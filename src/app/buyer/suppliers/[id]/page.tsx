@@ -115,7 +115,7 @@ async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id
                 href={filterHref(c.id)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "inline-flex min-h-9 shrink-0 items-center rounded-full border px-3 text-sm",
+                  "inline-flex min-h-11 md:min-h-9 shrink-0 items-center rounded-full border px-3 text-sm",
                   active ? "border-brand bg-brand-soft text-brand" : "border-border hover:bg-muted",
                 )}
               >

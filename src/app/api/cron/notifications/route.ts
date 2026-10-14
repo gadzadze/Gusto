@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { processDeliveries } from "@/server/notifications/process";
+import { pruneRateLimits } from "@/server/security/rate-limit";
 
 // Drains due outbox rows. Called every minute by Supabase Cron (pg_net), which
 // sends POST; GET is accepted so it can be tried by hand. Both need
@@ -17,7 +18,9 @@ function authorized(request: Request): boolean {
 async function drain(request: Request): Promise<Response> {
   if (!authorized(request)) return Response.json({ error: "unauthorized" }, { status: 401 });
   const result = await processDeliveries();
-  return Response.json(result);
+  // Housekeeping rides along: expired rate-limit windows.
+  const prunedRateLimits = await pruneRateLimits().catch(() => 0);
+  return Response.json({ ...result, prunedRateLimits });
 }
 
 export const GET = drain;

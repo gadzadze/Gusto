@@ -19,7 +19,7 @@ export async function NotificationBell({ userId, area }: { userId: string; area:
       {unread > 0 ? (
         <span
           data-testid="unread-count"
-          className="absolute right-1 top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold leading-5 text-white tabular-nums"
+          className="absolute right-1 top-1 inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold leading-5 text-brand-foreground tabular-nums"
         >
           {unread > 99 ? "99+" : unread}
         </span>

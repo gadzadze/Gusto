@@ -8,9 +8,22 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { OrgStatus } from "@/server/db/schema";
-import { reviewSupplierAction } from "../actions";
 
-export function ReviewPanel({ orgId, status }: { orgId: string; status: OrgStatus }) {
+type ReviewResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Approve / suspend / reactivate controls. The server action is passed in, so
+ * the same panel serves suppliers (all three) and buyers (no approval step).
+ */
+export function ReviewPanel({
+  orgId,
+  status,
+  review,
+}: {
+  orgId: string;
+  status: OrgStatus;
+  review: (input: { orgId: string; action: "approve" | "suspend" | "reactivate"; reason?: string }) => Promise<ReviewResult>;
+}) {
   const t = useTranslations("admin");
   const tc = useTranslations("common");
   const [pending, startTransition] = useTransition();
@@ -21,7 +34,7 @@ export function ReviewPanel({ orgId, status }: { orgId: string; status: OrgStatu
   const run = (action: "approve" | "suspend" | "reactivate") => {
     setError(null);
     startTransition(async () => {
-      const result = await reviewSupplierAction({ orgId, action, reason: reason || undefined });
+      const result = await review({ orgId, action, reason: reason || undefined });
       if (result.ok) {
         setReasonFor(null);
         setReason("");

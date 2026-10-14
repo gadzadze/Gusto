@@ -12,7 +12,8 @@ import { formatMoney } from "@/lib/money";
 import { requireAdmin } from "@/server/auth/guards";
 import { getSupplierForAdmin } from "@/server/domain/admin/suppliers";
 import { NotFoundError } from "@/server/domain/errors";
-import { ReviewPanel } from "./review-panel";
+import { ReviewPanel } from "@/components/admin/review-panel";
+import { reviewSupplierAction } from "../actions";
 
 export default async function AdminSupplierPage(props: PageProps<"/admin/suppliers/[id]">) {
   const t = await getTranslations("admin");
@@ -67,7 +68,7 @@ async function Supplier({ params }: PageProps<"/admin/suppliers/[id]">) {
         {t("detail.products", productCounts)}
       </p>
 
-      <ReviewPanel orgId={org.id} status={org.status} />
+      <ReviewPanel orgId={org.id} status={org.status} review={reviewSupplierAction} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>

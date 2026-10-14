@@ -31,8 +31,8 @@ export function ProductImageManager({
     if (code === "empty" || code === "too_large" || code === "unsupported" || code === "upload_failed") {
       return t(`imageErrors.${code}`);
     }
-    if (code === "suspended" || code === "category_unavailable" || code === "sku_taken" || code === "invalid") {
-      return t(`errors.${code}`);
+    if (code === "suspended" || code === "category_unavailable" || code === "sku_taken" || code === "invalid" || (code as string) === "rate_limited") {
+      return t(`errors.${code as "invalid"}`);
     }
     return t("errors.unknown");
   };

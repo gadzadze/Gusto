@@ -13,7 +13,9 @@
     "test:e2e": "playwright test",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "admin:grant": "tsx --conditions=react-server scripts/admin-grant.ts"
+    "admin:grant": "tsx --conditions=react-server scripts/admin-grant.ts",
+    "check:secrets": "tsx scripts/check-bundle-secrets.ts",
+    "db:seed": "tsx scripts/seed-dev.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

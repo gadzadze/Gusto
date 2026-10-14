@@ -12,6 +12,7 @@ import {
 import { assertCatalogWritable, isUuid } from "@/server/domain/catalog/products";
 import { assertSupplier, type OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
+import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 import { INVITE_TTL_MS, generateInviteToken } from "./invite-token";
 
 export type CustomerError = "not_active" | "suspended" | "price_list_unavailable" | "not_invited" | "stale_status";
@@ -140,6 +141,7 @@ export async function createCustomer(
   values: CustomerValues,
 ): Promise<{ customerId: string; token: string }> {
   assertCanInvite(ctx);
+  await consumeRateLimit(RATE_LIMITS.inviteCreate, ctx.orgId);
   return getDb().transaction(async (tx) => {
     await assertOwnPriceList(tx, ctx, values.priceListId);
     const [row] = await tx
@@ -162,6 +164,7 @@ export async function createCustomer(
 /** Issues a fresh link for a customer who hasn't joined yet, revoking older ones. */
 export async function regenerateInvitation(ctx: OrgCtx, customerId: string): Promise<string> {
   assertCanInvite(ctx);
+  await consumeRateLimit(RATE_LIMITS.inviteCreate, ctx.orgId);
   return getDb().transaction(async (tx) => {
     const [row] = await tx
       .select({ status: supplierCustomers.status })

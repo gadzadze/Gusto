@@ -175,6 +175,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `notification_deliveries`: the outbox. Channel, recipient, payload,
   `status`, `attempts`, `next_attempt_at`, `last_error`, unique `dedupe_key`.
 - `audit_logs`: admin and security-relevant actions.
+- `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
 
@@ -186,8 +187,8 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
 ```
 
 - Terminal states: `delivered`, `rejected`, `cancelled`.
-- Transitions are defined once in `src/server/domain/orders/transitions.ts`
-  and enforced on the server inside the same transaction that writes the
+- Transitions are defined once in `src/lib/orders/transitions.ts` and applied by
+  `src/server/domain/orders/transitions.ts`, enforced on the server inside the same transaction that writes the
   `order_status_history` row.
 - Every transition is checked against the current status with a conditional
   update (`WHERE status = $expected`), so two people clicking at once cannot
@@ -295,7 +296,7 @@ src/
     onboarding/               org creation after first sign-in
     supplier/                 supplier area (guarded by layout + every action)
     buyer/                    buyer area
-    admin/                    platform admin
+    admin/                    platform admin: overview + pilot metrics, suppliers, organizations, order lookup, audit log, categories
     o/[number]/               order link → redirects to the viewer's own order page, or 404
     api/cron/notifications/   outbox drain (CRON_SECRET)
     auth/callback/            Google OAuth code exchange
@@ -308,7 +309,8 @@ src/
     env.ts                    validated server env, read lazily
     supabase/server.ts        request-bound Supabase client (auth only)
     db/                       drizzle client, schema
-    domain/                   business logic by area: catalog, admin, pricing, orders, customers, search
+    domain/                   business logic by area: catalog, admin, pricing, orders, customers, search, metrics
+    security/rate-limit.ts    Postgres-backed rate limits
     domain/context.ts         OrgCtx / SupplierCtx / AdminCtx + assertSupplier/assertAdmin
     domain/errors.ts          NotFoundError, StateError, ConflictError
     actions/result.ts         runAction(): domain errors → action results / 404
@@ -318,7 +320,7 @@ src/
   components/                 app components
   i18n/, messages/ka.json
 drizzle/                      generated + custom SQL migrations
-scripts/                      admin-grant, load-env (seed-dev comes in milestone 6)
+scripts/                      admin-grant, seed-dev (+ seed-guard), check-bundle-secrets, load-env
 supabase/                     local Supabase config + email templates (no migrations here)
 tests/unit, tests/integration, tests/e2e
 ```
@@ -340,6 +342,8 @@ rules, so the same rule is never written twice.
 | `npm run db:generate` | Generate SQL from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL_DIRECT` |
 | `npm run admin:grant -- <email>` | Make an existing user a platform admin (audited) |
+| `npm run db:seed` | `[DEMO]` data into a **local** database; refuses any other host |
+| `npm run check:secrets` | After a build: fail if a server secret is in `.next/static` |
 
 Scripts, drizzle-kit and tests read `.env.local` then `.env`
 (`scripts/load-env.ts`), the same files Next.js reads.
@@ -547,6 +551,59 @@ and the delivery row is marked `skipped`, not `sent`.
   Suspense by `AppShell` for buyers and suppliers. The list lives at
   `/buyer/notifications` and `/supplier/notifications` (shared view);
   clicking a row marks it read and redirects to `/o/<number>`.
+
+## Launch specifics (milestone 6)
+
+- **Dashboards** compute from real rows only, with each number's definition
+  printed under it (`components/ui/stat-tile.tsx`). Supplier
+  (`domain/metrics/supplier.ts`): pending now; orders in the last 7 days vs the
+  7 before; confirmed + delivered **order value**, 30 days; top 5 products by
+  confirmed quantity; buyers with ≥2 orders in 30 days. Admin pilot metrics
+  (`domain/metrics/pilot.ts`): active supplier = received ≥1 order in 30 days;
+  active buyer = ordered in 14 days; weekly reorder rate = buyers in both of the
+  last two weeks ÷ buyers in the earlier week; a "week" is a rolling 7 days.
+  All take an injectable `now`, and the tests use a far-future `now` so only
+  their own fixture falls in the windows. Never call these numbers revenue.
+- **Buyer dashboard**: open orders, last 5 with order again, the 10 most-ordered
+  products (orders containing them; current prices, only what is still
+  orderable) with the cart stepper, connected suppliers.
+- **Admin support tools** see contact and status information, never price lists
+  or catalogs. Buyers are suspended/reactivated in `domain/admin/organizations.ts`
+  (suppliers keep `reviewSupplier`); the order lookup (`domain/admin/orders.ts`)
+  writes an `order.view` audit row in the same transaction as the read.
+  `ReviewPanel` takes the server action as a prop so both kinds share it.
+- **Rate limits** (`server/security/rate-limit.ts`, rules in `RATE_LIMITS`):
+  order submit 10/min/org (a repeated idempotency key doesn't count), invite
+  create or regenerate 30/h/supplier, invite accept 10/min/IP (hashed, in the
+  action: it knows the headers), image upload 30/h/supplier. Over the limit
+  throws `StateError("rate_limited")`; every UI maps that code. The cron route
+  prunes old windows.
+- **Suspended buyers can't submit** (`buyer_suspended`, read from the database,
+  not the request context).
+- **Headers** are static in `next.config.ts`. The CSP keeps `'unsafe-inline'`
+  for scripts and styles (Next's inline scripts; nonces would force dynamic
+  rendering of every page). Tighten it only together with a rendering change.
+- **Streamed not-found**: a guard that fails inside `<Suspense>` shows the
+  not-found page but the HTTP status is already 200. Tests assert the visible
+  heading, not the status. Don't rely on the status code for anything.
+- **Error boundaries**: `app/error.tsx` and one each under `buyer/`,
+  `supplier/`, `admin/` render `components/route-error.tsx`, so the shell
+  survives a failing page.
+- **Mobile**: tap targets ≥44px at phone width (`Button size="sm"` and the
+  filter pills grow below `md`); don't put `whitespace-nowrap` buttons with long
+  Georgian labels in narrow containers (the WhatsApp button wraps). The launch
+  e2e checks horizontal overflow and control heights at 360px.
+- **Contrast** is a unit test (`tests/unit/contrast.test.ts`) over the tokens in
+  `globals.css`, light and dark. Changing a colour token means the test tells
+  you whether it still passes AA. Text on a brand fill uses
+  `text-brand-foreground`, not white.
+- **Seed**: `scripts/seed-dev.ts` stubs `server-only` itself (the
+  `react-server` condition would break `next-intl`) and goes through the real
+  domain functions, so seeded data obeys every rule. The host check lives in
+  `scripts/seed-guard.ts` and is unit-tested.
+- **Playwright quirk**: a test title containing non-ASCII arrows (`→`) made
+  `setInputFiles` silently not fire React's change handler (the output folder
+  name carries the title). Keep e2e test titles ASCII.
 
 ## Testing approach
 

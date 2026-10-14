@@ -26,6 +26,8 @@ jobs:
       - run: npm test
       # No secrets: the build must succeed without runtime configuration.
       - run: npm run build
+      # Nothing server-side may end up in what browsers download.
+      - run: npm run check:secrets
 
   integration:
     name: Integration tests (Postgres)

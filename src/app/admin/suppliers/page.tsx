@@ -48,7 +48,7 @@ async function Suppliers({ searchParams }: Pick<PageProps<"/admin/suppliers">, "
               href={f === "all" ? "/admin/suppliers" : `/admin/suppliers?status=${f}`}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 text-sm",
+                "inline-flex min-h-11 md:min-h-9 items-center gap-2 rounded-full border px-3 text-sm",
                 active ? "border-brand bg-brand-soft text-brand" : "border-border hover:bg-muted",
               )}
             >

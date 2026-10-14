@@ -5,6 +5,7 @@ import { getDb, type Tx } from "@/server/db/client";
 import { categories, products, type Product } from "@/server/db/schema";
 import { assertSupplier, type OrgCtx, type SupplierCtx } from "@/server/domain/context";
 import { ConflictError, NotFoundError, StateError, isUniqueViolation } from "@/server/domain/errors";
+import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 import { buildSearchText, escapeLike, searchSkeleton } from "@/server/domain/search/translit";
 import {
   imageFilePaths,
@@ -210,6 +211,7 @@ export async function setProductImage(
   storage: ImageStorage,
 ): Promise<string> {
   assertCatalogWritable(ctx);
+  await consumeRateLimit(RATE_LIMITS.imageUpload, ctx.orgId);
   const product = await getSupplierProduct(ctx, productId);
   const variants = await processProductImage(upload);
 

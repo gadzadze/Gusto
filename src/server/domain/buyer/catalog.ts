@@ -1,8 +1,12 @@
 import "server-only";
-import { and, asc, count, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, isNotNull, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/server/db/client";
 import {
+  cartItems,
+  carts,
   categories,
+  orderItems,
+  orders,
   organizations,
   products,
   supplierCustomers,
@@ -243,4 +247,76 @@ export async function searchConnectedCatalogs(ctx: OrgCtx, query: string): Promi
     });
   }
   return [...groups.values()];
+}
+
+export type TopOrderedProduct = {
+  product: BuyerProduct;
+  supplier: { id: string; name: string; currency: string; pricesIncludeVat: boolean };
+  /** How many of the buyer's orders contained it. */
+  orderCount: number;
+  cartQtyMilli: number;
+};
+
+/**
+ * The products this buyer has ordered most often (number of orders containing
+ * them, across suppliers), limited to what they can still order today: active
+ * product, active connection, approved supplier. Prices are the current ones.
+ */
+export async function listTopOrderedProducts(ctx: OrgCtx, limit = 10): Promise<TopOrderedProduct[]> {
+  assertBuyer(ctx);
+  const db = getDb();
+  const ranked = await db
+    .select({
+      productId: orderItems.productId,
+      orderCount: sql<number>`count(distinct ${orderItems.orderId})::int`,
+      lastOrdered: sql<Date>`max(${orders.createdAt})`,
+    })
+    .from(orderItems)
+    .innerJoin(orders, eq(orders.id, orderItems.orderId))
+    .where(and(eq(orders.buyerOrgId, ctx.orgId), isNotNull(orderItems.productId)))
+    .groupBy(orderItems.productId)
+    // Over-fetch: some will have been deactivated or their supplier suspended.
+    .orderBy(desc(sql`count(distinct ${orderItems.orderId})`), desc(sql`max(${orders.createdAt})`))
+    .limit(limit * 3);
+  const ids = ranked.map((r) => r.productId).filter((id): id is string => id !== null);
+  if (ids.length === 0) return [];
+
+  const [rows, inCart] = await Promise.all([
+    db
+      .select({
+        ...buyerProductColumns(ctx.orgId),
+        supplierId: organizations.id,
+        supplierName: organizations.name,
+        currency: organizations.currency,
+        pricesIncludeVat: supplierSettings.pricesIncludeVat,
+      })
+      .from(products)
+      .innerJoin(categories, eq(categories.id, products.categoryId))
+      .innerJoin(organizations, eq(organizations.id, products.supplierOrgId))
+      .innerJoin(supplierSettings, eq(supplierSettings.organizationId, organizations.id))
+      .innerJoin(supplierCustomers, eq(supplierCustomers.supplierOrgId, organizations.id))
+      .where(and(inArray(products.id, ids), eq(products.isActive, true), visibleSupplierCondition(ctx.orgId))),
+    db
+      .select({ productId: cartItems.productId, qtyMilli: cartItems.qtyMilli })
+      .from(cartItems)
+      .innerJoin(carts, eq(carts.id, cartItems.cartId))
+      .where(and(eq(carts.buyerOrgId, ctx.orgId), inArray(cartItems.productId, ids))),
+  ]);
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  const cart = new Map(inCart.map((c) => [c.productId, c.qtyMilli]));
+
+  const out: TopOrderedProduct[] = [];
+  for (const r of ranked) {
+    const row = r.productId ? byId.get(r.productId) : undefined;
+    if (!row) continue;
+    const { supplierId, supplierName, currency, pricesIncludeVat, ...product } = row;
+    out.push({
+      product,
+      supplier: { id: supplierId, name: supplierName, currency, pricesIncludeVat },
+      orderCount: r.orderCount,
+      cartQtyMilli: cart.get(row.id) ?? 0,
+    });
+    if (out.length === limit) break;
+  }
+  return out;
 }

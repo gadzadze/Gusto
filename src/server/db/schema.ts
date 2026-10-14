@@ -530,6 +530,18 @@ export const notificationPreferences = pgTable("notification_preferences", {
   ...timestamps,
 });
 
+// Fixed-window counters for rate limiting (server/security/rate-limit.ts).
+// `key` is "<rule>:<subject>"; subjects that are people (IPs) are hashed.
+export const rateLimits = pgTable(
+  "rate_limits",
+  {
+    key: text("key").notNull(),
+    windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+    hits: integer("hits").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.key, t.windowStart] }), index("rate_limits_window_idx").on(t.windowStart)],
+);
+
 export const auditLogs = pgTable(
   "audit_logs",
   {

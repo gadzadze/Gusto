@@ -15,6 +15,7 @@
   --muted-text: #57534e;
   --brand: #7a1f2b;
   --brand-soft: #f6e9eb;
+  --brand-foreground: #ffffff;
   --danger: #dc2626;
 
   --background: var(--surface);
@@ -57,6 +58,7 @@
     /* Burgundy on black fails contrast; dark mode uses a lighter tone. */
     --brand: #d46a7c;
     --brand-soft: #2a1418;
+    --brand-foreground: #0b0b0c;
     --danger: #f87171;
 
     --primary-foreground: #0b0b0c;
@@ -91,6 +93,7 @@
   --color-ring: var(--ring);
   --color-brand: var(--brand);
   --color-brand-soft: var(--brand-soft);
+  --color-brand-foreground: var(--brand-foreground);
   --color-surface-2: var(--surface-2);
 
   --radius-sm: calc(var(--radius) - 4px);

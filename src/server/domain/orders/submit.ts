@@ -20,9 +20,16 @@ import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError, isUniqueViolation } from "@/server/domain/errors";
 import { effectivePriceSql } from "@/server/domain/pricing/resolve";
 import { recordOrderEvent } from "@/server/notifications/events";
+import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 import { afterOrderSubmitted } from "./hooks";
 
-export type SubmitError = "empty_cart" | "below_minimum" | "address_required" | "supplier_unavailable";
+export type SubmitError =
+  | "empty_cart"
+  | "below_minimum"
+  | "address_required"
+  | "supplier_unavailable"
+  | "buyer_suspended"
+  | "rate_limited";
 
 /** What the buyer reviewed on the checkout page. Anything else is a change. */
 export const submitInputSchema = z.object({
@@ -77,6 +84,9 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
   const existing = await findByKey(db, ctx.orgId, input.idempotencyKey);
   if (existing) return { status: "existing", orderId: existing.id, number: existing.number };
 
+  // A repeat of an order that already exists is free; a new attempt counts.
+  await consumeRateLimit(RATE_LIMITS.orderSubmit, ctx.orgId);
+
   let result: SubmitResult;
   try {
     result = await db.transaction(async (tx) => {
@@ -91,6 +101,14 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
         if (again) return { status: "existing" as const, orderId: again.id, number: again.number };
         throw new StateError<SubmitError>("empty_cart");
       }
+
+      // A suspended buyer organization can't order (checked against the database,
+      // not the request's context, so a suspension takes effect immediately).
+      const [buyerOrg] = await tx
+        .select({ status: organizations.status })
+        .from(organizations)
+        .where(eq(organizations.id, ctx.orgId));
+      if (buyerOrg?.status === "suspended") throw new StateError<SubmitError>("buyer_suspended");
 
       // 2. The connection is active and the supplier approved, right now.
       const [supplier] = await tx

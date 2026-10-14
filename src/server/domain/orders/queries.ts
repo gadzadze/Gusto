@@ -95,6 +95,17 @@ export async function listBuyerOrders(ctx: OrgCtx, page = 1, pageSize?: number) 
   return paged(eq(orders.buyerOrgId, ctx.orgId), page);
 }
 
+/** Pending and confirmed orders of this buyer, newest first. */
+export async function listOpenBuyerOrders(ctx: OrgCtx, limit = 20) {
+  if (ctx.orgType !== "buyer") throw new NotFoundError();
+  return getDb()
+    .select(listColumns)
+    .from(orders)
+    .where(and(eq(orders.buyerOrgId, ctx.orgId), inArray(orders.status, ["pending", "confirmed"])))
+    .orderBy(desc(orders.createdAt), desc(orders.number))
+    .limit(limit);
+}
+
 export type OrderDetail = {
   order: Order;
   items: OrderItem[];

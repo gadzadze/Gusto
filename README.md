@@ -6,7 +6,7 @@ existing customers on Gusto, and those customers reorder in a few taps.
 - Product scope, conventions and the security model: [`CLAUDE.md`](CLAUDE.md)
 - Build plan: [`docs/milestones/`](docs/milestones/README.md)
 
-**Status:** milestones 1–5.
+**Status:** milestones 1–6 (code complete for the pilot; production deployment not yet performed, see "Implemented, configured, verified").
 - Sign-in and onboarding as a buyer or supplier, with role-guarded areas.
 - Suppliers build a catalog: products, photos, CSV/XLSX import, order
   terms.
@@ -82,6 +82,8 @@ run `npx supabase init` in a scratch folder and copy those settings over.
 | `npm run db:generate` | Generate a migration from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations (uses `DATABASE_URL_DIRECT`) |
 | `npm run admin:grant -- <email>` | Make an existing user a platform admin |
+| `npm run db:seed` | Fill a **local** database with `[DEMO]` data (refuses anything else) |
+| `npm run check:secrets` | After `npm run build`: fail if a server secret is in the client bundle |
 
 ## Database and migrations
 
@@ -126,6 +128,13 @@ the Supabase in `.env.local` (local: `supabase start` + `db:migrate`).
 - Never point it at production.
 - If Playwright's bundled browser isn't installed, set
   `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to a Chromium binary.
+
+**Clean-database check.** The app must work with zero rows. The e2e suite is
+meant to run against a database that has only had `db:migrate` applied (no
+seed): every spec creates its own admin, suppliers and buyers through the UI,
+so a green run proves the empty-database path (including empty dashboards).
+The persistence spec starts and stops its own web server on port 3101 to prove
+orders survive a restart.
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and build,
 plus the integration tests against a Postgres service container. E2E is not in
@@ -227,6 +236,22 @@ Suppliers can't add products until at least one category exists:
 2. Add categories at `/admin/categories`.
 3. Approve new suppliers at `/admin/suppliers`.
 
+## Seed data (development only)
+
+`npm run db:seed` creates clearly fictional data, every name prefixed `[DEMO]`:
+a Tbilisi restaurant, a café, a beverage distributor and a food distributor,
+30 products, one custom price list, and seven orders in different statuses
+(with their notifications).
+
+- It refuses unless `DATABASE_URL` points at a local host (`localhost`,
+  `127.0.0.1`, `::1`) or at a host listed in `SEED_ALLOWED_HOSTS` (for a
+  dedicated **dev** Supabase project). It also refuses in production and when
+  `[DEMO]` organizations already exist.
+- The demo users have invented addresses and cannot sign in. To explore, sign
+  in with your own address, then `npm run admin:grant -- you@example.com`.
+- Never seed production. The app itself works with an empty database, which
+  is how the e2e suite runs.
+
 ## Platform admins
 
 There is no admin sign-up.
@@ -240,6 +265,84 @@ There is no admin sign-up.
    This uses `DATABASE_URL_DIRECT` from `.env.local` (or `.env`), and prints
    the database host so you can confirm you targeted the right one.
 3. The grant is recorded in `audit_logs`.
+
+## Security measures
+
+- Authorization is in the app: every page, Server Action and Route Handler
+  starts with a guard, tenant scope comes from the session, and another
+  organization's objects answer "not found". RLS is on with no policies, so the
+  Supabase Data API exposes nothing.
+- **Rate limits** (Postgres-backed, `rate_limits` table): order submit 10/min
+  per organization; invitation creation 30/hour per supplier; invitation
+  acceptance 10/min per client IP (stored hashed); image upload 30/hour per
+  supplier. A refused attempt shows "too many attempts, try again shortly".
+- **Headers** (`next.config.ts`): a Content-Security-Policy that allows this
+  app, the Supabase project (for product photos) and self-hosted fonts;
+  `X-Frame-Options: DENY`; `Referrer-Policy`; `X-Content-Type-Options`;
+  `Permissions-Policy`; HSTS. Scripts and styles need `'unsafe-inline'` because
+  Next.js emits inline ones and nonces would make every page dynamic.
+- **Secrets**: `npm run check:secrets` scans `.next/static` for the service-role
+  key's name and value, other server secret values, and service-role JWTs.
+- **Suspended organizations** can't act: a suspended buyer can't order (checked
+  against the database, so it takes effect immediately); a suspended supplier
+  is read-only.
+- **Dependencies**: `npm audit --omit=dev` reports 0 vulnerabilities. `npm audit`
+  also lists development-only findings (the ESLint config chain and
+  `drizzle-kit`'s bundled esbuild). They never ship to production, and npm's
+  suggested "fix" is to downgrade `eslint-config-next` to 14.x and
+  `drizzle-kit` to 0.18, which would break this project, so they are left
+  until upstream releases fix them.
+
+## Implemented, configured, verified
+
+What this repository does, what you must set up, and what has actually been
+exercised. Read the last column before relying on a row.
+
+| Area | Implemented | Needs configuring | Verified so far |
+|---|---|---|---|
+| Orders, carts, pricing, catalog, import | Yes | Nothing | Integration tests on real Postgres 16; e2e |
+| Magic-link and Google sign-in | Yes | Supabase Auth (URLs, templates, SMTP, Google) | e2e against a **stand-in** for Supabase Auth, **not real Supabase or Google** |
+| Product photos | Yes (sharp, Supabase Storage) | Bucket is created by migration | e2e against the same stand-in; not real Storage |
+| In-app notifications, preferences | Yes | Nothing | Integration + e2e |
+| **Email** (orders, invitations) | Yes, via Resend | `RESEND_API_KEY`, `EMAIL_FROM`, a verified sending domain | Request shape tested with a stubbed `fetch`; **no real email has been sent**. Without a key, email is logged and marked `skipped` |
+| Notification cron | Yes (route + migration `0010`) | Supabase Vault secrets `gusto_cron_url`, `gusto_cron_secret` | Route tested (401 / drain). The `pg_cron`/`pg_net` job has **never run**: it only ran as a no-op on plain Postgres |
+| **WhatsApp** | "Send on WhatsApp" links only | Nothing | The user sends the message; Gusto records nothing as delivered. **Automated WhatsApp sending does not exist** |
+| Dashboards, pilot metrics, admin tools | Yes | `admin:grant` for the first admin | Integration (hand-computed fixtures) + e2e |
+| Rate limits, headers, bundle scan | Yes | Nothing | Integration tests; headers and scan run on a production build |
+| Mobile (360px), contrast, focus ring | Yes | Nothing | e2e overflow and tap-size checks; WCAG AA contrast unit test on the design tokens |
+| Payments | **None, by design** | n/a | n/a |
+| Production deployment | Checklist written ([`docs/deploy.md`](docs/deploy.md)) | Everything in it | **Not performed.** No Supabase, Vercel or Resend account was available |
+
+## Before inviting real businesses
+
+Software is not the only thing between a pilot and real users. Do these first;
+none is done in this repository.
+
+- [ ] **Privacy policy and terms of use, in Georgian**, linked from the sign-in
+      page and the footer. Gusto stores names, phone numbers, email addresses,
+      delivery addresses and each business's price lists and orders.
+- [ ] **A lawful basis for processing personal data** under the Law of Georgia on
+      Personal Data Protection, written down (contract performance for
+      suppliers and buyers using the service; consent where you add optional
+      uses). Have a Georgian lawyer confirm, including whether any registration
+      or notification duty applies and what to say about processors (Supabase,
+      Vercel and Resend process data in the EU).
+- [ ] **A support contact** (email and phone) shown inside the app and in
+      invitation emails, and a named person who answers it during the pilot.
+- [ ] **Backups**: in the Supabase dashboard (Database → Backups) confirm daily
+      backups are on, enable point-in-time recovery if the plan allows, write
+      down the retention, and do one test restore into a scratch project.
+- [ ] **Supplier terms**: suppliers' price lists are confidential to each
+      customer; say so, and say that an order is a purchase request settled
+      outside Gusto.
+- [ ] **Clean production data**: no `[TEST]`, `[E2E]` or `[DEMO]` rows (the seed
+      never runs there), and only the people who should be admins are admins
+      (`select email from auth.users u join profiles p on p.id = u.id where p.is_platform_admin;`).
+- [ ] **Email deliverability**: send from a verified Resend domain (SPF, DKIM,
+      DMARC) and check that invitation and order emails reach a Gmail and an
+      Outlook inbox, not spam.
+- [ ] **Error visibility**: Vercel failed-deployment alerts on, and someone
+      looks at the function logs after the first real orders.
 
 ## Deployment (summary)
 
@@ -256,5 +359,4 @@ There is no admin sign-up.
 - `NEXT_PUBLIC_*` values are inlined at build time. Redeploy after changing
   them.
 
-A full step-by-step production checklist arrives in milestone 6
-(`docs/deploy.md`).
+The exact checklist is in [`docs/deploy.md`](docs/deploy.md).

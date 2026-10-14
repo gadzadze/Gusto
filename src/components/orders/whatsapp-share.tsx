@@ -28,8 +28,8 @@ export async function WhatsappShare({ detail, kind }: { detail: OrderDetail; kin
   const href = whatsappLink(counterpartyPhone, message);
   if (!href) return null;
   return (
-    <div className="space-y-1.5 print:hidden">
-      <Button asChild variant="outline">
+    <div className="min-w-0 space-y-1.5 print:hidden">
+      <Button asChild variant="outline" className="h-auto max-w-full whitespace-normal py-2 text-center">
         <a href={href} target="_blank" rel="noopener noreferrer">
           <MessageCircle />
           {kind === "to_supplier" ? to("sendToSupplier") : to("tellBuyer")}

@@ -41,7 +41,7 @@ async function Inbox({ searchParams }: Pick<PageProps<"/supplier/orders">, "sear
             href={key === "new" ? "/supplier/orders" : `/supplier/orders?tab=${key}`}
             aria-current={tab === key ? "page" : undefined}
             className={cn(
-              "inline-flex min-h-9 items-center gap-2 rounded-full border px-3 text-sm",
+              "inline-flex min-h-11 md:min-h-9 items-center gap-2 rounded-full border px-3 text-sm",
               tab === key ? "border-brand bg-brand-soft text-brand" : "border-border hover:bg-muted",
             )}
           >
