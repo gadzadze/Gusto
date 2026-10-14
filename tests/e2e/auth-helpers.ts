@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { createClient } from "@supabase/supabase-js";
 import type { Page } from "@playwright/test";
 
@@ -22,4 +23,9 @@ export async function signInAsNewUser(page: Page, label: string): Promise<string
 
   await page.goto(`/auth/confirm?token_hash=${link.data.properties.hashed_token}&type=magiclink`);
   return email;
+}
+
+/** Makes an existing user a platform admin through the real admin:grant script. */
+export function grantAdmin(email: string): void {
+  execFileSync("npx", ["tsx", "--conditions=react-server", "scripts/admin-grant.ts", email], { stdio: "pipe" });
 }

@@ -6,8 +6,12 @@ existing customers on Gusto, and those customers reorder in a few taps.
 - Product scope, conventions and the security model: [`CLAUDE.md`](CLAUDE.md)
 - Build plan: [`docs/milestones/`](docs/milestones/README.md)
 
-**Status:** milestone 1 (foundation). Sign-in, onboarding as a buyer or
-supplier, role-guarded dashboards (empty), admin bootstrap, CI.
+**Status:** milestones 1–2.
+- Sign-in and onboarding as a buyer or supplier, with role-guarded areas.
+- Suppliers build a catalog: products, photos, CSV/XLSX import, order
+  terms.
+- Admins approve or suspend suppliers and manage categories. All admin
+  actions are audited.
 
 ## Stack
 
@@ -151,6 +155,20 @@ Do this for each Supabase project (local is pre-configured in
      pattern above allows.
 5. **Data API:** RLS is enabled with no policies on every Gusto table, so
    the Data API exposes nothing. The app never uses it.
+6. **Storage:**
+   - `npm run db:migrate` creates the public `product-images` bucket (1 MB
+     per object, WebP only).
+   - There are no storage policies: only the server, using
+     `SUPABASE_SERVICE_ROLE_KEY`, can write.
+   - Product images are processed on the server and served straight from
+     the bucket's public URL.
+
+## First-run setup in the app
+
+Suppliers can't add products until at least one category exists:
+1. Grant yourself admin (below).
+2. Add categories at `/admin/categories`.
+3. Approve new suppliers at `/admin/suppliers`.
 
 ## Platform admins
 

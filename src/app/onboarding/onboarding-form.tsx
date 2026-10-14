@@ -3,14 +3,14 @@
 import { Building2, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { useForm, useWatch, type Resolver } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { describedBy, Field } from "@/components/forms/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { fieldErrorsFrom } from "@/lib/validation/form-errors";
+import { zodFormResolver } from "@/lib/validation/form-resolver";
 import { BUYER_BUSINESS_TYPES, onboardingSchema } from "@/lib/validation/onboarding";
 import { submitOnboarding, type OnboardingResult } from "./actions";
 
@@ -29,17 +29,7 @@ type FormFields = {
   deliveryArea: string;
 };
 
-const resolver: Resolver<FormFields> = async (values) => {
-  const parsed = onboardingSchema.safeParse(values);
-  if (parsed.success) return { values, errors: {} };
-  const errors = Object.fromEntries(
-    Object.entries(fieldErrorsFrom(parsed.error)).map(([field, key]) => [
-      field,
-      { type: "validation", message: key },
-    ]),
-  );
-  return { values: {}, errors };
-};
+const resolver = zodFormResolver<FormFields>(onboardingSchema);
 
 export function OnboardingForm() {
   const t = useTranslations("onboarding");

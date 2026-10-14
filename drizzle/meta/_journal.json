@@ -15,6 +15,20 @@
       "when": 1791965152977,
       "tag": "0001_rls_extensions_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791969225183,
+      "tag": "0002_catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791969226476,
+      "tag": "0003_catalog_rls_storage",
+      "breakpoints": true
     }
   ]
 }

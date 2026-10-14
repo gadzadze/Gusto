@@ -1,6 +1,15 @@
 import type { z } from "zod";
 
-export const VALIDATION_KEYS = ["required", "too_long", "invalid_phone", "invalid_legal_id"] as const;
+export const VALIDATION_KEYS = [
+  "required",
+  "too_long",
+  "invalid_phone",
+  "invalid_legal_id",
+  "invalid_price",
+  "invalid_quantity",
+  "invalid_vat",
+  "invalid_email",
+] as const;
 export type ValidationKey = (typeof VALIDATION_KEYS)[number];
 
 /** Narrows a Zod issue message to one of our i18n keys (default: "required"). */

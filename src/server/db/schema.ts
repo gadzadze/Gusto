@@ -4,6 +4,7 @@ import {
   boolean,
   check,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgTable,
@@ -28,6 +29,17 @@ const timestamps = {
 export const orgType = pgEnum("org_type", ["buyer", "supplier"]);
 export const orgStatus = pgEnum("org_status", ["pending_review", "active", "suspended"]);
 export const membershipRole = pgEnum("membership_role", ["owner", "member"]);
+export const productUnit = pgEnum("product_unit", [
+  "piece",
+  "kg",
+  "g",
+  "l",
+  "ml",
+  "box",
+  "pack",
+  "case",
+  "bottle",
+]);
 export const buyerBusinessType = pgEnum("buyer_business_type", [
   "restaurant",
   "cafe",
@@ -111,6 +123,8 @@ export const supplierSettings = pgTable(
     deliveryArea: text("delivery_area"),
     deliveryTerms: text("delivery_terms"),
     orderCutoffNote: text("order_cutoff_note"),
+    // Last column mapping used for catalog import: { field: column header }.
+    importMapping: jsonb("import_mapping").$type<Record<string, string>>(),
     updatedAt: timestamps.updatedAt,
   },
   (t) => [check("supplier_settings_min_order_nonneg", sql`${t.minOrderMinor} >= 0`)],
@@ -138,6 +152,66 @@ export const addresses = pgTable(
   ],
 );
 
+export const categories = pgTable(
+  "categories",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Georgian name. Categories are platform data managed by admins; when a
+    // second language ships this becomes per-locale.
+    name: text("name").notNull(),
+    sortOrder: integer("sort_order").notNull().default(0),
+    // Archived categories keep their products but can't be chosen for new ones.
+    isArchived: boolean("is_archived").notNull().default(false),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("categories_name_key").on(sql`lower(${t.name})`),
+    index("categories_sort_idx").on(t.isArchived, t.sortOrder),
+  ],
+);
+
+export const products = pgTable(
+  "products",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    supplierOrgId: uuid("supplier_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "restrict" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    brand: text("brand"),
+    sku: text("sku"),
+    unit: productUnit("unit").notNull(),
+    packDescription: text("pack_description"),
+    // Storage path prefix of the processed image (see server/storage), or null.
+    imagePath: text("image_path"),
+    // In the supplier org's currency, minor units.
+    basePriceMinor: bigint("base_price_minor", { mode: "number" }).notNull(),
+    vatRateBp: integer("vat_rate_bp").notNull(),
+    minQtyMilli: integer("min_qty_milli").notNull().default(1000),
+    qtyStepMilli: integer("qty_step_milli").notNull().default(1000),
+    isActive: boolean("is_active").notNull().default(true),
+    // Lowercased fields + transliteration skeletons; see search/translit.ts.
+    searchText: text("search_text").notNull().default(""),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("products_supplier_sku_key")
+      .on(t.supplierOrgId, t.sku)
+      .where(sql`${t.sku} is not null`),
+    index("products_supplier_active_idx").on(t.supplierOrgId, t.isActive),
+    index("products_category_idx").on(t.categoryId),
+    index("products_search_trgm_idx").using("gin", sql`${t.searchText} extensions.gin_trgm_ops`),
+    check("products_price_nonneg", sql`${t.basePriceMinor} >= 0`),
+    check("products_min_qty_positive", sql`${t.minQtyMilli} > 0`),
+    check("products_qty_step_positive", sql`${t.qtyStepMilli} > 0`),
+    check("products_vat_range", sql`${t.vatRateBp} between 0 and 10000`),
+  ],
+);
+
 export const auditLogs = pgTable(
   "audit_logs",
   {
@@ -162,4 +236,6 @@ export type Profile = typeof profiles.$inferSelect;
 export type OrgType = (typeof orgType.enumValues)[number];
 export type OrgStatus = (typeof orgStatus.enumValues)[number];
 export type MembershipRole = (typeof membershipRole.enumValues)[number];
+export type Category = typeof categories.$inferSelect;
+export type Product = typeof products.$inferSelect;
 export type BuyerBusinessType = (typeof buyerBusinessType.enumValues)[number];

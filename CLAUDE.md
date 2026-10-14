@@ -196,7 +196,9 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
 ## Conventions
 
 - **Money:** integer minor units (tetri) in `bigint` columns, always with a
-  currency code. Never floats. All arithmetic lives in `src/server/domain/money.ts`.
+  currency code. Never floats. Parsing, formatting and arithmetic live in
+  `src/lib/money.ts` (shared by forms and the server); quantities in
+  `src/lib/quantity.ts`.
 - **Quantities:** integer thousandths of the unit (`*_milli`; 2.5 kg = 2500), so
   weighed goods work without decimals. Line total =
   `round_half_up(unit_price_minor × qty_milli / 1000)`, computed in one helper.
@@ -299,7 +301,11 @@ src/
     env.ts                    validated server env, read lazily
     supabase/server.ts        request-bound Supabase client (auth only)
     db/                       drizzle client, schema
-    domain/                   business logic by area: catalog, pricing, orders, customers, search, money
+    domain/                   business logic by area: catalog, admin, pricing, orders, customers, search
+    domain/context.ts         OrgCtx / SupplierCtx / AdminCtx + assertSupplier/assertAdmin
+    domain/errors.ts          NotFoundError, StateError, ConflictError
+    actions/result.ts         runAction(): domain errors → action results / 404
+    storage/                  image processing (sharp) + Supabase Storage adapter
     notifications/            outbox, channels (inApp, email), whatsapp-link builder
   components/ui/              shadcn-style primitives (components.json is set up for `npx shadcn add`)
   components/                 app components
@@ -354,6 +360,61 @@ What this codebase relies on:
   `LayoutProps<"/route">` are global types; `npm run typecheck` regenerates
   them.
 - `AGENTS.md` is written by `next dev`. Leave it committed.
+- **The previous page stays mounted but hidden** (React `<Activity>`). In
+  Playwright, prefer role queries (`getByRole`), which skip hidden elements;
+  `getByLabel` can match a field on the hidden page.
+- **Mutating Server Actions call `refresh()`** (from `next/cache`) so the
+  current route re-renders. Nothing uses `'use cache'` yet.
+- **Server Action bodies are capped at 4.4 MB** (`next.config.ts`) for image
+  uploads; Vercel rejects function request bodies above 4.5 MB.
+
+## Server Action conventions
+
+- **Guard first:** every action starts with `require*()`.
+- **Validate:** parse input with the shared Zod schema from
+  `src/lib/validation/`. Return `{ ok: false, error: "invalid", fieldErrors }`
+  on failure.
+- **Call the domain function inside `runAction()`.** It maps errors:
+  - `NotFoundError` → `notFound()`;
+  - `StateError` / `ConflictError` → `{ ok: false, error: code }`;
+  - anything else is logged (message only) and becomes `"unknown"`.
+- **Error codes are i18n keys.** Client components translate them.
+- **Domain functions take `ctx` first** and re-check the role with
+  `assertSupplier` / `assertAdmin`, so a wrong call site fails closed.
+- **next-intl message keys must not contain dots.** Dots mean nesting. Map
+  dotted identifiers (audit actions) to flat keys.
+
+## Catalog specifics (milestone 2)
+
+- **Images:**
+  - Validated by content, not name or MIME: JPEG, PNG or WebP only, ≤ 4 MB,
+    ≤ 40 MP.
+  - Re-encoded with `sharp` to WebP at 400px and 1200px, which strips
+    metadata.
+  - Stored as `{supplierOrgId}/{productId}/{uuid}-w{400|1200}.webp` in the
+    public `product-images` bucket.
+  - `products.image_path` holds the prefix.
+  - `<ProductImage>` uses a custom `next/image` loader that picks the stored
+    size. Next's optimizer isn't used, so no `remotePatterns` are needed.
+  - The bucket is created by migration `0003`, which skips itself on plain
+    Postgres.
+- **Import:**
+  - The browser parses CSV (papaparse) or XLSX (read-excel-file) into
+    `{ headers, rows }` of strings, at most 2000 rows.
+  - The server re-validates every row on commit (`lib/catalog/import.ts`)
+    and never trusts the preview.
+  - Rows are matched to existing products by SKU within the supplier.
+  - Mode `all` aborts if any row is invalid; `valid_only` skips bad rows.
+  - Either way it runs in one transaction.
+  - The last column mapping is saved in `supplier_settings.import_mapping`.
+- **Supplier status:**
+  - `pending_review` can edit the catalog; `suspended` is read-only (domain
+    throws `StateError("suspended")`).
+  - Admin review moves are conditional on the current status and audited
+    as `supplier.approve|suspend|reactivate`; suspend and reactivate need a
+    reason.
+- **Categories:** a flat, admin-managed list with a Georgian `name`.
+  Archiving hides a category from new products; existing products keep it.
 
 ## Environment variables
 
@@ -401,6 +462,12 @@ and the delivery row is marked `skipped`, not `sent`.
 - **E2E signs users in via the Supabase admin API** (`generateLink` → visit
   `/auth/confirm?token_hash=…`). There's no inbox and no test-only route in
   the app. Never add a test-only auth bypass to the app.
+- **Integration helpers** (`tests/integration/helpers.ts`): `createSupplier`,
+  `createBuyer`, `createAdmin`, `createTestCategory`, `createTestProduct`,
+  and `memoryStorage()`, an in-memory `ImageStorage`. Image processing
+  itself is always real `sharp`.
+- **E2E file inputs:** wait for `networkidle` before `setInputFiles`, so
+  React has hydrated and attached its change handler.
 - **Test data** uses `[TEST]` / `[E2E]` name prefixes and `@test.gusto.ge`
   emails.
 
