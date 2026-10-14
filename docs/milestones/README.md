@@ -12,6 +12,7 @@ ones are merged.
 | 4 | [Ordering](04-ordering.md) | Cart → order → confirm/reject/deliver → reorder |
 | 5 | [Notifications](05-notifications.md) | In-app + email via an outbox; WhatsApp share links |
 | 6 | [Pilot launch](06-pilot-launch.md) | Dashboards, admin tools, security pass, deploy, docs |
+| 7 | [Go live](07-go-live.md) | **Draft.** Real-service verification, production deploy, legal and ops basics |
 
 After milestone 4 the product is usable end to end. After milestone 6 it is
 ready for the pilot suppliers.
