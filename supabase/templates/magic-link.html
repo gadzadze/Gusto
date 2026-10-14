@@ -1,0 +1,11 @@
+<!-- Used for both "Magic link" and "Confirm signup". The link must go to
+     /auth/confirm with the token hash; see src/app/auth/confirm/route.ts. -->
+<h2>შესვლა Gusto-ში</h2>
+<p>Gusto-ში შესასვლელად დააჭირეთ ღილაკს:</p>
+<p>
+  <a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email"
+     style="display:inline-block;padding:12px 20px;background:#0b0b0c;color:#ffffff;border-radius:8px;text-decoration:none">
+    შესვლა
+  </a>
+</p>
+<p style="color:#57534e">ბმული ერთჯერადია და მალე იწურება. თუ შესვლა თქვენ არ მოგითხოვიათ, უგულებელყავით ეს წერილი.</p>

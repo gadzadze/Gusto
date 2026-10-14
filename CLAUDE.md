@@ -95,8 +95,10 @@ real need appears).
 
 **Authorization lives in the app, in one place.**
 
-1. The browser never queries the database. The Supabase client in the
-   browser is used **only** for auth and nothing else.
+1. The browser never talks to the database or to Supabase. There is no
+   browser Supabase client: sign-in runs in Server Actions
+   (`src/app/(public)/login/actions.ts`), and the session lives in
+   httpOnly cookies managed by `@supabase/ssr`.
 2. All database access goes through Drizzle on the server, connected as the
    database owner. That connection **bypasses Row Level Security**, so RLS is
    not what protects tenants: the app layer is.
@@ -129,16 +131,19 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 
 - `profiles`: 1:1 with `auth.users`; name, phone (E.164), `is_platform_admin`.
 - `organizations`:
-  - `type` is `buyer` | `supplier`, immutable.
+  - `type` is `buyer` | `supplier`, immutable (a database trigger enforces
+    this).
   - `status`:
     - suppliers: `pending_review` → `active` → `suspended`;
-    - buyers: `active` / `suspended`.
-  - Also: name, city, phone, `timezone` (default `Asia/Tbilisi`), `currency`
-    (default `GEL`).
+    - buyers: `active` / `suspended` (a check constraint forbids
+      `pending_review`).
+  - Both types: name, contact name, city, phone, `timezone` (default
+    `Asia/Tbilisi`), `currency` (default `GEL`).
+  - Buyers only: `business_type`. Suppliers only: optional `legal_id`.
 - `organization_memberships`: user ↔ org, `role` `owner` | `member`. A user
   belongs to one org in the MVP; the schema allows more.
 - `supplier_settings`: `min_order_minor`, `prices_include_vat`,
-  `delivery_terms` (text), `order_cutoff_note` (text).
+  `delivery_area`, `delivery_terms`, `order_cutoff_note` (text fields).
 - `addresses`: buyer delivery locations.
 - `categories`: admin-managed, a flat list for now.
 - `products`:
@@ -170,6 +175,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `notification_deliveries`: the outbox. Channel, recipient, payload,
   `status`, `attempts`, `next_attempt_at`, `last_error`, unique `dedupe_key`.
 - `audit_logs`: admin and security-relevant actions.
+- `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
 
@@ -181,8 +187,8 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
 ```
 
 - Terminal states: `delivered`, `rejected`, `cancelled`.
-- Transitions are defined once in `src/server/domain/orders/transitions.ts`
-  and enforced on the server inside the same transaction that writes the
+- Transitions are defined once in `src/lib/orders/transitions.ts` and applied by
+  `src/server/domain/orders/transitions.ts`, enforced on the server inside the same transaction that writes the
   `order_status_history` row.
 - Every transition is checked against the current status with a conditional
   update (`WHERE status = $expected`), so two people clicking at once cannot
@@ -191,7 +197,9 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
 ## Conventions
 
 - **Money:** integer minor units (tetri) in `bigint` columns, always with a
-  currency code. Never floats. All arithmetic lives in `src/server/domain/money.ts`.
+  currency code. Never floats. Parsing, formatting and arithmetic live in
+  `src/lib/money.ts` (shared by forms and the server); quantities in
+  `src/lib/quantity.ts`.
 - **Quantities:** integer thousandths of the unit (`*_milli`; 2.5 kg = 2500), so
   weighed goods work without decimals. Line total =
   `round_half_up(unit_price_minor × qty_milli / 1000)`, computed in one helper.
@@ -207,7 +215,14 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
   display edge via `Intl`. Never hardcode Tbilisi or GEL in logic. They are
   defaults on the org row, not constants.
 - **Phones:** E.164 via `libphonenumber-js`, default region `GE`. `wa.me` links
-  use digits only.
+  use digits only (`lib/whatsapp.ts`). Display with `formatPhone()`.
+- **Formatting happens on the server.** Money, quantities and dates are
+  formatted in Server Components or actions, and client components receive
+  strings.
+  - Browsers' Intl data varies (a test Chromium rendered "GEL 15.00"
+    instead of "15,00 ₾"), which also breaks hydration.
+  - Client components may *parse* input with `lib/money.ts` and
+    `lib/quantity.ts`, but must not format for display.
 - **IDs:** UUIDs. Human references are `GST-<number>`, and the number is
   never used for authorization.
 - **Deletes:** products and orgs are deactivated, not deleted. Order items keep
@@ -218,9 +233,10 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
 - **All user-facing text** goes through `next-intl`. Only `ka` ships, but no
   Georgian string literals appear in components, so `en` can be added later.
 - **Georgian copy:** short and natural, like a well-made local app, not
-  bureaucratic or machine-translated. Use the informal-polite register that
-  Georgian product UIs use (e.g. "შეკვეთის გაგზავნა", not
-  "გთხოვთ განახორციელოთ შეკვეთის გაგზავნა").
+  bureaucratic or machine-translated.
+  - Address the user with the polite "თქვენ" form ("შეამოწმეთ ელფოსტა").
+  - Buttons use short verbal nouns ("შეკვეთის გაგზავნა", "გაგრძელება"),
+    never "გთხოვთ განახორციელოთ…".
 - **Search works in Georgian script and Latin transliteration.** Many people
   type "kveli" or "qveli" for "ყველი".
   - `src/server/domain/search/translit.ts` maps both scripts to one
@@ -280,20 +296,32 @@ src/
     onboarding/               org creation after first sign-in
     supplier/                 supplier area (guarded by layout + every action)
     buyer/                    buyer area
-    admin/                    platform admin
+    admin/                    platform admin: overview + pilot metrics, suppliers, organizations, order lookup, audit log, categories
     o/[number]/               order link → redirects to the viewer's own order page, or 404
     api/cron/notifications/   outbox drain (CRON_SECRET)
-    auth/callback/            Supabase auth code exchange
+    auth/callback/            Google OAuth code exchange
+    auth/confirm/             magic-link token-hash verification
+    auth/sign-out/            POST only
+    start/                    sends a signed-in user to their area
+  proxy.ts                    session refresh + signed-out redirect (Next 16's "middleware")
   server/
-    auth/                     session, guards
+    auth/                     access rules (pure), guards, sign-in helpers
+    env.ts                    validated server env, read lazily
+    supabase/server.ts        request-bound Supabase client (auth only)
     db/                       drizzle client, schema
-    domain/                   business logic by area: catalog, pricing, orders, customers, search, money
+    domain/                   business logic by area: catalog, admin, pricing, orders, customers, search, metrics
+    security/rate-limit.ts    Postgres-backed rate limits
+    domain/context.ts         OrgCtx / SupplierCtx / AdminCtx + assertSupplier/assertAdmin
+    domain/errors.ts          NotFoundError, StateError, ConflictError
+    actions/result.ts         runAction(): domain errors → action results / 404
+    storage/                  image processing (sharp) + Supabase Storage adapter
     notifications/            outbox, channels (inApp, email), whatsapp-link builder
-  components/ui/              shadcn primitives
+  components/ui/              shadcn-style primitives (components.json is set up for `npx shadcn add`)
   components/                 app components
   i18n/, messages/ka.json
 drizzle/                      generated + custom SQL migrations
-scripts/                      seed-dev, admin-grant
+scripts/                      admin-grant, seed-dev (+ seed-guard), check-bundle-secrets, load-env
+supabase/                     local Supabase config + email templates (no migrations here)
 tests/unit, tests/integration, tests/e2e
 ```
 
@@ -302,7 +330,102 @@ rules, so the same rule is never written twice.
 
 ## Commands
 
-(Filled in by milestone 1. Keep this section accurate.)
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server on :3000 |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
+| `npm test` | Unit tests, no database |
+| `npm run test:integration` | Against `DATABASE_URL_TEST`: **drops and rebuilds** it, then runs the real migrations |
+| `npm run test:e2e` | Playwright on a production build against the Supabase in `.env.local` |
+| `npm run build` | Production build; must pass with **no** env vars set (CI does this) |
+| `npm run db:generate` | Generate SQL from `src/server/db/schema.ts` |
+| `npm run db:migrate` | Apply migrations to `DATABASE_URL_DIRECT` |
+| `npm run admin:grant -- <email>` | Make an existing user a platform admin (audited) |
+| `npm run db:seed` | `[DEMO]` data into a **local** database; refuses any other host |
+| `npm run check:secrets` | After a build: fail if a server secret is in `.next/static` |
+
+Scripts, drizzle-kit and tests read `.env.local` then `.env`
+(`scripts/load-env.ts`), the same files Next.js reads.
+
+## Next.js 16 specifics (this is not the Next.js in your training data)
+
+Read `node_modules/next/dist/docs/` before using an API you haven't checked.
+What this codebase relies on:
+
+- **Cache Components is on** (`cacheComponents`, `partialPrefetching`).
+  - Reading cookies, headers or `searchParams` outside a `<Suspense>`
+    boundary is a build error.
+  - Pages render a static header and put the session-dependent part in an
+    async child component inside `<Suspense>` with a skeleton fallback.
+  - Area layouts do the same around the shell.
+- **`await connection()` comes before any Supabase client.**
+  - `createSupabaseServerClient()` calls it before anything else, because
+    the Supabase client reads the clock, which is forbidden during
+    prerendering.
+  - Don't create Supabase clients any other way.
+- **`proxy.ts` is what older Next.js called `middleware.ts`.** It only
+  refreshes the session and redirects signed-out visitors. It is not the
+  authorization layer.
+- **Route types are generated.** `PageProps<"/route">` and
+  `LayoutProps<"/route">` are global types; `npm run typecheck` regenerates
+  them.
+- `AGENTS.md` is written by `next dev`. Leave it committed.
+- **The previous page stays mounted but hidden** (React `<Activity>`). In
+  Playwright, prefer role queries (`getByRole`), which skip hidden elements;
+  `getByLabel` can match a field on the hidden page.
+- **Mutating Server Actions call `refresh()`** (from `next/cache`) so the
+  current route re-renders. Nothing uses `'use cache'` yet.
+- **Server Action bodies are capped at 4.4 MB** (`next.config.ts`) for image
+  uploads; Vercel rejects function request bodies above 4.5 MB.
+
+## Server Action conventions
+
+- **Guard first:** every action starts with `require*()`.
+- **Validate:** parse input with the shared Zod schema from
+  `src/lib/validation/`. Return `{ ok: false, error: "invalid", fieldErrors }`
+  on failure.
+- **Call the domain function inside `runAction()`.** It maps errors:
+  - `NotFoundError` → `notFound()`;
+  - `StateError` / `ConflictError` → `{ ok: false, error: code }`;
+  - anything else is logged (message only) and becomes `"unknown"`.
+- **Error codes are i18n keys.** Client components translate them.
+- **Domain functions take `ctx` first** and re-check the role with
+  `assertSupplier` / `assertAdmin`, so a wrong call site fails closed.
+- **next-intl message keys must not contain dots.** Dots mean nesting. Map
+  dotted identifiers (audit actions) to flat keys.
+
+## Catalog specifics (milestone 2)
+
+- **Images:**
+  - Validated by content, not name or MIME: JPEG, PNG or WebP only, ≤ 4 MB,
+    ≤ 40 MP.
+  - Re-encoded with `sharp` to WebP at 400px and 1200px, which strips
+    metadata.
+  - Stored as `{supplierOrgId}/{productId}/{uuid}-w{400|1200}.webp` in the
+    public `product-images` bucket.
+  - `products.image_path` holds the prefix.
+  - `<ProductImage>` uses a custom `next/image` loader that picks the stored
+    size. Next's optimizer isn't used, so no `remotePatterns` are needed.
+  - The bucket is created by migration `0003`, which skips itself on plain
+    Postgres.
+- **Import:**
+  - The browser parses CSV (papaparse) or XLSX (read-excel-file) into
+    `{ headers, rows }` of strings, at most 2000 rows.
+  - The server re-validates every row on commit (`lib/catalog/import.ts`)
+    and never trusts the preview.
+  - Rows are matched to existing products by SKU within the supplier.
+  - Mode `all` aborts if any row is invalid; `valid_only` skips bad rows.
+  - Either way it runs in one transaction.
+  - The last column mapping is saved in `supplier_settings.import_mapping`.
+- **Supplier status:**
+  - `pending_review` can edit the catalog; `suspended` is read-only (domain
+    throws `StateError("suspended")`).
+  - Admin review moves are conditional on the current status and audited
+    as `supplier.approve|suspend|reactivate`; suspend and reactivate need a
+    reason.
+- **Categories:** a flat, admin-managed list with a Georgian `name`.
+  Archiving hides a category from new products; existing products keep it.
 
 ## Environment variables
 
@@ -333,6 +456,182 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Never reset, truncate or seed a production database.** Integration tests
   and seeds run only against local Supabase (`supabase start`) or a dedicated
   dev project. The scripts check the host and refuse otherwise.
+
+## Customers and pricing specifics (milestone 3)
+
+- **Price resolution lives only in `server/domain/pricing/resolve.ts`:**
+  - `effectivePriceSql(buyerOrgId)` for queries that read `products`;
+  - `resolvePrices()` for a set of product IDs.
+  - The rule: the override in the price list of the buyer's *active*
+    connection, else the base price.
+  - The subquery references `"products"` by name, so don't alias `products`
+    in queries that embed it.
+- **Cross-supplier consistency is enforced by the database.**
+  - `price_list_items` and `supplier_customers.price_list_id` use composite
+    FKs that include `supplier_org_id`.
+  - So a row can't link one supplier's list to another supplier's product
+    or customer, even if app code is wrong.
+- **`supplier_customers` rows exist from invitation.**
+  - `buyer_org_id` is null until someone accepts.
+  - Status is `invited` → `active` on accept; `blocked` at any time.
+  - Blocking revokes open invitations. Unblocking restores `active`, or
+    `invited` if the customer never joined.
+- **Invitations:**
+  - 32 random bytes, base64url. Only the SHA-256 hash is stored.
+  - Valid 14 days and single use. A new link revokes older ones.
+  - The raw link is shown once, in the action result, and never put in our
+    own URLs.
+  - Every unusable token returns the same `unavailable`: forged, expired,
+    revoked, used, blocked customer, or non-active supplier.
+  - Acceptance locks the invitation row, so concurrent accepts can't both
+    win.
+  - A new user's buyer org is created and connected in one transaction
+    (`createOrganizationInTx`).
+- **Only `active` suppliers invite.** Pending suppliers can prepare price
+  lists; suspended suppliers are read-only.
+- **Buyers see a supplier only while** their connection is `active` *and*
+  the supplier is `active`. Only active products are shown. Otherwise the
+  answer is "not found".
+- **Invitation email** goes out directly from the action that creates the
+  invitation (`supplier/customers/actions.ts`), never through the outbox: the
+  text holds the raw token, which must not be persisted. A provider error is
+  caught and reported as "email not sent"; the link can still be copied.
+
+## Ordering specifics (milestone 4)
+
+- **Cart:** one per (buyer org, supplier org), persisted. Lines are quantities only; prices are always re-resolved when read (`domain/orders/cart.ts`).
+- **Submit** (`domain/orders/submit.ts`) is one transaction: lock the cart, re-check the connection and supplier status, re-resolve prices, then compare with `expected` (what the buyer reviewed). Any difference creates nothing and returns a `changed` diff, which checkout shows (formatted on the server) for the buyer to confirm again.
+- **Idempotency:** the checkout form generates a UUID key per page load; the key is unique per buyer org. A repeated key (or a lost race on the unique index) returns the existing order.
+- **Order numbers** come from `order_number_seq` (starts at 1001), shown as `GST-1001`. The sequence is created in migration `0006` and owned by `orders.number` in `0007`.
+- **Snapshots:** orders keep buyer/supplier names, currency, VAT mode and delivery address; items keep name, sku, unit, price and VAT rate.
+- **Transitions:** the table lives in `lib/orders/transitions.ts`; `domain/orders/transitions.ts` applies each with a conditional `UPDATE ... WHERE status = expected` and a history row in one transaction. Reject and supplier cancel need a reason; buyers cancel only while `pending`.
+- **Confirm** may change line quantities (0 = unavailable); totals are recomputed from the snapshot prices by `lib/orders/totals.ts` (per-line VAT).
+- **After-commit hook:** `domain/orders/hooks.ts` `afterOrderSubmitted` asks for immediate delivery of the order's notifications (milestone 5); the rows themselves are written in the transaction.
+- **`/o/<number>`** redirects to the viewer's own order page; 404 if they are on neither side, login redirect if signed out.
+- **Print:** the supplier order page prints cleanly (shell chrome has `print:hidden`).
+
+## Notifications specifics (milestone 5)
+
+- **Events** (`server/notifications/events.ts`): `recordOrderEvent(tx, ...)`
+  runs **inside** the transaction of the order change (`submitOrder` and
+  `applyTransition`), so a rollback leaves nothing. Who is told is decided by
+  the pure `lib/notifications/plan.ts`:
+  - submitted → all supplier members;
+  - confirmed / rejected / delivered → all buyer members;
+  - cancelled → the other side from whoever cancelled (a buyer cancelling
+    notifies the supplier);
+  - the actor is never notified; in-app is always on; email follows the
+    user's preference for the event's group (`new_orders` /
+    `order_updates`; no preference row = on).
+- **Dedupe:** unique `dedupe_key` on both tables, e.g.
+  `order:{id}:status:{status}:email:{userId}`. Replays insert nothing.
+- **Channels** (`server/notifications/channels/`): `Channel` has `enqueue`
+  (in the transaction, rows only) and optional `send` (outbox, later). In-app
+  and email implement it. A WhatsApp Business channel is **not** built:
+  `docs/whatsapp-business-api.md`.
+- **Outbox rows hold ids only** (`{event, orderId}`). The email is rendered at
+  send time from the persisted order (`lib/notifications/templates.ts`:
+  number, counterparty name, item count, total, `/o/<number>` link), and the
+  recipient address is read from `auth.users` then. Nothing secret is stored.
+- **Processing** (`server/notifications/process.ts`): claim = one `UPDATE ...
+  WHERE id IN (SELECT ... FOR UPDATE SKIP LOCKED LIMIT 50)` that pushes
+  `next_attempt_at` 5 minutes out (a lease) and counts the attempt; the send
+  happens outside any transaction. Failure → retry after 1, 5, 15, 60 minutes
+  (`lib/notifications/backoff.ts`), then `failed`. `after()` calls
+  `deliverAfterResponse(orderId)`; outside a request it quietly does nothing
+  and the cron picks the rows up.
+- **Cron:** `/api/cron/notifications` needs `Authorization: Bearer
+  $CRON_SECRET` (no secret configured = always 401). Scheduled every minute by
+  Supabase Cron via migration `0010` (URL and secret from Vault; README).
+- **Email:** Resend over HTTP (`server/notifications/email.ts`, no SDK). No
+  `RESEND_API_KEY` → `skipped` and `[DEV EMAIL]` log, never `sent`.
+- **WhatsApp** buttons (`components/orders/whatsapp-share.tsx`) use
+  `lib/whatsapp.ts`; copy says "send", never "sent"; nothing is stored.
+- **Bell:** `components/notifications/notification-bell.tsx`, rendered in
+  Suspense by `AppShell` for buyers and suppliers. The list lives at
+  `/buyer/notifications` and `/supplier/notifications` (shared view);
+  clicking a row marks it read and redirects to `/o/<number>`.
+
+## Launch specifics (milestone 6)
+
+- **Dashboards** compute from real rows only, with each number's definition
+  printed under it (`components/ui/stat-tile.tsx`). Supplier
+  (`domain/metrics/supplier.ts`): pending now; orders in the last 7 days vs the
+  7 before; confirmed + delivered **order value**, 30 days; top 5 products by
+  confirmed quantity; buyers with ≥2 orders in 30 days. Admin pilot metrics
+  (`domain/metrics/pilot.ts`): active supplier = received ≥1 order in 30 days;
+  active buyer = ordered in 14 days; weekly reorder rate = buyers in both of the
+  last two weeks ÷ buyers in the earlier week; a "week" is a rolling 7 days.
+  All take an injectable `now`, and the tests use a far-future `now` so only
+  their own fixture falls in the windows. Never call these numbers revenue.
+- **Buyer dashboard**: open orders, last 5 with order again, the 10 most-ordered
+  products (orders containing them; current prices, only what is still
+  orderable) with the cart stepper, connected suppliers.
+- **Admin support tools** see contact and status information, never price lists
+  or catalogs. Buyers are suspended/reactivated in `domain/admin/organizations.ts`
+  (suppliers keep `reviewSupplier`); the order lookup (`domain/admin/orders.ts`)
+  writes an `order.view` audit row in the same transaction as the read.
+  `ReviewPanel` takes the server action as a prop so both kinds share it.
+- **Rate limits** (`server/security/rate-limit.ts`, rules in `RATE_LIMITS`):
+  order submit 10/min/org (a repeated idempotency key doesn't count), invite
+  create or regenerate 30/h/supplier, invite accept 10/min/IP (hashed, in the
+  action: it knows the headers), image upload 30/h/supplier. Over the limit
+  throws `StateError("rate_limited")`; every UI maps that code. The cron route
+  prunes old windows.
+- **Suspended buyers can't submit** (`buyer_suspended`, read from the database,
+  not the request context).
+- **Headers** are static in `next.config.ts`. The CSP keeps `'unsafe-inline'`
+  for scripts and styles (Next's inline scripts; nonces would force dynamic
+  rendering of every page). Tighten it only together with a rendering change.
+- **Streamed not-found**: a guard that fails inside `<Suspense>` shows the
+  not-found page but the HTTP status is already 200. Tests assert the visible
+  heading, not the status. Don't rely on the status code for anything.
+- **Error boundaries**: `app/error.tsx` and one each under `buyer/`,
+  `supplier/`, `admin/` render `components/route-error.tsx`, so the shell
+  survives a failing page.
+- **Mobile**: tap targets ≥44px at phone width (`Button size="sm"` and the
+  filter pills grow below `md`); don't put `whitespace-nowrap` buttons with long
+  Georgian labels in narrow containers (the WhatsApp button wraps). The launch
+  e2e checks horizontal overflow and control heights at 360px.
+- **Contrast** is a unit test (`tests/unit/contrast.test.ts`) over the tokens in
+  `globals.css`, light and dark. Changing a colour token means the test tells
+  you whether it still passes AA. Text on a brand fill uses
+  `text-brand-foreground`, not white.
+- **Seed**: `scripts/seed-dev.ts` stubs `server-only` itself (the
+  `react-server` condition would break `next-intl`) and goes through the real
+  domain functions, so seeded data obeys every rule. The host check lives in
+  `scripts/seed-guard.ts` and is unit-tested.
+- **Playwright quirk**: a test title containing non-ASCII arrows (`→`) made
+  `setInputFiles` silently not fire React's change handler (the output folder
+  name carries the title). Keep e2e test titles ASCII.
+
+## Testing approach
+
+- **Integration tests use plain Postgres** with a stand-in `auth.users` and
+  the `anon`/`authenticated` roles, created by
+  `tests/integration/global-setup.ts`. They call domain functions directly,
+  passing a user ID.
+  - Guards and Server Actions need a Next.js request, so they are covered by
+    e2e instead.
+  - The stand-in has only the `auth.users` columns our code reads. If code
+    starts reading another column, add it there.
+- **`tests/integration/rls.test.ts` must keep passing:**
+  - every `public` table has RLS enabled;
+  - `anon`/`authenticated` see no rows and cannot write.
+- **E2E signs users in via the Supabase admin API** (`generateLink` → visit
+  `/auth/confirm?token_hash=…`). There's no inbox and no test-only route in
+  the app. Never add a test-only auth bypass to the app.
+- **Integration helpers** (`tests/integration/helpers.ts`): `createSupplier`,
+  `createBuyer`, `createAdmin`, `createTestCategory`, `createTestProduct`,
+  `connectBuyer` (invite + accept),
+  and `memoryStorage()`, an in-memory `ImageStorage`. Image processing
+  itself is always real `sharp`.
+- **E2E flows** (`tests/e2e/flows.ts`): admin with a category, supplier/buyer
+  onboarding, approval, product creation — all through the real UI.
+- **E2E file inputs:** wait for `networkidle` before `setInputFiles`, so
+  React has hydrated and attached its change handler.
+- **Test data** uses `[TEST]` / `[E2E]` name prefixes and `@test.gusto.ge`
+  emails.
 
 ## Working on this repo
 

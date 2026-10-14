@@ -41,7 +41,8 @@ categories.
      - base price, VAT rate (default 18%), min quantity, step.
    - Deactivate and reactivate. No hard delete.
 6. **Images.**
-   - Upload through a Server Action, accepting JPEG, PNG or WebP up to 5 MB.
+   - Upload through a Server Action, accepting JPEG, PNG or WebP up to 4 MB
+     (Vercel rejects function request bodies above 4.5 MB).
    - Check the file's actual type from its bytes, not its extension.
    - Re-encode with `sharp` to WebP, max 1200px. This also strips metadata.
    - Store in the `product-images` bucket at
