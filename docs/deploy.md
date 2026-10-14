@@ -33,8 +33,12 @@ openssl rand -hex 32
 - [ ] Dashboard → **New project**. Region **West EU (Frankfurt) / `eu-central-1`**.
       Strong database password (save it in your password manager).
 - [ ] Project Settings → **General**: note the **Reference ID** (`<ref>`).
-- [ ] Project Settings → **API**: copy the **Project URL**, the **anon /
-      publishable key** and the **service_role / secret key**.
+- [ ] Project Settings → **API**: copy the **Project URL**, the **anon** key and the
+      **service_role** key from the **Legacy API keys** tab (JWT-style, starting
+      with `eyJ`). The newer `sb_secret_...` key is not a JWT and the Auth admin
+      API, which Gusto uses to create allowed users, rejected it when tested
+      against local Supabase. Not yet checked against a hosted project, so if
+      Supabase retires the legacy keys, re-test before switching.
 - [ ] Project Settings → **Database → Connection string**. Copy two strings
       and substitute the password:
   - **Direct connection** (or Session pooler) → this is `DATABASE_URL_DIRECT`

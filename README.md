@@ -44,13 +44,16 @@ cp .env.example .env.local     # one file for the app, scripts and tests
 npx supabase start             # local Postgres + Auth + Studio + email catcher
 ```
 
-`supabase start` prints the local API URL and keys. Put them in `.env.local`:
+`supabase start` prints the local API URL and keys. Put them in `.env.local`.
+Newer CLI versions print `sb_publishable_` / `sb_secret_` keys; **don't use those**:
+the Auth admin API (used to create allowed users) refuses `sb_secret_` with
+"invalid JWT". Run `npx supabase status -o env` and use the `eyJ...` keys:
 
 | `.env.local` | From `supabase start` |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | API URL (`http://127.0.0.1:54321`) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon / publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | service_role / secret key |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `ANON_KEY` from `npx supabase status -o env` (`eyJ...`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | `SERVICE_ROLE_KEY` from `npx supabase status -o env` (the long `eyJ...` JWT) |
 | `DATABASE_URL`, `DATABASE_URL_DIRECT` | DB URL (`postgresql://postgres:postgres@127.0.0.1:54322/postgres`) |
 
 Then:
