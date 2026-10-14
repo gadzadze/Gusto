@@ -214,7 +214,14 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
   display edge via `Intl`. Never hardcode Tbilisi or GEL in logic. They are
   defaults on the org row, not constants.
 - **Phones:** E.164 via `libphonenumber-js`, default region `GE`. `wa.me` links
-  use digits only.
+  use digits only (`lib/whatsapp.ts`). Display with `formatPhone()`.
+- **Formatting happens on the server.** Money, quantities and dates are
+  formatted in Server Components or actions, and client components receive
+  strings.
+  - Browsers' Intl data varies (a test Chromium rendered "GEL 15.00"
+    instead of "15,00 ₾"), which also breaks hydration.
+  - Client components may *parse* input with `lib/money.ts` and
+    `lib/quantity.ts`, but must not format for display.
 - **IDs:** UUIDs. Human references are `GST-<number>`, and the number is
   never used for authorization.
 - **Deletes:** products and orgs are deactivated, not deleted. Order items keep
@@ -446,6 +453,45 @@ and the delivery row is marked `skipped`, not `sent`.
   and seeds run only against local Supabase (`supabase start`) or a dedicated
   dev project. The scripts check the host and refuse otherwise.
 
+## Customers and pricing specifics (milestone 3)
+
+- **Price resolution lives only in `server/domain/pricing/resolve.ts`:**
+  - `effectivePriceSql(buyerOrgId)` for queries that read `products`;
+  - `resolvePrices()` for a set of product IDs.
+  - The rule: the override in the price list of the buyer's *active*
+    connection, else the base price.
+  - The subquery references `"products"` by name, so don't alias `products`
+    in queries that embed it.
+- **Cross-supplier consistency is enforced by the database.**
+  - `price_list_items` and `supplier_customers.price_list_id` use composite
+    FKs that include `supplier_org_id`.
+  - So a row can't link one supplier's list to another supplier's product
+    or customer, even if app code is wrong.
+- **`supplier_customers` rows exist from invitation.**
+  - `buyer_org_id` is null until someone accepts.
+  - Status is `invited` → `active` on accept; `blocked` at any time.
+  - Blocking revokes open invitations. Unblocking restores `active`, or
+    `invited` if the customer never joined.
+- **Invitations:**
+  - 32 random bytes, base64url. Only the SHA-256 hash is stored.
+  - Valid 14 days and single use. A new link revokes older ones.
+  - The raw link is shown once, in the action result, and never put in our
+    own URLs.
+  - Every unusable token returns the same `unavailable`: forged, expired,
+    revoked, used, blocked customer, or non-active supplier.
+  - Acceptance locks the invitation row, so concurrent accepts can't both
+    win.
+  - A new user's buyer org is created and connected in one transaction
+    (`createOrganizationInTx`).
+- **Only `active` suppliers invite.** Pending suppliers can prepare price
+  lists; suspended suppliers are read-only.
+- **Buyers see a supplier only while** their connection is `active` *and*
+  the supplier is `active`. Only active products are shown. Otherwise the
+  answer is "not found".
+- **Email is not sent yet.** `server/notifications/email.ts` returns
+  `"skipped"` and logs `[DEV EMAIL]`; outside production it logs the body,
+  in production only the subject. The UI says email wasn't sent.
+
 ## Testing approach
 
 - **Integration tests use plain Postgres** with a stand-in `auth.users` and
@@ -464,8 +510,11 @@ and the delivery row is marked `skipped`, not `sent`.
   the app. Never add a test-only auth bypass to the app.
 - **Integration helpers** (`tests/integration/helpers.ts`): `createSupplier`,
   `createBuyer`, `createAdmin`, `createTestCategory`, `createTestProduct`,
+  `connectBuyer` (invite + accept),
   and `memoryStorage()`, an in-memory `ImageStorage`. Image processing
   itself is always real `sharp`.
+- **E2E flows** (`tests/e2e/flows.ts`): admin with a category, supplier/buyer
+  onboarding, approval, product creation — all through the real UI.
 - **E2E file inputs:** wait for `networkidle` before `setInputFiles`, so
   React has hydrated and attached its change handler.
 - **Test data** uses `[TEST]` / `[E2E]` name prefixes and `@test.gusto.ge`

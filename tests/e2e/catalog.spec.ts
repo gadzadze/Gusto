@@ -98,7 +98,7 @@ test("a buyer cannot open supplier catalog pages", async ({ page }) => {
   await signInAsNewUser(page, "buyer-catalog");
   await page.getByText("ვყიდულობ", { exact: true }).click();
   await page.getByLabel("ბიზნესის სახელი").fill("[E2E] Café");
-  await page.getByLabel("ბიზნესის ტიპი").selectOption("cafe");
+  await page.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("cafe");
   await page.getByLabel("საკონტაქტო პირი").fill("Nino");
   await page.getByLabel("ტელეფონი").fill("555 12 34 56");
   await page.getByLabel("ქალაქი").fill("თბილისი");

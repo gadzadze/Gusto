@@ -29,6 +29,20 @@
       "when": 1791969226476,
       "tag": "0003_catalog_rls_storage",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791971109949,
+      "tag": "0004_customers_pricing",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791971111100,
+      "tag": "0005_customers_pricing_rls",
+      "breakpoints": true
     }
   ]
 }

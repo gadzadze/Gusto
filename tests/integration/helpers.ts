@@ -105,3 +105,20 @@ export function memoryStorage(): ImageStorage & { files: Map<string, Buffer>; re
     },
   };
 }
+
+/** Invites `buyer` as a customer of `supplier` (optionally on a price list) and accepts. */
+export async function connectBuyer(
+  supplier: SupplierCtx,
+  buyer: OrgCtx,
+  priceListId: string | null = null,
+): Promise<{ customerId: string }> {
+  const { createCustomer } = await import("@/server/domain/customers/customers");
+  const { acceptInvitationAsBuyer } = await import("@/server/domain/customers/invitations");
+  const { customerSchema } = await import("@/lib/validation/customer");
+  const { customerId, token } = await createCustomer(
+    supplier,
+    customerSchema.parse({ businessName: "[TEST] Customer", phone: "555123456", priceListId: priceListId ?? "" }),
+  );
+  await acceptInvitationAsBuyer(buyer, token);
+  return { customerId };
+}

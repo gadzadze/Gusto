@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { parseUnit } from "@/lib/catalog/units";
+import { parseMoneyInput } from "@/lib/money";
 import { toValidationKey } from "@/lib/validation/form-errors";
 import { NEW_PRODUCT_DEFAULTS, productSchema, type ProductInput, type ProductValues } from "@/lib/validation/product";
 
@@ -175,4 +176,41 @@ export function parseImportRow(
 /** Required fields that have no column assigned. */
 export function missingRequiredFields(mapping: ImportMapping): ImportField[] {
   return REQUIRED_IMPORT_FIELDS.filter((f) => !mapping[f]);
+}
+
+// ── Price list overrides: SKU + price only ──────────────────────────────────
+
+export const PRICE_IMPORT_FIELDS = ["sku", "price"] as const;
+export type PriceImportField = (typeof PRICE_IMPORT_FIELDS)[number];
+export type PriceImportMapping = Partial<Record<PriceImportField, string>>;
+
+export const priceImportMappingSchema = z.object({
+  sku: z.string().max(200).optional(),
+  price: z.string().max(200).optional(),
+});
+
+export function guessPriceMapping(headers: string[]): PriceImportMapping {
+  const all = guessMapping(headers);
+  return { sku: all.sku, price: all.price };
+}
+
+export type PriceRow =
+  | { ok: true; sku: string; priceMinor: number }
+  | { ok: false; sku: string; errors: { field: PriceImportField; key: "required" | "invalid_price" }[] };
+
+export function parsePriceRow(row: readonly string[], headers: readonly string[], mapping: PriceImportMapping): PriceRow {
+  const cell = (field: PriceImportField) => {
+    const header = mapping[field];
+    const index = header ? headers.indexOf(header) : -1;
+    return index >= 0 ? (row[index] ?? "").trim() : "";
+  };
+  const sku = cell("sku");
+  const priceText = cell("price");
+  const errors: { field: PriceImportField; key: "required" | "invalid_price" }[] = [];
+  if (!sku) errors.push({ field: "sku", key: "required" });
+  const priceMinor = priceText ? parseMoneyInput(priceText) : null;
+  if (!priceText) errors.push({ field: "price", key: "required" });
+  else if (priceMinor === null) errors.push({ field: "price", key: "invalid_price" });
+  if (errors.length > 0 || priceMinor === null) return { ok: false, sku, errors };
+  return { ok: true, sku, priceMinor };
 }

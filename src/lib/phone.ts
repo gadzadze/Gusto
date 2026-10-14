@@ -10,3 +10,8 @@ export function normalizePhone(input: string, defaultCountry: CountryCode = "GE"
   if (!parsed || !parsed.isValid()) return null;
   return parsed.number;
 }
+
+/** E.164 → readable international format ("+995 599 00 00 00"); unchanged if unparseable. */
+export function formatPhone(e164: string): string {
+  return parsePhoneNumberFromString(e164)?.formatInternational() ?? e164;
+}

@@ -3,13 +3,16 @@ import {
   bigint,
   boolean,
   check,
+  foreignKey,
   index,
   integer,
   jsonb,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
@@ -29,6 +32,7 @@ const timestamps = {
 export const orgType = pgEnum("org_type", ["buyer", "supplier"]);
 export const orgStatus = pgEnum("org_status", ["pending_review", "active", "suspended"]);
 export const membershipRole = pgEnum("membership_role", ["owner", "member"]);
+export const customerStatus = pgEnum("customer_status", ["invited", "active", "blocked"]);
 export const productUnit = pgEnum("product_unit", [
   "piece",
   "kg",
@@ -202,6 +206,8 @@ export const products = pgTable(
     uniqueIndex("products_supplier_sku_key")
       .on(t.supplierOrgId, t.sku)
       .where(sql`${t.sku} is not null`),
+    // Target for composite FKs that pin rows to the product's own supplier.
+    unique("products_id_supplier_key").on(t.id, t.supplierOrgId),
     index("products_supplier_active_idx").on(t.supplierOrgId, t.isActive),
     index("products_category_idx").on(t.categoryId),
     index("products_search_trgm_idx").using("gin", sql`${t.searchText} extensions.gin_trgm_ops`),
@@ -209,6 +215,116 @@ export const products = pgTable(
     check("products_min_qty_positive", sql`${t.minQtyMilli} > 0`),
     check("products_qty_step_positive", sql`${t.qtyStepMilli} > 0`),
     check("products_vat_range", sql`${t.vatRateBp} between 0 and 10000`),
+  ],
+);
+
+export const priceLists = pgTable(
+  "price_lists",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    supplierOrgId: uuid("supplier_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    // Pre-selected for new customers. Customers without a list pay base prices.
+    isDefault: boolean("is_default").notNull().default(false),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("price_lists_supplier_name_key").on(t.supplierOrgId, sql`lower(${t.name})`),
+    uniqueIndex("price_lists_one_default_per_supplier")
+      .on(t.supplierOrgId)
+      .where(sql`${t.isDefault}`),
+    unique("price_lists_id_supplier_key").on(t.id, t.supplierOrgId),
+  ],
+);
+
+export const priceListItems = pgTable(
+  "price_list_items",
+  {
+    priceListId: uuid("price_list_id").notNull(),
+    productId: uuid("product_id").notNull(),
+    // Denormalized so the composite FKs below can require the list and the
+    // product to belong to the same supplier.
+    supplierOrgId: uuid("supplier_org_id").notNull(),
+    priceMinor: bigint("price_minor", { mode: "number" }).notNull(),
+    updatedAt: timestamps.updatedAt,
+  },
+  (t) => [
+    primaryKey({ columns: [t.priceListId, t.productId] }),
+    foreignKey({
+      name: "price_list_items_list_fk",
+      columns: [t.priceListId, t.supplierOrgId],
+      foreignColumns: [priceLists.id, priceLists.supplierOrgId],
+    }).onDelete("cascade"),
+    foreignKey({
+      name: "price_list_items_product_fk",
+      columns: [t.productId, t.supplierOrgId],
+      foreignColumns: [products.id, products.supplierOrgId],
+    }).onDelete("cascade"),
+    index("price_list_items_product_idx").on(t.productId),
+    check("price_list_items_price_nonneg", sql`${t.priceMinor} >= 0`),
+  ],
+);
+
+export const supplierCustomers = pgTable(
+  "supplier_customers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    supplierOrgId: uuid("supplier_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    // Set when the invitation is accepted; null while only invited.
+    buyerOrgId: uuid("buyer_org_id").references(() => organizations.id, { onDelete: "cascade" }),
+    status: customerStatus("status").notNull().default("invited"),
+    // What the supplier entered (their name for this customer, the contact
+    // the invitation goes to). Not shown to other suppliers.
+    businessName: text("business_name").notNull(),
+    contactName: text("contact_name"),
+    contactPhone: text("contact_phone"),
+    contactEmail: text("contact_email"),
+    // Null = base prices. Must be one of this supplier's lists (composite FK).
+    priceListId: uuid("price_list_id"),
+    connectedAt: timestamp("connected_at", { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("supplier_customers_supplier_buyer_key")
+      .on(t.supplierOrgId, t.buyerOrgId)
+      .where(sql`${t.buyerOrgId} is not null`),
+    index("supplier_customers_buyer_idx").on(t.buyerOrgId, t.status),
+    index("supplier_customers_supplier_idx").on(t.supplierOrgId, t.status),
+    foreignKey({
+      name: "supplier_customers_price_list_fk",
+      columns: [t.priceListId, t.supplierOrgId],
+      foreignColumns: [priceLists.id, priceLists.supplierOrgId],
+    }),
+    check(
+      "supplier_customers_active_has_buyer",
+      sql`${t.status} <> 'active' or ${t.buyerOrgId} is not null`,
+    ),
+  ],
+);
+
+export const invitations = pgTable(
+  "invitations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    supplierCustomerId: uuid("supplier_customer_id")
+      .notNull()
+      .references(() => supplierCustomers.id, { onDelete: "cascade" }),
+    // SHA-256 of the token; the token itself is never stored.
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    acceptedByUserId: uuid("accepted_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    uniqueIndex("invitations_token_hash_key").on(t.tokenHash),
+    index("invitations_customer_idx").on(t.supplierCustomerId),
   ],
 );
 
@@ -238,4 +354,8 @@ export type OrgStatus = (typeof orgStatus.enumValues)[number];
 export type MembershipRole = (typeof membershipRole.enumValues)[number];
 export type Category = typeof categories.$inferSelect;
 export type Product = typeof products.$inferSelect;
+export type PriceList = typeof priceLists.$inferSelect;
+export type SupplierCustomer = typeof supplierCustomers.$inferSelect;
+export type Invitation = typeof invitations.$inferSelect;
+export type CustomerStatus = (typeof customerStatus.enumValues)[number];
 export type BuyerBusinessType = (typeof buyerBusinessType.enumValues)[number];

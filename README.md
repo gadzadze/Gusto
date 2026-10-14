@@ -6,12 +6,17 @@ existing customers on Gusto, and those customers reorder in a few taps.
 - Product scope, conventions and the security model: [`CLAUDE.md`](CLAUDE.md)
 - Build plan: [`docs/milestones/`](docs/milestones/README.md)
 
-**Status:** milestones 1–2.
+**Status:** milestones 1–3.
 - Sign-in and onboarding as a buyer or supplier, with role-guarded areas.
 - Suppliers build a catalog: products, photos, CSV/XLSX import, order
   terms.
 - Admins approve or suspend suppliers and manage categories. All admin
   actions are audited.
+- Approved suppliers invite their existing customers with a single-use link
+  (copy, or send via WhatsApp) and assign per-customer price lists.
+- Buyers join from the link, browse their suppliers' catalogs at their own
+  prices, and search across suppliers in Georgian or Latin letters.
+- Invitation emails are not sent yet (milestone 5); the UI says so.
 
 ## Stack
 

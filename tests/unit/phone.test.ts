@@ -22,3 +22,11 @@ describe("normalizePhone", () => {
     expect(normalizePhone("")).toBeNull();
   });
 });
+
+describe("formatPhone", () => {
+  it("formats E.164 for display and leaves junk alone", async () => {
+    const { formatPhone } = await import("@/lib/phone");
+    expect(formatPhone("+995599000000")).toBe("+995 599 00 00 00");
+    expect(formatPhone("not a phone")).toBe("not a phone");
+  });
+});
