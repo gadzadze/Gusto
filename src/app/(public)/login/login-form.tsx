@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { sendMagicLink, signInWithGoogle, type MagicLinkState } from "./actions";
 
-export type LoginError = "auth" | null;
+export type LoginError = "auth" | "not_allowed" | null;
 
 export function LoginForm({ next, error }: { next: string | null; error: LoginError }) {
   const t = useTranslations("login");

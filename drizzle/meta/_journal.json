@@ -92,6 +92,20 @@
       "when": 1791985579330,
       "tag": "0012_rate_limits_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792002432470,
+      "tag": "0013_allowed_emails",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792002433477,
+      "tag": "0014_allowed_emails_rls_backfill",
+      "breakpoints": true
     }
   ]
 }

@@ -81,7 +81,8 @@ run `npx supabase init` in a scratch folder and copy those settings over.
 | `npm run test:e2e` | Playwright against a production build + real Supabase |
 | `npm run db:generate` | Generate a migration from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations (uses `DATABASE_URL_DIRECT`) |
-| `npm run admin:grant -- <email>` | Make an existing user a platform admin |
+| `npm run admin:grant -- <email>` | Make an address a platform admin (also allows it to sign in) |
+| `npm run user:allow -- <email>` | Let an address sign in (invite-only app); optional `--note "text"` |
 | `npm run db:seed` | Fill a **local** database with `[DEMO]` data (refuses anything else) |
 | `npm run check:secrets` | After `npm run build`: fail if a server secret is in the client bundle |
 
@@ -229,10 +230,46 @@ order.
 - **WhatsApp** is user-sent only. A future Business API channel is sketched in
   [`docs/whatsapp-business-api.md`](docs/whatsapp-business-api.md).
 
+## Access: sign-in is invite-only
+
+Nobody can register themselves, which keeps spam out. An email address can
+request a sign-in link only if:
+
+1. it is on the **allow-list** (admin page `/admin/access`, or
+   `npm run user:allow -- someone@example.com --note "Winiveria, owner"`); or
+2. the person is following a valid **supplier invitation link** (the single-use
+   link is the permission, so a WhatsApp-only invitation works); or
+3. a supplier addressed a valid invitation to that email.
+
+Revoking an address (admin page) blocks it, even if an invitation would
+otherwise let it in. Everything else gets "this address isn't registered" and
+no email, and no account is created.
+
+- **Roles are separate.** Being allowed to sign in gives no role. The person
+  onboards as buyer or supplier, and a supplier still waits for your approval at
+  `/admin/suppliers`.
+- **Where it is enforced:** the sign-in form checks the list before anything
+  happens; the sign-in return routes (`/auth/confirm`, `/auth/callback`) check
+  again and sign the person out if they are not allowed (this covers Google); and
+  Supabase itself has **sign-ups switched off**, so it only has the users the app
+  or its scripts created. Local Supabase gets this from `supabase/config.toml`.
+  On a hosted project, switch it off yourself: Authentication → Sign In / Providers →
+  turn off **Allow new users to sign up**.
+- **Existing accounts** at the time this was introduced were added to the list by
+  migration `0014`, so nobody was locked out.
+- **First admin:** `npm run admin:grant -- you@example.com` now also puts the
+  address on the list and creates its auth user, so you do not have to sign in
+  first. It needs `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in
+  `.env.local` (the project it should act on).
+- Link requests are rate limited to 10 per minute per IP.
+
+There are no passwords. A business's "credential" is its email address: it
+requests a link on the sign-in page and opens it.
+
 ## First-run setup in the app
 
 Suppliers can't add products until at least one category exists:
-1. Grant yourself admin (below).
+1. Grant yourself admin (below). Everyone else needs an invitation or an entry on `/admin/access`.
 2. Add categories at `/admin/categories`.
 3. Approve new suppliers at `/admin/suppliers`.
 
@@ -255,8 +292,8 @@ a Tbilisi restaurant, a café, a beverage distributor and a food distributor,
 ## Platform admins
 
 There is no admin sign-up.
-1. The person signs in once, normally.
-2. Someone with database access runs:
+1. Someone with database access runs (this also lets the address sign in, so the
+   person does not need to sign in first):
 
    ```bash
    npm run admin:grant -- person@example.com
@@ -264,7 +301,7 @@ There is no admin sign-up.
 
    This uses `DATABASE_URL_DIRECT` from `.env.local` (or `.env`), and prints
    the database host so you can confirm you targeted the right one.
-3. The grant is recorded in `audit_logs`.
+2. The grant is recorded in `audit_logs`.
 
 ## Security measures
 

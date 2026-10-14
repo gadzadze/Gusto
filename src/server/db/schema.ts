@@ -542,6 +542,26 @@ export const rateLimits = pgTable(
   (t) => [primaryKey({ columns: [t.key, t.windowStart] }), index("rate_limits_window_idx").on(t.windowStart)],
 );
 
+// Sign-in is invite-only: an address must be on this list, or hold a valid
+// invitation, before it can get a sign-in link (server/auth/allow-list.ts).
+// Rows are never deleted: revoking sets `revoked_at`, which also blocks an
+// address that would otherwise be let in by an invitation.
+export const allowedEmails = pgTable(
+  "allowed_emails",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Always stored lowercase and trimmed.
+    email: text("email").notNull(),
+    note: text("note"),
+    createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    // Who, when it was a script rather than a signed-in admin.
+    createdByLabel: text("created_by_label"),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [uniqueIndex("allowed_emails_email_key").on(t.email), check("allowed_emails_lowercase", sql`${t.email} = lower(btrim(${t.email}))`)],
+);
+
 export const auditLogs = pgTable(
   "audit_logs",
   {
@@ -579,3 +599,4 @@ export type BuyerBusinessType = (typeof buyerBusinessType.enumValues)[number];
 export type Notification = typeof notifications.$inferSelect;
 export type NotificationEvent = (typeof notificationEvent.enumValues)[number];
 export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;
+export type AllowedEmail = typeof allowedEmails.$inferSelect;

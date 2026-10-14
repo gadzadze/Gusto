@@ -124,6 +124,15 @@ real need appears).
    Handler requires `Authorization: Bearer $CRON_SECRET`.
 10. Never log tokens, magic links, invite URLs, cookies or full request
     bodies.
+11. **Sign-in is invite-only.** Nobody registers themselves. An address may get a
+    sign-in link only if it is on `allowed_emails` (not revoked), or follows a
+    valid invitation link, or holds a valid invitation addressed to it
+    (`server/auth/allow-list.ts`). Supabase sign-ups are switched off, so the
+    app creates auth users itself (`server/supabase/admin.ts`) for allowed
+    addresses only. `completeSignIn` re-checks and signs out anyone not
+    allowed, which is the only gate for Google. A revoked row beats an
+    invitation. Admins manage the list at `/admin/access`; scripts use
+    `npm run user:allow`. Being allowed gives no role.
 
 ## Domain model
 
@@ -175,6 +184,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `notification_deliveries`: the outbox. Channel, recipient, payload,
   `status`, `attempts`, `next_attempt_at`, `last_error`, unique `dedupe_key`.
 - `audit_logs`: admin and security-relevant actions.
+- `allowed_emails`: the sign-in allow-list (lowercase email, note, `revoked_at`); never deleted from.
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
@@ -341,7 +351,8 @@ rules, so the same rule is never written twice.
 | `npm run build` | Production build; must pass with **no** env vars set (CI does this) |
 | `npm run db:generate` | Generate SQL from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL_DIRECT` |
-| `npm run admin:grant -- <email>` | Make an existing user a platform admin (audited) |
+| `npm run admin:grant -- <email>` | Make an address a platform admin; also allows it to sign in (audited) |
+| `npm run user:allow -- <email>` | Allow an address to sign in (invite-only app) |
 | `npm run db:seed` | `[DEMO]` data into a **local** database; refuses any other host |
 | `npm run check:secrets` | After a build: fail if a server secret is in `.next/static` |
 
@@ -618,7 +629,7 @@ and the delivery row is marked `skipped`, not `sent`.
 - **`tests/integration/rls.test.ts` must keep passing:**
   - every `public` table has RLS enabled;
   - `anon`/`authenticated` see no rows and cannot write.
-- **E2E signs users in via the Supabase admin API** (`generateLink` → visit
+- **E2E signs users in via the Supabase admin API** (after putting the address on `allowed_emails`, since sign-in is invite-only) (`generateLink` → visit
   `/auth/confirm?token_hash=…`). There's no inbox and no test-only route in
   the app. Never add a test-only auth bypass to the app.
 - **Integration helpers** (`tests/integration/helpers.ts`): `createSupplier`,

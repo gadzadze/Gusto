@@ -1,6 +1,7 @@
 import {
   BadgePercent,
   Building2,
+  KeyRound,
   ClipboardList,
   FileSearch,
   ScrollText,
@@ -36,7 +37,8 @@ export type NavItem = {
     | "cart"
     | "organizations"
     | "orderLookup"
-    | "audit";
+    | "audit"
+    | "access";
   icon: LucideIcon;
 };
 
@@ -63,6 +65,7 @@ export const NAV_ITEMS: Record<Area, NavItem[]> = {
     { href: "/admin/suppliers", labelKey: "suppliers", icon: Store },
     { href: "/admin/organizations", labelKey: "organizations", icon: Building2 },
     { href: "/admin/orders", labelKey: "orderLookup", icon: FileSearch },
+    { href: "/admin/access", labelKey: "access", icon: KeyRound },
     { href: "/admin/audit", labelKey: "audit", icon: ScrollText },
     { href: "/admin/categories", labelKey: "categories", icon: Tags },
   ],

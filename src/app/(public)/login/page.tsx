@@ -32,7 +32,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 async function LoginFormFromParams({ searchParams }: Pick<PageProps<"/login">, "searchParams">) {
   const params = await searchParams;
   const next = safeNextPath(params.next);
-  const error: LoginError = params.error === "auth" ? "auth" : null;
+  const error: LoginError = params.error === "auth" ? "auth" : params.error === "not_allowed" ? "not_allowed" : null;
   return <LoginForm next={next} error={error} />;
 }
 

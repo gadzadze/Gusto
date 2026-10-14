@@ -17,6 +17,8 @@ export const RATE_LIMITS = {
   inviteCreate: { name: "invite_create", limit: 30, windowSeconds: 3600 },
   /** Invite acceptance: 10 per minute per client IP. */
   inviteAccept: { name: "invite_accept", limit: 10, windowSeconds: 60 },
+  /** Sign-in link requests: 10 per minute per client IP (stored hashed). */
+  signInRequest: { name: "sign_in_request", limit: 10, windowSeconds: 60 },
   /** Product image upload: 30 per hour per supplier. */
   imageUpload: { name: "image_upload", limit: 30, windowSeconds: 3600 },
 } as const;

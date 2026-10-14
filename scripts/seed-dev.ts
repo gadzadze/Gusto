@@ -101,6 +101,8 @@ async function main() {
       const rows = await db.execute<{ id: string }>(
         sql`insert into auth.users (id, email) values (${randomUUID()}, ${email}) returning id`,
       );
+      // Sign-in is invite-only; the demo users are on the list like anyone else.
+      await db.execute(sql`insert into allowed_emails (email, note, created_by_label) values (${email}, 'demo user', 'seed') on conflict (email) do nothing`);
       return { id: rows[0].id, email };
     };
 
