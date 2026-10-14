@@ -1,10 +1,12 @@
 import {
   BadgePercent,
+  ClipboardList,
   LayoutDashboard,
   Package,
   Settings,
   Search,
   ShieldCheck,
+  ShoppingCart,
   Store,
   Tags,
   Users,
@@ -26,7 +28,9 @@ export type NavItem = {
     | "categories"
     | "customers"
     | "pricing"
-    | "search";
+    | "search"
+    | "orders"
+    | "cart";
   icon: LucideIcon;
 };
 
@@ -36,10 +40,13 @@ export const NAV_ITEMS: Record<Area, NavItem[]> = {
   buyer: [
     { href: "/buyer", labelKey: "dashboard", icon: LayoutDashboard },
     { href: "/buyer/suppliers", labelKey: "suppliers", icon: Store },
+    { href: "/buyer/cart", labelKey: "cart", icon: ShoppingCart },
+    { href: "/buyer/orders", labelKey: "orders", icon: ClipboardList },
     { href: "/buyer/search", labelKey: "search", icon: Search },
   ],
   supplier: [
     { href: "/supplier", labelKey: "dashboard", icon: LayoutDashboard },
+    { href: "/supplier/orders", labelKey: "orders", icon: ClipboardList },
     { href: "/supplier/products", labelKey: "products", icon: Package },
     { href: "/supplier/customers", labelKey: "customers", icon: Users },
     { href: "/supplier/pricing", labelKey: "pricing", icon: BadgePercent },

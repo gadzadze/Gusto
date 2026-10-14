@@ -25,8 +25,8 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, ch
   const navProps = { area, homeHref, showAdminLink };
 
   return (
-    <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr]">
-      <aside className="hidden border-r border-border bg-surface-2 md:flex md:min-h-dvh md:flex-col">
+    <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
+      <aside className="hidden border-r border-border bg-surface-2 md:flex md:min-h-dvh md:flex-col print:!hidden">
         <div className="px-5 pb-4 pt-5">
           <Logo />
         </div>
@@ -44,14 +44,14 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, ch
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden">
+        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden print:hidden">
           <div className="flex min-w-0 items-center gap-3">
             <Logo className="text-base" />
             {title ? <span className="truncate text-sm text-muted-foreground">{title}</span> : null}
           </div>
           <SignOutButton label={t("nav.signOut")} compact />
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8">
+        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
           {children}
         </main>
       </div>

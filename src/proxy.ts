@@ -8,7 +8,7 @@ import { NextResponse, type NextRequest } from "next/server";
 // This is a convenience, not the security boundary: every page, Server Action
 // and Route Handler still calls a guard from src/server/auth/guards.ts.
 
-const PROTECTED_PREFIXES = ["/buyer", "/supplier", "/admin", "/onboarding"];
+const PROTECTED_PREFIXES = ["/buyer", "/supplier", "/admin", "/onboarding", "/o"];
 
 function isProtected(pathname: string): boolean {
   return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));

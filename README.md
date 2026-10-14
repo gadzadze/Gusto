@@ -6,7 +6,7 @@ existing customers on Gusto, and those customers reorder in a few taps.
 - Product scope, conventions and the security model: [`CLAUDE.md`](CLAUDE.md)
 - Build plan: [`docs/milestones/`](docs/milestones/README.md)
 
-**Status:** milestones 1–3.
+**Status:** milestones 1–4.
 - Sign-in and onboarding as a buyer or supplier, with role-guarded areas.
 - Suppliers build a catalog: products, photos, CSV/XLSX import, order
   terms.

@@ -16,6 +16,8 @@ import { formatPhone } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { requireBuyer } from "@/server/auth/guards";
 import { getConnectedSupplier, listBuyerCatalog } from "@/server/domain/buyer/catalog";
+import { getCart } from "@/server/domain/orders/cart";
+import { ShoppingCart } from "lucide-react";
 import { NotFoundError } from "@/server/domain/errors";
 
 export default async function SupplierCatalogPage(props: PageProps<"/buyer/suppliers/[id]">) {
@@ -55,7 +57,9 @@ async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id
   };
   const supplier = await getConnectedSupplier(ctx, id).catch(notFoundOn404);
   const catalog = await listBuyerCatalog(ctx, id, { q, categoryId, page }).catch(notFoundOn404);
-  const views = await toProductViews(catalog.items, supplier);
+  const cart = await getCart(ctx, id);
+  const views = await toProductViews(catalog.items, supplier, new Map(cart.lines.map((l) => [l.productId, l.qtyMilli])));
+  const tcart = await getTranslations("cart");
 
   const filterHref = (category: string) => {
     const search = new URLSearchParams();
@@ -143,6 +147,22 @@ async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id
           />
         </>
       )}
+
+      {cart.lines.length > 0 ? (
+        // Above the mobile bottom nav; plain block at the end on desktop.
+        <div className="sticky bottom-20 z-20 md:bottom-4">
+          <Link
+            href={`/buyer/checkout/${id}`}
+            className="flex items-center justify-between gap-3 rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-lg"
+          >
+            <span className="flex items-center gap-2">
+              <ShoppingCart aria-hidden className="size-4" />
+              {tcart("bar", { count: cart.lines.length, total: formatMoney(cart.totals.totalMinor, supplier.currency) })}
+            </span>
+            <span>{tcart("checkout")}</span>
+          </Link>
+        </div>
+      ) : null}
     </div>
   );
 }

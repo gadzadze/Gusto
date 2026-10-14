@@ -40,3 +40,14 @@ export function isOrderableQuantity(qtyMilli: number, minMilli: number, stepMill
   if (!Number.isSafeInteger(qtyMilli) || qtyMilli < minMilli || stepMilli <= 0) return false;
   return (qtyMilli - minMilli) % stepMilli === 0;
 }
+
+/** Next quantity up for a stepper: from nothing to the minimum, then by step. */
+export function stepUp(qtyMilli: number, minMilli: number, stepMilli: number): number {
+  return qtyMilli < minMilli ? minMilli : qtyMilli + stepMilli;
+}
+
+/** Next quantity down: by step, and below the minimum means removed (0). */
+export function stepDown(qtyMilli: number, minMilli: number, stepMilli: number): number {
+  const next = qtyMilli - stepMilli;
+  return next < minMilli ? 0 : next;
+}

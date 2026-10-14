@@ -68,14 +68,14 @@ test("a supplier invites a customer on a custom price list; the buyer joins and 
 
   await expect(buyer).toHaveURL(/\/buyer\/suppliers\/[0-9a-f-]{36}$/);
   await expect(buyer.getByRole("heading", { name: supplierName })).toBeVisible();
-  const card = buyer.getByRole("button", { name: /ყველი სულგუნი/ });
+  const card = buyer.getByRole("button", { name: /^ყველი სულგუნი/ });
   await expect(card).toContainText("15,00");
   await expect(card).not.toContainText("18,50");
   const supplierUrl = new URL(buyer.url()).pathname;
 
   // Search across suppliers in Latin letters.
   await buyer.goto("/buyer/search?q=sulguni");
-  await expect(buyer.getByRole("button", { name: /ყველი სულგუნი/ })).toContainText("15,00");
+  await expect(buyer.getByRole("button", { name: /^ყველი სულგუნი/ })).toContainText("15,00");
 
   // The supplier sees the connection.
   await supplier.goto("/supplier/customers");

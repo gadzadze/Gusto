@@ -10,6 +10,11 @@ import type { BuyerProduct } from "@/server/domain/buyer/catalog";
 
 export type ProductView = {
   id: string;
+  supplierOrgId: string;
+  minQtyMilli: number;
+  qtyStepMilli: number;
+  /** Already in the buyer's cart (0 = not in cart). */
+  cartQtyMilli: number;
   name: string;
   description: string | null;
   brand: string | null;
@@ -24,7 +29,8 @@ export type ProductView = {
 
 export async function toProductViews(
   products: BuyerProduct[],
-  supplier: { currency: string; pricesIncludeVat: boolean },
+  supplier: { id: string; currency: string; pricesIncludeVat: boolean },
+  cart: ReadonlyMap<string, number> = new Map(),
 ): Promise<ProductView[]> {
   const t = await getTranslations("buyer");
   const tu = await getTranslations("units");
@@ -32,6 +38,10 @@ export async function toProductViews(
     const unit = tu(p.unit);
     return {
       id: p.id,
+      supplierOrgId: supplier.id,
+      minQtyMilli: p.minQtyMilli,
+      qtyStepMilli: p.qtyStepMilli,
+      cartQtyMilli: cart.get(p.id) ?? 0,
       name: p.name,
       description: p.description,
       brand: p.brand,

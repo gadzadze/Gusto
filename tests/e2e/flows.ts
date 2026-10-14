@@ -59,3 +59,25 @@ export async function createProduct(
   await page.getByRole("button", { name: "პროდუქტის დამატება" }).click();
   await expect(page.getByText("პროდუქტი დაემატა")).toBeVisible();
 }
+
+/** Supplier invites a customer; returns the invite path. */
+export async function inviteCustomer(supplier: Page, businessName: string): Promise<string> {
+  await supplier.goto("/supplier/customers/new");
+  await supplier.waitForLoadState("networkidle");
+  await supplier.getByLabel("ბიზნესის სახელი").fill(businessName);
+  await supplier.getByLabel("ტელეფონი (WhatsApp)").fill("555 98 76 54");
+  await supplier.getByRole("button", { name: "დამატება და ბმულის შექმნა" }).click();
+  await expect(supplier.getByText("მოწვევის ბმული მზადაა")).toBeVisible();
+  return new URL(await supplier.getByRole("textbox", { name: "მოწვევის ბმული მზადაა" }).inputValue()).pathname;
+}
+
+/** A signed-in user without an org accepts an invite through the short onboarding. */
+export async function acceptInviteAsNewBuyer(buyer: Page, invitePath: string): Promise<void> {
+  await buyer.goto(invitePath);
+  await buyer.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("restaurant");
+  await buyer.getByLabel("საკონტაქტო პირი").fill("Levan");
+  await buyer.getByLabel("ქალაქი").fill("თბილისი");
+  await buyer.getByLabel("მიწოდების მისამართი").fill("ვაჟა-ფშაველას 10");
+  await buyer.getByRole("button", { name: "დაკავშირება" }).click();
+  await expect(buyer).toHaveURL(/\/buyer\/suppliers\/[0-9a-f-]{36}$/);
+}

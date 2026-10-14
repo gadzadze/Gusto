@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
 import { ProductImage } from "@/components/catalog/product-image";
+import { QuantityStepper } from "@/components/orders/quantity-stepper";
 import { Button } from "@/components/ui/button";
 import type { ProductView } from "./product-view";
 
@@ -21,21 +22,33 @@ export function ProductCard({ product }: { product: ProductView }) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => dialog.current?.showModal()}
-        className="flex w-full items-center gap-3 rounded-xl border border-border p-3 text-left transition-colors hover:bg-muted/50"
-      >
-        <ProductImage path={product.imagePath} alt="" size={64} />
-        <span className="min-w-0 flex-1">
-          <span className="block font-medium leading-snug">{product.name}</span>
-          {product.packDescription ? (
-            <span className="block text-sm text-muted-foreground">{product.packDescription}</span>
-          ) : null}
-          <span className="mt-1 block text-sm">{price}</span>
-          {hints.length ? <span className="block text-xs text-muted-foreground">{hints.join(" · ")}</span> : null}
-        </span>
-      </button>
+      <div className="flex flex-col gap-2 rounded-xl border border-border p-3">
+        <button
+          type="button"
+          onClick={() => dialog.current?.showModal()}
+          className="flex w-full items-center gap-3 rounded-md text-left transition-colors hover:bg-muted/50"
+        >
+          <ProductImage path={product.imagePath} alt="" size={64} />
+          <span className="min-w-0 flex-1">
+            <span className="block font-medium leading-snug">{product.name}</span>
+            {product.packDescription ? (
+              <span className="block text-sm text-muted-foreground">{product.packDescription}</span>
+            ) : null}
+            <span className="mt-1 block text-sm">{price}</span>
+            {hints.length ? <span className="block text-xs text-muted-foreground">{hints.join(" · ")}</span> : null}
+          </span>
+        </button>
+        <QuantityStepper
+          className="self-end"
+          supplierOrgId={product.supplierOrgId}
+          productId={product.id}
+          qtyMilli={product.cartQtyMilli}
+          minQtyMilli={product.minQtyMilli}
+          qtyStepMilli={product.qtyStepMilli}
+          unit={product.unit}
+          productName={product.name}
+        />
+      </div>
 
       <dialog
         ref={dialog}

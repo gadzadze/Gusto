@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
 import { searchConnectedCatalogs } from "@/server/domain/buyer/catalog";
+import { cartQuantities } from "@/server/domain/orders/cart";
 
 export default async function BuyerSearchPage({ searchParams }: PageProps<"/buyer/search">) {
   const t = await getTranslations("buyer");
@@ -29,7 +30,10 @@ async function Results({ searchParams }: Pick<PageProps<"/buyer/search">, "searc
   const { q: raw } = await searchParams;
   const q = (Array.isArray(raw) ? raw[0] : raw)?.trim().slice(0, 100) ?? "";
   const groups = await Promise.all(
-    (q ? await searchConnectedCatalogs(ctx, q) : []).map(async (g) => ({ ...g, views: await toProductViews(g.items, g.supplier) })),
+    (q ? await searchConnectedCatalogs(ctx, q) : []).map(async (g) => ({
+      ...g,
+      views: await toProductViews(g.items, g.supplier, await cartQuantities(ctx, g.supplier.id)),
+    })),
   );
 
   return (

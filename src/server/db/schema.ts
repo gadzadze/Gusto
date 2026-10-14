@@ -32,6 +32,7 @@ const timestamps = {
 export const orgType = pgEnum("org_type", ["buyer", "supplier"]);
 export const orgStatus = pgEnum("org_status", ["pending_review", "active", "suspended"]);
 export const membershipRole = pgEnum("membership_role", ["owner", "member"]);
+export const orderStatus = pgEnum("order_status", ["pending", "confirmed", "delivered", "rejected", "cancelled"]);
 export const customerStatus = pgEnum("customer_status", ["invited", "active", "blocked"]);
 export const productUnit = pgEnum("product_unit", [
   "piece",
@@ -328,6 +329,127 @@ export const invitations = pgTable(
   ],
 );
 
+export const carts = pgTable(
+  "carts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    buyerOrgId: uuid("buyer_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    supplierOrgId: uuid("supplier_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    ...timestamps,
+  },
+  // One cart per buyer per supplier; carts are never merged across suppliers.
+  (t) => [uniqueIndex("carts_buyer_supplier_key").on(t.buyerOrgId, t.supplierOrgId)],
+);
+
+export const cartItems = pgTable(
+  "cart_items",
+  {
+    cartId: uuid("cart_id")
+      .notNull()
+      .references(() => carts.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    qtyMilli: integer("qty_milli").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    primaryKey({ columns: [t.cartId, t.productId] }),
+    check("cart_items_qty_positive", sql`${t.qtyMilli} > 0`),
+  ],
+);
+
+export const orders = pgTable(
+  "orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Human reference, shown as GST-<number>. Never used for authorization.
+    number: bigint("number", { mode: "number" })
+      .notNull()
+      .default(sql`nextval('order_number_seq')`),
+    buyerOrgId: uuid("buyer_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    supplierOrgId: uuid("supplier_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "restrict" }),
+    status: orderStatus("status").notNull().default("pending"),
+    // Snapshots at submission: later edits to orgs/addresses don't rewrite history.
+    buyerName: text("buyer_name").notNull(),
+    supplierName: text("supplier_name").notNull(),
+    currency: text("currency").notNull(),
+    pricesIncludeVat: boolean("prices_include_vat").notNull(),
+    addressId: uuid("address_id").references(() => addresses.id, { onDelete: "set null" }),
+    deliveryCity: text("delivery_city").notNull(),
+    deliveryAddress: text("delivery_address").notNull(),
+    deliveryInstructions: text("delivery_instructions"),
+    note: text("note"),
+    // Current totals: ordered quantities while pending, confirmed ones after.
+    subtotalMinor: bigint("subtotal_minor", { mode: "number" }).notNull(),
+    vatMinor: bigint("vat_minor", { mode: "number" }).notNull(),
+    totalMinor: bigint("total_minor", { mode: "number" }).notNull(),
+    idempotencyKey: uuid("idempotency_key").notNull(),
+    createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("orders_number_key").on(t.number),
+    uniqueIndex("orders_buyer_idempotency_key").on(t.buyerOrgId, t.idempotencyKey),
+    index("orders_supplier_status_created_idx").on(t.supplierOrgId, t.status, t.createdAt.desc()),
+    index("orders_buyer_created_idx").on(t.buyerOrgId, t.createdAt.desc()),
+    check("orders_totals_nonneg", sql`${t.subtotalMinor} >= 0 and ${t.vatMinor} >= 0 and ${t.totalMinor} >= 0`),
+  ],
+);
+
+export const orderItems = pgTable(
+  "order_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    lineNo: integer("line_no").notNull(),
+    // Reference only; the snapshot below is what the order shows.
+    productId: uuid("product_id").references(() => products.id, { onDelete: "set null" }),
+    name: text("name").notNull(),
+    sku: text("sku"),
+    unit: productUnit("unit").notNull(),
+    packDescription: text("pack_description"),
+    unitPriceMinor: bigint("unit_price_minor", { mode: "number" }).notNull(),
+    vatRateBp: integer("vat_rate_bp").notNull(),
+    orderedQtyMilli: integer("ordered_qty_milli").notNull(),
+    // Null until the supplier confirms; 0 means "unavailable".
+    confirmedQtyMilli: integer("confirmed_qty_milli"),
+    lineTotalMinor: bigint("line_total_minor", { mode: "number" }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("order_items_order_line_key").on(t.orderId, t.lineNo),
+    check("order_items_ordered_positive", sql`${t.orderedQtyMilli} > 0`),
+    check("order_items_confirmed_nonneg", sql`${t.confirmedQtyMilli} is null or ${t.confirmedQtyMilli} >= 0`),
+  ],
+);
+
+export const orderStatusHistory = pgTable(
+  "order_status_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    fromStatus: orderStatus("from_status"),
+    toStatus: orderStatus("to_status").notNull(),
+    actorUserId: uuid("actor_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    actorOrgId: uuid("actor_org_id").references(() => organizations.id, { onDelete: "set null" }),
+    note: text("note"),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index("order_status_history_order_created_idx").on(t.orderId, t.createdAt)],
+);
+
 export const auditLogs = pgTable(
   "audit_logs",
   {
@@ -358,4 +480,7 @@ export type PriceList = typeof priceLists.$inferSelect;
 export type SupplierCustomer = typeof supplierCustomers.$inferSelect;
 export type Invitation = typeof invitations.$inferSelect;
 export type CustomerStatus = (typeof customerStatus.enumValues)[number];
+export type Order = typeof orders.$inferSelect;
+export type OrderItem = typeof orderItems.$inferSelect;
+export type OrderStatus = (typeof orderStatus.enumValues)[number];
 export type BuyerBusinessType = (typeof buyerBusinessType.enumValues)[number];

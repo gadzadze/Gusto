@@ -57,7 +57,7 @@ export function BottomNav(props: Props) {
   return (
     <nav
       aria-label={t("menu")}
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden"
     >
       <ul className="mx-auto flex max-w-md">
         {itemsFor(props.area, props.homeHref, props.showAdminLink).map((item) => {
@@ -68,7 +68,7 @@ export function BottomNav(props: Props) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium",
+                  "flex min-h-14 flex-col items-center justify-center gap-1 px-0.5 text-center text-[11px] font-medium leading-tight",
                   active ? "text-brand" : "text-muted-foreground",
                 )}
               >

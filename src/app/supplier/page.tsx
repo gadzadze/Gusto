@@ -6,6 +6,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Notice } from "@/components/ui/notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireSupplier } from "@/server/auth/guards";
+import { countSupplierOrders } from "@/server/domain/orders/queries";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default async function SupplierDashboardPage() {
   const t = await getTranslations("supplier");
@@ -22,6 +25,8 @@ export default async function SupplierDashboardPage() {
 async function Dashboard() {
   const ctx = await requireSupplier();
   const t = await getTranslations("supplier");
+  const counts = await countSupplierOrders(ctx);
+  const total = counts.new + counts.confirmed + counts.done;
   return (
     <div className="space-y-6">
       {ctx.orgStatus === "pending_review" ? (
@@ -34,7 +39,16 @@ async function Dashboard() {
           {t("suspendedBody")}
         </Notice>
       ) : null}
-      <EmptyState icon={Inbox} title={t("emptyTitle")} body={t("emptyBody")} />
+      {total === 0 ? (
+        <EmptyState icon={Inbox} title={t("emptyTitle")} body={t("emptyBody")} />
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-5">
+          <p className="text-lg font-semibold">{t("newOrders", { count: counts.new })}</p>
+          <Button asChild>
+            <Link href="/supplier/orders">{t("openOrders")}</Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

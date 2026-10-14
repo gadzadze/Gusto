@@ -492,6 +492,19 @@ and the delivery row is marked `skipped`, not `sent`.
   `"skipped"` and logs `[DEV EMAIL]`; outside production it logs the body,
   in production only the subject. The UI says email wasn't sent.
 
+## Ordering specifics (milestone 4)
+
+- **Cart:** one per (buyer org, supplier org), persisted. Lines are quantities only; prices are always re-resolved when read (`domain/orders/cart.ts`).
+- **Submit** (`domain/orders/submit.ts`) is one transaction: lock the cart, re-check the connection and supplier status, re-resolve prices, then compare with `expected` (what the buyer reviewed). Any difference creates nothing and returns a `changed` diff, which checkout shows (formatted on the server) for the buyer to confirm again.
+- **Idempotency:** the checkout form generates a UUID key per page load; the key is unique per buyer org. A repeated key (or a lost race on the unique index) returns the existing order.
+- **Order numbers** come from `order_number_seq` (starts at 1001), shown as `GST-1001`. The sequence is created in migration `0006` and owned by `orders.number` in `0007`.
+- **Snapshots:** orders keep buyer/supplier names, currency, VAT mode and delivery address; items keep name, sku, unit, price and VAT rate.
+- **Transitions:** the table lives in `lib/orders/transitions.ts`; `domain/orders/transitions.ts` applies each with a conditional `UPDATE ... WHERE status = expected` and a history row in one transaction. Reject and supplier cancel need a reason; buyers cancel only while `pending`.
+- **Confirm** may change line quantities (0 = unavailable); totals are recomputed from the snapshot prices by `lib/orders/totals.ts` (per-line VAT).
+- **After-commit hook:** `domain/orders/hooks.ts` `afterOrderSubmitted` is a no-op that milestone 5 fills with notifications.
+- **`/o/<number>`** redirects to the viewer's own order page; 404 if they are on neither side, login redirect if signed out.
+- **Print:** the supplier order page prints cleanly (shell chrome has `print:hidden`).
+
 ## Testing approach
 
 - **Integration tests use plain Postgres** with a stand-in `auth.users` and
