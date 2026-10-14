@@ -1,0 +1,44 @@
+# Local Supabase for development and e2e tests: `npx supabase start`.
+# Only the settings Gusto depends on are listed; everything else uses the
+# CLI defaults. Production is configured in the Supabase dashboard
+# (README, "Supabase Auth setup") — keep the two in step.
+#
+# Database schema is NOT managed here: run `npm run db:migrate` (Drizzle)
+# against the local database after `supabase start`.
+
+project_id = "gusto"
+
+[api]
+port = 54321
+
+[db]
+port = 54322
+# Match the production project's Postgres major version.
+major_version = 17
+
+[studio]
+port = 54323
+
+[auth]
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/**", "http://localhost:3100/**"]
+
+[auth.email]
+enable_signup = true
+# Magic links confirm the address; no separate confirmation step.
+enable_confirmations = false
+
+[auth.email.template.magic_link]
+subject = "Gusto — შესვლის ბმული"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.email.template.confirmation]
+subject = "Gusto — შესვლის ბმული"
+content_path = "./supabase/templates/magic-link.html"
+
+[auth.external.google]
+# Set both variables in your shell (or supabase/.env) and switch this on to
+# test Google sign-in locally.
+enabled = false
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"

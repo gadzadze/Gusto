@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/*
+ * Gusto design tokens — see CLAUDE.md, "Design system".
+ * Black is the primary action color; burgundy is the accent. The shadcn/ui
+ * variable names (--primary, --ring, …) map onto the Gusto tokens so
+ * components copied from shadcn pick them up unchanged.
+ */
+
+:root {
+  --ink: #0b0b0c;
+  --surface: #ffffff;
+  --surface-2: #fafaf9;
+  --border-color: #e7e5e4;
+  --muted-text: #57534e;
+  --brand: #7a1f2b;
+  --brand-soft: #f6e9eb;
+  --danger: #dc2626;
+
+  --background: var(--surface);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: #ffffff;
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--muted-text);
+  --accent: var(--brand-soft);
+  --accent-foreground: var(--brand);
+  --destructive: var(--danger);
+  --border: var(--border-color);
+  --input: var(--border-color);
+  --ring: var(--brand);
+
+  /* Status tones (badges): muted, never competing with brand or errors. */
+  --status-amber-bg: #fef3c7;
+  --status-amber-fg: #92400e;
+  --status-blue-bg: #dbeafe;
+  --status-blue-fg: #1e40af;
+  --status-green-bg: #dcfce7;
+  --status-green-fg: #166534;
+  --status-gray-bg: #f5f5f4;
+  --status-gray-fg: #44403c;
+
+  --radius: 0.625rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #f5f5f4;
+    --surface: #0b0b0c;
+    --surface-2: #161617;
+    --border-color: #2a2a2c;
+    --muted-text: #a8a29e;
+    /* Burgundy on black fails contrast; dark mode uses a lighter tone. */
+    --brand: #d46a7c;
+    --brand-soft: #2a1418;
+    --danger: #f87171;
+
+    --primary-foreground: #0b0b0c;
+
+    --status-amber-bg: #3a2a0a;
+    --status-amber-fg: #fcd34d;
+    --status-blue-bg: #172340;
+    --status-blue-fg: #93c5fd;
+    --status-green-bg: #0f2a1a;
+    --status-green-fg: #86efac;
+    --status-gray-bg: #1f1f21;
+    --status-gray-fg: #d6d3d1;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-brand-soft: var(--brand-soft);
+  --color-surface-2: var(--surface-2);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Inter first for Latin and digits; Georgian glyphs fall through to Noto. */
+  --font-sans: var(--font-inter), var(--font-noto-georgian), ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv11", "ss01";
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}

@@ -95,8 +95,10 @@ real need appears).
 
 **Authorization lives in the app, in one place.**
 
-1. The browser never queries the database. The Supabase client in the
-   browser is used **only** for auth and nothing else.
+1. The browser never talks to the database or to Supabase. There is no
+   browser Supabase client: sign-in runs in Server Actions
+   (`src/app/(public)/login/actions.ts`), and the session lives in
+   httpOnly cookies managed by `@supabase/ssr`.
 2. All database access goes through Drizzle on the server, connected as the
    database owner. That connection **bypasses Row Level Security**, so RLS is
    not what protects tenants: the app layer is.
@@ -129,16 +131,19 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 
 - `profiles`: 1:1 with `auth.users`; name, phone (E.164), `is_platform_admin`.
 - `organizations`:
-  - `type` is `buyer` | `supplier`, immutable.
+  - `type` is `buyer` | `supplier`, immutable (a database trigger enforces
+    this).
   - `status`:
     - suppliers: `pending_review` → `active` → `suspended`;
-    - buyers: `active` / `suspended`.
-  - Also: name, city, phone, `timezone` (default `Asia/Tbilisi`), `currency`
-    (default `GEL`).
+    - buyers: `active` / `suspended` (a check constraint forbids
+      `pending_review`).
+  - Both types: name, contact name, city, phone, `timezone` (default
+    `Asia/Tbilisi`), `currency` (default `GEL`).
+  - Buyers only: `business_type`. Suppliers only: optional `legal_id`.
 - `organization_memberships`: user ↔ org, `role` `owner` | `member`. A user
   belongs to one org in the MVP; the schema allows more.
 - `supplier_settings`: `min_order_minor`, `prices_include_vat`,
-  `delivery_terms` (text), `order_cutoff_note` (text).
+  `delivery_area`, `delivery_terms`, `order_cutoff_note` (text fields).
 - `addresses`: buyer delivery locations.
 - `categories`: admin-managed, a flat list for now.
 - `products`:
@@ -218,9 +223,10 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
 - **All user-facing text** goes through `next-intl`. Only `ka` ships, but no
   Georgian string literals appear in components, so `en` can be added later.
 - **Georgian copy:** short and natural, like a well-made local app, not
-  bureaucratic or machine-translated. Use the informal-polite register that
-  Georgian product UIs use (e.g. "შეკვეთის გაგზავნა", not
-  "გთხოვთ განახორციელოთ შეკვეთის გაგზავნა").
+  bureaucratic or machine-translated.
+  - Address the user with the polite "თქვენ" form ("შეამოწმეთ ელფოსტა").
+  - Buttons use short verbal nouns ("შეკვეთის გაგზავნა", "გაგრძელება"),
+    never "გთხოვთ განახორციელოთ…".
 - **Search works in Georgian script and Latin transliteration.** Many people
   type "kveli" or "qveli" for "ყველი".
   - `src/server/domain/search/translit.ts` maps both scripts to one
@@ -283,17 +289,24 @@ src/
     admin/                    platform admin
     o/[number]/               order link → redirects to the viewer's own order page, or 404
     api/cron/notifications/   outbox drain (CRON_SECRET)
-    auth/callback/            Supabase auth code exchange
+    auth/callback/            Google OAuth code exchange
+    auth/confirm/             magic-link token-hash verification
+    auth/sign-out/            POST only
+    start/                    sends a signed-in user to their area
+  proxy.ts                    session refresh + signed-out redirect (Next 16's "middleware")
   server/
-    auth/                     session, guards
+    auth/                     access rules (pure), guards, sign-in helpers
+    env.ts                    validated server env, read lazily
+    supabase/server.ts        request-bound Supabase client (auth only)
     db/                       drizzle client, schema
     domain/                   business logic by area: catalog, pricing, orders, customers, search, money
     notifications/            outbox, channels (inApp, email), whatsapp-link builder
-  components/ui/              shadcn primitives
+  components/ui/              shadcn-style primitives (components.json is set up for `npx shadcn add`)
   components/                 app components
   i18n/, messages/ka.json
 drizzle/                      generated + custom SQL migrations
-scripts/                      seed-dev, admin-grant
+scripts/                      admin-grant, load-env (seed-dev comes in milestone 6)
+supabase/                     local Supabase config + email templates (no migrations here)
 tests/unit, tests/integration, tests/e2e
 ```
 
@@ -302,7 +315,45 @@ rules, so the same rule is never written twice.
 
 ## Commands
 
-(Filled in by milestone 1. Keep this section accurate.)
+| Command | What it does |
+|---|---|
+| `npm run dev` | Dev server on :3000 |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `next typegen` (route types) + `tsc --noEmit` |
+| `npm test` | Unit tests, no database |
+| `npm run test:integration` | Against `DATABASE_URL_TEST`: **drops and rebuilds** it, then runs the real migrations |
+| `npm run test:e2e` | Playwright on a production build against the Supabase in `.env.local` |
+| `npm run build` | Production build; must pass with **no** env vars set (CI does this) |
+| `npm run db:generate` | Generate SQL from `src/server/db/schema.ts` |
+| `npm run db:migrate` | Apply migrations to `DATABASE_URL_DIRECT` |
+| `npm run admin:grant -- <email>` | Make an existing user a platform admin (audited) |
+
+Scripts, drizzle-kit and tests read `.env.local` then `.env`
+(`scripts/load-env.ts`), the same files Next.js reads.
+
+## Next.js 16 specifics (this is not the Next.js in your training data)
+
+Read `node_modules/next/dist/docs/` before using an API you haven't checked.
+What this codebase relies on:
+
+- **Cache Components is on** (`cacheComponents`, `partialPrefetching`).
+  - Reading cookies, headers or `searchParams` outside a `<Suspense>`
+    boundary is a build error.
+  - Pages render a static header and put the session-dependent part in an
+    async child component inside `<Suspense>` with a skeleton fallback.
+  - Area layouts do the same around the shell.
+- **`await connection()` comes before any Supabase client.**
+  - `createSupabaseServerClient()` calls it before anything else, because
+    the Supabase client reads the clock, which is forbidden during
+    prerendering.
+  - Don't create Supabase clients any other way.
+- **`proxy.ts` is what older Next.js called `middleware.ts`.** It only
+  refreshes the session and redirects signed-out visitors. It is not the
+  authorization layer.
+- **Route types are generated.** `PageProps<"/route">` and
+  `LayoutProps<"/route">` are global types; `npm run typecheck` regenerates
+  them.
+- `AGENTS.md` is written by `next dev`. Leave it committed.
 
 ## Environment variables
 
@@ -333,6 +384,25 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Never reset, truncate or seed a production database.** Integration tests
   and seeds run only against local Supabase (`supabase start`) or a dedicated
   dev project. The scripts check the host and refuse otherwise.
+
+## Testing approach
+
+- **Integration tests use plain Postgres** with a stand-in `auth.users` and
+  the `anon`/`authenticated` roles, created by
+  `tests/integration/global-setup.ts`. They call domain functions directly,
+  passing a user ID.
+  - Guards and Server Actions need a Next.js request, so they are covered by
+    e2e instead.
+  - The stand-in has only the `auth.users` columns our code reads. If code
+    starts reading another column, add it there.
+- **`tests/integration/rls.test.ts` must keep passing:**
+  - every `public` table has RLS enabled;
+  - `anon`/`authenticated` see no rows and cannot write.
+- **E2E signs users in via the Supabase admin API** (`generateLink` → visit
+  `/auth/confirm?token_hash=…`). There's no inbox and no test-only route in
+  the app. Never add a test-only auth bypass to the app.
+- **Test data** uses `[TEST]` / `[E2E]` name prefixes and `@test.gusto.ge`
+  emails.
 
 ## Working on this repo
 

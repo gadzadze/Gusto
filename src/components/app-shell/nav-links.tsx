@@ -1,0 +1,84 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { cn } from "@/lib/utils";
+import { NAV_ITEMS, ADMIN_LINK, type Area, type NavItem } from "./nav";
+
+// Icons can't cross the server→client boundary as props, so the client side
+// rebuilds the list from the area name.
+function itemsFor(area: Area, homeHref: string | null, showAdminLink: boolean): NavItem[] {
+  const items = [...NAV_ITEMS[area]];
+  if (area === "admin" && homeHref) {
+    items.push({ ...NAV_ITEMS[homeHref === "/buyer" ? "buyer" : "supplier"][0] });
+  }
+  if (area !== "admin" && showAdminLink) items.push(ADMIN_LINK);
+  return items;
+}
+
+function isActive(pathname: string, href: string, area: Area): boolean {
+  const areaRoot = `/${area}`;
+  if (href === areaRoot) return pathname === areaRoot;
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+type Props = { area: Area; homeHref: string | null; showAdminLink: boolean };
+
+export function SidebarNav(props: Props) {
+  const t = useTranslations("nav");
+  const pathname = usePathname();
+  return (
+    <nav aria-label={t("menu")} className="flex flex-col gap-1">
+      {itemsFor(props.area, props.homeHref, props.showAdminLink).map((item) => {
+        const active = isActive(pathname, item.href, props.area);
+        return (
+          <Link
+            key={item.href + item.labelKey}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              "flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
+              active ? "bg-brand-soft text-brand" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+            )}
+          >
+            <item.icon aria-hidden className="size-4" />
+            {t(item.labelKey)}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function BottomNav(props: Props) {
+  const t = useTranslations("nav");
+  const pathname = usePathname();
+  return (
+    <nav
+      aria-label={t("menu")}
+      className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden"
+    >
+      <ul className="mx-auto flex max-w-md">
+        {itemsFor(props.area, props.homeHref, props.showAdminLink).map((item) => {
+          const active = isActive(pathname, item.href, props.area);
+          return (
+            <li key={item.href + item.labelKey} className="flex-1">
+              <Link
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "flex min-h-14 flex-col items-center justify-center gap-1 text-xs font-medium",
+                  active ? "text-brand" : "text-muted-foreground",
+                )}
+              >
+                <item.icon aria-hidden className="size-5" />
+                {t(item.labelKey)}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </nav>
+  );
+}
