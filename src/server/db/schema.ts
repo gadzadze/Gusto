@@ -33,6 +33,15 @@ export const orgType = pgEnum("org_type", ["buyer", "supplier"]);
 export const orgStatus = pgEnum("org_status", ["pending_review", "active", "suspended"]);
 export const membershipRole = pgEnum("membership_role", ["owner", "member"]);
 export const orderStatus = pgEnum("order_status", ["pending", "confirmed", "delivered", "rejected", "cancelled"]);
+export const notificationEvent = pgEnum("notification_event", [
+  "order_submitted",
+  "order_confirmed",
+  "order_rejected",
+  "order_cancelled",
+  "order_delivered",
+]);
+export const deliveryChannel = pgEnum("delivery_channel", ["email"]);
+export const deliveryStatus = pgEnum("delivery_status", ["pending", "sent", "skipped", "failed"]);
 export const customerStatus = pgEnum("customer_status", ["invited", "active", "blocked"]);
 export const productUnit = pgEnum("product_unit", [
   "piece",
@@ -450,6 +459,77 @@ export const orderStatusHistory = pgTable(
   (t) => [index("order_status_history_order_created_idx").on(t.orderId, t.createdAt)],
 );
 
+// In-app notifications: one row per recipient user, written in the same
+// transaction as the change that caused it.
+export const notifications = pgTable(
+  "notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    event: notificationEvent("event").notNull(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    // Snapshots for display, so the list needs no join.
+    orderNumber: integer("order_number").notNull(),
+    // The other organization's name, from the viewer's side.
+    counterpartyName: text("counterparty_name").notNull(),
+    dedupeKey: text("dedupe_key").notNull(),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    uniqueIndex("notifications_dedupe_key").on(t.dedupeKey),
+    index("notifications_user_created_idx").on(t.userId, t.createdAt.desc()),
+    index("notifications_user_unread_idx")
+      .on(t.userId)
+      .where(sql`${t.readAt} is null`),
+  ],
+);
+
+// The outbox for channels that leave the app (email). Rows are claimed with
+// FOR UPDATE SKIP LOCKED; see server/notifications/process.ts.
+export const notificationDeliveries = pgTable(
+  "notification_deliveries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    notificationId: uuid("notification_id")
+      .notNull()
+      .references(() => notifications.id, { onDelete: "cascade" }),
+    channel: deliveryChannel("channel").notNull(),
+    recipientUserId: uuid("recipient_user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    // Ids only. The message is rendered from the persisted order at send time.
+    payload: jsonb("payload").$type<{ event: string; orderId: string }>().notNull(),
+    status: deliveryStatus("status").notNull().default("pending"),
+    attempts: integer("attempts").notNull().default(0),
+    nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull().defaultNow(),
+    lastError: text("last_error"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    dedupeKey: text("dedupe_key").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex("notification_deliveries_dedupe_key").on(t.dedupeKey),
+    index("notification_deliveries_due_idx")
+      .on(t.nextAttemptAt)
+      .where(sql`${t.status} = 'pending'`),
+  ],
+);
+
+// Email on/off per event group. In-app is always on. No row = defaults (on).
+export const notificationPreferences = pgTable("notification_preferences", {
+  userId: uuid("user_id")
+    .primaryKey()
+    .references(() => profiles.id, { onDelete: "cascade" }),
+  emailNewOrders: boolean("email_new_orders").notNull().default(true),
+  emailOrderUpdates: boolean("email_order_updates").notNull().default(true),
+  ...timestamps,
+});
+
 export const auditLogs = pgTable(
   "audit_logs",
   {
@@ -484,3 +564,6 @@ export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
 export type OrderStatus = (typeof orderStatus.enumValues)[number];
 export type BuyerBusinessType = (typeof buyerBusinessType.enumValues)[number];
+export type Notification = typeof notifications.$inferSelect;
+export type NotificationEvent = (typeof notificationEvent.enumValues)[number];
+export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;

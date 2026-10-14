@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, count, desc, eq, inArray, type SQL } from "drizzle-orm";
 import { getDb } from "@/server/db/client";
-import { orderItems, orders, orderStatusHistory, type Order, type OrderItem, type OrderStatus } from "@/server/db/schema";
+import { orderItems, orders, orderStatusHistory, organizations, type Order, type OrderItem, type OrderStatus } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError } from "@/server/domain/errors";
 import { putItemsInCart } from "./cart";
@@ -98,6 +98,8 @@ export async function listBuyerOrders(ctx: OrgCtx, page = 1, pageSize?: number) 
 export type OrderDetail = {
   order: Order;
   items: OrderItem[];
+  /** Contact phone of the other organization, for the "send on WhatsApp" buttons. */
+  counterpartyPhone: string | null;
   history: { fromStatus: OrderStatus | null; toStatus: OrderStatus; note: string | null; createdAt: Date; byBuyer: boolean }[];
 };
 
@@ -108,7 +110,9 @@ export async function getOrder(ctx: OrgCtx, orderId: string): Promise<OrderDetai
   const db = getDb();
   const [order] = await db.select().from(orders).where(and(eq(orders.id, orderId), eq(scope, ctx.orgId)));
   if (!order) throw new NotFoundError("order");
-  const [items, history] = await Promise.all([
+  const otherOrgId = ctx.orgType === "buyer" ? order.supplierOrgId : order.buyerOrgId;
+  const [[other], items, history] = await Promise.all([
+    db.select({ phone: organizations.phone }).from(organizations).where(eq(organizations.id, otherOrgId)),
     db.select().from(orderItems).where(eq(orderItems.orderId, orderId)).orderBy(asc(orderItems.lineNo)),
     db
       .select({
@@ -125,6 +129,7 @@ export async function getOrder(ctx: OrgCtx, orderId: string): Promise<OrderDetai
   return {
     order,
     items,
+    counterpartyPhone: other?.phone ?? null,
     history: history.map(({ actorOrgId, ...h }) => ({ ...h, byBuyer: actorOrgId === order.buyerOrgId })),
   };
 }

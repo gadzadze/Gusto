@@ -1,6 +1,8 @@
 import { LogOut } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { Suspense } from "react";
 import type * as React from "react";
+import { NotificationBellFallback } from "@/components/notifications/notification-bell";
 import { Logo } from "@/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,10 +18,12 @@ export type ShellProps = {
   /** The user's own org dashboard (shown as a link from the admin area). */
   homeHref: string | null;
   showAdminLink: boolean;
+  /** Notification bell (buyer and supplier areas); rendered in Suspense by the shell. */
+  bell?: React.ReactNode;
   children: React.ReactNode;
 };
 
-export async function AppShell({ area, title, email, homeHref, showAdminLink, children }: ShellProps) {
+export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, children }: ShellProps) {
   const t = await getTranslations();
   const roleLabel = t(`roles.${area}`);
   const navProps = { area, homeHref, showAdminLink };
@@ -27,8 +31,9 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, ch
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
       <aside className="hidden border-r border-border bg-surface-2 md:flex md:min-h-dvh md:flex-col print:!hidden">
-        <div className="px-5 pb-4 pt-5">
+        <div className="flex items-center justify-between gap-2 px-5 pb-4 pt-5">
           <Logo />
+          {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
         </div>
         <div className="px-5 pb-5">
           {title ? <p className="truncate text-sm font-medium" title={title}>{title}</p> : null}
@@ -49,7 +54,10 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, ch
             <Logo className="text-base" />
             {title ? <span className="truncate text-sm text-muted-foreground">{title}</span> : null}
           </div>
-          <SignOutButton label={t("nav.signOut")} compact />
+          <div className="flex items-center">
+            {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
+            <SignOutButton label={t("nav.signOut")} compact />
+          </div>
         </header>
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
           {children}

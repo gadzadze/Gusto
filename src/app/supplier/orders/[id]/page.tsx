@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { OrderView } from "@/components/orders/order-view";
+import { WhatsappShare } from "@/components/orders/whatsapp-share";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { availableActions } from "@/lib/orders/transitions";
@@ -42,6 +43,9 @@ async function Order({ params }: PageProps<"/supplier/orders/[id]">) {
   return (
     <div className="max-w-3xl space-y-6">
       <OrderView detail={detail} viewer="supplier" />
+      {detail.order.status === "confirmed" || detail.order.status === "rejected" ? (
+        <WhatsappShare detail={detail} kind={detail.order.status} />
+      ) : null}
       <div className="border-t border-border pt-6">
         <SupplierOrderActions
           orderId={detail.order.id}

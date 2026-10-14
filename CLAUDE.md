@@ -488,9 +488,10 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Buyers see a supplier only while** their connection is `active` *and*
   the supplier is `active`. Only active products are shown. Otherwise the
   answer is "not found".
-- **Email is not sent yet.** `server/notifications/email.ts` returns
-  `"skipped"` and logs `[DEV EMAIL]`; outside production it logs the body,
-  in production only the subject. The UI says email wasn't sent.
+- **Invitation email** goes out directly from the action that creates the
+  invitation (`supplier/customers/actions.ts`), never through the outbox: the
+  text holds the raw token, which must not be persisted. A provider error is
+  caught and reported as "email not sent"; the link can still be copied.
 
 ## Ordering specifics (milestone 4)
 
@@ -501,9 +502,51 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Snapshots:** orders keep buyer/supplier names, currency, VAT mode and delivery address; items keep name, sku, unit, price and VAT rate.
 - **Transitions:** the table lives in `lib/orders/transitions.ts`; `domain/orders/transitions.ts` applies each with a conditional `UPDATE ... WHERE status = expected` and a history row in one transaction. Reject and supplier cancel need a reason; buyers cancel only while `pending`.
 - **Confirm** may change line quantities (0 = unavailable); totals are recomputed from the snapshot prices by `lib/orders/totals.ts` (per-line VAT).
-- **After-commit hook:** `domain/orders/hooks.ts` `afterOrderSubmitted` is a no-op that milestone 5 fills with notifications.
+- **After-commit hook:** `domain/orders/hooks.ts` `afterOrderSubmitted` asks for immediate delivery of the order's notifications (milestone 5); the rows themselves are written in the transaction.
 - **`/o/<number>`** redirects to the viewer's own order page; 404 if they are on neither side, login redirect if signed out.
 - **Print:** the supplier order page prints cleanly (shell chrome has `print:hidden`).
+
+## Notifications specifics (milestone 5)
+
+- **Events** (`server/notifications/events.ts`): `recordOrderEvent(tx, ...)`
+  runs **inside** the transaction of the order change (`submitOrder` and
+  `applyTransition`), so a rollback leaves nothing. Who is told is decided by
+  the pure `lib/notifications/plan.ts`:
+  - submitted → all supplier members;
+  - confirmed / rejected / delivered → all buyer members;
+  - cancelled → the other side from whoever cancelled (a buyer cancelling
+    notifies the supplier);
+  - the actor is never notified; in-app is always on; email follows the
+    user's preference for the event's group (`new_orders` /
+    `order_updates`; no preference row = on).
+- **Dedupe:** unique `dedupe_key` on both tables, e.g.
+  `order:{id}:status:{status}:email:{userId}`. Replays insert nothing.
+- **Channels** (`server/notifications/channels/`): `Channel` has `enqueue`
+  (in the transaction, rows only) and optional `send` (outbox, later). In-app
+  and email implement it. A WhatsApp Business channel is **not** built:
+  `docs/whatsapp-business-api.md`.
+- **Outbox rows hold ids only** (`{event, orderId}`). The email is rendered at
+  send time from the persisted order (`lib/notifications/templates.ts`:
+  number, counterparty name, item count, total, `/o/<number>` link), and the
+  recipient address is read from `auth.users` then. Nothing secret is stored.
+- **Processing** (`server/notifications/process.ts`): claim = one `UPDATE ...
+  WHERE id IN (SELECT ... FOR UPDATE SKIP LOCKED LIMIT 50)` that pushes
+  `next_attempt_at` 5 minutes out (a lease) and counts the attempt; the send
+  happens outside any transaction. Failure → retry after 1, 5, 15, 60 minutes
+  (`lib/notifications/backoff.ts`), then `failed`. `after()` calls
+  `deliverAfterResponse(orderId)`; outside a request it quietly does nothing
+  and the cron picks the rows up.
+- **Cron:** `/api/cron/notifications` needs `Authorization: Bearer
+  $CRON_SECRET` (no secret configured = always 401). Scheduled every minute by
+  Supabase Cron via migration `0010` (URL and secret from Vault; README).
+- **Email:** Resend over HTTP (`server/notifications/email.ts`, no SDK). No
+  `RESEND_API_KEY` → `skipped` and `[DEV EMAIL]` log, never `sent`.
+- **WhatsApp** buttons (`components/orders/whatsapp-share.tsx`) use
+  `lib/whatsapp.ts`; copy says "send", never "sent"; nothing is stored.
+- **Bell:** `components/notifications/notification-bell.tsx`, rendered in
+  Suspense by `AppShell` for buyers and suppliers. The list lives at
+  `/buyer/notifications` and `/supplier/notifications` (shared view);
+  clicking a row marks it read and redirects to `/o/<number>`.
 
 ## Testing approach
 

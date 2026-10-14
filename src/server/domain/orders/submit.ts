@@ -19,6 +19,7 @@ import {
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError, isUniqueViolation } from "@/server/domain/errors";
 import { effectivePriceSql } from "@/server/domain/pricing/resolve";
+import { recordOrderEvent } from "@/server/notifications/events";
 import { afterOrderSubmitted } from "./hooks";
 
 export type SubmitError = "empty_cart" | "below_minimum" | "address_required" | "supplier_unavailable";
@@ -228,6 +229,13 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
         toStatus: "pending",
         actorUserId: ctx.userId,
         actorOrgId: ctx.orgId,
+      });
+
+      // The notifications commit (or roll back) with the order itself.
+      await recordOrderEvent(tx, {
+        orderId: order.id,
+        event: "order_submitted",
+        actor: { userId: ctx.userId, orgId: ctx.orgId },
       });
 
       // 7. The cart is done.

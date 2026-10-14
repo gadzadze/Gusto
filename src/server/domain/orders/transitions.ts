@@ -7,6 +7,9 @@ import { getDb, type Tx } from "@/server/db/client";
 import { orderItems, orders, orderStatusHistory } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
+import { recordOrderEvent } from "@/server/notifications/events";
+import { deliverAfterResponse } from "@/server/notifications/process";
+import type { NotificationEvent } from "@/server/db/schema";
 
 // Every status change goes through applyTransition(): role check →
 // conditional UPDATE on the expected current status → history row, in one
@@ -15,6 +18,14 @@ import { NotFoundError, StateError } from "@/server/domain/errors";
 export type TransitionError = "stale_status" | "reason_required" | "nothing_confirmed" | "invalid_lines" | "suspended";
 
 export const reasonSchema = z.string().trim().min(3).max(500);
+
+const EVENT_FOR_ACTION: Record<OrderAction, NotificationEvent> = {
+  confirm: "order_confirmed",
+  reject: "order_rejected",
+  deliver: "order_delivered",
+  buyer_cancel: "order_cancelled",
+  supplier_cancel: "order_cancelled",
+};
 
 async function applyTransition(
   tx: Tx,
@@ -44,6 +55,12 @@ async function applyTransition(
     actorUserId: ctx.userId,
     actorOrgId: ctx.orgId,
     note,
+  });
+  // Same transaction: no status change without its notifications, and none without the change.
+  await recordOrderEvent(tx, {
+    orderId,
+    event: EVENT_FOR_ACTION[action],
+    actor: { userId: ctx.userId, orgId: ctx.orgId },
   });
 }
 
@@ -112,6 +129,7 @@ export async function confirmOrder(
       .set({ subtotalMinor: totals.subtotalMinor, vatMinor: totals.vatMinor, totalMinor: totals.totalMinor })
       .where(eq(orders.id, orderId));
   });
+  deliverAfterResponse(orderId);
 }
 
 export async function rejectOrder(ctx: OrgCtx, orderId: string, reason: string): Promise<void> {
@@ -119,12 +137,14 @@ export async function rejectOrder(ctx: OrgCtx, orderId: string, reason: string):
   if (!isUuid(orderId)) throw new NotFoundError("order");
   const note = cleanReason("reject", reason);
   await getDb().transaction((tx) => applyTransition(tx, ctx, orderId, "reject", note));
+  deliverAfterResponse(orderId);
 }
 
 export async function markDelivered(ctx: OrgCtx, orderId: string): Promise<void> {
   assertSupplierCanAct(ctx);
   if (!isUuid(orderId)) throw new NotFoundError("order");
   await getDb().transaction((tx) => applyTransition(tx, ctx, orderId, "deliver", null));
+  deliverAfterResponse(orderId);
 }
 
 export async function cancelBySupplier(ctx: OrgCtx, orderId: string, reason: string): Promise<void> {
@@ -132,6 +152,7 @@ export async function cancelBySupplier(ctx: OrgCtx, orderId: string, reason: str
   if (!isUuid(orderId)) throw new NotFoundError("order");
   const note = cleanReason("supplier_cancel", reason);
   await getDb().transaction((tx) => applyTransition(tx, ctx, orderId, "supplier_cancel", note));
+  deliverAfterResponse(orderId);
 }
 
 /** Buyers may cancel only while the order is still pending. */
@@ -140,4 +161,5 @@ export async function cancelByBuyer(ctx: OrgCtx, orderId: string, reason?: strin
   if (!isUuid(orderId)) throw new NotFoundError("order");
   const note = cleanReason("buyer_cancel", reason);
   await getDb().transaction((tx) => applyTransition(tx, ctx, orderId, "buyer_cancel", note));
+  deliverAfterResponse(orderId);
 }

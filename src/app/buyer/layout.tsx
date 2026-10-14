@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { AppShell, AppShellSkeleton } from "@/components/app-shell/app-shell";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { requireBuyer } from "@/server/auth/guards";
 
 // The guard here picks the shell; it does not protect child pages on its own.
@@ -21,6 +22,7 @@ async function BuyerShell({ children }: { children: React.ReactNode }) {
       email={ctx.email}
       homeHref="/buyer"
       showAdminLink={ctx.isPlatformAdmin}
+      bell={<NotificationBell userId={ctx.userId} area="buyer" />}
     >
       {children}
     </AppShell>

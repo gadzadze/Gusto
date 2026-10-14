@@ -6,7 +6,7 @@ existing customers on Gusto, and those customers reorder in a few taps.
 - Product scope, conventions and the security model: [`CLAUDE.md`](CLAUDE.md)
 - Build plan: [`docs/milestones/`](docs/milestones/README.md)
 
-**Status:** milestones 1–4.
+**Status:** milestones 1–5.
 - Sign-in and onboarding as a buyer or supplier, with role-guarded areas.
 - Suppliers build a catalog: products, photos, CSV/XLSX import, order
   terms.
@@ -16,7 +16,13 @@ existing customers on Gusto, and those customers reorder in a few taps.
   (copy, or send via WhatsApp) and assign per-customer price lists.
 - Buyers join from the link, browse their suppliers' catalogs at their own
   prices, and search across suppliers in Georgian or Latin letters.
-- Invitation emails are not sent yet (milestone 5); the UI says so.
+- Buyers order from a per-supplier cart; suppliers confirm (adjusting
+  quantities), reject or deliver from an order inbox.
+- In-app notifications (bell with unread count) and email for order events,
+  with per-user email preferences. WhatsApp is a "send" button that opens a
+  prefilled message; Gusto never records it as delivered.
+- Without `RESEND_API_KEY`, emails (including invitations) are not sent: they
+  are logged as `[DEV EMAIL]` and the UI says so.
 
 ## Stack
 
@@ -144,7 +150,8 @@ Do this for each Supabase project (local is pre-configured in
      `supabase/templates/magic-link.html` has the Georgian template.
    - The default templates use a different link format, and sign-in will
      fail with them.
-3. **SMTP** (Authentication → Emails → SMTP settings):
+3. **SMTP** (Authentication → Emails → SMTP settings). This is how magic
+   links are sent; it is a dashboard setting, not code:
    - Supabase's built-in sender is heavily rate-limited and meant for testing
      only.
    - For production, use Resend's SMTP:
@@ -167,6 +174,51 @@ Do this for each Supabase project (local is pre-configured in
      `SUPABASE_SERVICE_ROLE_KEY`, can write.
    - Product images are processed on the server and served straight from
      the bucket's public URL.
+
+## Notifications and email
+
+Order events (submitted, confirmed, rejected, cancelled, delivered) write
+in-app notifications and email outbox rows **in the same transaction** as the
+order change. Delivery happens afterwards, so a mail problem never affects an
+order.
+
+- **Email provider:** Resend's HTTP API.
+  - `RESEND_API_KEY` and `EMAIL_FROM` (a sender on a domain verified in
+    Resend) enable real sending. This is separate from the SMTP setting
+    above, which only covers Supabase Auth's own emails.
+  - Without a key, email is **not sent**: it is logged as `[DEV EMAIL]`
+    (subject only in production) and the delivery row is marked `skipped`.
+- **Delivery:**
+  - Right after the response, Next.js `after()` attempts that order's
+    pending deliveries.
+  - `/api/cron/notifications` (`POST` or `GET`, header
+    `Authorization: Bearer $CRON_SECRET`) drains everything due: it claims
+    rows with `FOR UPDATE SKIP LOCKED` in batches of 50, retries after 1, 5,
+    15 and 60 minutes, then marks the row `failed`. Failures store a short
+    `last_error`, never a message body or token.
+- **Scheduling (Supabase Cron):** Vercel Hobby cron is too infrequent, so
+  migration `0010_notifications_cron.sql` schedules a job named
+  `gusto-notifications` every minute with `pg_cron` + `pg_net`. It skips
+  itself on plain Postgres. The URL and secret are **not** in the repo; the
+  job reads two Vault secrets at run time. Create them once per project
+  (SQL editor), **before or after** migrating:
+
+  ```sql
+  select vault.create_secret('https://<your-app-domain>/api/cron/notifications', 'gusto_cron_url');
+  select vault.create_secret('<same value as CRON_SECRET>', 'gusto_cron_secret');
+  ```
+
+  - Change a value later with `vault.update_secret(...)`.
+  - Check runs with `select * from cron.job_run_details order by start_time desc limit 10;`
+    and responses with `select * from net._http_response order by created desc limit 10;`.
+  - If the secrets are missing, the job runs but the request fails (visible
+    in `net._http_response`); in-app notifications and `after()` delivery
+    still work.
+- **Invitation emails** are sent directly when the invitation is created, not
+  through the outbox: the text contains the raw invite link, which Gusto never
+  stores.
+- **WhatsApp** is user-sent only. A future Business API channel is sketched in
+  [`docs/whatsapp-business-api.md`](docs/whatsapp-business-api.md).
 
 ## First-run setup in the app
 

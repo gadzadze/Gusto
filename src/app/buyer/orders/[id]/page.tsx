@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { BuyerCancelButton, ReorderButton } from "@/components/orders/order-buttons";
 import { OrderView } from "@/components/orders/order-view";
+import { WhatsappShare } from "@/components/orders/whatsapp-share";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -48,6 +49,7 @@ async function Order({ params, searchParams }: PageProps<"/buyer/orders/[id]">) 
         </FormAlert>
       ) : null}
       <OrderView detail={detail} viewer="buyer" />
+      {detail.order.status === "pending" ? <WhatsappShare detail={detail} kind="to_supplier" /> : null}
       <div className="flex flex-wrap items-start gap-3 border-t border-border pt-6">
         <ReorderButton orderId={id} />
         {actions.includes("buyer_cancel") ? <BuyerCancelButton orderId={id} /> : null}
