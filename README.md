@@ -56,6 +56,10 @@ the Auth admin API (used to create allowed users) refuses `sb_secret_` with
 | `SUPABASE_SERVICE_ROLE_KEY` | `SERVICE_ROLE_KEY` from `npx supabase status -o env` (the long `eyJ...` JWT) |
 | `DATABASE_URL`, `DATABASE_URL_DIRECT` | DB URL (`postgresql://postgres:postgres@127.0.0.1:54322/postgres`) |
 
+Or let a script do it: `npm run env:local` reads `npx supabase status -o env` and
+writes the right values into `.env.local` (keeping the rest, saving the old file
+as `.env.local.bak`). It refuses anything that is not a local Supabase.
+
 Then:
 
 ```bash
@@ -86,6 +90,7 @@ run `npx supabase init` in a scratch folder and copy those settings over.
 | `npm run db:migrate` | Apply migrations (uses `DATABASE_URL_DIRECT`) |
 | `npm run admin:grant -- <email>` | Make an address a platform admin (also allows it to sign in) |
 | `npm run user:allow -- <email>` | Let an address sign in (invite-only app); optional `--note "text"` |
+| `npm run env:local` | Write the local Supabase URL and keys into `.env.local` (after `supabase start`) |
 | `npm run db:seed` | Fill a **local** database with `[DEMO]` data (refuses anything else) |
 | `npm run check:secrets` | After `npm run build`: fail if a server secret is in the client bundle |
 
