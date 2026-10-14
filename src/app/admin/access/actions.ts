@@ -9,17 +9,27 @@ import { revokeEmail, allowEmail, type AccessError } from "@/server/domain/admin
 import { ensureAuthUser } from "@/server/supabase/admin";
 
 export type AllowActionResult =
-  | { ok: true; status: "allowed" | "restored" | "already_allowed"; authUserFailed: boolean }
+  | { ok: true; status: "allowed" | "restored" | "updated" | "already_allowed"; authUserFailed: boolean }
   | ActionError<AccessError>;
 
-const allowSchema = z.object({ email: z.string().max(254), note: z.string().max(200).optional() });
+const allowSchema = z.object({
+  email: z.string().max(254),
+  note: z.string().max(200).optional(),
+  // "" = either.
+  role: z.enum(["", "buyer", "supplier"]).optional(),
+});
 
 export async function allowEmailAction(raw: unknown): Promise<AllowActionResult> {
   const ctx = await requireAdmin();
   const parsed = allowSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "invalid" };
   return runAction<AllowActionResult, AccessError>("allowEmail", async () => {
-    const result = await registerEmail({ userId: ctx.userId }, parsed.data.email, parsed.data.note);
+    const result = await registerEmail(
+      { userId: ctx.userId },
+      parsed.data.email,
+      parsed.data.note,
+      parsed.data.role === undefined ? undefined : parsed.data.role === "" ? null : parsed.data.role,
+    );
     refresh();
     return { ok: true, status: result.status, authUserFailed: result.authUser === "failed" };
   });

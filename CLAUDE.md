@@ -132,7 +132,11 @@ real need appears).
     addresses only. `completeSignIn` re-checks and signs out anyone not
     allowed, which is the only gate for Google. A revoked row beats an
     invitation. Admins manage the list at `/admin/access`; scripts use
-    `npm run user:allow`. Being allowed gives no role.
+    `npm run user:allow`. Being allowed gives no role, but the admin may pin
+    `allowed_emails.intended_role`: onboarding then offers only that kind and
+    `submitOnboarding` / the invite action refuse the other (`wrong_role`). A new
+    supplier triggers `notifyAdminsSupplierPending` (direct email, best effort) and
+    the admin nav badge counts suppliers in `pending_review`.
 
 ## Domain model
 
@@ -184,7 +188,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `notification_deliveries`: the outbox. Channel, recipient, payload,
   `status`, `attempts`, `next_attempt_at`, `last_error`, unique `dedupe_key`.
 - `audit_logs`: admin and security-relevant actions.
-- `allowed_emails`: the sign-in allow-list (lowercase email, note, `revoked_at`); never deleted from.
+- `allowed_emails`: the sign-in allow-list (lowercase email, note, optional `intended_role`, `revoked_at`); never deleted from.
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle

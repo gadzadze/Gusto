@@ -1,14 +1,15 @@
 import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
-import { beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { customerSchema } from "@/lib/validation/customer";
-import { isEmailAllowed } from "@/server/auth/allow-list";
+import { isEmailAllowed, pinnedRoleFor } from "@/server/auth/allow-list";
 import { getDb } from "@/server/db/client";
 import { allowedEmails, auditLogs, organizations } from "@/server/db/schema";
 import { allowEmail, listAllowedEmails, revokeEmail } from "@/server/domain/admin/access";
 import type { AdminCtx } from "@/server/domain/context";
 import { createCustomer, regenerateInvitation, setCustomerBlocked } from "@/server/domain/customers/customers";
 import { NotFoundError, StateError } from "@/server/domain/errors";
+import { notifyAdminsSupplierPending } from "@/server/notifications/admin-alerts";
 import { createAdmin, createAuthUser, createSupplier } from "./helpers";
 
 let admin: AdminCtx;
@@ -146,5 +147,66 @@ describe("migration backfill", () => {
       WHERE u.email IS NOT NULL AND btrim(u.email) <> ''
       ON CONFLICT ("email") DO NOTHING`);
     expect(await isEmailAllowed(user.email)).toBe(true);
+  });
+});
+
+describe("registered role", () => {
+  it("pins the role, reports it, and lets the admin change or clear it", async () => {
+    const email = fresh();
+    expect(await pinnedRoleFor(email)).toBeNull(); // no row
+    expect(await allowEmail({ userId: admin.userId }, email, "Winiveria", "supplier")).toMatchObject({ status: "allowed" });
+    expect(await pinnedRoleFor(email)).toBe("supplier");
+    expect(await pinnedRoleFor(email.toUpperCase())).toBe("supplier");
+
+    // Same role again: nothing to do. A different role: updated. null: either.
+    expect(await allowEmail({ userId: admin.userId }, email, undefined, "supplier")).toMatchObject({ status: "already_allowed" });
+    expect(await allowEmail({ userId: admin.userId }, email, undefined, "buyer")).toMatchObject({ status: "updated" });
+    expect(await pinnedRoleFor(email)).toBe("buyer");
+    expect(await allowEmail({ userId: admin.userId }, email, undefined, null)).toMatchObject({ status: "updated" });
+    expect(await pinnedRoleFor(email)).toBeNull();
+
+    // Leaving the role out never changes it.
+    await allowEmail({ userId: admin.userId }, email, undefined, "supplier");
+    expect(await allowEmail({ userId: admin.userId }, email)).toMatchObject({ status: "already_allowed" });
+    expect(await pinnedRoleFor(email)).toBe("supplier");
+  });
+
+  it("a revoked address has no pinned role, and the role is audited", async () => {
+    const email = fresh();
+    await allowEmail({ userId: admin.userId }, email, undefined, "buyer");
+    const [row] = await getDb().select().from(allowedEmails).where(eq(allowedEmails.email, email));
+    expect(row.intendedRole).toBe("buyer");
+    await revokeEmail(admin, row.id);
+    expect(await pinnedRoleFor(email)).toBeNull();
+    const audits = await getDb().select().from(auditLogs).where(eq(auditLogs.targetId, email));
+    expect(audits.find((a) => a.action === "access.allow")?.data).toMatchObject({ role: "buyer" });
+    expect(await pinnedRoleFor(null)).toBeNull();
+  });
+});
+
+describe("admin alert for a supplier waiting for approval", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    delete process.env.RESEND_API_KEY;
+    delete process.env.EMAIL_FROM;
+  });
+
+  it("emails every platform admin the business name and the review link (dev log without a key)", async () => {
+    const log = vi.spyOn(console, "info").mockImplementation(() => {});
+    const result = await notifyAdminsSupplierPending("[TEST] Winiveria");
+    expect(result.attempted).toBeGreaterThanOrEqual(1);
+    const logged = log.mock.calls.map((c) => String(c[0])).join("\n");
+    expect(logged).toContain("[DEV EMAIL]");
+    expect(logged).toContain("[TEST] Winiveria");
+    expect(logged).toContain("/admin/suppliers?status=pending_review");
+  });
+
+  it("never throws when the email provider fails", async () => {
+    process.env.RESEND_API_KEY = "re_test";
+    process.env.EMAIL_FROM = "Gusto <a@test.gusto.ge>";
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    await expect(notifyAdminsSupplierPending("[TEST] X")).resolves.toMatchObject({ attempted: expect.any(Number) });
   });
 });

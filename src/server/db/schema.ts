@@ -553,6 +553,9 @@ export const allowedEmails = pgTable(
     // Always stored lowercase and trimmed.
     email: text("email").notNull(),
     note: text("note"),
+    // What this person is registered as. Null = either; set = onboarding offers
+    // only this kind, and the server refuses the other.
+    intendedRole: orgType("intended_role"),
     createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
     // Who, when it was a script rather than a signed-in admin.
     createdByLabel: text("created_by_label"),

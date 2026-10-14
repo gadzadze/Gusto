@@ -89,7 +89,7 @@ run `npx supabase init` in a scratch folder and copy those settings over.
 | `npm run db:generate` | Generate a migration from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations (uses `DATABASE_URL_DIRECT`) |
 | `npm run admin:grant -- <email>` | Make an address a platform admin (also allows it to sign in) |
-| `npm run user:allow -- <email>` | Let an address sign in (invite-only app); optional `--note "text"` |
+| `npm run user:allow -- <email>` | Let an address sign in (invite-only app); optional `--note "text"` and `--role supplier\|buyer` |
 | `npm run env:local` | Write the local Supabase URL and keys into `.env.local` (after `supabase start`) |
 | `npm run db:seed` | Fill a **local** database with `[DEMO]` data (refuses anything else) |
 | `npm run check:secrets` | After `npm run build`: fail if a server secret is in the client bundle |
@@ -244,7 +244,7 @@ Nobody can register themselves, which keeps spam out. An email address can
 request a sign-in link only if:
 
 1. it is on the **allow-list** (admin page `/admin/access`, or
-   `npm run user:allow -- someone@example.com --note "Winiveria, owner"`); or
+   `npm run user:allow -- someone@example.com --note "Winiveria, owner" --role supplier`); or
 2. the person is following a valid **supplier invitation link** (the single-use
    link is the permission, so a WhatsApp-only invitation works); or
 3. a supplier addressed a valid invitation to that email.
@@ -255,7 +255,14 @@ no email, and no account is created.
 
 - **Roles are separate.** Being allowed to sign in gives no role. The person
   onboards as buyer or supplier, and a supplier still waits for your approval at
-  `/admin/suppliers`.
+  `/admin/suppliers`. When you add an address you can **pin its role**
+  (`--role supplier|buyer`, or the Role field on the Access page): the person then
+  sees only that onboarding form, and the server refuses the other kind. Leave it
+  open and they choose.
+- **You are told when a supplier is waiting.** The admin sidebar shows a count next
+  to Suppliers, and every platform admin gets an email (the business name and a
+  link, nothing else) when a supplier finishes onboarding. Like all email it needs
+  Resend configured; without a key it is only logged.
 - **Where it is enforced:** the sign-in form checks the list before anything
   happens; the sign-in return routes (`/auth/confirm`, `/auth/callback`) check
   again and sign the person out if they are not allowed (this covers Google); and

@@ -37,3 +37,17 @@ export async function isEmailAllowed(rawEmail: string, nextPath: string | null =
     .where(and(sql`lower(${supplierCustomers.contactEmail}) = ${email}`));
   return open.some((i) => isInvitationUsable(i) && i.customerStatus === "invited" && i.supplierStatus === "active");
 }
+
+/**
+ * The kind of organization this address was registered for ("buyer" or
+ * "supplier"), or null when the admin left it open or there is no row. Onboarding
+ * offers only this kind and the server refuses the other.
+ */
+export async function pinnedRoleFor(rawEmail: string | null | undefined): Promise<"buyer" | "supplier" | null> {
+  if (!rawEmail) return null;
+  const [row] = await getDb()
+    .select({ role: allowedEmails.intendedRole, revokedAt: allowedEmails.revokedAt })
+    .from(allowedEmails)
+    .where(eq(allowedEmails.email, normalizeEmail(rawEmail)));
+  return row && row.revokedAt === null ? row.role : null;
+}

@@ -31,7 +31,7 @@ type FormFields = {
 
 const resolver = zodFormResolver<FormFields>(onboardingSchema);
 
-export function OnboardingForm() {
+export function OnboardingForm({ lockedKind = null }: { lockedKind?: "buyer" | "supplier" | null }) {
   const t = useTranslations("onboarding");
   const [pending, startTransition] = useTransition();
   const [formError, setFormError] = useState<OnboardingResult["error"] | null>(null);
@@ -44,7 +44,7 @@ export function OnboardingForm() {
   } = useForm<FormFields>({
     resolver,
     defaultValues: {
-      kind: "",
+      kind: lockedKind ?? "",
       businessName: "",
       businessType: "",
       legalId: "",
@@ -86,7 +86,9 @@ export function OnboardingForm() {
         </p>
       ) : null}
 
-      <fieldset className="space-y-3">
+      {/* The admin registered this address for one kind: no choice to make. */}
+      {lockedKind ? <input type="hidden" {...register("kind")} /> : null}
+      <fieldset className="space-y-3" hidden={lockedKind !== null}>
         <legend className="mb-3 text-sm font-medium">{t("kindLegend")}</legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <KindOption

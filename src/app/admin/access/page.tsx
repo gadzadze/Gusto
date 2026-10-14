@@ -30,6 +30,7 @@ async function Access() {
           id: r.id,
           email: r.email,
           note: r.note,
+          role: r.intendedRole,
           revoked: r.revokedAt !== null,
           addedAt: format.dateTime(r.createdAt, { dateStyle: "medium" }),
         }))}

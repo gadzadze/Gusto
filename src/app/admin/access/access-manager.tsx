@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";
 import { allowEmailAction, restoreEmailAction, revokeEmailAction } from "./actions";
 
-export type AccessRow = { id: string; email: string; note: string | null; revoked: boolean; addedAt: string };
+export type AccessRow = { id: string; email: string; note: string | null; role: "buyer" | "supplier" | null; revoked: boolean; addedAt: string };
 
 type Message = { tone: "success" | "error"; text: string } | null;
 
@@ -17,6 +18,7 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
   const t = useTranslations("admin.access");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
+  const [role, setRole] = useState<"" | "buyer" | "supplier">("");
   const [message, setMessage] = useState<Message>(null);
   const [pending, startTransition] = useTransition();
 
@@ -29,16 +31,17 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
   return (
     <div className="space-y-6">
       <form
-        className="grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end"
+        className="grid gap-3 sm:grid-cols-[1fr_1fr_10rem_auto] sm:items-end"
         onSubmit={(e) => {
           e.preventDefault();
           setMessage(null);
           startTransition(async () => {
-            const result = await allowEmailAction({ email, note });
+            const result = await allowEmailAction({ email, note, role });
             if (result.ok) {
               setMessage({ tone: "success", text: result.authUserFailed ? t("authUserWarning") : t(`done.${result.status}`) });
               setEmail("");
               setNote("");
+              setRole("");
             } else {
               setMessage({ tone: "error", text: errorText(result.error) });
             }
@@ -53,11 +56,21 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
           <Label htmlFor="access-note">{t("note")}</Label>
           <Input id="access-note" value={note} maxLength={200} placeholder={t("notePlaceholder")} onChange={(e) => setNote(e.target.value)} />
         </div>
+        <div className="space-y-2">
+          <Label htmlFor="access-role">{t("role")}</Label>
+          <Select id="access-role" value={role} onChange={(e) => setRole(e.target.value as "" | "buyer" | "supplier")} aria-describedby="access-role-hint">
+            <option value="">{t("roles.any")}</option>
+            <option value="supplier">{t("roles.supplier")}</option>
+            <option value="buyer">{t("roles.buyer")}</option>
+          </Select>
+        </div>
         <Button type="submit" disabled={pending}>
           <UserPlus />
           {t("add")}
         </Button>
       </form>
+
+      <p id="access-role-hint" className="-mt-3 text-xs text-muted-foreground">{t("roleHint")}</p>
 
       {message ? <FormAlert tone={message.tone}>{message.text}</FormAlert> : null}
 
@@ -70,6 +83,7 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
               <div className="min-w-0 flex-1">
                 <p className="truncate font-medium">{row.email}</p>
                 <p className="truncate text-sm text-muted-foreground">
+                  {row.role ? `${t(`roles.${row.role}`)} · ` : ""}
                   {row.note ? `${row.note} · ` : ""}
                   {t("added")} {row.addedAt}
                 </p>

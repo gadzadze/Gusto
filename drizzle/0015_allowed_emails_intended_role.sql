@@ -1,0 +1,1 @@
+ALTER TABLE "allowed_emails" ADD COLUMN "intended_role" "org_type";

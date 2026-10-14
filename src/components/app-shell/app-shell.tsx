@@ -20,13 +20,15 @@ export type ShellProps = {
   showAdminLink: boolean;
   /** Notification bell (buyer and supplier areas); rendered in Suspense by the shell. */
   bell?: React.ReactNode;
+  /** Counts shown next to nav items, keyed by href. */
+  navBadges?: Record<string, number>;
   children: React.ReactNode;
 };
 
-export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, children }: ShellProps) {
+export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, navBadges, children }: ShellProps) {
   const t = await getTranslations();
   const roleLabel = t(`roles.${area}`);
-  const navProps = { area, homeHref, showAdminLink };
+  const navProps = { area, homeHref, showAdminLink, badges: navBadges };
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">

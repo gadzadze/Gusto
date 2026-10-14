@@ -20,13 +20,20 @@ export const noteSchema = z.string().trim().max(200);
 
 export type Actor = { userId: string | null; label?: string };
 
-export type AllowResult = { status: "allowed" | "restored" | "already_allowed"; email: string };
+export type AllowResult = { status: "allowed" | "restored" | "updated" | "already_allowed"; email: string };
+
+export type IntendedRole = "buyer" | "supplier" | null;
 
 /**
  * Puts an address on the allow-list (or lifts a revocation). Used by the admin
  * page (Actor = the admin) and by scripts (Actor = a label). Audited.
  */
-export async function allowEmail(actor: Actor, rawEmail: string, rawNote?: string): Promise<AllowResult> {
+export async function allowEmail(
+  actor: Actor,
+  rawEmail: string,
+  rawNote?: string,
+  role?: IntendedRole,
+): Promise<AllowResult> {
   const parsed = accessEmailSchema.safeParse(normalizeEmail(rawEmail));
   if (!parsed.success) throw new StateError<AccessError>("invalid_email");
   const email = parsed.data;
@@ -39,13 +46,24 @@ export async function allowEmail(actor: Actor, rawEmail: string, rawNote?: strin
       await tx.insert(allowedEmails).values({
         email,
         note,
+        intendedRole: role ?? null,
         createdByUserId: actor.userId,
         createdByLabel: actor.label ?? null,
       });
       status = "allowed";
     } else if (existing.revokedAt) {
-      await tx.update(allowedEmails).set({ revokedAt: null, ...(note ? { note } : {}) }).where(eq(allowedEmails.id, existing.id));
+      await tx
+        .update(allowedEmails)
+        .set({ revokedAt: null, ...(note ? { note } : {}), ...(role !== undefined ? { intendedRole: role } : {}) })
+        .where(eq(allowedEmails.id, existing.id));
       status = "restored";
+    } else if (role !== undefined && role !== existing.intendedRole) {
+      // Re-adding with a different role changes the pin (null = either).
+      await tx
+        .update(allowedEmails)
+        .set({ intendedRole: role, ...(note ? { note } : {}) })
+        .where(eq(allowedEmails.id, existing.id));
+      status = "updated";
     } else {
       return { status: "already_allowed", email };
     }
@@ -55,7 +73,7 @@ export async function allowEmail(actor: Actor, rawEmail: string, rawNote?: strin
       action: "access.allow",
       targetType: "allowed_email",
       targetId: email,
-      data: { status, note },
+      data: { status, note, role: role ?? null },
     });
     return { status, email };
   });

@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { fieldErrorsFrom, type ValidationKey } from "@/lib/validation/form-errors";
 import { buyerOnboardingSchema } from "@/lib/validation/onboarding";
+import { pinnedRoleFor } from "@/server/auth/allow-list";
 import { requireOrg, requireUser } from "@/server/auth/guards";
 import { acceptInvitationAsBuyer, acceptInvitationWithNewBuyer, type InvitationError } from "@/server/domain/customers/invitations";
 import { StateError } from "@/server/domain/errors";
@@ -12,7 +13,7 @@ import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 
 export type AcceptResult = {
   ok: false;
-  error: InvitationError | "already_onboarded" | "invalid" | "rate_limited" | "unknown";
+  error: InvitationError | "already_onboarded" | "invalid" | "rate_limited" | "wrong_role" | "unknown";
   fieldErrors?: Record<string, ValidationKey>;
 };
 
@@ -58,6 +59,8 @@ export async function acceptInviteWithOnboardingAction(token: string, raw: unkno
   const user = await requireUser();
   const limited = await limitByIp();
   if (limited) return limited;
+  // An address the admin registered as a supplier doesn't become a buyer.
+  if ((await pinnedRoleFor(user.email)) === "supplier") return { ok: false, error: "wrong_role" };
   const parsed = buyerOnboardingSchema.safeParse({ ...(raw as object), kind: "buyer" });
   if (!parsed.success) return { ok: false, error: "invalid", fieldErrors: fieldErrorsFrom(parsed.error) };
   let supplierOrgId: string;

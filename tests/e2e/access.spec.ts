@@ -110,3 +110,44 @@ test("a supplier's invitation link lets its recipient request a sign-in link", a
   await requestLink(visitor, `other-${suffix}@test.gusto.ge`, `/invite/${"A".repeat(43)}`);
   await expect(visitor.getByText(NOT_REGISTERED)).toBeVisible();
 });
+
+test("a registered role skips the choice, and a waiting supplier shows up on the admin badge", async ({ browser }) => {
+  test.setTimeout(150_000);
+  const admin = await (await browser.newContext()).newPage();
+  const adminEmail = await signInAsNewUser(admin, "role-admin");
+  grantAdmin(adminEmail);
+
+  const supplierEmail = `pinned-${Date.now().toString(36)}@test.gusto.ge`;
+  await admin.goto("/admin/access");
+  await admin.waitForLoadState("networkidle");
+  await admin.getByLabel("ელფოსტა", { exact: true }).fill(supplierEmail);
+  await admin.getByLabel("როლი").selectOption("supplier");
+  await admin.getByRole("button", { name: "დამატება" }).click();
+  await expect(admin.getByRole("listitem").filter({ hasText: supplierEmail })).toContainText("მომწოდებელი");
+
+  // Sign that address in (what clicking the emailed link does).
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  const api = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  const link = await api.auth.admin.generateLink({ type: "magiclink", email: supplierEmail });
+  if (link.error) throw link.error;
+  const supplier = await (await browser.newContext()).newPage();
+  await supplier.goto(`/auth/confirm?token_hash=${link.data.properties.hashed_token}&type=magiclink`);
+  await expect(supplier).toHaveURL(/\/onboarding$/);
+
+  // No "how do you use Gusto?" choice: straight to the supplier form.
+  await expect(supplier.getByText("როგორ იყენებთ Gusto-ს?")).toBeHidden();
+  await expect(supplier.getByLabel("სავაჭრო სახელი")).toBeVisible();
+  await supplier.getByLabel("სავაჭრო სახელი").fill(`[E2E] Pinned Supplier ${Date.now().toString(36)}`);
+  await supplier.getByLabel("საკონტაქტო პირი").fill("Giorgi");
+  await supplier.getByLabel("ტელეფონი").fill("599 00 00 00");
+  await supplier.getByLabel("ქალაქი").fill("თბილისი");
+  await supplier.getByLabel("მიწოდების არეალი").fill("თბილისი");
+  await supplier.getByRole("button", { name: "გაგრძელება" }).click();
+  await expect(supplier).toHaveURL(/\/supplier$/);
+
+  // The admin sees a number next to "Suppliers".
+  await admin.goto("/admin");
+  const suppliersLink = admin.getByRole("link", { name: /მომწოდებლები/ }).first();
+  await expect(suppliersLink.locator("span[aria-label]")).toHaveText(/^\d+$/);
+});

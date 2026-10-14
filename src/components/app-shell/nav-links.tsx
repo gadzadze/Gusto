@@ -23,7 +23,20 @@ function isActive(pathname: string, href: string, area: Area): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-type Props = { area: Area; homeHref: string | null; showAdminLink: boolean };
+/** `badges` maps a nav href to a count shown next to it (e.g. suppliers waiting for approval). */
+type Props = { area: Area; homeHref: string | null; showAdminLink: boolean; badges?: Record<string, number> };
+
+function Count({ n, label }: { n: number; label: string }) {
+  if (n <= 0) return null;
+  return (
+    <span
+      aria-label={label}
+      className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold leading-5 text-brand-foreground tabular-nums"
+    >
+      {n > 99 ? "99+" : n}
+    </span>
+  );
+}
 
 export function SidebarNav(props: Props) {
   const t = useTranslations("nav");
@@ -44,6 +57,7 @@ export function SidebarNav(props: Props) {
           >
             <item.icon aria-hidden className="size-4" />
             {t(item.labelKey)}
+            <Count n={props.badges?.[item.href] ?? 0} label={String(props.badges?.[item.href] ?? 0)} />
           </Link>
         );
       })}
@@ -72,7 +86,12 @@ export function BottomNav(props: Props) {
                   active ? "text-brand" : "text-muted-foreground",
                 )}
               >
-                <item.icon aria-hidden className="size-5" />
+                <span className="relative">
+                  <item.icon aria-hidden className="size-5" />
+                  {(props.badges?.[item.href] ?? 0) > 0 ? (
+                    <span aria-hidden className="absolute -right-1.5 -top-1 size-2.5 rounded-full bg-brand" />
+                  ) : null}
+                </span>
                 {t(item.labelKey)}
               </Link>
             </li>
