@@ -67,6 +67,9 @@ async function Customers() {
                   {c.buyerOrgName && c.buyerOrgName !== c.businessName ? (
                     <span className="block text-xs text-muted-foreground">{c.buyerOrgName}</span>
                   ) : null}
+                  {c.buyerUnverified ? (
+                    <span className="block text-xs text-muted-foreground">{t("awaitingVerification")}</span>
+                  ) : null}
                   {c.status === "invited" ? (
                     <span className="block text-xs text-muted-foreground">
                       {c.inviteExpiresAt

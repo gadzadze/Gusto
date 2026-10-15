@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 import "../../scripts/load-env";
-import { grantAdmin, signInAsNewUser } from "./auth-helpers";
+import { grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
 import { adminWithCategory, approveSupplier, inviteCustomer, onboardSupplier } from "./flows";
 
 // Sign-in is invite-only: unknown addresses get no link, the admin manages the
@@ -14,7 +14,7 @@ async function requestLink(page: Page, email: string, next = "") {
   await page.goto(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   await page.waitForLoadState("networkidle");
   await page.getByLabel("ელფოსტა").fill(email);
-  await page.getByRole("button", { name: "შესვლის ბმულის გაგზავნა" }).click();
+  await page.getByRole("button", { name: "პირველი შესვლა — გამომიგზავნეთ ბმული" }).click();
 }
 
 test("an unregistered address gets no sign-in link", async ({ page }) => {
@@ -121,7 +121,7 @@ test("a registered role skips the choice, and a waiting supplier shows up on the
   await admin.goto("/admin/access");
   await admin.waitForLoadState("networkidle");
   await admin.getByLabel("ელფოსტა", { exact: true }).fill(supplierEmail);
-  await admin.getByLabel("როლი").selectOption("supplier");
+  await admin.getByLabel("როლი", { exact: true }).selectOption("supplier");
   await admin.getByRole("button", { name: "დამატება" }).click();
   await expect(admin.getByRole("listitem").filter({ hasText: supplierEmail })).toContainText("მომწოდებელი");
 
@@ -133,12 +133,19 @@ test("a registered role skips the choice, and a waiting supplier shows up on the
   if (link.error) throw link.error;
   const supplier = await (await browser.newContext()).newPage();
   await supplier.goto(`/auth/confirm?token_hash=${link.data.properties.hashed_token}&type=magiclink`);
+  // First sign-in: choose a password before anything else.
+  await expect(supplier).toHaveURL(/\/account\/password$/);
+  await supplier.waitForLoadState("networkidle");
+  await supplier.getByLabel("ახალი პაროლი").fill("a-long-enough-password");
+  await supplier.getByLabel("გაიმეორეთ პაროლი").fill("a-long-enough-password");
+  await supplier.getByRole("button", { name: "პაროლის შენახვა" }).click();
   await expect(supplier).toHaveURL(/\/onboarding$/);
 
   // No "how do you use Gusto?" choice: straight to the supplier form.
   await expect(supplier.getByText("როგორ იყენებთ Gusto-ს?")).toBeHidden();
   await expect(supplier.getByLabel("სავაჭრო სახელი")).toBeVisible();
   await supplier.getByLabel("სავაჭრო სახელი").fill(`[E2E] Pinned Supplier ${Date.now().toString(36)}`);
+  await supplier.getByLabel("საიდენტიფიკაციო კოდი").fill(randomLegalId());
   await supplier.getByLabel("საკონტაქტო პირი").fill("Giorgi");
   await supplier.getByLabel("ტელეფონი").fill("599 00 00 00");
   await supplier.getByLabel("ქალაქი").fill("თბილისი");

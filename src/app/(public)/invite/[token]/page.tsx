@@ -6,6 +6,7 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { registrationFor } from "@/server/auth/allow-list";
 import { getAccessState } from "@/server/auth/guards";
 import { previewInvitation } from "@/server/domain/customers/invitations";
 import { AcceptButton, NewBuyerForm } from "./invite-forms";
@@ -93,12 +94,14 @@ async function Invite({ params }: PageProps<"/invite/[token]">) {
     );
   }
 
+  const registration = await registrationFor(state.email);
   return (
     <Card>
       <CardContent className="space-y-6 pt-6">
         {header}
         <NewBuyerForm
           token={token}
+          lockedLegalId={registration?.legalId ?? null}
           prefill={{
             businessName: preview.businessName,
             contactName: preview.contactName ?? "",

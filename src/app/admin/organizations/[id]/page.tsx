@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireAdmin } from "@/server/auth/guards";
-import { getBuyerForAdmin } from "@/server/domain/admin/organizations";
+import { VerificationCard } from "@/components/admin/verification-card";
+import { getBuyerForAdmin, getVerificationInfo } from "@/server/domain/admin/organizations";
 import { NotFoundError } from "@/server/domain/errors";
 import { reviewBuyerAction } from "../actions";
 
@@ -41,6 +42,7 @@ async function Buyer({ params }: PageProps<"/admin/organizations/[id]">) {
     if (error instanceof NotFoundError) notFound();
     throw error;
   });
+  const info = await getVerificationInfo(ctx, org.id);
   const none = t("detail.none");
   return (
     <div className="space-y-6">
@@ -50,6 +52,7 @@ async function Buyer({ params }: PageProps<"/admin/organizations/[id]">) {
         {to("orders", { count: orderCount })}
       </p>
       <ReviewPanel orgId={org.id} status={org.status} review={reviewBuyerAction} />
+      <VerificationCard info={info} />
       <Card>
         <CardHeader>
           <CardTitle>{t("detail.contact")}</CardTitle>

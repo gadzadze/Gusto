@@ -1,10 +1,11 @@
 import "server-only";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
 import { authUsers } from "drizzle-orm/supabase";
 import { z } from "zod";
 import { normalizeEmail } from "@/lib/auth/invite-path";
 import { getDb } from "@/server/db/client";
-import { allowedEmails } from "@/server/db/schema";
+import { allowedEmails, organizations } from "@/server/db/schema";
+import { isValidLegalId, normalizeLegalId } from "@/lib/legal-id";
 import { writeAudit } from "@/server/domain/audit";
 import { assertAdmin, type AdminCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
@@ -13,7 +14,7 @@ import { NotFoundError, StateError } from "@/server/domain/errors";
 // an address does not give it a role: the person still onboards, and a supplier
 // still waits for approval.
 
-export type AccessError = "invalid_email" | "cannot_revoke_self";
+export type AccessError = "invalid_email" | "cannot_revoke_self" | "invalid_legal_id" | "legal_id_taken";
 
 export const accessEmailSchema = z.email().max(254);
 export const noteSchema = z.string().trim().max(200);
@@ -24,6 +25,9 @@ export type AllowResult = { status: "allowed" | "restored" | "updated" | "alread
 
 export type IntendedRole = "buyer" | "supplier" | null;
 
+/** The business the admin verified (ID check, phone call) before registering the address. */
+export type VerifiedCompany = { businessName: string; legalId: string };
+
 /**
  * Puts an address on the allow-list (or lifts a revocation). Used by the admin
  * page (Actor = the admin) and by scripts (Actor = a label). Audited.
@@ -33,13 +37,41 @@ export async function allowEmail(
   rawEmail: string,
   rawNote?: string,
   role?: IntendedRole,
+  company?: VerifiedCompany,
 ): Promise<AllowResult> {
   const parsed = accessEmailSchema.safeParse(normalizeEmail(rawEmail));
   if (!parsed.success) throw new StateError<AccessError>("invalid_email");
   const email = parsed.data;
   const note = noteSchema.parse(rawNote ?? "") || null;
 
+  // With a legal ID the person's business starts active (already vetted), so
+  // the ID must be well-formed and not already registered to someone else.
+  const verified = company ? { businessName: company.businessName.trim().slice(0, 160), legalId: normalizeLegalId(company.legalId) } : null;
+  if (verified && !isValidLegalId(verified.legalId)) throw new StateError<AccessError>("invalid_legal_id");
+  if (verified && !verified.businessName) throw new StateError<AccessError>("invalid_legal_id");
+
   return getDb().transaction(async (tx) => {
+    if (verified) {
+      const [org] = await tx
+        .select({ id: organizations.id })
+        .from(organizations)
+        .where(and(eq(organizations.legalId, verified.legalId), role ? eq(organizations.type, role) : undefined))
+        .limit(1);
+      const [other] = await tx
+        .select({ id: allowedEmails.id })
+        .from(allowedEmails)
+        .where(
+          and(
+            eq(allowedEmails.legalId, verified.legalId),
+            ne(allowedEmails.email, email),
+            isNull(allowedEmails.revokedAt),
+            role ? eq(allowedEmails.intendedRole, role) : undefined,
+          ),
+        )
+        .limit(1);
+      if (org || other) throw new StateError<AccessError>("legal_id_taken");
+    }
+    const companyFields = verified ? { businessName: verified.businessName, legalId: verified.legalId } : {};
     const [existing] = await tx.select().from(allowedEmails).where(eq(allowedEmails.email, email)).for("update");
     let status: AllowResult["status"];
     if (!existing) {
@@ -47,6 +79,7 @@ export async function allowEmail(
         email,
         note,
         intendedRole: role ?? null,
+        ...companyFields,
         createdByUserId: actor.userId,
         createdByLabel: actor.label ?? null,
       });
@@ -54,14 +87,14 @@ export async function allowEmail(
     } else if (existing.revokedAt) {
       await tx
         .update(allowedEmails)
-        .set({ revokedAt: null, ...(note ? { note } : {}), ...(role !== undefined ? { intendedRole: role } : {}) })
+        .set({ revokedAt: null, ...companyFields, ...(note ? { note } : {}), ...(role !== undefined ? { intendedRole: role } : {}) })
         .where(eq(allowedEmails.id, existing.id));
       status = "restored";
-    } else if (role !== undefined && role !== existing.intendedRole) {
-      // Re-adding with a different role changes the pin (null = either).
+    } else if ((role !== undefined && role !== existing.intendedRole) || (verified && verified.legalId !== existing.legalId)) {
+      // Re-adding with a different role or verified company changes the row (role null = either).
       await tx
         .update(allowedEmails)
-        .set({ intendedRole: role, ...(note ? { note } : {}) })
+        .set({ ...(role !== undefined ? { intendedRole: role } : {}), ...companyFields, ...(note ? { note } : {}) })
         .where(eq(allowedEmails.id, existing.id));
       status = "updated";
     } else {
@@ -73,7 +106,7 @@ export async function allowEmail(
       action: "access.allow",
       targetType: "allowed_email",
       targetId: email,
-      data: { status, note, role: role ?? null },
+      data: { status, note, role: role ?? null, legalId: verified?.legalId ?? null },
     });
     return { status, email };
   });

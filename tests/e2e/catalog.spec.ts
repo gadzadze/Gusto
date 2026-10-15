@@ -2,7 +2,7 @@ import { writeFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 import "../../scripts/load-env";
-import { grantAdmin, signInAsNewUser } from "./auth-helpers";
+import { grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
 
 test("admin sets up a category; a supplier builds a catalog by hand and by import; admin approves it", async ({
   browser,
@@ -23,9 +23,10 @@ test("admin sets up a category; a supplier builds a catalog by hand and by impor
 
   // Supplier: onboard (pending review) and create a product with a photo.
   const page = await (await browser.newContext()).newPage();
-  await signInAsNewUser(page, "supplier");
+  await signInAsNewUser(page, "supplier", { vetted: false });
   await page.getByText("ვაწვდი", { exact: true }).click();
   await page.getByLabel("სავაჭრო სახელი").fill(supplierName);
+  await page.getByLabel("საიდენტიფიკაციო კოდი").fill(randomLegalId());
   await page.getByLabel("საკონტაქტო პირი").fill("Giorgi");
   await page.getByLabel("ტელეფონი").fill("599 00 00 00");
   await page.getByLabel("ქალაქი").fill("თბილისი");

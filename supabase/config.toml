@@ -20,6 +20,7 @@ major_version = 17
 port = 54323
 
 [auth]
+minimum_password_length = 10
 # Sign-in is invite-only (README, "Access"): users are created by the app and
 # its scripts through the admin API, never by self sign-up.
 enable_signup = false

@@ -51,3 +51,26 @@ export async function pinnedRoleFor(rawEmail: string | null | undefined): Promis
     .where(eq(allowedEmails.email, normalizeEmail(rawEmail)));
   return row && row.revokedAt === null ? row.role : null;
 }
+
+export type Registration = {
+  role: "buyer" | "supplier" | null;
+  businessName: string | null;
+  /** Set when the admin verified the business before registering the address. */
+  legalId: string | null;
+};
+
+/** What the admin recorded for this address, or null (no row, or revoked). */
+export async function registrationFor(rawEmail: string | null | undefined): Promise<Registration | null> {
+  if (!rawEmail) return null;
+  const [row] = await getDb()
+    .select({
+      role: allowedEmails.intendedRole,
+      businessName: allowedEmails.businessName,
+      legalId: allowedEmails.legalId,
+      revokedAt: allowedEmails.revokedAt,
+    })
+    .from(allowedEmails)
+    .where(eq(allowedEmails.email, normalizeEmail(rawEmail)));
+  if (!row || row.revokedAt) return null;
+  return { role: row.role, businessName: row.businessName, legalId: row.legalId };
+}

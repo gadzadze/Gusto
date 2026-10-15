@@ -13,7 +13,7 @@ test("a supplier invites a customer on a custom price list; the buyer joins and 
 
   const admin = await adminWithCategory(browser, category);
   const supplier = await (await browser.newContext()).newPage();
-  await signInAsNewUser(supplier, "supplier");
+  await signInAsNewUser(supplier, "supplier", { vetted: false }); // unvetted: starts pending review
   await onboardSupplier(supplier, supplierName);
 
   // Pending suppliers can't invite yet.

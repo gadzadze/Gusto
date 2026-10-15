@@ -14,12 +14,13 @@ import {
   OnboardingError,
   createOrganizationForUser,
 } from "@/server/domain/onboarding/create-organization";
-import { createAuthUser } from "./helpers";
+import { createAuthUser, randomLegalId } from "./helpers";
 
 const buyerInput = (overrides: Record<string, unknown> = {}): OnboardingValues =>
   onboardingSchema.parse({
     kind: "buyer",
     businessName: "[TEST] Café Tbilisi",
+    legalId: randomLegalId(),
     businessType: "cafe",
     contactName: "Nino",
     phone: "555 12 34 56",
@@ -33,7 +34,7 @@ const supplierInput = (overrides: Record<string, unknown> = {}): OnboardingValue
   onboardingSchema.parse({
     kind: "supplier",
     businessName: "[TEST] Beverage Distribution",
-    legalId: "123456789",
+    legalId: randomLegalId(),
     contactName: "Giorgi",
     phone: "599 00 00 00",
     city: "თბილისი",
@@ -50,9 +51,32 @@ async function orgsOf(userId: string) {
 }
 
 describe("createOrganizationForUser", () => {
+  it("creates a buyer org pending review unless the admin vetted the ID, then active", async () => {
+    const unvetted = await createAuthUser();
+    await createOrganizationForUser(unvetted.id, buyerInput());
+    expect((await orgsOf(unvetted.id))[0].org.status).toBe("pending_review");
+
+    // The admin's verified ID wins over whatever was typed, and starts the org active.
+    const vettedId = randomLegalId();
+    const vetted = await createAuthUser();
+    await createOrganizationForUser(vetted.id, buyerInput({ legalId: "111111111" }), { preapprovedLegalId: vettedId });
+    expect((await orgsOf(vetted.id))[0].org).toMatchObject({ status: "active", legalId: vettedId });
+  });
+
+  it("refuses a legal ID that is already registered for the same kind", async () => {
+    const legalId = randomLegalId();
+    await createOrganizationForUser((await createAuthUser()).id, buyerInput({ legalId }));
+    await expect(createOrganizationForUser((await createAuthUser()).id, buyerInput({ legalId }))).rejects.toEqual(
+      new OnboardingError("legal_id_taken"),
+    );
+    // The same company may also be a supplier.
+    await createOrganizationForUser((await createAuthUser()).id, supplierInput({ legalId }));
+  });
+
   it("creates an active buyer org with owner membership, default address, profile and audit row", async () => {
     const user = await createAuthUser();
-    const { orgId, orgType } = await createOrganizationForUser(user.id, buyerInput());
+    const legalId = randomLegalId();
+    const { orgId, orgType } = await createOrganizationForUser(user.id, buyerInput({ legalId }), { preapprovedLegalId: legalId });
     expect(orgType).toBe("buyer");
 
     const memberships = await orgsOf(user.id);
@@ -92,7 +116,7 @@ describe("createOrganizationForUser", () => {
     const { orgId } = await createOrganizationForUser(user.id, supplierInput());
 
     const [{ org }] = await orgsOf(user.id);
-    expect(org).toMatchObject({ type: "supplier", status: "pending_review", legalId: "123456789", businessType: null });
+    expect(org).toMatchObject({ type: "supplier", status: "pending_review", businessType: null });
 
     const settings = await getDb()
       .select()
@@ -178,11 +202,13 @@ describe("organization invariants in the database", () => {
     ).rejects.toThrow();
   });
 
-  it("does not allow a buyer org to be pending review", async () => {
-    const user = await createAuthUser();
-    const { orgId } = await createOrganizationForUser(user.id, buyerInput());
+  it("keeps a legal ID unique per kind in the database itself", async () => {
+    const legalId = randomLegalId();
+    const first = await createOrganizationForUser((await createAuthUser()).id, buyerInput({ legalId }));
+    const second = await createOrganizationForUser((await createAuthUser()).id, buyerInput());
     await expect(
-      getDb().update(organizations).set({ status: "pending_review" }).where(eq(organizations.id, orgId)),
+      getDb().update(organizations).set({ legalId }).where(eq(organizations.id, second.orgId)),
     ).rejects.toThrow();
+    expect(first.orgId).not.toBe(second.orgId);
   });
 });

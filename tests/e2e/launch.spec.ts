@@ -61,9 +61,9 @@ async function expectNotFound(page: Page, path: string) {
   await expect(page.getByRole("heading", { name: "გვერდი ვერ მოიძებნა" }), path).toBeVisible();
 }
 
-async function newPage(browser: Browser, label: string): Promise<Page> {
+async function newPage(browser: Browser, label: string, vetted = true): Promise<Page> {
   const page = await (await browser.newContext()).newPage();
-  await signInAsNewUser(page, label);
+  await signInAsNewUser(page, label, { vetted });
   return page;
 }
 
@@ -82,7 +82,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   await expect(fresh.getByText("მომწოდებლები ჯერ არ გყავთ")).toBeVisible();
 
   // Supplier: onboarding, approval, a product with a photo.
-  const supplier = await newPage(browser, "launch-supplier");
+  const supplier = await newPage(browser, "launch-supplier", false);
   await onboardSupplier(supplier, supplierName);
   await expect(supplier.getByText("ანგარიში განხილვის პროცესშია")).toBeVisible();
   await approveSupplier(admin, supplierName);

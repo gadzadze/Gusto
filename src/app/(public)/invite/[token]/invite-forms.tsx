@@ -44,6 +44,7 @@ export function AcceptButton({ token, label }: { token: string; label: string })
 type Fields = {
   kind: "buyer";
   businessName: string;
+  legalId: string;
   businessType: string;
   contactName: string;
   phone: string;
@@ -57,9 +58,12 @@ const resolver = zodFormResolver<Fields>(buyerOnboardingSchema);
 export function NewBuyerForm({
   token,
   prefill,
+  lockedLegalId = null,
 }: {
   token: string;
   prefill: { businessName: string; contactName: string; phone: string };
+  /** Set when the admin already verified this address's legal ID. */
+  lockedLegalId?: string | null;
 }) {
   const t = useTranslations("onboarding");
   const ti = useTranslations("invite");
@@ -73,7 +77,15 @@ export function NewBuyerForm({
     formState: { errors },
   } = useForm<Fields>({
     resolver,
-    defaultValues: { kind: "buyer", businessType: "", city: "", addressLine: "", deliveryInstructions: "", ...prefill },
+    defaultValues: {
+      kind: "buyer",
+      businessType: "",
+      legalId: lockedLegalId ?? "",
+      city: "",
+      addressLine: "",
+      deliveryInstructions: "",
+      ...prefill,
+    },
   });
 
   const err = (name: keyof Fields) => errors[name]?.message;
@@ -103,6 +115,9 @@ export function NewBuyerForm({
       {error ? <FormAlert tone="error">{error}</FormAlert> : null}
       <Field id="businessName" label={t("businessName")} error={err("businessName")}>
         <Input autoComplete="organization" {...input("businessName")} />
+      </Field>
+      <Field id="legalId" label={t("legalId")} hint={t("legalIdHint")} error={err("legalId")}>
+        <Input inputMode="numeric" readOnly={lockedLegalId !== null} {...input("legalId", t("legalIdHint"))} />
       </Field>
       <div className="grid gap-5 sm:grid-cols-2">
         <Field id="businessType" label={t("businessType")} error={err("businessType")}>

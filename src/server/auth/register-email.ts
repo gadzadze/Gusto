@@ -1,5 +1,5 @@
 import "server-only";
-import { allowEmail, type Actor, type AllowResult, type IntendedRole } from "@/server/domain/admin/access";
+import { allowEmail, type Actor, type AllowResult, type IntendedRole, type VerifiedCompany } from "@/server/domain/admin/access";
 import { ensureAuthUser } from "@/server/supabase/admin";
 
 /**
@@ -13,8 +13,9 @@ export async function registerEmail(
   email: string,
   note?: string,
   role?: IntendedRole,
+  company?: VerifiedCompany,
 ): Promise<AllowResult & { authUser: "created" | "exists" | "failed" }> {
-  const result = await allowEmail(actor, email, note, role);
+  const result = await allowEmail(actor, email, note, role, company);
   try {
     return { ...result, authUser: await ensureAuthUser(result.email) };
   } catch (error) {

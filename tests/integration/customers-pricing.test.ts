@@ -48,6 +48,7 @@ import {
   createSupplier,
   createTestCategory,
   createTestProduct,
+  randomLegalId,
 } from "./helpers";
 
 let admin: AdminCtx;
@@ -125,6 +126,7 @@ describe("invitations", () => {
     const onboarding = onboardingSchema.parse({
       kind: "buyer",
       businessName: "[TEST] New Café",
+      legalId: randomLegalId(),
       businessType: "cafe",
       contactName: "Nino",
       phone: "555123456",
@@ -142,7 +144,7 @@ describe("invitations", () => {
     const { token } = await createCustomer(supplier, newCustomer());
     const existing = await createBuyer();
     const onboarding = onboardingSchema.parse({
-      kind: "buyer", businessName: "[TEST] Dup", businessType: "cafe", contactName: "N", phone: "555123456", city: "T", addressLine: "A",
+      kind: "buyer", businessName: "[TEST] Dup", legalId: randomLegalId(), businessType: "cafe", contactName: "N", phone: "555123456", city: "T", addressLine: "A",
     });
     if (onboarding.kind !== "buyer") throw new Error("unreachable");
     await expect(acceptInvitationWithNewBuyer(existing.userId, token, onboarding)).rejects.toBeInstanceOf(OnboardingError);

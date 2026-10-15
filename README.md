@@ -89,7 +89,7 @@ run `npx supabase init` in a scratch folder and copy those settings over.
 | `npm run db:generate` | Generate a migration from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations (uses `DATABASE_URL_DIRECT`) |
 | `npm run admin:grant -- <email>` | Make an address a platform admin (also allows it to sign in) |
-| `npm run user:allow -- <email>` | Let an address sign in (invite-only app); optional `--note "text"` and `--role supplier\|buyer` |
+| `npm run user:allow -- <email>` | Let an address sign in (invite-only app); optional `--note "text"`, `--role supplier\|buyer`, and `--name "Business" --legal-id 123456789` (= you verified this business: it starts active) |
 | `npm run env:local` | Write the local Supabase URL and keys into `.env.local` (after `supabase start`) |
 | `npm run db:seed` | Fill a **local** database with `[DEMO]` data (refuses anything else) |
 | `npm run check:secrets` | After `npm run build`: fail if a server secret is in the client bundle |
@@ -253,6 +253,16 @@ Revoking an address (admin page) blocks it, even if an invitation would
 otherwise let it in. Everything else gets "this address isn't registered" and
 no email, and no account is created.
 
+- **Your partners use their own company email and choose their own password.**
+  You never create passwords. Add their company address (with business name and
+  legal ID once you have checked them in the registry and by phone). They ask for
+  a link on the login page, open it, and are asked to choose a password; after
+  that they sign in with email and password. "Forgot password" sends the link
+  again. A business you registered with its legal ID starts **active**.
+- **Buyers who arrive from a supplier's WhatsApp link** fill a short form (name,
+  legal ID, contact, phone, address) and wait on a "we are verifying you" page.
+  They appear in Admin → Organizations (and the sidebar badge); check the ID, call
+  them, then approve. Until then they cannot see catalogs or order.
 - **Roles are separate.** Being allowed to sign in gives no role. The person
   onboards as buyer or supplier, and a supplier still waits for your approval at
   `/admin/suppliers`. When you add an address you can **pin its role**

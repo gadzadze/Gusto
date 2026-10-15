@@ -14,11 +14,14 @@ const t = createTranslator({ locale: "ka", messages, namespace: "adminAlerts" })
 ) => string;
 
 /**
- * Tells every platform admin a supplier is waiting for approval. Sent directly
+ * Tells every platform admin a business is waiting for approval. Sent directly
  * (best effort, never throws): it carries only the business name and a link to
  * the review list, nothing secret, and the admin area also shows a badge.
  */
-export async function notifyAdminsSupplierPending(businessName: string): Promise<{ attempted: number }> {
+export async function notifyAdminsOrgPending(
+  kind: "supplier" | "buyer",
+  businessName: string,
+): Promise<{ attempted: number }> {
   const admins = await getDb()
     .select({ email: authUsers.email })
     .from(profiles)
@@ -27,9 +30,10 @@ export async function notifyAdminsSupplierPending(businessName: string): Promise
   const to = admins.map((a) => a.email).filter((e): e is string => Boolean(e));
   if (to.length === 0) return { attempted: 0 };
 
-  const link = `${appUrl()}/admin/suppliers?status=pending_review`;
-  const subject = t("supplierPendingSubject");
-  const text = [t("supplierPendingBody", { name: businessName }), "", t("supplierPendingLink", { link })].join("\n");
+  const path = kind === "supplier" ? "/admin/suppliers?status=pending_review" : "/admin/organizations?type=buyer&status=pending_review";
+  const link = `${appUrl()}${path}`;
+  const subject = t(`${kind}PendingSubject`);
+  const text = [t(`${kind}PendingBody`, { name: businessName }), "", t(`${kind}PendingLink`, { link })].join("\n");
   for (const address of to) {
     try {
       await sendEmail({ to: address, subject, text });
@@ -39,3 +43,5 @@ export async function notifyAdminsSupplierPending(businessName: string): Promise
   }
   return { attempted: to.length };
 }
+
+export const notifyAdminsSupplierPending = (businessName: string) => notifyAdminsOrgPending("supplier", businessName);

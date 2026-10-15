@@ -5,6 +5,7 @@ import { onboardingSchema } from "@/lib/validation/onboarding";
 const validBuyer = {
   kind: "buyer",
   businessName: "[TEST] Café",
+  legalId: "204512345",
   businessType: "cafe",
   contactName: "Nino",
   phone: "555 12 34 56",
@@ -16,7 +17,7 @@ const validBuyer = {
 const validSupplier = {
   kind: "supplier",
   businessName: "[TEST] Distribution",
-  legalId: "",
+  legalId: "205512345",
   contactName: "Giorgi",
   phone: "+995 599 00 00 00",
   city: "თბილისი",
@@ -30,9 +31,18 @@ describe("onboardingSchema", () => {
     expect(parsed.kind === "buyer" && parsed.deliveryInstructions).toBeUndefined();
   });
 
-  it("accepts a valid supplier with or without an ID number", () => {
+  it("requires a legal ID for both kinds", () => {
+    for (const base of [validBuyer, validSupplier]) {
+      const result = onboardingSchema.safeParse({ ...base, legalId: "" });
+      expect(result.success).toBe(false);
+      if (result.success) continue;
+      expect(fieldErrorsFrom(result.error)).toEqual({ legalId: "required" });
+    }
+  });
+
+  it("accepts a valid supplier with a 9 or 11 digit ID number", () => {
     expect(onboardingSchema.parse(validSupplier).kind).toBe("supplier");
-    expect(onboardingSchema.parse({ ...validSupplier, legalId: "123456789" })).toMatchObject({
+    expect(onboardingSchema.parse({ ...validSupplier, legalId: "123 456-789" })).toMatchObject({
       legalId: "123456789",
     });
     expect(onboardingSchema.parse({ ...validSupplier, legalId: "12345678901" })).toMatchObject({

@@ -21,13 +21,16 @@ export type AccessState =
       userId: string;
       email: string | null;
       isPlatformAdmin: boolean;
+      /** The person has chosen their own password (until then every area asks for it). */
+      passwordSet: boolean;
       membership: OrgMembership | null;
     };
 
-export type AccessDecision = "allow" | "login" | "onboarding" | "not_found";
+export type AccessDecision = "allow" | "login" | "set_password" | "onboarding" | "pending" | "not_found";
 
 export function decideAccess(state: AccessState, requirement: Requirement): AccessDecision {
   if (!state.signedIn) return "login";
+  if (!state.passwordSet) return "set_password";
   switch (requirement) {
     case "user":
       return "allow";
@@ -38,6 +41,11 @@ export function decideAccess(state: AccessState, requirement: Requirement): Acce
     case "buyer":
     case "supplier": {
       if (!state.membership) return "onboarding";
+      // A buyer waits for the admin's verification before seeing anything.
+      // (Suppliers keep preparing their catalog while they wait.)
+      if (state.membership.orgType === "buyer" && state.membership.orgStatus === "pending_review") {
+        return requirement === "supplier" ? "not_found" : "pending";
+      }
       if (requirement === "org") return "allow";
       return state.membership.orgType === requirement ? "allow" : "not_found";
     }
@@ -47,6 +55,8 @@ export function decideAccess(state: AccessState, requirement: Requirement): Acce
 /** Where a signed-in user lands by default. */
 export function homePathFor(state: AccessState): string {
   if (!state.signedIn) return "/login";
+  if (!state.passwordSet) return "/account/password";
+  if (state.membership?.orgType === "buyer" && state.membership.orgStatus === "pending_review") return "/pending";
   if (!state.membership) return state.isPlatformAdmin ? "/admin" : "/onboarding";
   return state.membership.orgType === "buyer" ? "/buyer" : "/supplier";
 }

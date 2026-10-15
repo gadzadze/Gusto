@@ -9,7 +9,7 @@ import type { ReviewError } from "@/server/domain/admin/suppliers";
 
 const inputSchema = z.object({
   orgId: z.uuid(),
-  action: z.enum(["suspend", "reactivate"]),
+  action: z.enum(["approve", "suspend", "reactivate"]),
   reason: z.string().max(500).optional(),
 });
 

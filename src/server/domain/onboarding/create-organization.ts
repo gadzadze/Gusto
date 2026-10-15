@@ -1,5 +1,5 @@
 import "server-only";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { OnboardingValues } from "@/lib/validation/onboarding";
 import { getDb, type Tx } from "@/server/db/client";
 import {
@@ -8,12 +8,13 @@ import {
   organizations,
   profiles,
   supplierSettings,
+  type OrgStatus,
   type OrgType,
 } from "@/server/db/schema";
 import { writeAudit } from "@/server/domain/audit";
 
 export class OnboardingError extends Error {
-  constructor(public readonly code: "already_onboarded") {
+  constructor(public readonly code: "already_onboarded" | "legal_id_taken") {
     super(code);
     this.name = "OnboardingError";
   }
@@ -23,14 +24,20 @@ export class OnboardingError extends Error {
  * Creates the user's organization, their owner membership and the type's
  * first settings row, in one transaction.
  *
- * The status is decided here, never by the caller: buyers start `active`,
- * suppliers `pending_review` until an admin approves them.
+ * The status is decided here, never by the caller. An organization starts
+ * `pending_review` (the admin checks the legal ID and calls them) unless the
+ * admin already vetted the business when registering the address: then
+ * `preapprovedLegalId` is that vetted ID, it replaces whatever was typed, and
+ * the organization starts `active`.
  */
+export type CreateOptions = { preapprovedLegalId?: string | null };
+
 export async function createOrganizationForUser(
   userId: string,
   input: OnboardingValues,
-): Promise<{ orgId: string; orgType: OrgType }> {
-  return getDb().transaction((tx) => createOrganizationInTx(tx, userId, input));
+  options: CreateOptions = {},
+): Promise<{ orgId: string; orgType: OrgType; status: OrgStatus }> {
+  return getDb().transaction((tx) => createOrganizationInTx(tx, userId, input, options));
 }
 
 /** Same as createOrganizationForUser, inside a caller's transaction (e.g. accepting an invitation). */
@@ -38,7 +45,8 @@ export async function createOrganizationInTx(
   tx: Tx,
   userId: string,
   input: OnboardingValues,
-): Promise<{ orgId: string; orgType: OrgType }> {
+  options: CreateOptions = {},
+): Promise<{ orgId: string; orgType: OrgType; status: OrgStatus }> {
   await tx
     .insert(profiles)
     .values({ id: userId, fullName: input.contactName, phone: input.phone })
@@ -61,19 +69,29 @@ export async function createOrganizationInTx(
     .limit(1);
   if (existing.length > 0) throw new OnboardingError("already_onboarded");
 
+  const legalId = options.preapprovedLegalId ?? input.legalId;
+  const status: OrgStatus = options.preapprovedLegalId ? "active" : "pending_review";
+  // One organization per legal ID and kind (the unique index is the backstop).
+  const [taken] = await tx
+    .select({ id: organizations.id })
+    .from(organizations)
+    .where(and(eq(organizations.type, input.kind), eq(organizations.legalId, legalId)))
+    .limit(1);
+  if (taken) throw new OnboardingError("legal_id_taken");
+
   const [org] = await tx
     .insert(organizations)
     .values({
       type: input.kind,
-      status: input.kind === "buyer" ? "active" : "pending_review",
+      status,
       name: input.businessName,
       businessType: input.kind === "buyer" ? input.businessType : null,
-      legalId: input.kind === "supplier" ? (input.legalId ?? null) : null,
+      legalId,
       contactName: input.contactName,
       phone: input.phone,
       city: input.city,
     })
-    .returning({ id: organizations.id, type: organizations.type });
+    .returning({ id: organizations.id, type: organizations.type, status: organizations.status });
 
   await tx
     .insert(organizationMemberships)
@@ -98,8 +116,8 @@ export async function createOrganizationInTx(
     action: "organization.created",
     targetType: "organization",
     targetId: org.id,
-    data: { type: org.type },
+    data: { type: org.type, status: org.status, preapproved: !!options.preapprovedLegalId },
   });
 
-  return { orgId: org.id, orgType: org.type };
+  return { orgId: org.id, orgType: org.type, status: org.status };
 }

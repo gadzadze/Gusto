@@ -31,7 +31,14 @@ type FormFields = {
 
 const resolver = zodFormResolver<FormFields>(onboardingSchema);
 
-export function OnboardingForm({ lockedKind = null }: { lockedKind?: "buyer" | "supplier" | null }) {
+export function OnboardingForm({
+  lockedKind = null,
+  registered = { businessName: null, legalId: null },
+}: {
+  lockedKind?: "buyer" | "supplier" | null;
+  /** What the admin verified when registering this address. */
+  registered?: { businessName: string | null; legalId: string | null };
+}) {
   const t = useTranslations("onboarding");
   const [pending, startTransition] = useTransition();
   const [formError, setFormError] = useState<OnboardingResult["error"] | null>(null);
@@ -45,9 +52,9 @@ export function OnboardingForm({ lockedKind = null }: { lockedKind?: "buyer" | "
     resolver,
     defaultValues: {
       kind: lockedKind ?? "",
-      businessName: "",
+      businessName: registered.businessName ?? "",
       businessType: "",
-      legalId: "",
+      legalId: registered.legalId ?? "",
       contactName: "",
       phone: "",
       city: "",
@@ -123,6 +130,10 @@ export function OnboardingForm({ lockedKind = null }: { lockedKind?: "buyer" | "
             </Field>
           </div>
 
+          <Field id="legalId" label={t("legalId")} hint={t("legalIdHint")} error={err("legalId")}>
+            <Input inputMode="numeric" readOnly={registered.legalId !== null} {...input("legalId", t("legalIdHint"))} />
+          </Field>
+
           {kind === "buyer" ? (
             <Field id="businessType" label={t("businessType")} error={err("businessType")}>
               <Select {...input("businessType")}>
@@ -134,11 +145,7 @@ export function OnboardingForm({ lockedKind = null }: { lockedKind?: "buyer" | "
                 ))}
               </Select>
             </Field>
-          ) : (
-            <Field id="legalId" label={t("legalId")} hint={t("legalIdHint")} error={err("legalId")} optional>
-              <Input inputMode="numeric" {...input("legalId", t("legalIdHint"))} />
-            </Field>
-          )}
+          ) : null}
 
           <Field id="contactName" label={t("contactName")} error={err("contactName")}>
             <Input autoComplete="name" {...input("contactName")} />

@@ -1,4 +1,5 @@
-import { LogOut } from "lucide-react";
+import { KeyRound, LogOut } from "lucide-react";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import type * as React from "react";
@@ -45,7 +46,10 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           <SidebarNav {...navProps} />
         </div>
         <div className="border-t border-border p-3">
-          {email ? <p className="truncate px-3 pb-2 text-xs text-muted-foreground" title={email}>{email}</p> : null}
+          {email ? <p className="truncate px-3 pb-1 text-xs text-muted-foreground" title={email}>{email}</p> : null}
+          <Link href="/account/password" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
+            {t("nav.changePassword")}
+          </Link>
           <SignOutButton label={t("nav.signOut")} />
         </div>
       </aside>
@@ -58,6 +62,9 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           </div>
           <div className="flex items-center">
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
+            <Link href="/account/password" aria-label={t("nav.changePassword")} className="inline-flex size-11 items-center justify-center text-muted-foreground">
+              <KeyRound aria-hidden className="size-5" />
+            </Link>
             <SignOutButton label={t("nav.signOut")} compact />
           </div>
         </header>

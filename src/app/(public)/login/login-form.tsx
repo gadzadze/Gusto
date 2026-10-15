@@ -2,20 +2,28 @@
 
 import { Mail } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { sendMagicLink, signInWithGoogle, type MagicLinkState } from "./actions";
+import { signInWithGoogle, submitLogin, type MagicLinkState } from "./actions";
 
 export type LoginError = "auth" | "not_allowed" | null;
 
 export function LoginForm({ next, error }: { next: string | null; error: LoginError }) {
   const t = useTranslations("login");
-  const [state, formAction, pending] = useActionState<MagicLinkState, FormData>(sendMagicLink, {
+  const [state, formAction, pending] = useActionState<MagicLinkState, FormData>(submitLogin, {
     status: "idle",
   });
   const [retrying, setRetrying] = useState(false);
+  // Controlled so a failed attempt (React clears uncontrolled fields) keeps the address.
+  const [email, setEmail] = useState("");
+
+  const redirectTo = state.status === "redirect" ? state.to : null;
+  useEffect(() => {
+    if (redirectTo) window.location.assign(redirectTo);
+  }, [redirectTo]);
+  if (redirectTo) return <p className="text-center text-sm text-muted-foreground" aria-live="polite">{t("signingIn")}</p>;
 
   if (state.status === "sent" && !retrying) {
     return (
@@ -66,13 +74,27 @@ export function LoginForm({ next, error }: { next: string | null; error: LoginEr
             type="email"
             autoComplete="email"
             inputMode="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             required
             placeholder={t("emailPlaceholder")}
           />
         </div>
-        <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? t("sending") : t("sendLink")}
+        <div className="space-y-2">
+          <Label htmlFor="password">{t("passwordLabel")}</Label>
+          <Input id="password" name="password" type="password" autoComplete="current-password" />
+        </div>
+        <Button type="submit" name="intent" value="password" className="w-full" disabled={pending}>
+          {pending ? t("signingIn") : t("signIn")}
         </Button>
+        <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
+          <Button type="submit" name="intent" value="link" variant="link" className="h-auto p-0" disabled={pending}>
+            {t("firstTime")}
+          </Button>
+          <Button type="submit" name="intent" value="reset" variant="link" className="h-auto p-0" disabled={pending}>
+            {t("forgot")}
+          </Button>
+        </div>
       </form>
     </div>
   );

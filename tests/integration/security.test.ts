@@ -146,4 +146,13 @@ describe("suspended buyer", () => {
     // `buyer` still says orgStatus "active": the database decides.
     await expect(submitOnce(supplier, buyer, product)).rejects.toEqual(new StateError("buyer_suspended"));
   });
+
+  it("cannot submit an order before an admin verified the business", async () => {
+    const supplier = await createSupplier();
+    const buyer = await createBuyer("pending_review");
+    await connectBuyer(supplier, buyer);
+    const product = await createTestProduct(supplier, categoryId, { basePrice: "1" });
+    await setCartQuantity(buyer, supplier.orgId, product, 1000);
+    await expect(submitOnce(supplier, buyer, product)).rejects.toEqual(new StateError("buyer_not_verified"));
+  });
 });

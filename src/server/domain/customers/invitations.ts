@@ -5,7 +5,7 @@ import { getDb, type Tx } from "@/server/db/client";
 import { invitations, organizations, supplierCustomers } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { StateError } from "@/server/domain/errors";
-import { createOrganizationInTx } from "@/server/domain/onboarding/create-organization";
+import { createOrganizationInTx, type CreateOptions } from "@/server/domain/onboarding/create-organization";
 import { hashInviteToken, isInvitationUsable, looksLikeInviteToken } from "./invite-token";
 
 // Every way an invitation can't be used — never existed, forged, expired,
@@ -112,11 +112,12 @@ export async function acceptInvitationWithNewBuyer(
   userId: string,
   token: string,
   onboarding: Extract<OnboardingValues, { kind: "buyer" }>,
+  options: CreateOptions = {},
 ): Promise<{ orgId: string; supplierOrgId: string }> {
   return getDb().transaction(async (tx) => {
     const row = await loadUsable(tx, token, true);
     if (!row) throw new StateError<InvitationError>("unavailable");
-    const { orgId } = await createOrganizationInTx(tx, userId, onboarding);
+    const { orgId } = await createOrganizationInTx(tx, userId, onboarding, options);
     await connect(tx, row, orgId, userId);
     return { orgId, supplierOrgId: row.supplierOrgId };
   });

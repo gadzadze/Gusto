@@ -31,6 +31,7 @@ export const getAccessState = cache(async (): Promise<AccessState> => {
   const rows = await getDb()
     .select({
       isPlatformAdmin: profiles.isPlatformAdmin,
+      passwordSetAt: profiles.passwordSetAt,
       orgId: organizations.id,
       orgType: organizations.type,
       orgStatus: organizations.status,
@@ -61,6 +62,7 @@ export const getAccessState = cache(async (): Promise<AccessState> => {
     userId: data.user.id,
     email: data.user.email ?? null,
     isPlatformAdmin: row?.isPlatformAdmin ?? false,
+    passwordSet: row?.passwordSetAt != null,
     membership,
   };
 });
@@ -70,8 +72,12 @@ async function enforce(requirement: Requirement) {
   switch (decideAccess(state, requirement)) {
     case "login":
       redirect("/login");
+    case "set_password":
+      redirect("/account/password");
     case "onboarding":
       redirect("/onboarding");
+    case "pending":
+      redirect("/pending");
     case "not_found":
       notFound();
     case "allow":

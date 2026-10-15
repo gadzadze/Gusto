@@ -17,18 +17,25 @@ const allowSchema = z.object({
   note: z.string().max(200).optional(),
   // "" = either.
   role: z.enum(["", "buyer", "supplier"]).optional(),
+  // Both or neither: together they mean "I verified this business".
+  businessName: z.string().max(160).optional(),
+  legalId: z.string().max(40).optional(),
 });
 
 export async function allowEmailAction(raw: unknown): Promise<AllowActionResult> {
   const ctx = await requireAdmin();
   const parsed = allowSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "invalid" };
+  const businessName = parsed.data.businessName?.trim() ?? "";
+  const legalId = parsed.data.legalId?.trim() ?? "";
+  if (Boolean(businessName) !== Boolean(legalId)) return { ok: false, error: "invalid" };
   return runAction<AllowActionResult, AccessError>("allowEmail", async () => {
     const result = await registerEmail(
       { userId: ctx.userId },
       parsed.data.email,
       parsed.data.note,
       parsed.data.role === undefined ? undefined : parsed.data.role === "" ? null : parsed.data.role,
+      businessName ? { businessName, legalId } : undefined,
     );
     refresh();
     return { ok: true, status: result.status, authUserFailed: result.authUser === "failed" };

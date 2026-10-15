@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidLegalId, normalizeLegalId } from "@/lib/legal-id";
 import { normalizePhone } from "@/lib/phone";
 
 // Shared by the onboarding form (client) and its Server Action. Messages are
@@ -30,7 +31,15 @@ const phone = z
     return normalized;
   });
 
+// Required for both kinds: the admin checks it before approving anyone.
+const legalId = z
+  .string()
+  .transform(normalizeLegalId)
+  .pipe(z.string().min(1, "required"))
+  .refine(isValidLegalId, { message: "invalid_legal_id" });
+
 const common = {
+  legalId,
   businessName: requiredText(160),
   contactName: requiredText(120),
   phone,
@@ -48,10 +57,6 @@ export const buyerOnboardingSchema = z.object({
 export const supplierOnboardingSchema = z.object({
   kind: z.literal("supplier"),
   ...common,
-  // Georgian company IDs are 9 digits, personal (individual entrepreneur) IDs 11.
-  legalId: optionalText(11).refine((v) => v === undefined || /^(\d{9}|\d{11})$/.test(v), {
-    message: "invalid_legal_id",
-  }),
   deliveryArea: requiredText(240),
 });
 

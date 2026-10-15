@@ -19,6 +19,11 @@ export async function createAuthUser(email = `user-${randomUUID()}@test.gusto.ge
   return { id: rows[0].id, email };
 }
 
+/** A well-formed 9-digit company ID that no other test fixture uses. */
+export function randomLegalId(): string {
+  return String(Math.floor(100_000_000 + Math.random() * 900_000_000));
+}
+
 export async function createSupplier(status: OrgStatus = "active"): Promise<SupplierCtx> {
   const user = await createAuthUser();
   const { orgId } = await createOrganizationForUser(
@@ -26,6 +31,7 @@ export async function createSupplier(status: OrgStatus = "active"): Promise<Supp
     onboardingSchema.parse({
       kind: "supplier",
       businessName: `[TEST] Supplier ${randomUUID().slice(0, 6)}`,
+      legalId: randomLegalId(),
       contactName: "Giorgi",
       phone: "599 00 00 00",
       city: "Tbilisi",
@@ -38,21 +44,28 @@ export async function createSupplier(status: OrgStatus = "active"): Promise<Supp
   return { userId: user.id, orgId, orgType: "supplier", orgStatus: status };
 }
 
-export async function createBuyer(): Promise<OrgCtx> {
+export async function createBuyer(status: OrgStatus = "active"): Promise<OrgCtx> {
+  const legalId = randomLegalId();
   const user = await createAuthUser();
   const { orgId } = await createOrganizationForUser(
     user.id,
     onboardingSchema.parse({
       kind: "buyer",
       businessName: `[TEST] Café ${randomUUID().slice(0, 6)}`,
+      legalId,
       businessType: "cafe",
       contactName: "Nino",
       phone: "555 12 34 56",
       city: "Tbilisi",
       addressLine: "Somewhere 1",
     }),
+    // "Vetted by the admin" = registered with the ID; otherwise it waits for review.
+    status === "pending_review" ? {} : { preapprovedLegalId: legalId },
   );
-  return { userId: user.id, orgId, orgType: "buyer", orgStatus: "active" };
+  if (status === "suspended") {
+    await getDb().update(organizations).set({ status }).where(eq(organizations.id, orgId));
+  }
+  return { userId: user.id, orgId, orgType: "buyer", orgStatus: status };
 }
 
 export async function createAdmin(): Promise<AdminCtx> {

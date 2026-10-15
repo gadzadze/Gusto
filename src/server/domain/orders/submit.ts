@@ -29,6 +29,7 @@ export type SubmitError =
   | "address_required"
   | "supplier_unavailable"
   | "buyer_suspended"
+  | "buyer_not_verified"
   | "rate_limited";
 
 /** What the buyer reviewed on the checkout page. Anything else is a change. */
@@ -109,6 +110,8 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
         .from(organizations)
         .where(eq(organizations.id, ctx.orgId));
       if (buyerOrg?.status === "suspended") throw new StateError<SubmitError>("buyer_suspended");
+      // Not yet verified by an admin: can't order either.
+      if (buyerOrg?.status === "pending_review") throw new StateError<SubmitError>("buyer_not_verified");
 
       // 2. The connection is active and the supplier approved, right now.
       const [supplier] = await tx

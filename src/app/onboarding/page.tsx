@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { Logo } from "@/components/logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { homePathFor } from "@/server/auth/access";
-import { pinnedRoleFor } from "@/server/auth/allow-list";
+import { registrationFor } from "@/server/auth/allow-list";
 import { getAccessState } from "@/server/auth/guards";
 import { OnboardingForm } from "./onboarding-form";
 
@@ -29,7 +29,13 @@ async function OnboardingGate() {
   if (!state.signedIn) redirect("/login?next=/onboarding");
   // One organization per person in the MVP: onboarding runs once.
   if (state.membership) redirect(homePathFor(state));
-  return <OnboardingForm lockedKind={await pinnedRoleFor(state.email)} />;
+  const registration = await registrationFor(state.email);
+  return (
+    <OnboardingForm
+      lockedKind={registration?.role ?? null}
+      registered={{ businessName: registration?.businessName ?? null, legalId: registration?.legalId ?? null }}
+    />
+  );
 }
 
 function FormSkeleton() {

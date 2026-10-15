@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { customerSchema } from "@/lib/validation/customer";
-import { isEmailAllowed, pinnedRoleFor } from "@/server/auth/allow-list";
+import { isEmailAllowed, pinnedRoleFor, registrationFor } from "@/server/auth/allow-list";
 import { getDb } from "@/server/db/client";
 import { allowedEmails, auditLogs, organizations } from "@/server/db/schema";
 import { allowEmail, listAllowedEmails, revokeEmail } from "@/server/domain/admin/access";
@@ -10,7 +10,7 @@ import type { AdminCtx } from "@/server/domain/context";
 import { createCustomer, regenerateInvitation, setCustomerBlocked } from "@/server/domain/customers/customers";
 import { NotFoundError, StateError } from "@/server/domain/errors";
 import { notifyAdminsSupplierPending } from "@/server/notifications/admin-alerts";
-import { createAdmin, createAuthUser, createSupplier } from "./helpers";
+import { createAdmin, createAuthUser, createSupplier, randomLegalId } from "./helpers";
 
 let admin: AdminCtx;
 beforeAll(async () => {
@@ -208,5 +208,42 @@ describe("admin alert for a supplier waiting for approval", () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
     vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(notifyAdminsSupplierPending("[TEST] X")).resolves.toMatchObject({ attempted: expect.any(Number) });
+  });
+});
+
+describe("verified company on the allow-list", () => {
+  it("records the vetted business and exposes it as the registration", async () => {
+    const email = fresh();
+    const legalId = randomLegalId();
+    await allowEmail({ userId: admin.userId }, email, "called 12 Oct", "supplier", { businessName: " Winiveria ", legalId: ` ${legalId.slice(0, 3)}-${legalId.slice(3)} ` });
+    expect(await registrationFor(email)).toEqual({ role: "supplier", businessName: "Winiveria", legalId });
+  });
+
+  it("an address without a company is not vetted", async () => {
+    const email = fresh();
+    await allowEmail({ userId: admin.userId }, email);
+    expect(await registrationFor(email)).toEqual({ role: null, businessName: null, legalId: null });
+    expect(await registrationFor("nobody@test.gusto.ge")).toBeNull();
+  });
+
+  it("rejects malformed IDs and an ID that already belongs to someone else", async () => {
+    await expect(
+      allowEmail({ userId: admin.userId }, fresh(), undefined, "buyer", { businessName: "X", legalId: "12345" }),
+    ).rejects.toEqual(new StateError("invalid_legal_id"));
+    const legalId = randomLegalId();
+    await allowEmail({ userId: admin.userId }, fresh(), undefined, "buyer", { businessName: "A", legalId });
+    await expect(
+      allowEmail({ userId: admin.userId }, fresh(), undefined, "buyer", { businessName: "B", legalId }),
+    ).rejects.toEqual(new StateError("legal_id_taken"));
+    // The same company as a supplier is a different registration.
+    await allowEmail({ userId: admin.userId }, fresh(), undefined, "supplier", { businessName: "A", legalId });
+  });
+
+  it("a revoked address has no registration", async () => {
+    const email = fresh();
+    await allowEmail({ userId: admin.userId }, email, undefined, "buyer", { businessName: "Z", legalId: randomLegalId() });
+    const [row] = await getDb().select().from(allowedEmails).where(eq(allowedEmails.email, email));
+    await revokeEmail(admin, row.id);
+    expect(await registrationFor(email)).toBeNull();
   });
 });
