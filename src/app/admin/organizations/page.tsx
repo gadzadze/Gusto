@@ -37,13 +37,15 @@ async function Organizations({ searchParams }: Pick<PageProps<"/admin/organizati
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q : "";
   const type = params.type === "supplier" || params.type === "buyer" ? params.type : undefined;
+  const status = params.status === "pending_review" ? "pending_review" : undefined;
   const page = Number.parseInt(typeof params.page === "string" ? params.page : "1", 10) || 1;
-  const list = await listOrganizations(ctx, { q, type, page });
+  const list = await listOrganizations(ctx, { q, type, status, page });
 
   const href = (nextType: string) => {
     const s = new URLSearchParams();
     if (q) s.set("q", q);
     if (nextType !== "all") s.set("type", nextType);
+    if (status) s.set("status", status);
     const qs = s.toString();
     return qs ? `/admin/organizations?${qs}` : "/admin/organizations";
   };
@@ -52,6 +54,7 @@ async function Organizations({ searchParams }: Pick<PageProps<"/admin/organizati
     <div className="space-y-5">
       <form className="flex gap-2" role="search">
         {type ? <input type="hidden" name="type" value={type} /> : null}
+        {status ? <input type="hidden" name="status" value={status} /> : null}
         <Input name="q" defaultValue={q} placeholder={t("searchPlaceholder")} aria-label={tcommon("search")} className="max-w-sm" />
         <Button type="submit" variant="outline">{tcommon("search")}</Button>
       </form>
@@ -82,6 +85,7 @@ async function Organizations({ searchParams }: Pick<PageProps<"/admin/organizati
               <TR>
                 <TH>{tc("name")}</TH>
                 <TH className="hidden sm:table-cell">{t("type.all")}</TH>
+                <TH className="hidden sm:table-cell">{tc("legalId")}</TH>
                 <TH className="hidden sm:table-cell">{tc("city")}</TH>
                 <TH>{tc("status")}</TH>
                 <TH className="hidden md:table-cell">{tc("registered")}</TH>
@@ -99,6 +103,7 @@ async function Organizations({ searchParams }: Pick<PageProps<"/admin/organizati
                     </Link>
                   </TD>
                   <TD className="hidden text-muted-foreground sm:table-cell">{t(`typeLabel.${o.type}`)}</TD>
+                  <TD className="hidden tabular-nums text-muted-foreground sm:table-cell">{o.legalId ?? "—"}</TD>
                   <TD className="hidden text-muted-foreground sm:table-cell">{o.city}</TD>
                   <TD><SupplierStatusBadge status={o.status} /></TD>
                   <TD className="hidden text-muted-foreground md:table-cell">
@@ -110,7 +115,7 @@ async function Organizations({ searchParams }: Pick<PageProps<"/admin/organizati
           </Table>
           <Pagination
             basePath="/admin/organizations"
-            params={{ q: q || undefined, type }}
+            params={{ q: q || undefined, type, status }}
             page={list.page}
             pageCount={list.pageCount}
           />

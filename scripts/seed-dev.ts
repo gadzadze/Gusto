@@ -101,6 +101,8 @@ async function main() {
       const rows = await db.execute<{ id: string }>(
         sql`insert into auth.users (id, email) values (${randomUUID()}, ${email}) returning id`,
       );
+      // Sign-in is invite-only; the demo users are on the list like anyone else.
+      await db.execute(sql`insert into allowed_emails (email, note, created_by_label) values (${email}, 'demo user', 'seed') on conflict (email) do nothing`);
       return { id: rows[0].id, email };
     };
 
@@ -111,20 +113,24 @@ async function main() {
     const drinksCat = await createCategory(admin, "[DEMO] სასმელები");
     const foodCat = await createCategory(admin, "[DEMO] სურსათი");
 
+    // Fictional IDs (9 digits, leading 9) so seeded organizations obey the legal-ID rules.
+    const demoLegalId = () => String(Math.floor(900_000_000 + Math.random() * 99_999_999));
     const supplier = async (slug: string, name: string, person: string) => {
       const user = await newUser(slug);
       const { orgId } = await createOrganizationForUser(
         user.id,
-        onboardingSchema.parse({ kind: "supplier", businessName: name, contactName: person, phone: "599 00 00 01", city: "თბილისი", deliveryArea: "თბილისი" }),
+        onboardingSchema.parse({ kind: "supplier", businessName: name, legalId: demoLegalId(), contactName: person, phone: "599 00 00 01", city: "თბილისი", deliveryArea: "თბილისი" }),
       );
       await db.update(organizations).set({ status: "active" }).where(eq(organizations.id, orgId));
       return { userId: user.id, orgId, orgType: "supplier" as const, orgStatus: "active" as const };
     };
     const buyer = async (slug: string, name: string, type: "restaurant" | "cafe", person: string) => {
       const user = await newUser(slug);
+      const legalId = demoLegalId();
       const { orgId } = await createOrganizationForUser(
         user.id,
-        onboardingSchema.parse({ kind: "buyer", businessName: name, businessType: type, contactName: person, phone: "555 00 00 02", city: "თბილისი", addressLine: "[DEMO] ჭავჭავაძის გამზ. 1" }),
+        onboardingSchema.parse({ kind: "buyer", businessName: name, legalId, businessType: type, contactName: person, phone: "555 00 00 02", city: "თბილისი", addressLine: "[DEMO] ჭავჭავაძის გამზ. 1" }),
+        { preapprovedLegalId: legalId },
       );
       return { userId: user.id, orgId, orgType: "buyer" as const, orgStatus: "active" as const };
     };

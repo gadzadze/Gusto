@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@/lib/money";
 import { requireAdmin } from "@/server/auth/guards";
+import { VerificationCard } from "@/components/admin/verification-card";
+import { getVerificationInfo } from "@/server/domain/admin/organizations";
 import { getSupplierForAdmin } from "@/server/domain/admin/suppliers";
 import { NotFoundError } from "@/server/domain/errors";
 import { ReviewPanel } from "@/components/admin/review-panel";
@@ -52,6 +54,7 @@ async function Supplier({ params }: PageProps<"/admin/suppliers/[id]">) {
     throw error;
   });
   const { org, settings, owners, productCounts, history } = detail;
+  const info = await getVerificationInfo(ctx, org.id);
   const none = t("detail.none");
 
   const rows: [string, string][] = [
@@ -69,6 +72,7 @@ async function Supplier({ params }: PageProps<"/admin/suppliers/[id]">) {
       </p>
 
       <ReviewPanel orgId={org.id} status={org.status} review={reviewSupplierAction} />
+      <VerificationCard info={info} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card>

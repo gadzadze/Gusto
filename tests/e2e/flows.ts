@@ -1,5 +1,5 @@
 import { expect, type Browser, type Page } from "@playwright/test";
-import { grantAdmin, signInAsNewUser } from "./auth-helpers";
+import { grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
 
 // Reusable UI flows for e2e specs. Everything goes through the real UI and
 // Server Actions; only admin rights come from the admin:grant script.
@@ -16,9 +16,16 @@ export async function adminWithCategory(browser: Browser, category: string): Pro
   return page;
 }
 
+/** Pre-registered people see their verified ID (read-only); anyone else types it. */
+async function fillLegalId(page: Page): Promise<void> {
+  const field = page.getByLabel("საიდენტიფიკაციო კოდი");
+  if (await field.isEditable()) await field.fill(randomLegalId());
+}
+
 export async function onboardSupplier(page: Page, name: string): Promise<void> {
   await page.getByText("ვაწვდი", { exact: true }).click();
   await page.getByLabel("სავაჭრო სახელი").fill(name);
+  await fillLegalId(page);
   await page.getByLabel("საკონტაქტო პირი").fill("Giorgi");
   await page.getByLabel("ტელეფონი").fill("599 00 00 00");
   await page.getByLabel("ქალაქი").fill("თბილისი");
@@ -30,6 +37,7 @@ export async function onboardSupplier(page: Page, name: string): Promise<void> {
 export async function onboardBuyer(page: Page, name: string): Promise<void> {
   await page.getByText("ვყიდულობ", { exact: true }).click();
   await page.getByLabel("ბიზნესის სახელი").fill(name);
+  await fillLegalId(page);
   await page.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("cafe");
   await page.getByLabel("საკონტაქტო პირი").fill("Nino");
   await page.getByLabel("ტელეფონი").fill("555 12 34 56");
@@ -41,7 +49,11 @@ export async function onboardBuyer(page: Page, name: string): Promise<void> {
 
 export async function approveSupplier(adminPage: Page, supplierName: string): Promise<void> {
   await adminPage.goto("/admin/suppliers?status=pending_review");
-  await adminPage.getByRole("link", { name: supplierName }).click();
+  await adminPage.waitForLoadState("networkidle"); // the list streams in
+  const link = adminPage.getByRole("link", { name: supplierName });
+  // A supplier the admin already vetted (registered with a legal ID) starts active: nothing to approve.
+  if ((await link.count()) === 0) return;
+  await link.click();
   await adminPage.getByRole("button", { name: "დადასტურება" }).click();
   await expect(adminPage.getByText("დადასტურდა")).toBeVisible();
 }

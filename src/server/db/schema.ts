@@ -69,6 +69,9 @@ export const profiles = pgTable("profiles", {
   fullName: text("full_name"),
   phone: text("phone"),
   isPlatformAdmin: boolean("is_platform_admin").notNull().default(false),
+  // Set when the person has chosen their own password. Until then every guard
+  // sends them to /account/password.
+  passwordSetAt: timestamp("password_set_at", { withTimezone: true }),
   ...timestamps,
 });
 
@@ -82,7 +85,8 @@ export const organizations = pgTable(
     name: text("name").notNull(),
     // Buyers only.
     businessType: buyerBusinessType("business_type"),
-    // Suppliers only: company or individual-entrepreneur ID number, optional.
+    // Company (9 digits) or individual-entrepreneur (11 digits) ID, both kinds.
+    // Unique per kind. Null only on rows from before it was collected.
     legalId: text("legal_id"),
     contactName: text("contact_name").notNull(),
     phone: text("phone").notNull(),
@@ -94,10 +98,10 @@ export const organizations = pgTable(
   },
   (t) => [
     index("organizations_type_status_idx").on(t.type, t.status),
-    check(
-      "organizations_buyer_shape",
-      sql`${t.type} <> 'buyer' or (${t.businessType} is not null and ${t.status} <> 'pending_review')`,
-    ),
+    uniqueIndex("organizations_type_legal_id_key")
+      .on(t.type, t.legalId)
+      .where(sql`${t.legalId} is not null`),
+    check("organizations_buyer_shape", sql`${t.type} <> 'buyer' or ${t.businessType} is not null`),
     check(
       "organizations_supplier_shape",
       sql`${t.type} <> 'supplier' or ${t.businessType} is null`,
@@ -542,6 +546,34 @@ export const rateLimits = pgTable(
   (t) => [primaryKey({ columns: [t.key, t.windowStart] }), index("rate_limits_window_idx").on(t.windowStart)],
 );
 
+// Sign-in is invite-only: an address must be on this list, or hold a valid
+// invitation, before it can get a sign-in link (server/auth/allow-list.ts).
+// Rows are never deleted: revoking sets `revoked_at`, which also blocks an
+// address that would otherwise be let in by an invitation.
+export const allowedEmails = pgTable(
+  "allowed_emails",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Always stored lowercase and trimmed.
+    email: text("email").notNull(),
+    note: text("note"),
+    // What this person is registered as. Null = either; set = onboarding offers
+    // only this kind, and the server refuses the other.
+    intendedRole: orgType("intended_role"),
+    // What the admin verified before registering the address. With a legal ID
+    // the person's organization starts `active` (already vetted); without one
+    // it waits for review.
+    businessName: text("business_name"),
+    legalId: text("legal_id"),
+    createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    // Who, when it was a script rather than a signed-in admin.
+    createdByLabel: text("created_by_label"),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [uniqueIndex("allowed_emails_email_key").on(t.email), check("allowed_emails_lowercase", sql`${t.email} = lower(btrim(${t.email}))`)],
+);
+
 export const auditLogs = pgTable(
   "audit_logs",
   {
@@ -579,3 +611,4 @@ export type BuyerBusinessType = (typeof buyerBusinessType.enumValues)[number];
 export type Notification = typeof notifications.$inferSelect;
 export type NotificationEvent = (typeof notificationEvent.enumValues)[number];
 export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;
+export type AllowedEmail = typeof allowedEmails.$inferSelect;

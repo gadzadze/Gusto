@@ -44,14 +44,21 @@ cp .env.example .env.local     # one file for the app, scripts and tests
 npx supabase start             # local Postgres + Auth + Studio + email catcher
 ```
 
-`supabase start` prints the local API URL and keys. Put them in `.env.local`:
+`supabase start` prints the local API URL and keys. Put them in `.env.local`.
+Newer CLI versions print `sb_publishable_` / `sb_secret_` keys; **don't use those**:
+the Auth admin API (used to create allowed users) refuses `sb_secret_` with
+"invalid JWT". Run `npx supabase status -o env` and use the `eyJ...` keys:
 
 | `.env.local` | From `supabase start` |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | API URL (`http://127.0.0.1:54321`) |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon / publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | service_role / secret key |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `ANON_KEY` from `npx supabase status -o env` (`eyJ...`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | `SERVICE_ROLE_KEY` from `npx supabase status -o env` (the long `eyJ...` JWT) |
 | `DATABASE_URL`, `DATABASE_URL_DIRECT` | DB URL (`postgresql://postgres:postgres@127.0.0.1:54322/postgres`) |
+
+Or let a script do it: `npm run env:local` reads `npx supabase status -o env` and
+writes the right values into `.env.local` (keeping the rest, saving the old file
+as `.env.local.bak`). It refuses anything that is not a local Supabase.
 
 Then:
 
@@ -81,7 +88,9 @@ run `npx supabase init` in a scratch folder and copy those settings over.
 | `npm run test:e2e` | Playwright against a production build + real Supabase |
 | `npm run db:generate` | Generate a migration from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations (uses `DATABASE_URL_DIRECT`) |
-| `npm run admin:grant -- <email>` | Make an existing user a platform admin |
+| `npm run admin:grant -- <email>` | Make an address a platform admin (also allows it to sign in) |
+| `npm run user:allow -- <email>` | Let an address sign in (invite-only app); optional `--note "text"`, `--role supplier\|buyer`, and `--name "Business" --legal-id 123456789` (= you verified this business: it starts active) |
+| `npm run env:local` | Write the local Supabase URL and keys into `.env.local` (after `supabase start`) |
 | `npm run db:seed` | Fill a **local** database with `[DEMO]` data (refuses anything else) |
 | `npm run check:secrets` | After `npm run build`: fail if a server secret is in the client bundle |
 
@@ -229,10 +238,63 @@ order.
 - **WhatsApp** is user-sent only. A future Business API channel is sketched in
   [`docs/whatsapp-business-api.md`](docs/whatsapp-business-api.md).
 
+## Access: sign-in is invite-only
+
+Nobody can register themselves, which keeps spam out. An email address can
+request a sign-in link only if:
+
+1. it is on the **allow-list** (admin page `/admin/access`, or
+   `npm run user:allow -- someone@example.com --note "Winiveria, owner" --role supplier`); or
+2. the person is following a valid **supplier invitation link** (the single-use
+   link is the permission, so a WhatsApp-only invitation works); or
+3. a supplier addressed a valid invitation to that email.
+
+Revoking an address (admin page) blocks it, even if an invitation would
+otherwise let it in. Everything else gets "this address isn't registered" and
+no email, and no account is created.
+
+- **Your partners use their own company email and choose their own password.**
+  You never create passwords. Add their company address (with business name and
+  legal ID once you have checked them in the registry and by phone). They ask for
+  a link on the login page, open it, and are asked to choose a password; after
+  that they sign in with email and password. "Forgot password" sends the link
+  again. A business you registered with its legal ID starts **active**.
+- **Buyers who arrive from a supplier's WhatsApp link** fill a short form (name,
+  legal ID, contact, phone, address) and wait on a "we are verifying you" page.
+  They appear in Admin → Organizations (and the sidebar badge); check the ID, call
+  them, then approve. Until then they cannot see catalogs or order.
+- **Roles are separate.** Being allowed to sign in gives no role. The person
+  onboards as buyer or supplier, and a supplier still waits for your approval at
+  `/admin/suppliers`. When you add an address you can **pin its role**
+  (`--role supplier|buyer`, or the Role field on the Access page): the person then
+  sees only that onboarding form, and the server refuses the other kind. Leave it
+  open and they choose.
+- **You are told when a supplier is waiting.** The admin sidebar shows a count next
+  to Suppliers, and every platform admin gets an email (the business name and a
+  link, nothing else) when a supplier finishes onboarding. Like all email it needs
+  Resend configured; without a key it is only logged.
+- **Where it is enforced:** the sign-in form checks the list before anything
+  happens; the sign-in return routes (`/auth/confirm`, `/auth/callback`) check
+  again and sign the person out if they are not allowed (this covers Google); and
+  Supabase itself has **sign-ups switched off**, so it only has the users the app
+  or its scripts created. Local Supabase gets this from `supabase/config.toml`.
+  On a hosted project, switch it off yourself: Authentication → Sign In / Providers →
+  turn off **Allow new users to sign up**.
+- **Existing accounts** at the time this was introduced were added to the list by
+  migration `0014`, so nobody was locked out.
+- **First admin:** `npm run admin:grant -- you@example.com` now also puts the
+  address on the list and creates its auth user, so you do not have to sign in
+  first. It needs `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in
+  `.env.local` (the project it should act on).
+- Link requests are rate limited to 10 per minute per IP.
+
+There are no passwords. A business's "credential" is its email address: it
+requests a link on the sign-in page and opens it.
+
 ## First-run setup in the app
 
 Suppliers can't add products until at least one category exists:
-1. Grant yourself admin (below).
+1. Grant yourself admin (below). Everyone else needs an invitation or an entry on `/admin/access`.
 2. Add categories at `/admin/categories`.
 3. Approve new suppliers at `/admin/suppliers`.
 
@@ -255,8 +317,8 @@ a Tbilisi restaurant, a café, a beverage distributor and a food distributor,
 ## Platform admins
 
 There is no admin sign-up.
-1. The person signs in once, normally.
-2. Someone with database access runs:
+1. Someone with database access runs (this also lets the address sign in, so the
+   person does not need to sign in first):
 
    ```bash
    npm run admin:grant -- person@example.com
@@ -264,7 +326,7 @@ There is no admin sign-up.
 
    This uses `DATABASE_URL_DIRECT` from `.env.local` (or `.env`), and prints
    the database host so you can confirm you targeted the right one.
-3. The grant is recorded in `audit_logs`.
+2. The grant is recorded in `audit_logs`.
 
 ## Security measures
 

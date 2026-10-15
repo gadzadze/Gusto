@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { onboardingSchema } from "@/lib/validation/onboarding";
 import { getDb } from "@/server/db/client";
 import { createOrganizationForUser } from "@/server/domain/onboarding/create-organization";
-import { createAuthUser } from "./helpers";
+import { createAuthUser, randomLegalId } from "./helpers";
 
 // Supabase exposes the `public` schema through its Data API to the anon and
 // authenticated roles. RLS with no policies must leave those roles with
@@ -28,6 +28,7 @@ describe("row level security", () => {
       onboardingSchema.parse({
         kind: "buyer",
         businessName: "[TEST] RLS Café",
+        legalId: randomLegalId(),
         businessType: "cafe",
         contactName: "Nino",
         phone: "555 12 34 56",

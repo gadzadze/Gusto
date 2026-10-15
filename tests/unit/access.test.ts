@@ -7,6 +7,7 @@ const noOrg: AccessState = {
   userId: "u1",
   email: "a@b.ge",
   isPlatformAdmin: false,
+  passwordSet: true,
   membership: null,
 };
 const withOrg = (orgType: "buyer" | "supplier", isPlatformAdmin = false): AccessState => ({
@@ -14,6 +15,7 @@ const withOrg = (orgType: "buyer" | "supplier", isPlatformAdmin = false): Access
   userId: "u1",
   email: "a@b.ge",
   isPlatformAdmin,
+  passwordSet: true,
   membership: {
     orgId: "o1",
     orgType,
@@ -48,6 +50,25 @@ describe("decideAccess", () => {
     expect(decideAccess(withOrg("buyer"), "buyer")).toBe("allow");
     expect(decideAccess(withOrg("supplier"), "supplier")).toBe("allow");
     expect(decideAccess(withOrg("supplier"), "org")).toBe("allow");
+  });
+
+  it("sends people without a password of their own to set one, before anything else", () => {
+    for (const r of requirements) {
+      expect(decideAccess({ ...noOrg, passwordSet: false }, r)).toBe("set_password");
+    }
+    expect(homePathFor({ ...noOrg, passwordSet: false })).toBe("/account/password");
+  });
+
+  it("holds buyers waiting for verification on the pending page; suppliers keep working", () => {
+    const pendingBuyer: AccessState = {
+      ...noOrg,
+      membership: { orgId: "o1", orgType: "buyer", orgStatus: "pending_review", orgName: "Org", role: "owner" },
+    };
+    expect(decideAccess(pendingBuyer, "buyer")).toBe("pending");
+    expect(decideAccess(pendingBuyer, "org")).toBe("pending");
+    expect(decideAccess(pendingBuyer, "user")).toBe("allow");
+    expect(homePathFor(pendingBuyer)).toBe("/pending");
+    expect(decideAccess(withOrg("supplier"), "supplier")).toBe("allow");
   });
 
   it("allows platform admins into admin regardless of org", () => {

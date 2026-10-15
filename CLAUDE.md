@@ -124,22 +124,58 @@ real need appears).
    Handler requires `Authorization: Bearer $CRON_SECRET`.
 10. Never log tokens, magic links, invite URLs, cookies or full request
     bodies.
+11. **Sign-in is invite-only.** Nobody registers themselves. An address may get a
+    sign-in link only if it is on `allowed_emails` (not revoked), or follows a
+    valid invitation link, or holds a valid invitation addressed to it
+    (`server/auth/allow-list.ts`). Supabase sign-ups are switched off, so the
+    app creates auth users itself (`server/supabase/admin.ts`) for allowed
+    addresses only. `completeSignIn` re-checks and signs out anyone not
+    allowed, which is the only gate for Google. A revoked row beats an
+    invitation. Admins manage the list at `/admin/access`; scripts use
+    `npm run user:allow`. Being allowed gives no role, but the admin may pin
+    `allowed_emails.intended_role`: onboarding then offers only that kind and
+    `submitOnboarding` / the invite action refuse the other (`wrong_role`).
+12. **Partners use their own company address and their own password.** Nobody
+    creates accounts or passwords for them. The first sign-in is the emailed link
+    (proof they control the mailbox); until `profiles.password_set_at` is set,
+    every guard sends them to `/account/password` (`decideAccess` →
+    `set_password`). After that: email + password (`submitLogin`), "forgot" =
+    the same link landing on `/account/password`, change in the shell. Magic
+    link and Google stay as fallbacks. Passwords go straight to Supabase Auth
+    (`auth.updateUser`), min 10 characters (`lib/validation/password.ts`,
+    `supabase/config.toml`), and are never stored, logged or audited.
+13. **The admin vets who is real.** The legal ID (9 digits company / 11 sole
+    trader, `lib/legal-id.ts`; format only, the registry lookup is manual) is
+    required for both kinds and unique per kind. Two paths:
+    - *Pre-registered*: the admin adds the address with business name + legal ID
+      (Access page / `user:allow --name --legal-id`). That ID is authoritative
+      (`registrationFor`, shown read-only at onboarding) and the organization
+      starts `active`.
+    - *Unvetted* (no ID on the row, e.g. a buyer arriving through a supplier's
+      WhatsApp link): the organization starts `pending_review`. A buyer sees
+      only `/pending` (`decideAccess` → `pending`) and `submitOrder` refuses
+      (`buyer_not_verified`); a supplier may prepare its catalog but can't invite.
+      Admins get an email (`notifyAdminsOrgPending`) and a nav badge, review at
+      `/admin/suppliers` or `/admin/organizations?status=pending_review`, where the
+      `VerificationCard` shows ID, sign-in address (free-mail warning), who invited.
+      Suppliers see "awaiting Gusto verification" on such customers.
 
 ## Domain model
 
 Tables (snake_case in SQL, camelCase in TypeScript):
 
-- `profiles`: 1:1 with `auth.users`; name, phone (E.164), `is_platform_admin`.
+- `profiles`: 1:1 with `auth.users`; name, phone (E.164), `is_platform_admin`,
+  `password_set_at` (null until the person chose their own password).
 - `organizations`:
   - `type` is `buyer` | `supplier`, immutable (a database trigger enforces
     this).
   - `status`:
-    - suppliers: `pending_review` → `active` → `suspended`;
-    - buyers: `active` / `suspended` (a check constraint forbids
-      `pending_review`).
+    - both kinds: `pending_review` → `active` → `suspended`. Pre-registered
+      businesses start `active`; unvetted ones start `pending_review` (a buyer
+      then sees only the pending page until approved).
   - Both types: name, contact name, city, phone, `timezone` (default
     `Asia/Tbilisi`), `currency` (default `GEL`).
-  - Buyers only: `business_type`. Suppliers only: optional `legal_id`.
+  - `legal_id` (required at onboarding, unique per type). Buyers only: `business_type`.
 - `organization_memberships`: user ↔ org, `role` `owner` | `member`. A user
   belongs to one org in the MVP; the schema allows more.
 - `supplier_settings`: `min_order_minor`, `prices_include_vat`,
@@ -175,6 +211,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `notification_deliveries`: the outbox. Channel, recipient, payload,
   `status`, `attempts`, `next_attempt_at`, `last_error`, unique `dedupe_key`.
 - `audit_logs`: admin and security-relevant actions.
+- `allowed_emails`: the sign-in allow-list (lowercase email, note, optional `intended_role`, optional vetted `business_name` + `legal_id`, `revoked_at`); never deleted from.
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
@@ -341,7 +378,8 @@ rules, so the same rule is never written twice.
 | `npm run build` | Production build; must pass with **no** env vars set (CI does this) |
 | `npm run db:generate` | Generate SQL from `src/server/db/schema.ts` |
 | `npm run db:migrate` | Apply migrations to `DATABASE_URL_DIRECT` |
-| `npm run admin:grant -- <email>` | Make an existing user a platform admin (audited) |
+| `npm run admin:grant -- <email>` | Make an address a platform admin; also allows it to sign in (audited) |
+| `npm run user:allow -- <email> [--name N --legal-id ID]` | Allow an address to sign in (invite-only app); name + ID = "I verified this business" |
 | `npm run db:seed` | `[DEMO]` data into a **local** database; refuses any other host |
 | `npm run check:secrets` | After a build: fail if a server secret is in `.next/static` |
 
@@ -618,7 +656,7 @@ and the delivery row is marked `skipped`, not `sent`.
 - **`tests/integration/rls.test.ts` must keep passing:**
   - every `public` table has RLS enabled;
   - `anon`/`authenticated` see no rows and cannot write.
-- **E2E signs users in via the Supabase admin API** (`generateLink` → visit
+- **E2E signs users in via the Supabase admin API** (after putting the address on `allowed_emails`, since sign-in is invite-only) (`generateLink` → visit
   `/auth/confirm?token_hash=…`). There's no inbox and no test-only route in
   the app. Never add a test-only auth bypass to the app.
 - **Integration helpers** (`tests/integration/helpers.ts`): `createSupplier`,

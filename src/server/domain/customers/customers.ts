@@ -24,6 +24,8 @@ export type CustomerListItem = {
   contactPhone: string | null;
   status: CustomerStatus;
   buyerOrgName: string | null;
+  /** The connected buyer is still waiting for Gusto's verification. */
+  buyerUnverified: boolean;
   priceListId: string | null;
   priceListName: string | null;
   inviteExpiresAt: Date | null;
@@ -39,6 +41,10 @@ const openInviteExpiry = sql<Date | null>`(
     and ${invitations.expiresAt} > now()
 )`.mapWith((v: string | Date | null) => (v === null ? null : new Date(v)));
 
+const buyerUnverified = sql<boolean>`coalesce((
+  select ${organizations.status} = 'pending_review' from ${organizations} where ${organizations.id} = ${supplierCustomers.buyerOrgId}
+), false)`;
+
 const buyerOrg = sql<string | null>`(
   select ${organizations.name} from ${organizations} where ${organizations.id} = ${supplierCustomers.buyerOrgId}
 )`;
@@ -53,6 +59,7 @@ export async function listCustomers(ctx: OrgCtx): Promise<CustomerListItem[]> {
       contactPhone: supplierCustomers.contactPhone,
       status: supplierCustomers.status,
       buyerOrgName: buyerOrg,
+      buyerUnverified,
       priceListId: supplierCustomers.priceListId,
       priceListName: priceLists.name,
       inviteExpiresAt: openInviteExpiry,
@@ -82,6 +89,7 @@ export async function getCustomer(ctx: OrgCtx, customerId: string): Promise<Cust
       contactEmail: supplierCustomers.contactEmail,
       status: supplierCustomers.status,
       buyerOrgName: buyerOrg,
+      buyerUnverified,
       priceListId: supplierCustomers.priceListId,
       priceListName: priceLists.name,
       inviteExpiresAt: openInviteExpiry,

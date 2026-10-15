@@ -15,7 +15,9 @@
     "db:migrate": "drizzle-kit migrate",
     "admin:grant": "tsx --conditions=react-server scripts/admin-grant.ts",
     "check:secrets": "tsx scripts/check-bundle-secrets.ts",
-    "db:seed": "tsx scripts/seed-dev.ts"
+    "db:seed": "tsx scripts/seed-dev.ts",
+    "user:allow": "tsx scripts/user-allow.ts",
+    "env:local": "tsx scripts/setup-local-env.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",

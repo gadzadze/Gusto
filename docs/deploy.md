@@ -33,8 +33,12 @@ openssl rand -hex 32
 - [ ] Dashboard → **New project**. Region **West EU (Frankfurt) / `eu-central-1`**.
       Strong database password (save it in your password manager).
 - [ ] Project Settings → **General**: note the **Reference ID** (`<ref>`).
-- [ ] Project Settings → **API**: copy the **Project URL**, the **anon /
-      publishable key** and the **service_role / secret key**.
+- [ ] Project Settings → **API**: copy the **Project URL**, the **anon** key and the
+      **service_role** key from the **Legacy API keys** tab (JWT-style, starting
+      with `eyJ`). The newer `sb_secret_...` key is not a JWT and the Auth admin
+      API, which Gusto uses to create allowed users, rejected it when tested
+      against local Supabase. Not yet checked against a hosted project, so if
+      Supabase retires the legacy keys, re-test before switching.
 - [ ] Project Settings → **Database → Connection string**. Copy two strings
       and substitute the password:
   - **Direct connection** (or Session pooler) → this is `DATABASE_URL_DIRECT`
@@ -59,6 +63,9 @@ Follow README → "Supabase Auth setup" with the production domain:
 - [ ] Authentication → Providers → **Google** (optional): enable, paste the
       client ID and secret; the Google OAuth client's redirect URI is
       `https://<ref>.supabase.co/auth/v1/callback`.
+- [ ] Authentication → Sign In / Providers: turn **off** "Allow new users to sign up".
+      Gusto is invite-only: the app creates the users it allows (README, "Access").
+      With this off, nobody can create an account behind the app's back.
 - [ ] Authentication → Rate Limits: leave the defaults unless you have a reason.
 
 ## 3. Resend
@@ -151,14 +158,19 @@ select vault.create_secret('<the CRON_SECRET value>', 'gusto_cron_secret');
 
 ## 8. First admin and first data
 
-- [ ] Open `https://gusto.example/login`, sign in with **your own** address
-      (magic link; check the email arrives from the Resend SMTP sender).
-- [ ] From your clone, grant yourself admin (this uses `DATABASE_URL_DIRECT`,
-      and prints the host it connected to; check it is the production host):
+- [ ] From your clone, grant yourself admin. This also lets your address sign in
+      and creates its account, so you do not need to sign in first. It needs the
+      production project's URL and service-role key as well as the database
+      string; put all three in `.env.local` for this one command (and remove
+      them afterwards), and check the host it prints is the production one:
 
   ```bash
-  DATABASE_URL_DIRECT='postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres' npm run admin:grant -- you@example.com
+  DATABASE_URL_DIRECT='postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres' NEXT_PUBLIC_SUPABASE_URL='https://<ref>.supabase.co' SUPABASE_SERVICE_ROLE_KEY='<service key>' NEXT_PUBLIC_APP_URL='https://gusto.example' NEXT_PUBLIC_SUPABASE_ANON_KEY='<anon key>' npm run admin:grant -- you@example.com
   ```
+- [ ] Open `https://gusto.example/login`, enter your address and open the link
+      (check the email arrives from the Resend SMTP sender).
+- [ ] `/admin/access`: register each pilot business's email (supplier owners
+      and, if you want them in before any supplier invites them, buyers).
 - [ ] `/admin/categories`: add the pilot category (one category for the pilot).
 - [ ] **Never** run `npm run db:seed` against this project. It refuses unless
       the host is local or listed in `SEED_ALLOWED_HOSTS`.
@@ -177,7 +189,7 @@ Use two real mailboxes you control (one as supplier, one as buyer) and your admi
   ```bash
   curl -s "https://<ref>.supabase.co/rest/v1/organizations?select=*" -H "apikey: <anon key>"
   ```
-- [ ] Supplier signs up (own mailbox) → appears at `/admin/suppliers` → admin approves.
+- [ ] Admin registers the supplier's address at `/admin/access`. The supplier signs in (own mailbox), onboards → appears at `/admin/suppliers` → admin approves. An address that is not registered gets "this address isn't registered" and no email.
 - [ ] Supplier adds a product **with a photo** → the photo shows on the product page.
 - [ ] Supplier invites the buyer (email field) → the invitation email arrives
       (Resend → Logs shows it) → buyer opens the link, signs in, completes the

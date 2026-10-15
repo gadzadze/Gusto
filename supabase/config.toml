@@ -20,11 +20,15 @@ major_version = 17
 port = 54323
 
 [auth]
+minimum_password_length = 10
+# Sign-in is invite-only (README, "Access"): users are created by the app and
+# its scripts through the admin API, never by self sign-up.
+enable_signup = false
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/**", "http://localhost:3100/**"]
 
 [auth.email]
-enable_signup = true
+enable_signup = false
 # Magic links confirm the address; no separate confirmation step.
 enable_confirmations = false
 

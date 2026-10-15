@@ -1,4 +1,5 @@
-import { LogOut } from "lucide-react";
+import { KeyRound, LogOut } from "lucide-react";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import type * as React from "react";
@@ -20,13 +21,15 @@ export type ShellProps = {
   showAdminLink: boolean;
   /** Notification bell (buyer and supplier areas); rendered in Suspense by the shell. */
   bell?: React.ReactNode;
+  /** Counts shown next to nav items, keyed by href. */
+  navBadges?: Record<string, number>;
   children: React.ReactNode;
 };
 
-export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, children }: ShellProps) {
+export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, navBadges, children }: ShellProps) {
   const t = await getTranslations();
   const roleLabel = t(`roles.${area}`);
-  const navProps = { area, homeHref, showAdminLink };
+  const navProps = { area, homeHref, showAdminLink, badges: navBadges };
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
@@ -43,7 +46,10 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           <SidebarNav {...navProps} />
         </div>
         <div className="border-t border-border p-3">
-          {email ? <p className="truncate px-3 pb-2 text-xs text-muted-foreground" title={email}>{email}</p> : null}
+          {email ? <p className="truncate px-3 pb-1 text-xs text-muted-foreground" title={email}>{email}</p> : null}
+          <Link href="/account/password" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
+            {t("nav.changePassword")}
+          </Link>
           <SignOutButton label={t("nav.signOut")} />
         </div>
       </aside>
@@ -56,6 +62,9 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           </div>
           <div className="flex items-center">
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
+            <Link href="/account/password" aria-label={t("nav.changePassword")} className="inline-flex size-11 items-center justify-center text-muted-foreground">
+              <KeyRound aria-hidden className="size-5" />
+            </Link>
             <SignOutButton label={t("nav.signOut")} compact />
           </div>
         </header>

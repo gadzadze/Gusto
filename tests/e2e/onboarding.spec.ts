@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import "../../scripts/load-env";
-import { signInAsNewUser } from "./auth-helpers";
+import { randomLegalId, signInAsNewUser } from "./auth-helpers";
 
 test("a signed-out visitor is sent to login with a return path", async ({ page }) => {
   await page.goto("/supplier");
@@ -9,11 +9,12 @@ test("a signed-out visitor is sent to login with a return path", async ({ page }
 });
 
 test("a new supplier signs in, onboards and sees the awaiting-review banner", async ({ page }) => {
-  await signInAsNewUser(page, "supplier");
+  await signInAsNewUser(page, "supplier", { vetted: false });
   await expect(page).toHaveURL(/\/onboarding$/);
 
   await page.getByText("ვაწვდი", { exact: true }).click();
   await page.getByLabel("სავაჭრო სახელი").fill("[E2E] Beverage Distribution");
+  await page.getByLabel("საიდენტიფიკაციო კოდი").fill(randomLegalId());
   await page.getByLabel("საკონტაქტო პირი").fill("Giorgi");
   await page.getByLabel("ტელეფონი").fill("599 00 00 00");
   await page.getByLabel("ქალაქი").fill("თბილისი");

@@ -31,7 +31,14 @@ type FormFields = {
 
 const resolver = zodFormResolver<FormFields>(onboardingSchema);
 
-export function OnboardingForm() {
+export function OnboardingForm({
+  lockedKind = null,
+  registered = { businessName: null, legalId: null },
+}: {
+  lockedKind?: "buyer" | "supplier" | null;
+  /** What the admin verified when registering this address. */
+  registered?: { businessName: string | null; legalId: string | null };
+}) {
   const t = useTranslations("onboarding");
   const [pending, startTransition] = useTransition();
   const [formError, setFormError] = useState<OnboardingResult["error"] | null>(null);
@@ -44,10 +51,10 @@ export function OnboardingForm() {
   } = useForm<FormFields>({
     resolver,
     defaultValues: {
-      kind: "",
-      businessName: "",
+      kind: lockedKind ?? "",
+      businessName: registered.businessName ?? "",
       businessType: "",
-      legalId: "",
+      legalId: registered.legalId ?? "",
       contactName: "",
       phone: "",
       city: "",
@@ -86,7 +93,9 @@ export function OnboardingForm() {
         </p>
       ) : null}
 
-      <fieldset className="space-y-3">
+      {/* The admin registered this address for one kind: no choice to make. */}
+      {lockedKind ? <input type="hidden" {...register("kind")} /> : null}
+      <fieldset className="space-y-3" hidden={lockedKind !== null}>
         <legend className="mb-3 text-sm font-medium">{t("kindLegend")}</legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <KindOption
@@ -121,6 +130,10 @@ export function OnboardingForm() {
             </Field>
           </div>
 
+          <Field id="legalId" label={t("legalId")} hint={t("legalIdHint")} error={err("legalId")}>
+            <Input inputMode="numeric" readOnly={registered.legalId !== null} {...input("legalId", t("legalIdHint"))} />
+          </Field>
+
           {kind === "buyer" ? (
             <Field id="businessType" label={t("businessType")} error={err("businessType")}>
               <Select {...input("businessType")}>
@@ -132,11 +145,7 @@ export function OnboardingForm() {
                 ))}
               </Select>
             </Field>
-          ) : (
-            <Field id="legalId" label={t("legalId")} hint={t("legalIdHint")} error={err("legalId")} optional>
-              <Input inputMode="numeric" {...input("legalId", t("legalIdHint"))} />
-            </Field>
-          )}
+          ) : null}
 
           <Field id="contactName" label={t("contactName")} error={err("contactName")}>
             <Input autoComplete="name" {...input("contactName")} />

@@ -6,7 +6,13 @@ import { getDb } from "@/server/db/client";
 import { addresses, auditLogs, organizations } from "@/server/db/schema";
 import { listAuditActions, listAuditLog } from "@/server/domain/admin/audit-log";
 import { viewOrderForAdmin } from "@/server/domain/admin/orders";
-import { getBuyerForAdmin, listOrganizations, reviewBuyer } from "@/server/domain/admin/organizations";
+import {
+  countPendingOrganizations,
+  getBuyerForAdmin,
+  getVerificationInfo,
+  listOrganizations,
+  reviewBuyer,
+} from "@/server/domain/admin/organizations";
 import { reviewSupplier } from "@/server/domain/admin/suppliers";
 import { createCategory } from "@/server/domain/catalog/categories";
 import { createProduct } from "@/server/domain/catalog/products";
@@ -72,6 +78,33 @@ describe("organizations (admin)", () => {
       actorUserId: admin.userId,
       data: { before: "active", after: "suspended", reason: "Unpaid invoices outside Gusto" },
     });
+  });
+
+  it("approves a buyer waiting for verification, without a reason, once; shows what to check", async () => {
+    const buyer = await createBuyer("pending_review");
+    expect((await getBuyerForAdmin(admin, buyer.orgId)).org.status).toBe("pending_review");
+    expect(await countPendingOrganizations(admin, "buyer")).toBeGreaterThanOrEqual(1);
+    const info = await getVerificationInfo(admin, buyer.orgId);
+    expect(info).toMatchObject({ preRegistered: false, invitedBy: [], freeMail: false });
+    expect(info.legalId).toMatch(/^\d{9}$/);
+
+    await reviewBuyer(admin, buyer.orgId, "approve");
+    expect((await getBuyerForAdmin(admin, buyer.orgId)).org.status).toBe("active");
+    await expect(reviewBuyer(admin, buyer.orgId, "approve")).rejects.toEqual(new StateError("stale_status"));
+    const [log] = await getDb().select().from(auditLogs).where(eq(auditLogs.action, "buyer.approve"));
+    expect(log).toMatchObject({ actorUserId: admin.userId, data: { before: "pending_review", after: "active" } });
+  });
+
+  it("lists organizations waiting for verification first and filters by status", async () => {
+    const buyer = await createBuyer("pending_review");
+    const list = await listOrganizations(admin, { type: "buyer", status: "pending_review" });
+    expect(list.items.every((o) => o.status === "pending_review")).toBe(true);
+    expect(list.items.map((o) => o.id)).toContain(buyer.orgId);
+  });
+
+  it("a buyer organization is marked as pre-registered when the admin vetted it", async () => {
+    const buyer = await createBuyer();
+    expect((await getVerificationInfo(admin, buyer.orgId)).preRegistered).toBe(true);
   });
 
   it("a buyer review is for buyers only; supplier review for suppliers only", async () => {
