@@ -259,6 +259,13 @@ no email, and no account is created.
   a link on the login page, open it, and are asked to choose a password; after
   that they sign in with email and password. "Forgot password" sends the link
   again. A business you registered with its legal ID starts **active**.
+- **Suppliers who found Gusto through a partner's WhatsApp message** open the
+  public page `/suppliers` (what Gusto is, plus a short form with business name,
+  legal ID, contact, phone, email, city). That creates **no account**, only a
+  request. You see it under Admin → Requests (email alert and sidebar count),
+  check the ID, call them, then **Approve**: their email goes on the allow-list as
+  a vetted supplier and they sign in like any supplier you registered yourself.
+  Reject needs a reason. Spam is limited by a per-IP limit and a hidden trap field.
 - **Buyers who arrive from a supplier's WhatsApp link** fill a short form (name,
   legal ID, contact, phone, address) and wait on a "we are verifying you" page.
   They appear in Admin → Organizations (and the sidebar badge); check the ID, call

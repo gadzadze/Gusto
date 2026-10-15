@@ -1,6 +1,7 @@
 "use client";
 
 import { Mail } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -96,6 +97,12 @@ export function LoginForm({ next, error }: { next: string | null; error: LoginEr
           </Button>
         </div>
       </form>
+      <p className="text-center text-sm text-muted-foreground">
+        {t("supplierPrompt")}{" "}
+        <Link href="/suppliers" className="text-brand underline-offset-2 hover:underline">
+          {t("supplierLink")}
+        </Link>
+      </p>
     </div>
   );
 }

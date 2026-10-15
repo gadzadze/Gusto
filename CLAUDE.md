@@ -159,6 +159,17 @@ real need appears).
       `/admin/suppliers` or `/admin/organizations?status=pending_review`, where the
       `VerificationCard` shows ID, sign-in address (free-mail warning), who invited.
       Suppliers see "awaiting Gusto verification" on such customers.
+14. **Suppliers can also ask to be onboarded.** The public page `/suppliers`
+    (explainer + short form) is for a supplier who got a partner's WhatsApp
+    message. It only inserts a `supplier_requests` row: no account, no sign-in
+    access. Abuse controls: hidden honeypot field, 5 per hour per IP
+    (`RATE_LIMITS.supplierRequest`), and the same thank-you for duplicates
+    (open request for the address or legal ID, or an already-registered
+    supplier) so nothing about who is known leaks. The admin works the queue at
+    `/admin/requests` (email alert via `notifyAdminsSupplierRequest`, sidebar
+    count): mark contacted, reject (reason required), or approve, which calls
+    `allowEmail(..., "supplier", { businessName, legalId })` so the supplier then
+    signs in like any pre-registered one and starts `active`.
 
 ## Domain model
 
@@ -212,6 +223,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
   `status`, `attempts`, `next_attempt_at`, `last_error`, unique `dedupe_key`.
 - `audit_logs`: admin and security-relevant actions.
 - `allowed_emails`: the sign-in allow-list (lowercase email, note, optional `intended_role`, optional vetted `business_name` + `legal_id`, `revoked_at`); never deleted from.
+- `supplier_requests`: public "onboard me" submissions (business name, legal ID, contact, phone, email, city, note; `status` new/contacted/approved/rejected, admin note, reviewer). At most one open request per legal ID and per email.
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
@@ -329,7 +341,7 @@ Black, burgundy and white.
 ```
 src/
   app/
-    (public)/                 landing, login, invite acceptance
+    (public)/                 landing, login, invite acceptance, /suppliers (request to be onboarded)
     onboarding/               org creation after first sign-in
     supplier/                 supplier area (guarded by layout + every action)
     buyer/                    buyer area
