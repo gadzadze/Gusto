@@ -574,6 +574,43 @@ export const allowedEmails = pgTable(
   (t) => [uniqueIndex("allowed_emails_email_key").on(t.email), check("allowed_emails_lowercase", sql`${t.email} = lower(btrim(${t.email}))`)],
 );
 
+export const supplierRequestStatus = pgEnum("supplier_request_status", ["new", "contacted", "approved", "rejected"]);
+
+// A prospective supplier's "please onboard me" form (public page /suppliers).
+// It creates no account and no sign-in access: the admin checks the business,
+// then approves, which registers the address on the allow-list.
+export const supplierRequests = pgTable(
+  "supplier_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessName: text("business_name").notNull(),
+    legalId: text("legal_id").notNull(),
+    contactName: text("contact_name").notNull(),
+    phone: text("phone").notNull(),
+    // Lowercase, trimmed.
+    email: text("email").notNull(),
+    city: text("city").notNull(),
+    note: text("note"),
+    status: supplierRequestStatus("status").notNull().default("new"),
+    // The admin's own note (what was said on the phone, why rejected).
+    adminNote: text("admin_note"),
+    reviewedByUserId: uuid("reviewed_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    index("supplier_requests_status_idx").on(t.status, t.createdAt),
+    // One open request per business and per address: a second submission is a duplicate.
+    uniqueIndex("supplier_requests_open_legal_id_key")
+      .on(t.legalId)
+      .where(sql`${t.status} in ('new', 'contacted')`),
+    uniqueIndex("supplier_requests_open_email_key")
+      .on(t.email)
+      .where(sql`${t.status} in ('new', 'contacted')`),
+    check("supplier_requests_email_lowercase", sql`${t.email} = lower(btrim(${t.email}))`),
+  ],
+);
+
 export const auditLogs = pgTable(
   "audit_logs",
   {
@@ -596,6 +633,7 @@ export const auditLogs = pgTable(
 export type Organization = typeof organizations.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
 export type OrgType = (typeof orgType.enumValues)[number];
+export type SupplierRequestStatus = (typeof supplierRequestStatus.enumValues)[number];
 export type OrgStatus = (typeof orgStatus.enumValues)[number];
 export type MembershipRole = (typeof membershipRole.enumValues)[number];
 export type Category = typeof categories.$inferSelect;

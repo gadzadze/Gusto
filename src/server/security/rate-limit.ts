@@ -21,6 +21,8 @@ export const RATE_LIMITS = {
   signInRequest: { name: "sign_in_request", limit: 10, windowSeconds: 60 },
   /** Password sign-in attempts: 10 per minute per client IP (stored hashed). */
   passwordSignIn: { name: "password_sign_in", limit: 10, windowSeconds: 60 },
+  /** Public "onboard me" supplier requests: 5 per hour per client IP (stored hashed). */
+  supplierRequest: { name: "supplier_request", limit: 5, windowSeconds: 3600 },
   /** Product image upload: 30 per hour per supplier. */
   imageUpload: { name: "image_upload", limit: 30, windowSeconds: 3600 },
 } as const;

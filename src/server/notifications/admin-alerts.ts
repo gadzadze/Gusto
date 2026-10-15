@@ -19,7 +19,7 @@ const t = createTranslator({ locale: "ka", messages, namespace: "adminAlerts" })
  * the review list, nothing secret, and the admin area also shows a badge.
  */
 export async function notifyAdminsOrgPending(
-  kind: "supplier" | "buyer",
+  kind: "supplier" | "buyer" | "request",
   businessName: string,
 ): Promise<{ attempted: number }> {
   const admins = await getDb()
@@ -30,7 +30,12 @@ export async function notifyAdminsOrgPending(
   const to = admins.map((a) => a.email).filter((e): e is string => Boolean(e));
   if (to.length === 0) return { attempted: 0 };
 
-  const path = kind === "supplier" ? "/admin/suppliers?status=pending_review" : "/admin/organizations?type=buyer&status=pending_review";
+  const path =
+    kind === "supplier"
+      ? "/admin/suppliers?status=pending_review"
+      : kind === "request"
+        ? "/admin/requests"
+        : "/admin/organizations?type=buyer&status=pending_review";
   const link = `${appUrl()}${path}`;
   const subject = t(`${kind}PendingSubject`);
   const text = [t(`${kind}PendingBody`, { name: businessName }), "", t(`${kind}PendingLink`, { link })].join("\n");
@@ -45,3 +50,6 @@ export async function notifyAdminsOrgPending(
 }
 
 export const notifyAdminsSupplierPending = (businessName: string) => notifyAdminsOrgPending("supplier", businessName);
+
+/** A prospective supplier asked to be onboarded (public form). */
+export const notifyAdminsSupplierRequest = (businessName: string) => notifyAdminsOrgPending("request", businessName);
