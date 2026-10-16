@@ -113,8 +113,7 @@ export default async function LandingPage() {
       <main className="flex-1">
         {/* Hero */}
         <section className="mx-auto w-full max-w-6xl px-4 pb-10 pt-16 text-center sm:px-6 sm:pt-28">
-          <p className="inline-flex rounded-full bg-brand-soft px-3 py-1 text-sm font-medium text-brand">{tb("pilot")}</p>
-          <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-semibold leading-[1.05] tracking-tight sm:text-7xl">{t("heroTitle")}</h1>
+          <h1 className="mx-auto max-w-4xl text-5xl font-semibold leading-[1.05] tracking-tight sm:text-7xl">{t("heroTitle")}</h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl">{t("heroBody")}</p>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" className="w-full sm:w-auto">
