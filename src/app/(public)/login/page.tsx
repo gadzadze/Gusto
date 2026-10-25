@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { DemoAccounts } from "@/components/demo-accounts";
 import { Logo } from "@/components/logo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,6 +26,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           </Suspense>
         </CardContent>
       </Card>
+      <DemoAccounts />
     </main>
   );
 }

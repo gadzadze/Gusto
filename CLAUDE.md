@@ -655,6 +655,26 @@ and the delivery row is marked `skipped`, not `sent`.
   `setInputFiles` silently not fire React's change handler (the output folder
   name carries the title). Keep e2e test titles ASCII.
 
+## Public demo
+
+A separate Vercel project (`gusto-demo`) and Supabase project (`gusto-demo`)
+hold fictional data for showing Gusto to partners. Nothing in the real
+deployment depends on it.
+
+- **`DEMO_MODE=1`** (server env) turns on the banner, the demo accounts on
+  `/login`, `noindex` and a disallow-all `robots.txt` (`src/lib/demo.ts`).
+  `DEMO_PASSWORD` is the shared password shown on the login page.
+- **Data** comes from `scripts/seed-dev.ts` run on a scratch local database,
+  stored as JSON in `demo.demo_snapshot` on the demo project.
+  `demo.reset()` (a `security definer` function guarded by `demo.marker`) wipes
+  tenant data, recreates the four demo auth users and reloads the snapshot.
+  pg_cron runs it nightly (`gusto-demo-reset`, 01:00 UTC). Platform admins are
+  kept.
+- **Logins**: `supplier@demo.gusto.example` and `restaurant@demo.gusto.example`;
+  the other two demo users have random passwords.
+- **Never** create `demo.marker` on a real project: that is what lets
+  `demo.reset()` delete everything.
+
 ## Testing approach
 
 - **Integration tests use plain Postgres** with a stand-in `auth.users` and
