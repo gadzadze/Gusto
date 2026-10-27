@@ -692,7 +692,11 @@ interface, a dark trust band and a closing call to action.
 - **Fonts:** Nunito (Latin and digits, `landing-font.ts`) with Noto Sans Georgian
   for Georgian. Only the landing page loads Nunito; the app keeps Inter.
 - **The wordmark** is the traced vector in `public/brand/gusto-wordmark.svg`,
-  used on the landing page only. The in-app `Logo` is still the small square.
+  used everywhere through `components/logo.tsx` (size it with a height class;
+  white in the dark theme). The favicon and app icon (`src/app/icon.svg`,
+  `apple-icon.png`, `favicon.ico`) are the app icon mark; the auth email uses
+  `public/brand/gusto-wordmark.png` because email clients block SVG. Re-render
+  the PNGs from the SVGs if the brand changes; don't hand-edit them.
 - **Server renders, client interacts:** `ProductTour` (tabs, autoplay that stops
   on the first click, off for reduced motion) and the nav are client components;
   the panels are rendered on the server and passed in, so nothing formats on the

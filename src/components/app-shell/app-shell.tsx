@@ -57,7 +57,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
       <div className="flex min-w-0 flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden print:hidden">
           <div className="flex min-w-0 items-center gap-3">
-            <Logo className="text-base" />
+            <Logo className="h-6" />
             {title ? <span className="truncate text-sm text-muted-foreground">{title}</span> : null}
           </div>
           <div className="flex items-center">
