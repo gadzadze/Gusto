@@ -279,3 +279,28 @@
 html:has(.lp) { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html:has(.lp) { scroll-behavior: auto; } }
 @media (prefers-reduced-motion: reduce) { .lp .prog { animation: none; width: 100%; } }
+
+/* Scroll reveals: one quiet fade-and-settle, armed by reveal.tsx only below the fold */
+.lp .rv { transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); transition-delay: var(--rv-delay, 0ms); }
+.lp .rv-hidden { opacity: 0; }
+.lp .rv-up.rv-hidden { transform: translateY(28px); }
+.lp .rv-left.rv-hidden { transform: translateX(-36px); }
+.lp .rv-right.rv-hidden { transform: translateX(36px); }
+.lp .rv-stagger.rv-hidden { opacity: 1; transform: none; }
+.lp .rv-stagger > * { transition: opacity 0.9s var(--ease), transform 0.9s var(--ease); transition-delay: calc(var(--i, 0) * 90ms); }
+.lp .rv-stagger.rv-hidden > * { opacity: 0; transform: translateY(24px); }
+.lp .rv-stagger > :nth-child(2) { --i: 1; }
+.lp .rv-stagger > :nth-child(3) { --i: 2; }
+.lp .rv-stagger > :nth-child(4) { --i: 3; }
+.lp .rv-stagger > :nth-child(5) { --i: 4; }
+@media print, (prefers-reduced-motion: reduce) {
+  .lp .rv-hidden, .lp .rv-stagger.rv-hidden > * { opacity: 1; transform: none; }
+  .lp .rv, .lp .rv-stagger > * { transition: none; }
+}
+.lp .tour-wrap { margin-top: 56px; }
+
+/* Hero depth: the layers drift at different speeds as the page scrolls */
+.lp .depth { min-width: 0; }
+.lp .depth .dash { transform: translateY(calc(var(--sy, 0) * -0.05px)); }
+.lp .depth .phone { transform: translateY(calc(var(--sy, 0) * -0.13px)); }
+@media (prefers-reduced-motion: reduce) { .lp .depth .dash, .lp .depth .phone { transform: none; } }

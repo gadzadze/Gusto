@@ -5,6 +5,8 @@ import { LandingNav } from "@/components/landing/nav";
 import { nunito } from "@/components/landing/landing-font";
 import { BuyerPhone, HeroComposite, SupplierMock, TrustCard, buildTourViews } from "@/components/landing/panels";
 import { ProductTour } from "@/components/landing/product-tour";
+import { Reveal } from "@/components/landing/reveal";
+import { ScrollDepth } from "@/components/landing/scroll-depth";
 import "@/components/landing/landing.css";
 
 // Static: no session read here, so it prerenders. "Sign in" goes through
@@ -65,18 +67,20 @@ export default async function LandingPage() {
                   </a>
                 </div>
               </div>
-              <HeroComposite />
+              <ScrollDepth className="depth">
+                <HeroComposite />
+              </ScrollDepth>
             </div>
 
             <div className="facts">
-              <div className="facts-in">
+              <Reveal className="facts-in" stagger>
                 {facts.map((f) => (
                   <div key={f.title} className="fact">
                     <b>{f.title}</b>
                     <span>{f.body}</span>
                   </div>
                 ))}
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>
@@ -84,13 +88,13 @@ export default async function LandingPage() {
         {/* Product tour */}
         <section className="section" id="product">
           <div className="wrap">
-            <div className="sec-head">
+            <Reveal className="sec-head">
               <p className="kicker">{t("tour.kicker")}</p>
               <h2 className="h2">{t("tour.title")}</h2>
-            </div>
-            <div style={{ marginTop: 56 }}>
+            </Reveal>
+            <Reveal className="tour-wrap" delay={120}>
               <ProductTour label={t("tour.aria")} tabs={tabs} views={views} />
-            </div>
+            </Reveal>
           </div>
         </section>
 
@@ -98,7 +102,7 @@ export default async function LandingPage() {
         <section className="section alt" id="suppliers">
           <div className="wrap">
             <div className="split">
-              <div className="split-text">
+              <Reveal className="split-text">
                 <p className="kicker">{t("suppliers.kicker")}</p>
                 <h2 className="h2">{t("suppliers.title")}</h2>
                 <p className="body">{t("suppliers.body")}</p>
@@ -113,8 +117,10 @@ export default async function LandingPage() {
                 <Link className="more" href="/suppliers">
                   {t("suppliers.cta")}
                 </Link>
-              </div>
-              <SupplierMock />
+              </Reveal>
+              <Reveal from="right" delay={120}>
+                <SupplierMock />
+              </Reveal>
             </div>
           </div>
         </section>
@@ -123,7 +129,7 @@ export default async function LandingPage() {
         <section className="section" id="buyers">
           <div className="wrap">
             <div className="split rev">
-              <div className="split-text">
+              <Reveal className="split-text">
                 <p className="kicker">{t("buyers.kicker")}</p>
                 <h2 className="h2">{t("buyers.title")}</h2>
                 <p className="body">{t("buyers.body")}</p>
@@ -135,8 +141,10 @@ export default async function LandingPage() {
                     </li>
                   ))}
                 </ul>
-              </div>
-              <BuyerPhone />
+              </Reveal>
+              <Reveal from="left" delay={120}>
+                <BuyerPhone />
+              </Reveal>
             </div>
           </div>
         </section>
@@ -145,21 +153,23 @@ export default async function LandingPage() {
         <section className="night" id="trust">
           <div className="wrap">
             <div className="trust">
-              <div className="split-text">
+              <Reveal className="split-text">
                 <p className="kicker">{t("trust.kicker")}</p>
                 <h2 className="h2">{t("trust.title")}</h2>
                 <p className="body">{t("trust.body")}</p>
-              </div>
-              <TrustCard />
+              </Reveal>
+              <Reveal from="right" delay={120}>
+                <TrustCard />
+              </Reveal>
             </div>
-            <div className="trust-list">
+            <Reveal className="trust-list" stagger>
               {trustPoints.map((p) => (
                 <div key={p.title} className="trust-item">
                   <b>{p.title}</b>
                   <span>{p.body}</span>
                 </div>
               ))}
-            </div>
+            </Reveal>
           </div>
         </section>
 
@@ -167,7 +177,7 @@ export default async function LandingPage() {
         <section className="close" id="join">
           <div className="wrap">
             <div className="close-grid">
-              <div className="close-copy">
+              <Reveal className="close-copy">
                 <h2 className="h2">{t("close.title")}</h2>
                 <p className="body">{t("close.body")}</p>
                 <div className="hero-cta">
@@ -178,8 +188,8 @@ export default async function LandingPage() {
                     {t("close.signIn")}
                   </Link>
                 </div>
-              </div>
-              <div className="close-side">
+              </Reveal>
+              <Reveal className="close-side" stagger delay={120}>
                 <div>
                   <b className="h3">{t("close.sTitle")}</b>
                   <p>{t("close.sBody")}</p>
@@ -194,7 +204,7 @@ export default async function LandingPage() {
                     {t("close.bCta")}
                   </Link>
                 </div>
-              </div>
+              </Reveal>
             </div>
           </div>
         </section>

@@ -31,3 +31,23 @@ test("the landing page has no horizontal scroll at phone width", async ({ browse
   await page.getByRole("button", { name: "მენიუს გახსნა" }).click();
   await expect(page.getByRole("link", { name: "ნდობა" }).first()).toBeVisible();
 });
+
+test("scroll reveals arm below the fold, settle as you scroll, and stay off for reduced motion", async ({ browser }) => {
+  const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  // Below-the-fold blocks start hidden; the hero is never hidden.
+  await expect.poll(() => page.locator(".rv-hidden").count()).toBeGreaterThan(0);
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+  // Scrolling through the page reveals every one of them.
+  for (let y = 0; y <= 6000; y += 400) {
+    await page.evaluate((v) => window.scrollTo(0, v), y);
+    await page.waitForTimeout(60);
+  }
+  await expect.poll(() => page.locator(".rv-hidden").count()).toBe(0);
+
+  const calm = await (await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" })).newPage();
+  await calm.goto("/");
+  await calm.waitForLoadState("networkidle");
+  expect(await calm.locator(".rv-hidden").count()).toBe(0);
+});
