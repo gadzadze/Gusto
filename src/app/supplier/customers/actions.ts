@@ -46,7 +46,7 @@ async function inviteLinks(
     // token, which Gusto never persists. A provider error must not fail the
     // invitation (the link is still shown to copy or send on WhatsApp).
     try {
-      const result = await sendEmail({ to: customer.contactEmail, subject: `${ctx.orgName} — Gusto`, text });
+      const result = await sendEmail({ to: customer.contactEmail, subject: `${ctx.orgName} - Gusto`, text });
       emailSent = result === "sent";
     } catch (error) {
       console.error("[invite] email failed", { message: error instanceof Error ? error.message : String(error) });

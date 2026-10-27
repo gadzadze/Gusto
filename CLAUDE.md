@@ -675,6 +675,31 @@ deployment depends on it.
 - **Never** create `demo.marker` on a real project: that is what lets
   `demo.reset()` delete everything.
 
+## Landing page
+
+`src/app/(public)/page.tsx` plus `src/components/landing/`. A light, product-first
+page (Stripe-style structure): floating blurred pill nav, a hero with the
+supplier's order list and the buyer's phone, an interactive four-tab product
+tour, supplier and buyer sections that each pair short copy with a drawn
+interface, a dark trust band and a closing call to action.
+
+- **Everything on screen is a drawn mock-up with fictional data**, labelled as
+  such in the hero (`demo`). No screenshots, no invented metrics. Amounts go
+  through `formatMoney`; the demo numbers live in `components/landing/panels.tsx`.
+- **Styles are scoped under `.lp`** in `landing.css` (plain CSS, class names are
+  generic like `.btn` and `.pill`, so never import it outside the landing page).
+  Burgundy is for meaning only: links, hover and focus, and nothing decorative.
+- **Fonts:** Nunito (Latin and digits, `landing-font.ts`) with Noto Sans Georgian
+  for Georgian. Only the landing page loads Nunito; the app keeps Inter.
+- **The wordmark** is the traced vector in `public/brand/gusto-wordmark.svg`,
+  used on the landing page only. The in-app `Logo` is still the small square.
+- **Server renders, client interacts:** `ProductTour` (tabs, autoplay that stops
+  on the first click, off for reduced motion) and the nav are client components;
+  the panels are rendered on the server and passed in, so nothing formats on the
+  client.
+- **Hyphens only:** user-visible text uses the standard `-`, never an em or en
+  dash. The landing e2e test checks the page text for them.
+
 ## Testing approach
 
 - **Integration tests use plain Postgres** with a stand-in `auth.users` and

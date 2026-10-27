@@ -137,7 +137,7 @@ async function Supplier({ params }: PageProps<"/admin/suppliers/[id]">) {
                     ? t(`historyActions.${HISTORY_KEYS[h.action as keyof typeof HISTORY_KEYS]}`)
                     : h.action}
                   {typeof h.data?.reason === "string" ? (
-                    <span className="text-muted-foreground"> — {h.data.reason}</span>
+                    <span className="text-muted-foreground"> - {h.data.reason}</span>
                   ) : null}
                 </span>
               </li>

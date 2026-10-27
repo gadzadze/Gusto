@@ -10,7 +10,7 @@ import type { VerificationInfo } from "@/server/domain/admin/organizations";
  */
 export async function VerificationCard({ info }: { info: VerificationInfo }) {
   const t = await getTranslations("admin.verification");
-  const none = "—";
+  const none = "-";
   return (
     <Card>
       <CardHeader>

@@ -66,7 +66,7 @@ export function renderOrderEmail(data: OrderEmailData): RenderedEmail {
   const open = t("email.open", { link: data.link });
   const footer = t("email.footer");
 
-  const text = [intro, "", ...lines, "", open, "", "—", footer].join("\n");
+  const text = [intro, "", ...lines, "", open, "", "-", footer].join("\n");
   const html = `<!doctype html>
 <html lang="ka"><body style="margin:0;padding:24px;background:#ffffff;color:#0b0b0c;font-family:Arial,sans-serif;font-size:15px;line-height:1.5">
 <p style="margin:0 0 16px;font-size:17px;font-weight:600">${escapeHtml(subject)}</p>
