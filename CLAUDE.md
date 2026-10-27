@@ -702,8 +702,10 @@ interface, a dark trust band and a closing call to action.
   settle once when clearly on screen, grouped items follow one after another
   (`stagger`), mock-ups settle in from the side, and the hero's layers drift at
   different speeds. The server renders everything visible; the hidden state is
-  armed on the client only below the fold, so no JavaScript, print or Reduce
-  Motion means nothing is ever hidden. Add motion with `Reveal`, never with
+  armed on the client only below the fold, so no JavaScript or print
+  means nothing is ever hidden. Reduce Motion keeps the fade but drops the
+  movement and the hero drift (many Windows machines report it just because OS
+  animations are off). Add motion with `Reveal`, never with
   per-element animations.
 - **Server renders, client interacts:** `ProductTour` (tabs, autoplay that stops
   on the first click, off for reduced motion) and the nav are client components;
