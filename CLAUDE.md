@@ -697,6 +697,14 @@ interface, a dark trust band and a closing call to action.
   `apple-icon.png`, `favicon.ico`) are the app icon mark; the auth email uses
   `public/brand/gusto-wordmark.png` because email clients block SVG. Re-render
   the PNGs from the SVGs if the brand changes; don't hand-edit them.
+- **Scroll motion** is deliberately plain (`components/landing/reveal.tsx`,
+  `scroll-depth.tsx`, no animation library): blocks below the fold fade and
+  settle once when clearly on screen, grouped items follow one after another
+  (`stagger`), mock-ups settle in from the side, and the hero's layers drift at
+  different speeds. The server renders everything visible; the hidden state is
+  armed on the client only below the fold, so no JavaScript, print or Reduce
+  Motion means nothing is ever hidden. Add motion with `Reveal`, never with
+  per-element animations.
 - **Server renders, client interacts:** `ProductTour` (tabs, autoplay that stops
   on the first click, off for reduced motion) and the nav are client components;
   the panels are rendered on the server and passed in, so nothing formats on the
