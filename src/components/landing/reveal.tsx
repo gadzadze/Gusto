@@ -17,7 +17,8 @@ type RevealProps = {
  * Scroll-triggered entrance: the element fades and settles into place the
  * first time it is clearly on screen. The server renders it visible; the
  * hidden state is armed on the client only for elements below the fold, so
- * without JavaScript (or for print, or Reduce Motion) nothing is ever hidden.
+ * without JavaScript (or for print) nothing is ever hidden. Reduce Motion gets
+ * the fade only; the CSS drops the movement.
  */
 export function Reveal({ children, className = "", delay = 0, from = "up", stagger = false }: RevealProps) {
   const ref = useRef<HTMLDivElement>(null);
@@ -25,7 +26,6 @@ export function Reveal({ children, className = "", delay = 0, from = "up", stagg
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     // Already on screen at load: the hero has its own arrival, leave it be.
     if (el.getBoundingClientRect().top < window.innerHeight - 40) return;
     el.classList.add("rv-hidden");

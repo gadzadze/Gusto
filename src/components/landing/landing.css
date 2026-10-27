@@ -293,9 +293,16 @@ html:has(.lp) { scroll-behavior: smooth; }
 .lp .rv-stagger > :nth-child(3) { --i: 2; }
 .lp .rv-stagger > :nth-child(4) { --i: 3; }
 .lp .rv-stagger > :nth-child(5) { --i: 4; }
-@media print, (prefers-reduced-motion: reduce) {
+@media print {
   .lp .rv-hidden, .lp .rv-stagger.rv-hidden > * { opacity: 1; transform: none; }
   .lp .rv, .lp .rv-stagger > * { transition: none; }
+}
+/* Reduce Motion keeps a soft fade (no movement): many Windows machines report it
+   just because OS animations are off, and a page with no entrance at all feels broken. */
+@media (prefers-reduced-motion: reduce) {
+  .lp .rv-up.rv-hidden, .lp .rv-left.rv-hidden, .lp .rv-right.rv-hidden,
+  .lp .rv-stagger.rv-hidden > * { transform: none; }
+  .lp .rv, .lp .rv-stagger > * { transition: opacity 0.7s ease; }
 }
 .lp .tour-wrap { margin-top: 56px; }
 

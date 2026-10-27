@@ -32,7 +32,7 @@ test("the landing page has no horizontal scroll at phone width", async ({ browse
   await expect(page.getByRole("link", { name: "ნდობა" }).first()).toBeVisible();
 });
 
-test("scroll reveals arm below the fold, settle as you scroll, and stay off for reduced motion", async ({ browser }) => {
+test("scroll reveals arm below the fold, settle as you scroll, and fade without movement for reduced motion", async ({ browser }) => {
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();
   await page.goto("/");
   await page.waitForLoadState("networkidle");
@@ -49,5 +49,11 @@ test("scroll reveals arm below the fold, settle as you scroll, and stay off for 
   const calm = await (await browser.newContext({ viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" })).newPage();
   await calm.goto("/");
   await calm.waitForLoadState("networkidle");
-  expect(await calm.locator(".rv-hidden").count()).toBe(0);
+  await expect.poll(() => calm.locator(".rv-hidden").count()).toBeGreaterThan(0);
+  expect(await calm.locator(".rv-up.rv-hidden").first().evaluate((e) => getComputedStyle(e).transform)).toBe("none");
+  for (let y = 0; y <= 6000; y += 400) {
+    await calm.evaluate((top) => window.scrollTo(0, top), y);
+    await calm.waitForTimeout(60);
+  }
+  await expect.poll(() => calm.locator(".rv-hidden").count()).toBe(0);
 });
