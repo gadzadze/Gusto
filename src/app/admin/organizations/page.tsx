@@ -103,7 +103,7 @@ async function Organizations({ searchParams }: Pick<PageProps<"/admin/organizati
                     </Link>
                   </TD>
                   <TD className="hidden text-muted-foreground sm:table-cell">{t(`typeLabel.${o.type}`)}</TD>
-                  <TD className="hidden tabular-nums text-muted-foreground sm:table-cell">{o.legalId ?? "—"}</TD>
+                  <TD className="hidden tabular-nums text-muted-foreground sm:table-cell">{o.legalId ?? "-"}</TD>
                   <TD className="hidden text-muted-foreground sm:table-cell">{o.city}</TD>
                   <TD><SupplierStatusBadge status={o.status} /></TD>
                   <TD className="hidden text-muted-foreground md:table-cell">

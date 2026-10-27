@@ -186,7 +186,7 @@ export function ImportWizard({ savedMapping }: { savedMapping: ImportMapping | n
                 .map((row) => (
                   <TR key={row.rowNumber}>
                     <TD className="tabular-nums text-muted-foreground">{row.rowNumber}</TD>
-                    <TD>{row.name || "—"}</TD>
+                    <TD>{row.name || "-"}</TD>
                     <TD>
                       {row.action === "error" ? (
                         <span className="flex flex-col gap-1">

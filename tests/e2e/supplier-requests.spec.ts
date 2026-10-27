@@ -41,7 +41,7 @@ test("a prospective supplier asks to be onboarded and the admin approves", async
   await visitor.goto("/login");
   await visitor.waitForLoadState("networkidle");
   await visitor.getByLabel("ელფოსტა").fill(email);
-  await visitor.getByRole("button", { name: "პირველი შესვლა — გამომიგზავნეთ ბმული" }).click();
+  await visitor.getByRole("button", { name: "პირველი შესვლა - გამომიგზავნეთ ბმული" }).click();
   await expect(visitor.getByText("ეს ელფოსტა რეგისტრირებული არ არის")).toBeVisible();
 
   // 2. The admin sees it, and the sidebar count.

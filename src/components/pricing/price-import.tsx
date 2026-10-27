@@ -117,7 +117,7 @@ export function PriceImport({ priceListId, disabled }: { priceListId: string; di
                 r.action === "error" ? (
                   <li key={r.rowNumber} className="flex items-start gap-1.5 text-destructive">
                     <CircleAlert aria-hidden className="mt-0.5 size-3.5 shrink-0" />
-                    {ti("columns.row")} {r.rowNumber} ({r.sku || "—"}):{" "}
+                    {ti("columns.row")} {r.rowNumber} ({r.sku || "-"}):{" "}
                     {r.errors
                       .map((e) =>
                         e.key === "unknown_sku" || e.key === "duplicate_sku_in_file"

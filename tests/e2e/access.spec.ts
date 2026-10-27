@@ -14,7 +14,7 @@ async function requestLink(page: Page, email: string, next = "") {
   await page.goto(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   await page.waitForLoadState("networkidle");
   await page.getByLabel("ელფოსტა").fill(email);
-  await page.getByRole("button", { name: "პირველი შესვლა — გამომიგზავნეთ ბმული" }).click();
+  await page.getByRole("button", { name: "პირველი შესვლა - გამომიგზავნეთ ბმული" }).click();
 }
 
 test("an unregistered address gets no sign-in link", async ({ page }) => {

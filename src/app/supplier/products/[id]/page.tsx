@@ -53,7 +53,7 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
   // Keep an archived category selectable for the product that already has it.
   const categories = activeCategories.some((c) => c.id === product.categoryId)
     ? activeCategories
-    : [...activeCategories, { id: product.categoryId, name: "—" }];
+    : [...activeCategories, { id: product.categoryId, name: "-" }];
   const readOnly = ctx.orgStatus === "suspended";
 
   const defaults: ProductInput = {
