@@ -697,6 +697,10 @@ interface, a dark trust band and a closing call to action.
   `apple-icon.png`, `favicon.ico`) are the app icon mark; the auth email uses
   `public/brand/gusto-wordmark.png` because email clients block SVG. Re-render
   the PNGs from the SVGs if the brand changes; don't hand-edit them.
+- **The phones are a drawn iPhone** (`components/landing/iphone.tsx`: titanium
+  frame, side buttons, Dynamic Island, status bar, home indicator), pure CSS and
+  SVG with no Apple artwork. Placement and size come from the `phone` and
+  `phone-lg` classes.
 - **Server renders, client interacts:** `ProductTour` (tabs, autoplay that stops
   on the first click, off for reduced motion) and the nav are client components;
   the panels are rendered on the server and passed in, so nothing formats on the

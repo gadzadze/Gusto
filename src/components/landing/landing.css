@@ -115,10 +115,8 @@
 .lp .trow.head { border-top: 0; padding-top: 0; font-size: 11px; color: var(--soft); font-weight: 700; }
 .lp .newrow { animation: rowin 0.7s var(--ease) 1.2s both; }
 /* Phone */
-.lp .phone { position: absolute; left: 0; top: 90px; width: 262px; height: 540px; padding: 9px; border-radius: 44px; background: #0B1220; box-shadow: 0 40px 70px -40px rgba(11, 18, 32, 0.6); z-index: 2; }
-.lp .screen { position: relative; height: 100%; border-radius: 36px; overflow: hidden; background: #fff; }
-.lp .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 76px; height: 22px; border-radius: 999px; background: #0B1220; }
-.lp .p-top { padding: 42px 16px 10px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+.lp .phone { position: absolute; left: 0; top: 90px; width: 266px; height: 548px; z-index: 2; }
+.lp .p-top { padding: 54px 16px 10px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
 .lp .p-top b { color: var(--brand); font-size: 14px; font-weight: 800; }
 .lp .p-top span { font-size: 10px; color: var(--muted); font-weight: 600; }
 .lp .p-body { padding: 14px 16px; }
@@ -129,7 +127,7 @@
 .lp .p-step { display: inline-flex; align-items: center; height: 28px; border: 1px solid var(--line); border-radius: 999px; font-size: 12px; font-weight: 700; }
 .lp .p-step span { min-width: 24px; text-align: center; }
 .lp .p-step span.d { color: var(--soft); }
-.lp .p-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; border-top: 1px solid var(--line); background: #fff; }
+.lp .p-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 28px; border-top: 1px solid var(--line); background: #fff; }
 .lp .p-sum { display: flex; justify-content: space-between; align-items: baseline; font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 8px; }
 .lp .p-sum b { font-size: 17px; color: var(--ink); font-weight: 800; }
 .lp .p-btn { display: flex; align-items: center; justify-content: center; height: 40px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 12px; font-weight: 700; }
@@ -204,8 +202,7 @@
 .lp .crm.head { border-top: 0; padding-top: 0; font-size: 12px; color: var(--muted); }
 .lp .crm .pl { color: var(--text); font-weight: 600; font-size: 14px; text-align: right; }
 /* Buyer phone (static, larger) */
-.lp .phone-lg { position: relative; width: 300px; height: 610px; margin: 0 auto; padding: 10px; border-radius: 50px; background: #0B1220; box-shadow: 0 40px 70px -40px rgba(11, 18, 32, 0.55); }
-.lp .phone-lg .screen { border-radius: 41px; }
+.lp .phone-lg { position: relative; width: 304px; height: 626px; margin: 0 auto; }
 .lp .bsec { margin: 16px 0 6px; font-size: 12px; color: var(--muted); font-weight: 700; }
 .lp .bord { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .lp .bord b { display: block; font-size: 14px; font-weight: 700; }
@@ -279,3 +276,25 @@
 html:has(.lp) { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html:has(.lp) { scroll-behavior: auto; } }
 @media (prefers-reduced-motion: reduce) { .lp .prog { animation: none; width: 100%; } }
+
+/* iPhone: titanium frame, bezel, screen */
+.lp .iphone { box-sizing: border-box; }
+.lp .ip-frame { position: relative; width: 100%; height: 100%; padding: 3px; border-radius: 48px; background: linear-gradient(150deg, #5b5f66 0%, #2b2e33 18%, #1a1c20 50%, #2e3136 82%, #55595f 100%); box-shadow: 0 40px 70px -38px rgba(11, 18, 32, 0.6), 0 0 0 1px rgba(11, 18, 32, 0.25); }
+.lp .ip-bezel { width: 100%; height: 100%; padding: 6px; border-radius: 45px; background: #050506; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07); }
+.lp .ip-screen { position: relative; width: 100%; height: 100%; border-radius: 39px; overflow: hidden; background: #fff; color: var(--ink); text-align: left; }
+.lp .ip-btn { position: absolute; width: 3px; border-radius: 2px; background: linear-gradient(90deg, #1a1c20, #4a4e55); }
+.lp .ip-action { left: -3px; top: 17%; height: 4.2%; }
+.lp .ip-volup { left: -3px; top: 25%; height: 8%; }
+.lp .ip-voldn { left: -3px; top: 35%; height: 8%; }
+.lp .ip-power { right: -3px; top: 29%; height: 12.5%; background: linear-gradient(270deg, #1a1c20, #4a4e55); }
+.lp .ip-island { position: absolute; top: 10px; left: 50%; z-index: 4; display: flex; align-items: center; justify-content: flex-end; width: 84px; height: 24px; padding-right: 8px; border-radius: 999px; background: #050506; transform: translateX(-50%); }
+.lp .ip-island i { display: block; width: 8px; height: 8px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #2b3a5a 0%, #0c1220 55%, #050506 100%); box-shadow: 0 0 0 1.5px #0d0e11; }
+.lp .ip-status { position: absolute; top: 12px; left: 0; right: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; height: 20px; padding: 0 22px 0 26px; color: var(--ink); }
+.lp .ip-time { font-size: 12px; font-weight: 800; letter-spacing: -0.01em; }
+.lp .ip-icons { display: inline-flex; align-items: center; gap: 4px; }
+.lp .ip-home { position: absolute; bottom: 8px; left: 50%; z-index: 4; width: 96px; height: 4px; border-radius: 999px; background: #0B1220; transform: translateX(-50%); }
+@media (max-width: 760px) { .lp .ip-frame { border-radius: 46px; } }
+/* The hero phone is smaller: shrink the island and status icons so they never touch */
+.lp .phone .ip-island { width: 72px; height: 22px; }
+.lp .phone .ip-status { padding: 0 16px 0 20px; }
+.lp .phone .ip-icons { gap: 3px; transform: scale(0.86); transform-origin: right center; }
