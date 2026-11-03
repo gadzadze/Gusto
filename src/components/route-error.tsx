@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { TriangleAlert } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
@@ -15,6 +16,9 @@ export function RouteError({ error, reset }: { error: Error & { digest?: string 
   useEffect(() => {
     // Message and digest only: error objects can carry request details.
     console.error("[route error]", { message: error.message, digest: error.digest });
+    // Errors from the server arrive here with a digest and were already sent by
+    // onRequestError; only browser-side render errors are new information.
+    if (!error.digest) Sentry.captureException(error);
   }, [error]);
   return (
     <div role="alert" className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-14 text-center">

@@ -1,11 +1,13 @@
+import { withSentryConfig } from "@sentry/nextjs/config";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { sentryIngestOrigin } from "./src/lib/sentry-dsn";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
 // Content-Security-Policy: this app, Supabase (product images are served from
-// its public Storage bucket) and the fonts (next/font self-hosts them, so
-// 'self' covers them). 'unsafe-inline' is needed for the inline scripts and
+// its public Storage bucket), Sentry (browser error reports go to the DSN's
+// ingest origin) and the fonts (next/font self-hosts them, so 'self' covers them). 'unsafe-inline' is needed for the inline scripts and
 // styles Next.js emits; per-request nonces would force every page to render
 // dynamically, which Cache Components is there to avoid. 'unsafe-eval' is
 // development only (React's debugging features).
@@ -17,6 +19,7 @@ function contentSecurityPolicy(): string {
   } catch {
     supabaseOrigin = "";
   }
+  const sentryOrigin = sentryIngestOrigin();
   const dev = process.env.NODE_ENV !== "production";
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
@@ -24,7 +27,12 @@ function contentSecurityPolicy(): string {
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:", ...(supabaseOrigin ? [supabaseOrigin] : [])],
     "font-src": ["'self'", "data:"],
-    "connect-src": ["'self'", ...(supabaseOrigin ? [supabaseOrigin] : []), ...(dev ? ["ws:", "wss:"] : [])],
+    "connect-src": [
+      "'self'",
+      ...(supabaseOrigin ? [supabaseOrigin] : []),
+      ...(sentryOrigin ? [sentryOrigin] : []),
+      ...(dev ? ["ws:", "wss:"] : []),
+    ],
     "frame-ancestors": ["'none'"],
     "base-uri": ["'self'"],
     "form-action": ["'self'"],
@@ -70,4 +78,16 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withNextIntl(nextConfig);
+// Source maps are uploaded (so production stack traces are readable) only when
+// SENTRY_AUTH_TOKEN is set, which keeps `npm run build` working with no
+// environment, as CI requires. Telemetry to Sentry about the build is off.
+export default withSentryConfig(withNextIntl(nextConfig), {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+  silent: !process.env.CI,
+  telemetry: false,
+  widenClientFileUpload: true,
+  // Features that are not used: smaller browser bundle.
+  bundleSizeOptimizations: { excludeDebugStatements: true, excludeTracing: true, excludeReplayShadowDom: true },
+});
