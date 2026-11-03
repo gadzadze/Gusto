@@ -1,0 +1,82 @@
+name: Database backup
+
+# Nightly encrypted dump of the production database, proven restorable before
+# it is kept. See docs/backups.md for setup, restore and the drill.
+#
+# Needs two repository secrets (Settings -> Secrets and variables -> Actions):
+#   BACKUP_DATABASE_URL  Supabase "Session pooler" connection string (port 5432).
+#                        GitHub runners are IPv4-only and the direct host is
+#                        IPv6-only, and pg_dump cannot use the :6543 pooler.
+#   BACKUP_PASSPHRASE    long random string: openssl rand -base64 32
+#                        Store it somewhere that is NOT this repository; without
+#                        it the backups cannot be opened.
+# A missing secret fails the run, and GitHub emails the failure.
+on:
+  schedule:
+    - cron: "23 2 * * *" # 02:23 UTC, 06:23 in Tbilisi: before anyone orders
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: Dump, restore-check, store
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      scratch:
+        # An empty throwaway database to prove the dump restores.
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: restore_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v5
+
+      # The dump must come from a client at least as new as the server (17).
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump
+        id: dump
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          PG_DUMP: /usr/lib/postgresql/17/bin/pg_dump
+          PSQL: /usr/lib/postgresql/17/bin/psql
+        run: |
+          file="$(scripts/ops/db-backup.sh backups | tail -n 1)"
+          echo "file=$file" >> "$GITHUB_OUTPUT"
+          ls -l "$file"
+
+      - name: Prove it restores
+        env:
+          RESTORE_CHECK_URL: postgresql://postgres:postgres@localhost:5432/restore_check
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+          PG_RESTORE: /usr/lib/postgresql/17/bin/pg_restore
+          PSQL: /usr/lib/postgresql/17/bin/psql
+        run: scripts/ops/db-restore-check.sh "${{ steps.dump.outputs.file }}"
+
+      # The file is encrypted, so the artifact is useless without the passphrase.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gusto-db-backup-${{ github.run_id }}
+          path: ${{ steps.dump.outputs.file }}
+          retention-days: 14
+          if-no-files-found: error

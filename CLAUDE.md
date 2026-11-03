@@ -655,6 +655,22 @@ and the delivery row is marked `skipped`, not `sent`.
   `setInputFiles` silently not fire React's change handler (the output folder
   name carries the title). Keep e2e test titles ASCII.
 
+## Operations (health and backups)
+
+Details and the restore drill are in [`docs/backups.md`](docs/backups.md).
+
+- **`GET /api/health`** is public and excluded from `proxy.ts`, so it never
+  depends on the auth provider. 200 when the database answers and no queued
+  notification is over 15 minutes overdue; 503 otherwise (`server/health.ts`).
+  It returns status words only: no counts, hosts or error text.
+- **Nightly backup** (`.github/workflows/db-backup.yml`): encrypted dump of
+  `public` + `drizzle` and an id/email-only export of `auth.users`, restored
+  into a scratch Postgres before it is kept. The dump needs the Supabase
+  **session** pooler (port 5432), not the transaction pooler.
+- `scripts/ops/*.sh` are Linux shell scripts for CI and restore drills. They
+  are deliberately not npm scripts, which must stay cross-platform.
+- Not in the backup: Storage images, the cron job and Vault secrets, passwords.
+
 ## Public demo
 
 A separate Vercel project (`gusto-demo`) and Supabase project (`gusto-demo`)
