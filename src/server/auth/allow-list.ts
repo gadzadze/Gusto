@@ -1,41 +1,22 @@
 import "server-only";
-import { and, eq, sql } from "drizzle-orm";
-import { inviteTokenFromPath, normalizeEmail } from "@/lib/auth/invite-path";
+import { eq } from "drizzle-orm";
+import { normalizeEmail } from "@/lib/auth/invite-path";
 import { getDb } from "@/server/db/client";
-import { allowedEmails, invitations, organizations, supplierCustomers } from "@/server/db/schema";
-import { isInvitationUsable } from "@/server/domain/customers/invite-token";
-import { previewInvitation } from "@/server/domain/customers/invitations";
+import { allowedEmails } from "@/server/db/schema";
 
-// Sign-in is invite-only. An address may sign in if:
-//  1. it has an allow-list row that is not revoked; or, when it has NO row,
-//  2. the person is following a valid invitation link (`next` = /invite/<token>:
-//     the single-use token is the capability, so a WhatsApp-only invite works); or
-//  3. a valid invitation was addressed to this email by a supplier.
-// A revoked row always wins: an admin's revocation is not undone by an invitation.
+// Sign-in is closed until the business is accepted. An address may get a
+// sign-in link (or finish a Google sign-in) only if the admin has put it on the
+// allow-list and has not revoked it. Nothing else opens the door: not an
+// invitation link, not an invitation addressed to that email. An invitation
+// only connects a buyer to a supplier AFTER the buyer is signed in, so an
+// address nobody accepted never gets an email and never gets an account.
 
-export async function isEmailAllowed(rawEmail: string, nextPath: string | null = null): Promise<boolean> {
-  const email = normalizeEmail(rawEmail);
-  const db = getDb();
-
-  const [row] = await db.select({ revokedAt: allowedEmails.revokedAt }).from(allowedEmails).where(eq(allowedEmails.email, email));
-  if (row) return row.revokedAt === null;
-
-  const token = inviteTokenFromPath(nextPath);
-  if (token && (await previewInvitation(token)).status === "valid") return true;
-
-  const open = await db
-    .select({
-      expiresAt: invitations.expiresAt,
-      revokedAt: invitations.revokedAt,
-      acceptedAt: invitations.acceptedAt,
-      customerStatus: supplierCustomers.status,
-      supplierStatus: organizations.status,
-    })
-    .from(invitations)
-    .innerJoin(supplierCustomers, eq(supplierCustomers.id, invitations.supplierCustomerId))
-    .innerJoin(organizations, eq(organizations.id, supplierCustomers.supplierOrgId))
-    .where(and(sql`lower(${supplierCustomers.contactEmail}) = ${email}`));
-  return open.some((i) => isInvitationUsable(i) && i.customerStatus === "invited" && i.supplierStatus === "active");
+export async function isEmailAllowed(rawEmail: string): Promise<boolean> {
+  const [row] = await getDb()
+    .select({ revokedAt: allowedEmails.revokedAt })
+    .from(allowedEmails)
+    .where(eq(allowedEmails.email, normalizeEmail(rawEmail)));
+  return row !== undefined && row.revokedAt === null;
 }
 
 /**

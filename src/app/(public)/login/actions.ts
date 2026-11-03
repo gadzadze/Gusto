@@ -3,7 +3,6 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { safeNextPath } from "@/lib/safe-next";
 import { completeSignIn } from "@/server/auth/complete-sign-in";
 import { isEmailAllowed } from "@/server/auth/allow-list";
 import { rememberNextPath } from "@/server/auth/next-cookie";
@@ -74,9 +73,8 @@ export async function sendMagicLink(_prev: MagicLinkState, formData: FormData): 
     throw error;
   }
 
-  // Invite-only: unknown addresses get no account and no email.
-  const next = safeNextPath(formData.get("next"));
-  if (!(await isEmailAllowed(parsed.data, next))) return { status: "error", error: "not_allowed" };
+  // Closed until the admin accepts the business: any other address gets no account and no email.
+  if (!(await isEmailAllowed(parsed.data))) return { status: "error", error: "not_allowed" };
   try {
     // Sign-ups are off in Supabase, so the auth user is created here, by us, for allowed addresses only.
     await ensureAuthUser(parsed.data);

@@ -125,14 +125,20 @@ real need appears).
    Handler requires `Authorization: Bearer $CRON_SECRET`.
 10. Never log tokens, magic links, invite URLs, cookies or full request
     bodies.
-11. **Sign-in is invite-only.** Nobody registers themselves. An address may get a
-    sign-in link only if it is on `allowed_emails` (not revoked), or follows a
-    valid invitation link, or holds a valid invitation addressed to it
-    (`server/auth/allow-list.ts`). Supabase sign-ups are switched off, so the
+11. **Sign-in is closed until the admin accepts the business.** Nobody registers
+    themselves, and nobody gets a sign-in link or an account first. An address
+    may get a link only if it is on `allowed_emails` and not revoked
+    (`server/auth/allow-list.ts`, `isEmailAllowed`: that is the whole rule).
+    **An invitation does not open the door**, neither its link nor an invitation
+    addressed to an email: it only connects a buyer to a supplier after the buyer
+    has signed in (decided 2026-11-03, so unaccepted people never become junk
+    accounts). Supabase sign-ups are switched off, so the
     app creates auth users itself (`server/supabase/admin.ts`) for allowed
     addresses only. `completeSignIn` re-checks and signs out anyone not
-    allowed, which is the only gate for Google. A revoked row beats an
-    invitation. Admins manage the list at `/admin/access`; scripts use
+    allowed, which is the only gate for Google. A revoked row stays blocked.
+    The admin adds every business, buyers included, at `/admin/access` (ideally
+    with business name + legal ID, which also makes the organization start
+    `active`); scripts use
     `npm run user:allow`. Being allowed gives no role, but the admin may pin
     `allowed_emails.intended_role`: onboarding then offers only that kind and
     `submitOnboarding` / the invite action refuse the other (`wrong_role`).
@@ -152,8 +158,8 @@ real need appears).
       (Access page / `user:allow --name --legal-id`). That ID is authoritative
       (`registrationFor`, shown read-only at onboarding) and the organization
       starts `active`.
-    - *Unvetted* (no ID on the row, e.g. a buyer arriving through a supplier's
-      WhatsApp link): the organization starts `pending_review`. A buyer sees
+    - *Unvetted* (the admin allowed the address without a legal ID): the
+      organization starts `pending_review`. A buyer sees
       only `/pending` (`decideAccess` → `pending`) and `submitOrder` refuses
       (`buyer_not_verified`); a supplier may prepare its catalog but can't invite.
       Admins get an email (`notifyAdminsOrgPending`) and a nav badge, review at
