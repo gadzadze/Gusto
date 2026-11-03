@@ -45,7 +45,9 @@ openssl rand -hex 32
     (used for migrations only).
   - **Transaction pooler**, port **6543** → this is `DATABASE_URL` (used by the app).
 - [ ] Database → **Backups**: confirm daily backups are listed; enable **PITR**
-      if the plan allows it. Write down the retention period.
+      if the plan allows it. Write down the retention period. On the free plan
+      there are none: set up the nightly backup and health monitor in
+      [backups.md](backups.md) instead, and run its restore drill.
 
 ## 2. Supabase Auth
 
