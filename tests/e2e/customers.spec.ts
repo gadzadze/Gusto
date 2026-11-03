@@ -29,9 +29,11 @@ test("a supplier invites a customer on a custom price list; the buyer joins and 
   await supplier.getByPlaceholder(/ახალი სიის სახელი/).fill("[E2E] რესტორნები");
   await supplier.getByRole("button", { name: "სიის შექმნა" }).click();
   await expect(supplier).toHaveURL(/\/supplier\/pricing\/[0-9a-f-]{36}$/);
+  // Nothing is available to the list's customers until it is ticked, then priced.
+  await supplier.getByRole("checkbox", { name: "ყველი სულგუნი: ხელმისაწვდომია" }).check();
   await supplier.getByRole("textbox", { name: "ყველი სულგუნი: ფასი ამ სიაში" }).fill("15,00");
   await supplier.getByRole("button", { name: /ცვლილებების შენახვა/ }).click();
-  await expect(supplier.getByText("ფასები შენახულია")).toBeVisible();
+  await expect(supplier.getByText("ცვლილებები შენახულია")).toBeVisible();
 
   // Invite the customer on that list.
   await supplier.goto("/supplier/customers/new");

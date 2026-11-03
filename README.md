@@ -13,7 +13,7 @@ existing customers on Gusto, and those customers reorder in a few taps.
 - Admins approve or suspend suppliers and manage categories. All admin
   actions are audited.
 - Approved suppliers invite their existing customers with a single-use link
-  (copy, or send via WhatsApp) and assign per-customer price lists.
+  (copy, or send via WhatsApp) and give each one a list of the products it may order, with its own prices (a customer sees nothing until its list is set up).
 - Buyers join from the link once the admin has accepted their business,
   browse their suppliers' catalogs at their own prices, and search across suppliers in Georgian or Latin letters.
 - Buyers order from a per-supplier cart; suppliers confirm (adjusting
@@ -310,7 +310,7 @@ Suppliers can't add products until at least one category exists:
 
 `npm run db:seed` creates clearly fictional data, every name prefixed `[DEMO]`:
 a Tbilisi restaurant, a café, a beverage distributor and a food distributor,
-30 products, one custom price list, and seven orders in different statuses
+30 products, a price list per supplier, and seven orders in different statuses
 (with their notifications).
 
 - It refuses unless `DATABASE_URL` points at a local host (`localhost`,

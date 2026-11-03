@@ -10,6 +10,7 @@ import {
   listConnectedSuppliers,
   searchConnectedCatalogs,
 } from "@/server/domain/buyer/catalog";
+import { getCart, setCartQuantity } from "@/server/domain/orders/cart";
 import { setProductActive } from "@/server/domain/catalog/products";
 import type { AdminCtx, OrgCtx, SupplierCtx } from "@/server/domain/context";
 import {
@@ -36,7 +37,9 @@ import {
   getPriceList,
   listPriceListProducts,
   previewBulkDiscount,
-  setPriceOverrides,
+  setListItems,
+  setAllListItems,
+  copyPriceList,
 } from "@/server/domain/pricing/price-lists";
 import { analyzePriceImport, commitPriceImport } from "@/server/domain/pricing/price-import";
 import { resolvePrices } from "@/server/domain/pricing/resolve";
@@ -181,8 +184,8 @@ describe("buyer visibility and price isolation", () => {
     productId = await createTestProduct(supplier, categoryId, { name: "ყველი იმერული", basePrice: "10" });
     listX = await createPriceList(supplier, "[TEST] Restaurants");
     listY = await createPriceList(supplier, "[TEST] Cafés");
-    await setPriceOverrides(supplier, listX, [{ productId, priceMinor: 800 }]);
-    await setPriceOverrides(supplier, listY, [{ productId, priceMinor: 900 }]);
+    await setListItems(supplier, listX, [{ productId, included: true, priceMinor: 800 }]);
+    await setListItems(supplier, listY, [{ productId, included: true, priceMinor: 900 }]);
     x = await createBuyer();
     y = await createBuyer();
     stranger = await createBuyer();
@@ -196,7 +199,7 @@ describe("buyer visibility and price isolation", () => {
     const resolved = await resolvePrices({ supplierOrgId: supplier.orgId, buyerOrgId: x.orgId, productIds: [productId] });
     expect(resolved.get(productId)).toBe(800);
     const forStranger = await resolvePrices({ supplierOrgId: supplier.orgId, buyerOrgId: stranger.orgId, productIds: [productId] });
-    expect(forStranger.get(productId)).toBe(1000);
+    expect(forStranger.has(productId)).toBe(false); // not connected: not available
   });
 
   it("an unconnected buyer can't see the supplier or its catalog", async () => {
@@ -240,14 +243,14 @@ describe("buyer visibility and price isolation", () => {
     expect(await listConnectedSuppliers(buyer)).toHaveLength(1);
   });
 
-  it("deleting a price list puts its customers back on base prices", async () => {
+  it("deleting a price list leaves its customers with no products", async () => {
     const buyer = await createBuyer();
     const list = await createPriceList(supplier, "[TEST] Temporary");
-    await setPriceOverrides(supplier, list, [{ productId, priceMinor: 500 }]);
+    await setListItems(supplier, list, [{ productId, included: true, priceMinor: 500 }]);
     const { customerId } = await connectBuyer(supplier, buyer, list);
     expect(await priceSeen(buyer, supplier, productId)).toBe(500);
     await deletePriceList(supplier, list);
-    expect(await priceSeen(buyer, supplier, productId)).toBe(1000);
+    expect(await priceSeen(buyer, supplier, productId)).toBeUndefined();
     expect((await getCustomer(supplier, customerId)).priceListId).toBeNull();
   });
 
@@ -275,7 +278,7 @@ describe("supplier isolation", () => {
     await expect(getPriceList(t, listOfS)).rejects.toBeInstanceOf(NotFoundError);
     await expect(listPriceListProducts(t, listOfS, {})).rejects.toBeInstanceOf(NotFoundError);
     // T can't put S's product on T's list, nor assign S's list to a customer.
-    await expect(setPriceOverrides(t, listOfT, [{ productId: productOfS, priceMinor: 1 }])).rejects.toEqual(
+    await expect(setListItems(t, listOfT, [{ productId: productOfS, included: true, priceMinor: 1 }])).rejects.toEqual(
       new StateError("unknown_products"),
     );
     const tCustomer = await createCustomer(t, newCustomer());
@@ -308,6 +311,7 @@ describe("price list tools", () => {
     const a = await createTestProduct(supplier, categoryId, { name: "[TEST] A", basePrice: "10" });
     const b = await createTestProduct(supplier, categoryId, { name: "[TEST] B", basePrice: "0,05" });
     const list = await createPriceList(supplier, "[TEST] −12.5%");
+    await setAllListItems(supplier, list, true);
 
     const preview = await previewBulkDiscount(supplier, list, 1250);
     expect(preview.count).toBe(2);
@@ -317,9 +321,9 @@ describe("price list tools", () => {
     expect(await applyBulkDiscount(supplier, list, 1250)).toBe(2);
 
     const rows = (await listPriceListProducts(supplier, list, {})).items;
-    expect(rows.find((r) => r.productId === a)?.overrideMinor).toBe(875);
+    expect(rows.find((r) => r.productId === a)?.listPriceMinor).toBe(875);
     // 5 × 0.875 = 4.375 → 4 in both the SQL and the JS helper.
-    expect(rows.find((r) => r.productId === b)?.overrideMinor).toBe(discountedPrice(5, 1250));
+    expect(rows.find((r) => r.productId === b)?.listPriceMinor).toBe(discountedPrice(5, 1250));
     await expect(applyBulkDiscount(supplier, list, 10_001)).rejects.toEqual(new StateError("invalid_discount"));
   });
 
@@ -334,7 +338,74 @@ describe("price list tools", () => {
     expect(analysis.counts).toEqual({ set: 1, error: 3 });
     await expect(commitPriceImport(supplier, list, sheet, mapping, "all")).rejects.toEqual(new StateError("has_errors"));
     expect(await commitPriceImport(supplier, list, sheet, mapping, "valid_only")).toEqual({ updated: 1, skipped: 3 });
-    expect((await listPriceListProducts(supplier, list, {})).items.find((r) => r.productId === p)?.overrideMinor).toBe(420);
+    expect((await listPriceListProducts(supplier, list, {})).items.find((r) => r.productId === p)?.listPriceMinor).toBe(420);
+  });
+});
+
+describe("assortment per customer", () => {
+  it("a customer sees nothing until their list has products; a blank price means base price", async () => {
+    const supplier = await createSupplier();
+    const a = await createTestProduct(supplier, categoryId, { name: "[TEST] Seen", basePrice: "10" });
+    const b = await createTestProduct(supplier, categoryId, { name: "[TEST] Hidden", basePrice: "20" });
+    const buyer = await createBuyer();
+    const bare = await createBuyer();
+    const list = await createPriceList(supplier, "[TEST] Assortment");
+    await connectBuyer(supplier, bare, null);
+    await connectBuyer(supplier, buyer, list);
+
+    expect((await listBuyerCatalog(buyer, supplier.orgId, {})).items).toEqual([]);
+    expect((await listBuyerCatalog(bare, supplier.orgId, {})).items).toEqual([]);
+
+    await setListItems(supplier, list, [{ productId: a, included: true, priceMinor: null }]);
+    const seen = (await listBuyerCatalog(buyer, supplier.orgId, {})).items;
+    expect(seen.map((p) => [p.id, p.priceMinor])).toEqual([[a, 1000]]);
+    expect((await listBuyerCatalog(bare, supplier.orgId, {})).items).toEqual([]);
+    expect(await priceSeen(buyer, supplier, b)).toBeUndefined();
+
+    await setListItems(supplier, list, [{ productId: a, included: true, priceMinor: 700 }]);
+    expect(await priceSeen(buyer, supplier, a)).toBe(700);
+    await setListItems(supplier, list, [{ productId: a, included: false, priceMinor: null }]);
+    expect((await listBuyerCatalog(buyer, supplier.orgId, {})).items).toEqual([]);
+  });
+
+  it("search and the cart refuse products that are not on the buyer's list", async () => {
+    const supplier = await createSupplier();
+    const p = await createTestProduct(supplier, categoryId, { name: "ყველი სულგუნი", basePrice: "10" });
+    const buyer = await createBuyer();
+    const list = await createPriceList(supplier, "[TEST] Empty");
+    await connectBuyer(supplier, buyer, list);
+
+    expect(await searchConnectedCatalogs(buyer, "kveli")).toEqual([]);
+    await expect(setCartQuantity(buyer, supplier.orgId, p, 1000)).rejects.toEqual(new StateError("product_unavailable"));
+
+    await setListItems(supplier, list, [{ productId: p, included: true, priceMinor: null }]);
+    expect((await searchConnectedCatalogs(buyer, "kveli"))[0]?.items).toHaveLength(1);
+    await setCartQuantity(buyer, supplier.orgId, p, 1000);
+
+    // Taken off the list after it is in the cart: flagged, and it cannot be submitted.
+    await setListItems(supplier, list, [{ productId: p, included: false, priceMinor: null }]);
+    const cart = await getCart(buyer, supplier.orgId);
+    expect(cart.lines[0].problem).toBe("unavailable");
+  });
+
+  it("tick-all respects the search filter, untick-all clears, and a list can be copied", async () => {
+    const supplier = await createSupplier();
+    const cheese = await createTestProduct(supplier, categoryId, { name: "ყველი", basePrice: "10" });
+    await createTestProduct(supplier, categoryId, { name: "ღვინო", basePrice: "20" });
+    const list = await createPriceList(supplier, "[TEST] Bulk");
+
+    expect(await setAllListItems(supplier, list, true, { q: "ყველი" })).toBe(1);
+    expect((await listPriceListProducts(supplier, list, { onlyIncluded: true })).items.map((r) => r.productId)).toEqual([cheese]);
+    expect(await setAllListItems(supplier, list, true)).toBe(1); // only the one still missing
+    await setListItems(supplier, list, [{ productId: cheese, included: true, priceMinor: 900 }]);
+
+    const copy = await copyPriceList(supplier, list, "[TEST] Bulk copy");
+    const copied = (await listPriceListProducts(supplier, copy, { onlyIncluded: true })).items;
+    expect(copied).toHaveLength(2);
+    expect(copied.find((r) => r.productId === cheese)?.listPriceMinor).toBe(900);
+
+    expect(await setAllListItems(supplier, list, false)).toBe(2);
+    expect((await listPriceListProducts(supplier, list, { onlyIncluded: true })).items).toEqual([]);
   });
 });
 

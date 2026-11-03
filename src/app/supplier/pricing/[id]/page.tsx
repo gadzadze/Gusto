@@ -6,16 +6,18 @@ import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { BulkDiscount } from "@/components/pricing/bulk-discount";
-import { OverrideEditor } from "@/components/pricing/override-editor";
+import { AssortmentEditor } from "@/components/pricing/assortment-editor";
 import { PriceImport } from "@/components/pricing/price-import";
 import { PriceListSettings } from "@/components/pricing/price-list-settings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatMoney } from "@/lib/money";
 import { requireSupplier } from "@/server/auth/guards";
+import { listActiveCategories } from "@/server/domain/catalog/categories";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import { NotFoundError } from "@/server/domain/errors";
 import { customersOnPriceList, getPriceList, listPriceListProducts } from "@/server/domain/pricing/price-lists";
@@ -49,16 +51,18 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
   const { id } = await params;
   const query = await searchParams;
   const q = one(query.q).slice(0, 100);
+  const categoryId = one(query.category);
   const page = Number.parseInt(one(query.page), 10) || 1;
 
   const list = await getPriceList(ctx, id).catch((error: unknown) => {
     if (error instanceof NotFoundError) notFound();
     throw error;
   });
-  const [products, settings, customerCount] = await Promise.all([
-    listPriceListProducts(ctx, id, { q, page }),
+  const [products, settings, customerCount, categories] = await Promise.all([
+    listPriceListProducts(ctx, id, { q, categoryId, page }),
     getSupplierSettings(ctx),
     customersOnPriceList(ctx, id),
+    listActiveCategories(),
   ]);
   const disabled = ctx.orgStatus === "suspended";
 
@@ -77,20 +81,28 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
       </div>
 
       <section className="space-y-3">
-        <form method="get" className="flex max-w-xl gap-2">
+        <form method="get" className="grid max-w-2xl gap-2 sm:grid-cols-[minmax(0,1fr)_14rem_auto]">
           <label className="sr-only" htmlFor="q">{tc("search")}</label>
           <Input id="q" name="q" type="search" defaultValue={q} placeholder={tc("searchPlaceholder")} />
+          <label className="sr-only" htmlFor="category">{t("detail.category")}</label>
+          <Select id="category" name="category" defaultValue={categoryId}>
+            <option value="">{t("detail.category")}: {tc("all")}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </Select>
           <Button type="submit" variant="outline">
             <Search />
             {tc("apply")}
           </Button>
         </form>
         {products.items.length === 0 ? (
-          <EmptyState icon={Search} title={q ? tc("search") : t("detail.noProducts")} />
+          <EmptyState icon={Search} title={q || categoryId ? tc("search") : t("detail.noProducts")} />
         ) : (
           <>
-            <OverrideEditor
-              key={`${q}-${products.page}`}
+            <AssortmentEditor
+              key={`${q}-${categoryId}-${products.page}`}
+              filters={{ q, categoryId }}
               priceListId={list.id}
               disabled={disabled}
               rows={products.items.map((p) => ({
@@ -100,10 +112,11 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
                 unitLabel: tu(p.unit as "kg"),
                 isActive: p.isActive,
                 basePriceLabel: formatMoney(p.basePriceMinor, settings.currency),
-                overrideMinor: p.overrideMinor,
+                included: p.included,
+                listPriceMinor: p.listPriceMinor,
               }))}
             />
-            <Pagination basePath={`/supplier/pricing/${list.id}`} params={{ q }} page={products.page} pageCount={products.pageCount} />
+            <Pagination basePath={`/supplier/pricing/${list.id}`} params={{ q, category: categoryId }} page={products.page} pageCount={products.pageCount} />
           </>
         )}
       </section>

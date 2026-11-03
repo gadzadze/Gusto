@@ -261,7 +261,7 @@ export const priceListItems = pgTable(
     // Denormalized so the composite FKs below can require the list and the
     // product to belong to the same supplier.
     supplierOrgId: uuid("supplier_org_id").notNull(),
-    priceMinor: bigint("price_minor", { mode: "number" }).notNull(),
+    priceMinor: bigint("price_minor", { mode: "number" }),
     updatedAt: timestamps.updatedAt,
   },
   (t) => [

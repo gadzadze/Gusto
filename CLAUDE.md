@@ -28,7 +28,8 @@ prices openly, and an empty marketplace convinces nobody.
 ### In scope
 
 - **Supplier:** sign-up and admin approval. Catalog with Excel/CSV import and
-  per-customer price lists. Customer invites. Order inbox with
+  per-customer assortment and prices (a list says which products a
+  customer may order, and at what price). Customer invites. Order inbox with
   confirm (quantities adjustable) / reject / delivered.
 - **Buyer:** join from an invite, a catalog showing their own prices, one cart
   per supplier, checkout, order tracking, one-tap reorder.
@@ -205,12 +206,13 @@ Tables (snake_case in SQL, camelCase in TypeScript):
   - name, description, brand, sku, `unit`, `pack_description`, `image_path`;
   - `base_price_minor`, `vat_rate_bp`, `min_qty_milli`, `qty_step_milli`;
   - `is_active`, `search_text`.
-- `price_lists`, `price_list_items`: per-supplier price lists. An item
-  overrides a product's base price.
+- `price_lists`, `price_list_items`: per-supplier **assortment lists**. An item
+  means "customers on this list may see and order this product"; its
+  `price_minor` is optional (NULL = the product's base price).
 - `supplier_customers`:
   - supplier org ↔ buyer org;
   - `status` `invited` | `active` | `blocked`;
-  - `price_list_id` (null means base prices).
+  - `price_list_id` (null means the customer sees no products yet).
 - `invitations`: `token_hash`, `expires_at`, `revoked_at`, `accepted_at`, and
   the target supplier_customers row.
 - `carts`, `cart_items`: persisted, one cart per (buyer org, supplier org).
@@ -521,8 +523,14 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Price resolution lives only in `server/domain/pricing/resolve.ts`:**
   - `effectivePriceSql(buyerOrgId)` for queries that read `products`;
   - `resolvePrices()` for a set of product IDs.
-  - The rule: the override in the price list of the buyer's *active*
-    connection, else the base price.
+  - `availableToBuyerSql(buyerOrgId)` is the matching condition: the product
+    must be on the list of the buyer's *active* connection. It is applied in
+    the buyer catalog, search, top-ordered, cart (flags `unavailable`,
+    refuses new quantities) and submit (re-checked as a `changed` diff).
+    `resolvePrices` omits unavailable products.
+  - The rule: **nothing until set up.** A customer with no list, or a list
+    without the product, sees and can order nothing. On the list, the item's
+    price, else the base price.
   - The subquery references `"products"` by name, so don't alias `products`
     in queries that embed it.
 - **Cross-supplier consistency is enforced by the database.**

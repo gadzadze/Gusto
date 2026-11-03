@@ -4,8 +4,10 @@ import { getDb, type Db, type Tx } from "@/server/db/client";
 import { products } from "@/server/db/schema";
 
 // The one place a buyer's price is decided (CLAUDE.md, "Conventions").
-// Rule: the override in the price list assigned to this buyer's active
-// connection with the supplier, otherwise the product's base price.
+// Assortment: a buyer sees and can order only the products on the price list
+// assigned to their active connection with the supplier (a customer with no
+// list, or a list without the product, gets nothing). Price: the list item's
+// price, or the product's base price when the item has none (NULL).
 
 /** The rule itself, for code that already has both numbers. */
 export function pickPrice(basePriceMinor: number, overrideMinor: number | null | undefined): number {
@@ -33,8 +35,27 @@ export function effectivePriceSql(buyerOrgId: string): SQL<number> {
 }
 
 /**
+ * SQL condition: `products` row is on the price list of `buyerOrgId`'s active
+ * connection with the product's supplier, i.e. this buyer may see and order it.
+ * Same aliasing rules as effectivePriceSql.
+ */
+export function availableToBuyerSql(buyerOrgId: string): SQL<boolean> {
+  return sql<boolean>`exists (
+    select 1
+    from price_list_items pli
+    join supplier_customers sc
+      on sc.price_list_id = pli.price_list_id
+     and sc.supplier_org_id = pli.supplier_org_id
+    where pli.product_id = "products"."id"
+      and sc.buyer_org_id = ${buyerOrgId}
+      and sc.status = 'active'
+  )`;
+}
+
+/**
  * Effective unit prices for a set of one supplier's products, for one buyer.
- * Products that don't belong to the supplier are simply absent from the map.
+ * Products that don't belong to the supplier, or aren't on the buyer's list,
+ * are simply absent from the map.
  * One query regardless of how many products.
  */
 export async function resolvePrices(
@@ -45,6 +66,12 @@ export async function resolvePrices(
   const rows = await db
     .select({ id: products.id, price: effectivePriceSql(input.buyerOrgId) })
     .from(products)
-    .where(and(eq(products.supplierOrgId, input.supplierOrgId), inArray(products.id, input.productIds)));
+    .where(
+      and(
+        eq(products.supplierOrgId, input.supplierOrgId),
+        inArray(products.id, input.productIds),
+        availableToBuyerSql(input.buyerOrgId),
+      ),
+    );
   return new Map(rows.map((r) => [r.id, r.price]));
 }

@@ -127,6 +127,13 @@
       "when": 1792092851612,
       "tag": "0017_supplier_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793740248635,
+      "tag": "0018_list_items_nullable_price",
+      "breakpoints": true
     }
   ]
 }

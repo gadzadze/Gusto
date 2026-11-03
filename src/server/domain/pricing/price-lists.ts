@@ -13,7 +13,7 @@ export const PRICE_LIST_PAGE_SIZE = 50;
 
 export type PriceListError = "name_taken" | "suspended" | "invalid_discount" | "unknown_products";
 
-export type PriceListSummary = PriceList & { customerCount: number; overrideCount: number };
+export type PriceListSummary = PriceList & { customerCount: number; productCount: number };
 
 export async function listPriceLists(ctx: OrgCtx): Promise<PriceListSummary[]> {
   assertSupplier(ctx);
@@ -26,7 +26,7 @@ export async function listPriceLists(ctx: OrgCtx): Promise<PriceListSummary[]> {
       createdAt: priceLists.createdAt,
       updatedAt: priceLists.updatedAt,
       customerCount: sql<number>`(select count(*)::int from ${supplierCustomers} where ${supplierCustomers.priceListId} = ${priceLists.id})`,
-      overrideCount: sql<number>`(select count(*)::int from ${priceListItems} where ${priceListItems.priceListId} = ${priceLists.id})`,
+      productCount: sql<number>`(select count(*)::int from ${priceListItems} where ${priceListItems.priceListId} = ${priceLists.id})`,
     })
     .from(priceLists)
     .where(eq(priceLists.supplierOrgId, ctx.orgId))
@@ -95,7 +95,7 @@ export async function setDefaultPriceList(ctx: OrgCtx, priceListId: string | nul
   });
 }
 
-/** Deletes a list. Customers on it fall back to base prices; its overrides go with it. */
+/** Deletes a list. Customers on it see no products until given another list; its items go with it. */
 export async function deletePriceList(ctx: OrgCtx, priceListId: string): Promise<void> {
   assertCatalogWritable(ctx);
   await getPriceList(ctx, priceListId);
@@ -116,18 +116,30 @@ export type PriceListProductRow = {
   categoryName: string;
   isActive: boolean;
   basePriceMinor: number;
-  overrideMinor: number | null;
+  /** On this list: customers with this list can see and order it. */
+  included: boolean;
+  /** Price on this list; null = the product's base price. Only meaningful when included. */
+  listPriceMinor: number | null;
 };
 
 export async function listPriceListProducts(
   ctx: OrgCtx,
   priceListId: string,
-  filters: { q?: string; page?: number },
+  filters: { q?: string; categoryId?: string; onlyIncluded?: boolean; page?: number },
 ): Promise<{ items: PriceListProductRow[]; total: number; page: number; pageCount: number }> {
   await getPriceList(ctx, priceListId);
-  const where = and(eq(products.supplierOrgId, ctx.orgId), filters.q ? searchCondition(filters.q) : undefined);
+  const where = and(
+    eq(products.supplierOrgId, ctx.orgId),
+    filters.q ? searchCondition(filters.q) : undefined,
+    filters.categoryId && isUuid(filters.categoryId) ? eq(products.categoryId, filters.categoryId) : undefined,
+    filters.onlyIncluded ? isNotNull(priceListItems.productId) : undefined,
+  );
   const db = getDb();
-  const [{ total }] = await db.select({ total: count() }).from(products).where(where);
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(products)
+    .leftJoin(priceListItems, and(eq(priceListItems.productId, products.id), eq(priceListItems.priceListId, priceListId)))
+    .where(where);
   const pageCount = Math.max(1, Math.ceil(total / PRICE_LIST_PAGE_SIZE));
   const page = Math.min(Math.max(1, Math.floor(filters.page ?? 1)), pageCount);
   const items = await db
@@ -139,7 +151,8 @@ export async function listPriceListProducts(
       categoryName: categories.name,
       isActive: products.isActive,
       basePriceMinor: products.basePriceMinor,
-      overrideMinor: priceListItems.priceMinor,
+      included: sql<boolean>`${priceListItems.productId} is not null`,
+      listPriceMinor: priceListItems.priceMinor,
     })
     .from(products)
     .innerJoin(categories, eq(categories.id, products.categoryId))
@@ -154,10 +167,14 @@ export async function listPriceListProducts(
   return { items, total, page, pageCount };
 }
 
-export type OverrideChange = { productId: string; priceMinor: number | null };
+/**
+ * One product's place on a list. `included: false` takes it off the list;
+ * `included: true` puts it on, at `priceMinor` or (null) at its base price.
+ */
+export type ListItemChange = { productId: string; included: boolean; priceMinor: number | null };
 
-/** Sets (or, with null, removes) overrides. All products must be the supplier's own. */
-export async function setPriceOverrides(ctx: OrgCtx, priceListId: string, changes: OverrideChange[]): Promise<void> {
+/** Adds, reprices or removes products on a list. All products must be the supplier's own. */
+export async function setListItems(ctx: OrgCtx, priceListId: string, changes: ListItemChange[]): Promise<void> {
   assertCatalogWritable(ctx);
   await getPriceList(ctx, priceListId);
   if (changes.length === 0) return;
@@ -171,13 +188,13 @@ export async function setPriceOverrides(ctx: OrgCtx, priceListId: string, change
       .where(and(eq(products.supplierOrgId, ctx.orgId), inArray(products.id, ids)));
     if (owned.length !== ids.length) throw new StateError<PriceListError>("unknown_products");
 
-    const removals = changes.filter((c) => c.priceMinor === null).map((c) => c.productId);
+    const removals = changes.filter((c) => !c.included).map((c) => c.productId);
     if (removals.length) {
       await tx
         .delete(priceListItems)
         .where(and(eq(priceListItems.priceListId, priceListId), inArray(priceListItems.productId, removals)));
     }
-    const upserts = changes.filter((c): c is { productId: string; priceMinor: number } => c.priceMinor !== null);
+    const upserts = changes.filter((c) => c.included);
     if (upserts.length) {
       await tx
         .insert(priceListItems)
@@ -188,6 +205,81 @@ export async function setPriceOverrides(ctx: OrgCtx, priceListId: string, change
         });
     }
   });
+}
+
+/**
+ * Puts every product matching the filter on the list (at base price), keeping
+ * the price of those already there, or - with `include: false` - takes them
+ * all off. Returns how many rows changed.
+ */
+export async function setAllListItems(
+  ctx: OrgCtx,
+  priceListId: string,
+  include: boolean,
+  filters: { q?: string; categoryId?: string; activeOnly?: boolean } = {},
+): Promise<number> {
+  assertCatalogWritable(ctx);
+  await getPriceList(ctx, priceListId);
+  const matching = and(
+    eq(products.supplierOrgId, ctx.orgId),
+    filters.activeOnly ? eq(products.isActive, true) : undefined,
+    filters.q ? searchCondition(filters.q) : undefined,
+    filters.categoryId && isUuid(filters.categoryId) ? eq(products.categoryId, filters.categoryId) : undefined,
+  );
+  const db = getDb();
+  if (!include) {
+    const removed = await db
+      .delete(priceListItems)
+      .where(
+        and(
+          eq(priceListItems.priceListId, priceListId),
+          inArray(priceListItems.productId, db.select({ id: products.id }).from(products).where(matching)),
+        ),
+      )
+      .returning({ id: priceListItems.productId });
+    return removed.length;
+  }
+  const added = await db
+    .insert(priceListItems)
+    .select(
+      db
+        .select({
+          priceListId: sql<string>`${priceListId}::uuid`.as("price_list_id"),
+          productId: products.id,
+          supplierOrgId: products.supplierOrgId,
+          priceMinor: sql<number | null>`null::bigint`.as("price_minor"),
+          updatedAt: sql<Date>`now()`.as("updated_at"),
+        })
+        .from(products)
+        .where(matching),
+    )
+    .onConflictDoNothing()
+    .returning({ id: priceListItems.productId });
+  return added.length;
+}
+
+/** A new list with the same products and prices as `sourceId`. Returns the new id. */
+export async function copyPriceList(ctx: OrgCtx, sourceId: string, rawName: string): Promise<string> {
+  assertCatalogWritable(ctx);
+  const name = priceListNameSchema.parse(rawName);
+  await getPriceList(ctx, sourceId);
+  try {
+    return await getDb().transaction(async (tx) => {
+      const [created] = await tx
+        .insert(priceLists)
+        .values({ supplierOrgId: ctx.orgId, name })
+        .returning({ id: priceLists.id });
+      await tx.execute(sql`
+        insert into ${priceListItems} (price_list_id, product_id, supplier_org_id, price_minor)
+        select ${created.id}::uuid, product_id, supplier_org_id, price_minor
+        from ${priceListItems}
+        where price_list_id = ${sourceId}::uuid and supplier_org_id = ${ctx.orgId}::uuid
+      `);
+      return created.id;
+    });
+  } catch (error) {
+    rethrowNameTaken(error);
+  }
 }
 
 /** Discount in basis points (12.5% = 1250) → base × (1 − d), rounded half up. */
@@ -214,11 +306,17 @@ export async function previewBulkDiscount(ctx: OrgCtx, priceListId: string, disc
     throw new StateError<PriceListError>("invalid_discount");
   }
   const db = getDb();
-  const [{ n }] = await db.select({ n: count() }).from(products).where(eq(products.supplierOrgId, ctx.orgId));
+  const onList = and(eq(products.supplierOrgId, ctx.orgId), eq(priceListItems.priceListId, priceListId));
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(products)
+    .innerJoin(priceListItems, eq(priceListItems.productId, products.id))
+    .where(onList);
   const sample = await db
     .select({ name: products.name, basePriceMinor: products.basePriceMinor })
     .from(products)
-    .where(eq(products.supplierOrgId, ctx.orgId))
+    .innerJoin(priceListItems, eq(priceListItems.productId, products.id))
+    .where(onList)
     .orderBy(desc(products.isActive), asc(products.name))
     .limit(8);
   return {
@@ -227,7 +325,7 @@ export async function previewBulkDiscount(ctx: OrgCtx, priceListId: string, disc
   };
 }
 
-/** Sets every product's override in this list to base − discount. Replaces existing overrides. */
+/** Sets the price of every product already on this list to base - discount. */
 export async function applyBulkDiscount(ctx: OrgCtx, priceListId: string, discountBp: number): Promise<number> {
   assertCatalogWritable(ctx);
   await getPriceList(ctx, priceListId);
@@ -237,14 +335,14 @@ export async function applyBulkDiscount(ctx: OrgCtx, priceListId: string, discou
   // Same result as discountedPrice(): Postgres round(numeric) rounds halves
   // away from zero, i.e. up for these non-negative amounts.
   const rows = await getDb().execute<{ product_id: string }>(sql`
-    insert into ${priceListItems} (price_list_id, product_id, supplier_org_id, price_minor)
-    select ${priceListId}, ${products.id}, ${products.supplierOrgId},
-           round(${products.basePriceMinor}::numeric * (10000 - ${discountBp}::int) / 10000)::bigint
+    update ${priceListItems} pli
+    set price_minor = round(${products.basePriceMinor}::numeric * (10000 - ${discountBp}::int) / 10000)::bigint,
+        updated_at = now()
     from ${products}
-    where ${products.supplierOrgId} = ${ctx.orgId}
-    on conflict (price_list_id, product_id)
-      do update set price_minor = excluded.price_minor, updated_at = now()
-    returning product_id
+    where ${products.id} = pli.product_id
+      and pli.price_list_id = ${priceListId}::uuid
+      and pli.supplier_org_id = ${ctx.orgId}::uuid
+    returning pli.product_id
   `);
   return rows.length;
 }

@@ -9,7 +9,7 @@ import { getConnectedSupplier, type ConnectedSupplier } from "@/server/domain/bu
 import { isUuid } from "@/server/domain/catalog/products";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
-import { effectivePriceSql } from "@/server/domain/pricing/resolve";
+import { availableToBuyerSql, effectivePriceSql } from "@/server/domain/pricing/resolve";
 
 // Carts are persisted, one per (buyer, supplier), and never merged. Prices
 // shown in a cart are advisory: submit re-resolves everything.
@@ -57,6 +57,7 @@ export async function getCart(ctx: OrgCtx, supplierOrgId: string): Promise<Cart>
       packDescription: products.packDescription,
       imagePath: products.imagePath,
       isActive: products.isActive,
+      available: availableToBuyerSql(ctx.orgId),
       qtyMilli: cartItems.qtyMilli,
       minQtyMilli: products.minQtyMilli,
       qtyStepMilli: products.qtyStepMilli,
@@ -71,7 +72,7 @@ export async function getCart(ctx: OrgCtx, supplierOrgId: string): Promise<Cart>
 
   const lines = rows.map((r) => ({
     ...r,
-    problem: !r.isActive
+    problem: !r.isActive || !r.available
       ? ("unavailable" as const)
       : !isOrderableQuantity(r.qtyMilli, r.minQtyMilli, r.qtyStepMilli)
         ? ("invalid_quantity" as const)
@@ -163,7 +164,12 @@ export async function setCartQuantity(
 
   await db.transaction(async (tx) => {
     const [product] = await tx
-      .select({ isActive: products.isActive, min: products.minQtyMilli, step: products.qtyStepMilli })
+      .select({
+        isActive: products.isActive,
+        available: availableToBuyerSql(ctx.orgId),
+        min: products.minQtyMilli,
+        step: products.qtyStepMilli,
+      })
       .from(products)
       .where(and(eq(products.id, productId), eq(products.supplierOrgId, supplierOrgId)));
     if (!product) throw new NotFoundError("product");
@@ -178,7 +184,7 @@ export async function setCartQuantity(
       await tx.delete(cartItems).where(and(eq(cartItems.cartId, cart.id), eq(cartItems.productId, productId)));
       return;
     }
-    if (!product.isActive) throw new StateError<CartError>("product_unavailable");
+    if (!product.isActive || !product.available) throw new StateError<CartError>("product_unavailable");
     if (!isOrderableQuantity(qtyMilli, product.min, product.step)) throw new StateError<CartError>("invalid_quantity");
 
     await tx
@@ -204,14 +210,20 @@ export async function putItemsInCart(
   return getDb().transaction(async (tx) => {
     const found = ids.length
       ? await tx
-          .select({ id: products.id, isActive: products.isActive, min: products.minQtyMilli, step: products.qtyStepMilli })
+          .select({
+            id: products.id,
+            isActive: products.isActive,
+            available: availableToBuyerSql(ctx.orgId),
+            min: products.minQtyMilli,
+            step: products.qtyStepMilli,
+          })
           .from(products)
           .where(and(eq(products.supplierOrgId, supplierOrgId), inArray(products.id, ids)))
       : [];
     const byId = new Map(found.map((p) => [p.id, p]));
     const ok = items.filter((i) => {
       const p = byId.get(i.productId);
-      return p?.isActive && isOrderableQuantity(i.qtyMilli, p.min, p.step);
+      return p?.isActive && p.available && isOrderableQuantity(i.qtyMilli, p.min, p.step);
     });
     const skipped = items.filter((i) => !ok.includes(i)).map((i) => i.name);
     if (ok.length === 0) return { added: 0, skipped };

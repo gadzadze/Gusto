@@ -15,7 +15,7 @@ import { getCart, listCarts, setCartQuantity } from "@/server/domain/orders/cart
 import { getOrder, listBuyerOrders, listSupplierOrders, orderLinkTarget, reorder } from "@/server/domain/orders/queries";
 import { submitOrder, type SubmitInput } from "@/server/domain/orders/submit";
 import { cancelByBuyer, cancelBySupplier, confirmOrder, markDelivered, rejectOrder } from "@/server/domain/orders/transitions";
-import { createPriceList, setPriceOverrides } from "@/server/domain/pricing/price-lists";
+import { createPriceList, setListItems } from "@/server/domain/pricing/price-lists";
 import { testDatabaseUrl } from "./test-database";
 import { connectBuyer, createAdmin, createBuyer, createSupplier, createTestCategory, createTestProduct, productInput } from "./helpers";
 
@@ -120,7 +120,7 @@ describe("submitOrder", () => {
     const buyer = await createBuyer();
     const product = await createTestProduct(supplier, categoryId, { basePrice: "10" });
     const list = await createPriceList(supplier, "[TEST] VIP");
-    await setPriceOverrides(supplier, list, [{ productId: product, priceMinor: 700 }]);
+    await setListItems(supplier, list, [{ productId: product, included: true, priceMinor: 700 }]);
     await connectBuyer(supplier, buyer, list);
     await setCartQuantity(buyer, supplier.orgId, product, 2000);
     const result = await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier));

@@ -1,12 +1,13 @@
 "use client";
 
-import { Check, Pencil, Star, StarOff, Trash2 } from "lucide-react";
+import { Check, Copy, Pencil, Star, StarOff, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
 import {
+  copyPriceListAction,
   deletePriceListAction,
   renamePriceListAction,
   setDefaultPriceListAction,
@@ -31,6 +32,8 @@ export function PriceListSettings({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(name);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [copying, setCopying] = useState(false);
+  const [copyName, setCopyName] = useState(`${name} (2)`);
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, after?: () => void) => {
     setError(null);
@@ -58,7 +61,27 @@ export function PriceListSettings({
           </Button>
         </form>
       ) : null}
+      {copying ? (
+        <form
+          className="flex max-w-xl gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            run(() => copyPriceListAction(priceListId, copyName));
+          }}
+        >
+          <Input aria-label={t("detail.copyName")} value={copyName} onChange={(e) => setCopyName(e.target.value)} autoFocus />
+          <Button type="submit" variant="outline" size="icon" aria-label={t("detail.copy")} disabled={pending}>
+            <Check />
+          </Button>
+        </form>
+      ) : null}
       <div className="flex flex-wrap gap-2">
+        {!copying ? (
+          <Button variant="outline" size="sm" disabled={disabled} onClick={() => setCopying(true)}>
+            <Copy />
+            {t("detail.copy")}
+          </Button>
+        ) : null}
         {!editing ? (
           <Button variant="outline" size="sm" disabled={disabled} onClick={() => setEditing(true)}>
             <Pencil />

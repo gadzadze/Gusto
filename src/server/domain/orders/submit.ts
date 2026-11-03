@@ -18,7 +18,7 @@ import {
 } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError, isUniqueViolation } from "@/server/domain/errors";
-import { effectivePriceSql } from "@/server/domain/pricing/resolve";
+import { availableToBuyerSql, effectivePriceSql } from "@/server/domain/pricing/resolve";
 import { recordOrderEvent } from "@/server/notifications/events";
 import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 import { afterOrderSubmitted } from "./hooks";
@@ -147,6 +147,7 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
           qtyStepMilli: products.qtyStepMilli,
           vatRateBp: products.vatRateBp,
           unitPriceMinor: effectivePriceSql(ctx.orgId),
+          available: availableToBuyerSql(ctx.orgId),
           qtyMilli: cartItems.qtyMilli,
         })
         .from(cartItems)
@@ -160,7 +161,7 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
       const changes: CartChange[] = [];
       for (const line of lines) {
         const seen = expected.get(line.productId);
-        if (!line.isActive) changes.push({ productId: line.productId, name: line.name, kind: "unavailable" });
+        if (!line.isActive || !line.available) changes.push({ productId: line.productId, name: line.name, kind: "unavailable" });
         else if (!isOrderableQuantity(line.qtyMilli, line.minQtyMilli, line.qtyStepMilli)) {
           changes.push({ productId: line.productId, name: line.name, kind: "quantity_invalid" });
         } else if (!seen) changes.push({ productId: line.productId, name: line.name, kind: "added" });
