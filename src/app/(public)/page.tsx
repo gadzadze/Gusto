@@ -219,6 +219,8 @@ export default async function LandingPage() {
                 {l.label}
               </a>
             ))}
+            <Link href="/terms">{t("legalTerms")}</Link>
+            <Link href="/privacy">{t("legalPrivacy")}</Link>
           </nav>
           <span>{t("footer")}</span>
         </div>

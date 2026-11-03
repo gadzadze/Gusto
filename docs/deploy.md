@@ -147,6 +147,7 @@ select vault.create_secret('<the CRON_SECRET value>', 'gusto_cron_secret');
 | `RESEND_API_KEY` | Resend key | **Sensitive.** |
 | `EMAIL_FROM` | `Gusto <orders@mail.gusto.example>` | |
 | `CRON_SECRET` | the value from step 0 | **Sensitive.** Must equal the Vault secret. |
+| `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL` | The legal entity behind Gusto | Printed on `/terms` and `/privacy`. Inlined at build, so redeploy after changing. Public, not sensitive. Until `LEGAL_ENTITY_NAME` is set the operator block is left out. |
 
   Do **not** set `DATABASE_URL_DIRECT`, `DATABASE_URL_TEST` or `SEED_ALLOWED_HOSTS` on Vercel.
 - [ ] Deploy (push to `main`, or **Deploy** in the dashboard).
@@ -213,6 +214,10 @@ Use two real mailboxes you control (one as supplier, one as buyer) and your admi
       external monitor) and email alerts from Vercel on failed deployments.
 - [ ] Put the support email/phone where users can see it (see README, "Before
       inviting real businesses").
+- [ ] Open `/terms` and `/privacy` on the live domain: the "Organization and
+      contact" block at the bottom must show the real entity. Have a lawyer read
+      both before real partners sign in; the wording was drafted from what the
+      product does, not reviewed legally.
 - [ ] Run `npm run build && npm run check:secrets` locally after dependency
       updates.
 - [ ] Rotating a secret: change it in the provider, in Vercel, and (for

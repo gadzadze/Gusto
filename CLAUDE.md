@@ -491,6 +491,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
 - `DATABASE_URL_DIRECT`: direct or session connection, for migrations only.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `CRON_SECRET`
+- `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build).
 
 Missing optional integrations degrade loudly, not silently. With no
 `RESEND_API_KEY`, emails are written to the server log prefixed `[DEV EMAIL]`
@@ -670,6 +671,29 @@ Details and the restore drill are in [`docs/backups.md`](docs/backups.md).
 - `scripts/ops/*.sh` are Linux shell scripts for CI and restore drills. They
   are deliberately not npm scripts, which must stay cross-platform.
 - Not in the backup: Storage images, the cron job and Vault secrets, passwords.
+
+## Legal pages (terms and privacy)
+
+`/terms` and `/privacy` are static public pages rendered by
+`components/legal/legal-document.tsx`. The wording is in `messages/ka.json`
+under `legal` (sections are arrays of `{ title, paragraphs, items, closing }`),
+never in components. Linked from the landing footer, the sign-in page and the
+supplier request form.
+
+- **Drafted from what the product does, not reviewed by a lawyer.** Have one
+  read both before real partners sign in.
+- **The operator block is not in the repo.** `lib/legal.ts` reads
+  `LEGAL_ENTITY_*` at build time and leaves the block out when
+  `LEGAL_ENTITY_NAME` is unset. Never hardcode a company name or address.
+- **Claims must stay true.** The policy says: only essential cookies, no
+  analytics or ads, IP addresses kept hashed and pruned within a day, backups
+  kept about 14 days, admins never see catalogs or price lists, and lists the
+  processors (Supabase, Vercel, Resend, Google). When you add analytics, error
+  monitoring (Sentry), a new processor, a new kind of personal data or change
+  retention, update `legal` **and** `LEGAL_UPDATED` in `lib/legal.ts`.
+  `tests/unit/legal.test.ts` ties the 14-day claim to the backup workflow.
+- There is no recorded consent: the sign-in and request-form notes only link to
+  the documents. Recording acceptance would need a schema change; ask first.
 
 ## Public demo
 
