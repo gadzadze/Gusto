@@ -72,7 +72,7 @@ prices openly, and an empty marketplace convinces nobody.
 | App | One Next.js 16 app (App Router, TypeScript strict), npm |
 | UI | Tailwind CSS v4, shadcn/ui, lucide-react |
 | Auth | Supabase Auth via `@supabase/ssr`: Google + email magic link |
-| Database | Supabase Postgres (region `eu-central-1`, Frankfurt) |
+| Database | Supabase Postgres (region `eu-west-1`, Ireland) |
 | Data access | Drizzle ORM + `postgres` driver, **server-only** |
 | Migrations | Drizzle Kit, SQL files committed under `drizzle/` |
 | File storage | Supabase Storage, `product-images` bucket |
@@ -82,7 +82,7 @@ prices openly, and an empty marketplace convinces nobody.
 | Validation | Zod at every server boundary |
 | i18n | `next-intl`, messages in `messages/ka.json` |
 | Tests | Vitest (unit + integration), Playwright (e2e) |
-| Hosting | Vercel (region `fra1`), deployed from `main` by Vercel's Git integration |
+| Hosting | Vercel (region `dub1`, Dublin: next to the database), deployed from `main` by Vercel's Git integration |
 
 There is **no separate backend service**. Gusto has no long-lived sockets or
 heavy jobs, so Server Components, Server Actions and a few Route Handlers
