@@ -30,7 +30,7 @@ openssl rand -hex 32
 
 ## 1. Supabase project
 
-- [ ] Dashboard → **New project**. Region **West EU (Frankfurt) / `eu-central-1`**.
+- [ ] Dashboard → **New project**. Region **West EU (Ireland) / `eu-west-1`**: the app's functions run in Dublin (`vercel.json`), so keep the database in the same place.
       Strong database password (save it in your password manager).
 - [ ] Project Settings → **General**: note the **Reference ID** (`<ref>`).
 - [ ] Project Settings → **API**: copy the **Project URL**, the **anon** key and the
@@ -132,7 +132,7 @@ select vault.create_secret('<the CRON_SECRET value>', 'gusto_cron_secret');
 
 - [ ] **Add New → Project**, import the GitHub repo. Framework preset **Next.js**.
       Leave build and install commands at their defaults.
-- [ ] Settings → Functions: **Function Region** = Frankfurt (`fra1`). (`vercel.json`
+- [ ] Settings → Functions: **Function Region** = Dublin (`dub1`). (`vercel.json`
       sets the same; check the dashboard agrees.)
 - [ ] Settings → Environment Variables, for **Production** (and Preview only if
       you want previews to work against this same project):

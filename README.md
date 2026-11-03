@@ -28,7 +28,7 @@ existing customers on Gusto, and those customers reorder in a few taps.
 
 Next.js 16 (App Router, Cache Components) · TypeScript · Tailwind CSS v4 ·
 Supabase (Auth, Postgres) · Drizzle ORM · next-intl (Georgian) · Vitest ·
-Playwright. Hosted on Vercel + Supabase, both in Frankfurt.
+Playwright. Hosted on Vercel + Supabase, both in Ireland.
 
 ## Prerequisites
 
@@ -416,12 +416,12 @@ none is done in this repository.
 ## Deployment (summary)
 
 - **Supabase:**
-  - project in `eu-central-1` (Frankfurt);
+  - project in `eu-west-1` (Ireland);
   - apply migrations with `DATABASE_URL_DIRECT` pointing at the project's
     direct or session connection, then `npm run db:migrate`;
   - configure auth as above.
 - **Vercel:**
-  - import the repo, region `fra1`;
+  - import the repo, region `dub1`;
   - set the variables from `.env.example`, with `DATABASE_URL` = the
     transaction pooler URL (port 6543);
   - deploys happen on push to `main` via Vercel's Git integration.
