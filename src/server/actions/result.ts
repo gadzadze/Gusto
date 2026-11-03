@@ -1,4 +1,5 @@
 import "server-only";
+import * as Sentry from "@sentry/nextjs";
 import { notFound } from "next/navigation";
 import type { ValidationKey } from "@/lib/validation/form-errors";
 import { ConflictError, NotFoundError, StateError } from "@/server/domain/errors";
@@ -29,6 +30,9 @@ export async function runAction<T, Code extends string>(
     console.error(`[action] ${label} failed`, {
       message: error instanceof Error ? error.message : String(error),
     });
+    // The action turns this into "unknown" for the user, so it never reaches
+    // onRequestError; report it here. Scrubbed in beforeSend.
+    Sentry.captureException(error, { tags: { action: label } });
     return { ok: false, error: "unknown" };
   }
 }

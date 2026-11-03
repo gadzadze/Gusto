@@ -77,6 +77,7 @@ prices openly, and an empty marketplace convinces nobody.
 | Migrations | Drizzle Kit, SQL files committed under `drizzle/` |
 | File storage | Supabase Storage, `product-images` bucket |
 | Email | Resend (transactional email + SMTP for Supabase auth emails) |
+| Error monitoring | Sentry (`@sentry/nextjs`): errors only, scrubbed, off without a DSN |
 | Background work | Notification outbox table, drained by a cron-triggered route |
 | Validation | Zod at every server boundary |
 | i18n | `next-intl`, messages in `messages/ka.json` |
@@ -491,6 +492,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
 - `DATABASE_URL_DIRECT`: direct or session connection, for migrations only.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `CRON_SECRET`
+- `NEXT_PUBLIC_SENTRY_DSN` (public, build time), `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (build-only, **secret**): see Operations.
 - `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build).
 
 Missing optional integrations degrade loudly, not silently. With no
@@ -668,6 +670,35 @@ Details and the restore drill are in [`docs/backups.md`](docs/backups.md).
   `public` + `drizzle` and an id/email-only export of `auth.users`, restored
   into a scratch Postgres before it is kept. The dump needs the Supabase
   **session** pooler (port 5432), not the transaction pooler.
+- **Sentry** (`src/instrumentation.ts`, `instrumentation-client.ts`,
+  `global-error.tsx`, `lib/sentry-*.ts`). Errors only: no tracing, no session
+  replay (it would record other businesses' prices), no default PII. With no
+  `NEXT_PUBLIC_SENTRY_DSN` nothing initializes and every Sentry call is a
+  no-op, so local runs and CI send nothing.
+  - **Everything passes through `lib/sentry-scrub.ts`** (`beforeSend` and
+    `beforeBreadcrumb`): request cookies, headers, bodies and query strings,
+    user identity and `extra` are removed; emails (also URL-encoded) and
+    token-like strings in messages become `[email]` / `[token]`;
+    `/invite/<token>` becomes `/invite/[token]`; Next's own
+    `contexts.nextjs.request_path` (which carries the query string) is scrubbed
+    too. Record ids (UUIDs) are kept. This is the "never log tokens, magic links,
+    invite URLs, cookies or request bodies" rule applied to a third party. A new
+    place that can hold a URL or user input (a new context, a tag) needs a rule
+    and a test in `tests/unit/sentry.test.ts`.
+  - Server errors arrive through `onRequestError`; `runAction()` reports the
+    "unknown" case itself because that error never reaches it; the client error
+    boundary reports browser render errors only (server ones carry a `digest`
+    and were already sent).
+  - The CSP `connect-src` gets the DSN's ingest origin at build time
+    (`next.config.ts`), or browser reports are blocked.
+  - Source maps upload only when `SENTRY_AUTH_TOKEN` is set, so `npm run build`
+    still works with no environment.
+  - `package.json` `overrides` pins `glob` to 14.0.3 under
+    `@sentry/bundler-plugins` (build tooling) to clear moderate advisories; it
+    only uses the plain `glob(patterns, options)` call. Drop the override when
+    Sentry ships a patched plugin, and re-run `npm audit --omit=dev`.
+  - Version 10.78.0 is pinned: 11.x pulled in the advisory-affected packages
+    with no override-free fix at the time.
 - `scripts/ops/*.sh` are Linux shell scripts for CI and restore drills. They
   are deliberately not npm scripts, which must stay cross-platform.
 - Not in the backup: Storage images, the cron job and Vault secrets, passwords.
@@ -688,7 +719,7 @@ supplier request form.
 - **Claims must stay true.** The policy says: only essential cookies, no
   analytics or ads, IP addresses kept hashed and pruned within a day, backups
   kept about 14 days, admins never see catalogs or price lists, and lists the
-  processors (Supabase, Vercel, Resend, Google). When you add analytics, error
+  processors (Supabase, Vercel, Resend, Google, Sentry). When you add analytics, error
   monitoring (Sentry), a new processor, a new kind of personal data or change
   retention, update `legal` **and** `LEGAL_UPDATED` in `lib/legal.ts`.
   `tests/unit/legal.test.ts` ties the 14-day claim to the backup workflow.

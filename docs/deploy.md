@@ -147,12 +147,33 @@ select vault.create_secret('<the CRON_SECRET value>', 'gusto_cron_secret');
 | `RESEND_API_KEY` | Resend key | **Sensitive.** |
 | `EMAIL_FROM` | `Gusto <orders@mail.gusto.example>` | |
 | `CRON_SECRET` | the value from step 0 | **Sensitive.** Must equal the Vault secret. |
+| `NEXT_PUBLIC_SENTRY_DSN` | Project DSN (section 6a) | Public by design; inlined at build, so redeploy after changing. Leave unset on the demo. |
+| `SENTRY_ORG`, `SENTRY_PROJECT` | Sentry slugs | Build-time only, for source maps. |
+| `SENTRY_AUTH_TOKEN` | Sentry organization token | **Sensitive.** Build-time only; without it errors still arrive, just with minified stack traces. |
 | `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL` | The legal entity behind Gusto | Printed on `/terms` and `/privacy`. Inlined at build, so redeploy after changing. Public, not sensitive. Until `LEGAL_ENTITY_NAME` is set the operator block is left out. |
 
   Do **not** set `DATABASE_URL_DIRECT`, `DATABASE_URL_TEST` or `SEED_ALLOWED_HOSTS` on Vercel.
 - [ ] Deploy (push to `main`, or **Deploy** in the dashboard).
 - [ ] Settings → Domains: add `gusto.example`, create the DNS records Vercel shows.
 - [ ] `NEXT_PUBLIC_*` values are baked in at build: if you change one, **redeploy**.
+
+### 6a. Sentry (error monitoring)
+
+- [ ] sentry.io → create an organization and **choose the EU data region** (events
+      then go to `*.ingest.de.sentry.io`). Create a project, platform **Next.js**.
+- [ ] Project Settings → **Security & Privacy**: turn on **Prevent Storing of IP
+      Addresses**. (The SDK does not send IPs, but Sentry can infer one from the
+      connection unless this is on.) Keep **Data Scrubber** on.
+- [ ] Project Settings → **Client Keys (DSN)**: copy the DSN into
+      `NEXT_PUBLIC_SENTRY_DSN` (Vercel, **production only**).
+- [ ] Optional, for readable stack traces: Settings → **Developer Settings** → new
+      **Organization Token**; put it in `SENTRY_AUTH_TOKEN` (Sensitive), and set
+      `SENTRY_ORG` and `SENTRY_PROJECT` to the slugs in the Sentry URL.
+- [ ] Alerts → make sure an issue alert emails you on every **new issue**.
+- [ ] Redeploy, open the live site, and in the browser console run
+      `setTimeout(() => { throw new Error("Sentry test") })`. The event should appear
+      in Sentry within a minute, with the page address and no query string or email.
+- [ ] Do **not** set the DSN on the demo project.
 
 ## 7. Back to Supabase: point everything at the real domain
 
