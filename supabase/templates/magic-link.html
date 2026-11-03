@@ -1,7 +1,12 @@
 <!-- Used for both "Magic link" and "Confirm signup". The link must go to
      /auth/confirm with the token hash; see src/app/auth/confirm/route.ts.
-     The wordmark is a PNG (email clients block SVG) served from the app's public/brand folder. -->
-<p style="margin:0 0 24px"><img src="{{ .SiteURL }}/brand/gusto-wordmark.png" alt="Gusto" width="120" height="34" style="display:block;border:0"></p>
+     The header is "Gusto" as white text on the brand burgundy (#7a1f2b, the --brand token): no image,
+     so nothing has to load and no email client can block it. Table layout and inline styles on purpose. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px">
+  <tr>
+    <td bgcolor="#7a1f2b" style="background-color:#7a1f2b;padding:20px 24px;border-radius:8px;font-family:Helvetica,Arial,sans-serif;font-size:28px;line-height:32px;font-weight:700;letter-spacing:-0.5px;color:#ffffff">Gusto</td>
+  </tr>
+</table>
 <h2>შესვლა Gusto-ში</h2>
 <p>Gusto-ში შესასვლელად დააჭირეთ ღილაკს:</p>
 <p>

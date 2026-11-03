@@ -765,8 +765,10 @@ interface, a dark trust band and a closing call to action.
 - **The wordmark** is the traced vector in `public/brand/gusto-wordmark.svg`,
   used everywhere through `components/logo.tsx` (size it with a height class;
   white in the dark theme). The favicon and app icon (`src/app/icon.svg`,
-  `apple-icon.png`, `favicon.ico`) are the app icon mark; the auth email uses
-  `public/brand/gusto-wordmark.png` because email clients block SVG. Re-render
+  `apple-icon.png`, `favicon.ico`) are the app icon mark. The auth email header is not an
+  image: white "Gusto" text on the brand burgundy (`supabase/templates/magic-link.html`,
+  pasted into Supabase by hand), so nothing has to load. `public/brand/gusto-wordmark.png`
+  stays because the demo project's older template still points at it. Re-render
   the PNGs from the SVGs if the brand changes; don't hand-edit them.
 - **Scroll motion** is deliberately plain (`components/landing/reveal.tsx`,
   `scroll-depth.tsx`, no animation library): blocks below the fold fade and
