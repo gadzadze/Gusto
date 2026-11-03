@@ -17,7 +17,8 @@
     "check:secrets": "tsx scripts/check-bundle-secrets.ts",
     "db:seed": "tsx scripts/seed-dev.ts",
     "user:allow": "tsx scripts/user-allow.ts",
-    "env:local": "tsx scripts/setup-local-env.ts"
+    "env:local": "tsx scripts/setup-local-env.ts",
+    "brand:icons": "node scripts/gen-icons.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.5.0",
