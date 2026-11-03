@@ -26,6 +26,20 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           </Suspense>
         </CardContent>
       </Card>
+      <p className="mt-5 max-w-sm text-center text-xs leading-5 text-muted-foreground">
+        {t.rich("legalNote", {
+          terms: (chunks) => (
+            <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">
+              {chunks}
+            </Link>
+          ),
+          privacy: (chunks) => (
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
       <DemoAccounts />
     </main>
   );

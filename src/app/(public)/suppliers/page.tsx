@@ -36,6 +36,15 @@ export default async function SuppliersPage() {
           <h2 id="request-heading" className="text-xl font-semibold">{t("formTitle")}</h2>
           <p className="mb-6 mt-2 text-sm text-muted-foreground">{t("formIntro")}</p>
           <RequestForm />
+          <p className="mt-5 text-xs leading-5 text-muted-foreground">
+            {t.rich("privacyNote", {
+              privacy: (chunks) => (
+                <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
         </section>
       </main>
     </div>
