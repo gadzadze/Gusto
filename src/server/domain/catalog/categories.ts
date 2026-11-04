@@ -148,3 +148,48 @@ export async function setCategoryArchived(ctx: AdminCtx, id: string, archived: b
   });
 }
 
+
+export type CreateMissingResult = { created: string[]; existing: string[]; invalid: string[] };
+
+/**
+ * Creates the categories that do not exist yet (names compared without regard
+ * to case, archived ones included, because the product import matches names
+ * that way). One transaction; every created category is audited like a single
+ * create.
+ */
+export async function createMissingCategories(ctx: AdminCtx, rawNames: string[]): Promise<CreateMissingResult> {
+  assertAdmin(ctx);
+  const result: CreateMissingResult = { created: [], existing: [], invalid: [] };
+  const wanted = new Map<string, string>();
+  for (const raw of rawNames) {
+    const parsed = categoryNameSchema.safeParse(raw);
+    if (!parsed.success) {
+      if (String(raw).trim()) result.invalid.push(String(raw).trim().slice(0, 80));
+      continue;
+    }
+    if (!wanted.has(parsed.data.toLowerCase())) wanted.set(parsed.data.toLowerCase(), parsed.data);
+  }
+  if (wanted.size === 0) return result;
+  await getDb().transaction(async (tx) => {
+    const all = await tx.select({ name: categories.name, sortOrder: categories.sortOrder }).from(categories).for("update");
+    const have = new Set(all.map((c) => c.name.toLowerCase()));
+    let next = Math.max(0, ...all.map((c) => c.sortOrder)) + 10;
+    for (const [key, name] of wanted) {
+      if (have.has(key)) {
+        result.existing.push(name);
+        continue;
+      }
+      const [row] = await tx.insert(categories).values({ name, sortOrder: next }).returning({ id: categories.id });
+      next += 10;
+      await writeAudit(tx, {
+        actorUserId: ctx.userId,
+        action: "category.created",
+        targetType: "category",
+        targetId: row.id,
+        data: { name, via: "product file" },
+      });
+      result.created.push(name);
+    }
+  });
+  return result;
+}

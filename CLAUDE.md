@@ -505,6 +505,12 @@ What this codebase relies on:
     reason.
 - **Categories:** a flat, admin-managed list with a Georgian `name`.
   Archiving hides a category from new products; existing products keep it.
+  Suppliers cannot create categories. The import screen lists the valid ones
+  when rows fail on `unknown_category`, and the admin can create the missing
+  ones straight from a supplier's file (`/admin/categories`, "from a product
+  file": `categoryNamesInSheet` in the browser, `createMissingCategories` on the
+  server: case-insensitive, archived names count as existing, audited).
+  `lib/catalog/read-sheet.ts` is the shared browser file reader.
 
 ## Environment variables
 

@@ -22,7 +22,7 @@ import {
 import { NEW_PRODUCT_DEFAULTS } from "@/lib/validation/product";
 import type { ImportAnalysis, ImportCommitResult } from "@/server/domain/catalog/import";
 import { analyzeImportAction, commitImportAction } from "./actions";
-import { readSpreadsheet } from "./read-sheet";
+import { readSpreadsheet } from "@/lib/catalog/read-sheet";
 
 type Step =
   | { kind: "file" }
@@ -32,7 +32,7 @@ type Step =
 
 const PREVIEW_LIMIT = 200;
 
-export function ImportWizard({ savedMapping }: { savedMapping: ImportMapping | null }) {
+export function ImportWizard({ savedMapping, categoryNames }: { savedMapping: ImportMapping | null; categoryNames: string[] }) {
   const t = useTranslations("import");
   const tv = useTranslations("validation");
   const [step, setStep] = useState<Step>({ kind: "file" });
@@ -170,6 +170,13 @@ export function ImportWizard({ savedMapping }: { savedMapping: ImportMapping | n
             })}
           </p>
           {step.analysis.counts.error > 0 ? <FormAlert tone="error">{t("hasErrorsNote")}</FormAlert> : null}
+          {step.analysis.rows.some((r) => r.action === "error" && r.errors.some((e) => e.key === "unknown_category")) ? (
+            <div className="space-y-1 rounded-xl border border-border p-4 text-sm">
+              <p className="font-medium">{t("validCategories")}</p>
+              <p className="text-muted-foreground">{categoryNames.join(", ")}</p>
+              <p className="text-muted-foreground">{t("validCategoriesHint")}</p>
+            </div>
+          ) : null}
           <Table>
             <THead>
               <TR>

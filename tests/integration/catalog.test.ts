@@ -1,9 +1,10 @@
+import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 import { productSchema } from "@/lib/validation/product";
 import { getDb } from "@/server/db/client";
 import { products } from "@/server/db/schema";
-import { setCategoryArchived } from "@/server/domain/catalog/categories";
+import { createCategory, createMissingCategories, listAllCategories, setCategoryArchived } from "@/server/domain/catalog/categories";
 import {
   createProduct,
   getSupplierProduct,
@@ -208,5 +209,27 @@ describe("supplier settings", () => {
       supplierSettingsSchema.parse({ contactName: "Tamar", phone: "577112233", minOrder: "", pricesIncludeVat: true }),
     );
     expect((await getSupplierSettings(supplier)).minOrderMinor).toBe(0);
+  });
+});
+
+describe("createMissingCategories", () => {
+  it("creates only the names that do not exist (any case, archived included), audits each, and ignores blanks", async () => {
+    const admin = await createAdmin();
+    const base = `[TEST] ${randomUUID().slice(0, 8)}`;
+    const existingId = await createCategory(admin, `${base} Drinks`);
+    await setCategoryArchived(admin, existingId, true);
+
+    const result = await createMissingCategories(admin, [`${base} drinks`, `${base} Dairy`, `${base} DAIRY`, "  ", `${base} Grocery`, "x".repeat(81)]);
+    expect(result.created).toEqual([`${base} Dairy`, `${base} Grocery`]);
+    expect(result.existing).toEqual([`${base} drinks`]);
+    expect(result.invalid).toHaveLength(1);
+
+    const names = (await listAllCategories(admin)).map((c) => c.name);
+    expect(names.filter((n) => n.toLowerCase() === `${base} dairy`.toLowerCase())).toHaveLength(1);
+    // Running it again changes nothing.
+    expect((await createMissingCategories(admin, [`${base} Dairy`])).created).toEqual([]);
+    // A supplier cannot.
+    const supplier = await createSupplier();
+    await expect(createMissingCategories(supplier as never, ["x"])).rejects.toBeInstanceOf(NotFoundError);
   });
 });

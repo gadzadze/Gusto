@@ -7,6 +7,8 @@ import { requireAdmin } from "@/server/auth/guards";
 import {
   categoryNameSchema,
   createCategory,
+  createMissingCategories,
+  type CreateMissingResult,
   moveCategory,
   renameCategory,
   setCategoryArchived,
@@ -63,5 +65,17 @@ export async function setCategoryArchivedAction(id: string, archived: boolean): 
     await setCategoryArchived(ctx, id, archived === true);
     refresh();
     return { ok: true };
+  });
+}
+
+/** Creates the categories from a product file that Gusto does not have yet. */
+export async function createCategoriesFromFileAction(names: unknown): Promise<({ ok: true } & CreateMissingResult) | ActionError<CategoryError>> {
+  const ctx = await requireAdmin();
+  const parsed = z.array(z.string().max(200)).min(1).max(100).safeParse(names);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  return runAction<{ ok: true } & CreateMissingResult, CategoryError>("createCategoriesFromFile", async () => {
+    const result = await createMissingCategories(ctx, parsed.data);
+    refresh();
+    return { ok: true, ...result };
   });
 }
