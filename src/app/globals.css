@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* The theme is the data-theme attribute on <html>, set before first paint (layout.tsx) from the
+   visitor's choice (light / dark / follow the device) and kept by components/theme-toggle.tsx. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /*
  * Gusto design tokens — see CLAUDE.md, "Design system".
  * Black is the primary action color; burgundy is the accent. The shadcn/ui
@@ -46,32 +50,32 @@
   --status-gray-fg: #44403c;
 
   --radius: 0.625rem;
+  color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --ink: #f5f5f4;
-    --surface: #0b0b0c;
-    --surface-2: #161617;
-    --border-color: #2a2a2c;
-    --muted-text: #a8a29e;
-    /* Burgundy on black fails contrast; dark mode uses a lighter tone. */
-    --brand: #d46a7c;
-    --brand-soft: #2a1418;
-    --brand-foreground: #0b0b0c;
-    --danger: #f87171;
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #f5f5f4;
+  --surface: #0b0b0c;
+  --surface-2: #161617;
+  --border-color: #2a2a2c;
+  --muted-text: #a8a29e;
+  /* Burgundy on black fails contrast; dark mode uses a lighter tone. */
+  --brand: #d46a7c;
+  --brand-soft: #2a1418;
+  --brand-foreground: #0b0b0c;
+  --danger: #f87171;
 
-    --primary-foreground: #0b0b0c;
+  --primary-foreground: #0b0b0c;
 
-    --status-amber-bg: #3a2a0a;
-    --status-amber-fg: #fcd34d;
-    --status-blue-bg: #172340;
-    --status-blue-fg: #93c5fd;
-    --status-green-bg: #0f2a1a;
-    --status-green-fg: #86efac;
-    --status-gray-bg: #1f1f21;
-    --status-gray-fg: #d6d3d1;
-  }
+  --status-amber-bg: #3a2a0a;
+  --status-amber-fg: #fcd34d;
+  --status-blue-bg: #172340;
+  --status-blue-fg: #93c5fd;
+  --status-green-bg: #0f2a1a;
+  --status-green-fg: #86efac;
+  --status-gray-bg: #1f1f21;
+  --status-gray-fg: #d6d3d1;
 }
 
 @theme inline {

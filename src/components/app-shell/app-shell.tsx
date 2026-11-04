@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import type * as React from "react";
 import { NotificationBellFallback } from "@/components/notifications/notification-bell";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,6 +51,9 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           <Link href="/account/password" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
             {t("nav.changePassword")}
           </Link>
+          <div className="px-3 pb-2">
+            <ThemeToggle />
+          </div>
           <SignOutButton label={t("nav.signOut")} />
         </div>
       </aside>
@@ -62,6 +66,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           </div>
           <div className="flex items-center">
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
+            <ThemeToggle compact />
             <Link href="/account/password" aria-label={t("nav.changePassword")} className="inline-flex size-11 items-center justify-center text-muted-foreground">
               <KeyRound aria-hidden className="size-5" />
             </Link>

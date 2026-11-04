@@ -13,7 +13,7 @@ function block(source: string): Record<string, string> {
 }
 
 const rootMatch = css.match(/:root\s*\{([\s\S]*?)\n\}/);
-const darkMatch = css.match(/prefers-color-scheme:\s*dark\)\s*\{\s*:root\s*\{([\s\S]*?)\n\s*\}\s*\n\}/);
+const darkMatch = css.match(/:root\[data-theme="dark"\]\s*\{([\s\S]*?)\n\}/);
 const light = block(rootMatch![1]);
 const dark = { ...light, ...block(darkMatch![1]) };
 

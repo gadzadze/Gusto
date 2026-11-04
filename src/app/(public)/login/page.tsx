@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { DemoAccounts } from "@/components/demo-accounts";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { contactEmail } from "@/lib/legal";
@@ -41,6 +42,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           ),
         })}
       </p>
+      <ThemeToggle className="mt-5" />
       <DemoAccounts />
     </main>
   );
