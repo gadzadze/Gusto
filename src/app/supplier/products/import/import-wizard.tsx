@@ -314,6 +314,11 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
           <FormAlert tone="success">
             {t("doneTitle")}. {t("doneBody", step.result)}
           </FormAlert>
+          {step.result.created + step.result.updated > 0 ? (
+            <FormAlert tone="warning">
+              <strong>{t("doneCheckTitle")}.</strong> {t("doneCheckBody")}
+            </FormAlert>
+          ) : null}
           <div className="flex flex-wrap gap-3">
             <Button asChild>
               <Link href="/supplier/products">{t("toProducts")}</Link>
