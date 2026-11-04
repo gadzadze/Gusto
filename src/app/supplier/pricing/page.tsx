@@ -41,7 +41,7 @@ async function PriceLists() {
                   <span className="font-medium">{l.name}</span>
                   {l.isDefault ? <Badge tone="brand" className="ml-2">{t("default")}</Badge> : null}
                   <span className="block text-sm text-muted-foreground">
-                    {t("customers", { count: l.customerCount })} · {t("overrides", { count: l.overrideCount })}
+                    {t("customers", { count: l.customerCount })} · {t("overrides", { count: l.productCount })}
                   </span>
                 </span>
                 <ChevronRight aria-hidden className="size-4 text-muted-foreground" />

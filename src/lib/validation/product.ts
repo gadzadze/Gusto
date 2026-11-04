@@ -41,6 +41,21 @@ export const positiveQuantityField = z
     return milli;
   });
 
+/** Optional stock count: empty = not tracked (null), otherwise 0 or more. */
+export const stockField = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value, ctx) => {
+    if (!value) return null;
+    const milli = parseQuantityInput(value);
+    if (milli === null) {
+      ctx.addIssue({ code: "custom", message: "invalid_quantity" });
+      return z.NEVER;
+    }
+    return milli;
+  });
+
 /** VAT as a percentage ("18", "0", "5.5") → basis points (1800, 0, 550). */
 export const vatRateField = z
   .string()
@@ -74,6 +89,7 @@ export const productSchema = z
     vatRate: vatRateField,
     minQty: positiveQuantityField,
     qtyStep: positiveQuantityField,
+    stock: stockField,
   });
 
 export type ProductInput = z.input<typeof productSchema>;
@@ -92,4 +108,5 @@ export const NEW_PRODUCT_DEFAULTS: ProductInput = {
   vatRate: "18",
   minQty: "1",
   qtyStep: "1",
+  stock: "",
 };

@@ -34,6 +34,9 @@ async function Inbox({ searchParams }: Pick<PageProps<"/supplier/orders">, "sear
 
   return (
     <div className="space-y-5">
+      <div className="flex justify-end">
+        <Link href="/supplier/orders/pick" className="text-sm font-medium text-brand hover:underline">{t("pick.link")}</Link>
+      </div>
       <nav className="flex flex-wrap gap-2" aria-label={t("title")}>
         {(Object.keys(SUPPLIER_TABS) as SupplierTab[]).map((key) => (
           <Link

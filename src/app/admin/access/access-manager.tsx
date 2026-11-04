@@ -8,7 +8,8 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { allowEmailAction, restoreEmailAction, revokeEmailAction } from "./actions";
+import { Textarea } from "@/components/ui/textarea";
+import { allowEmailAction, bulkAllowAction, restoreEmailAction, revokeEmailAction, type BulkResult } from "./actions";
 
 export type AccessRow = { id: string; email: string; note: string | null; role: "buyer" | "supplier" | null; businessName: string | null; legalId: string | null; revoked: boolean; addedAt: string };
 
@@ -22,6 +23,8 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
   const [legalId, setLegalId] = useState("");
   const [role, setRole] = useState<"" | "buyer" | "supplier">("");
   const [message, setMessage] = useState<Message>(null);
+  const [bulkText, setBulkText] = useState("");
+  const [bulk, setBulk] = useState<BulkResult | null>(null);
   const [pending, startTransition] = useTransition();
 
   const errorText = (code: string) => {
@@ -87,6 +90,54 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
       <p id="access-role-hint" className="-mt-3 text-xs text-muted-foreground">{t("roleHint")} {t("verifiedHint")}</p>
 
       {message ? <FormAlert tone={message.tone}>{message.text}</FormAlert> : null}
+
+      <details className="rounded-xl border border-border px-4 py-3">
+        <summary className="cursor-pointer text-sm font-medium">{t("bulk.title")}</summary>
+        <form
+          className="mt-3 space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            setBulk(null);
+            startTransition(async () => {
+              const result = await bulkAllowAction(bulkText);
+              setBulk(result);
+              if (result.ok && result.results.every((r) => r.outcome !== "error") && result.parseErrors.length === 0) setBulkText("");
+            });
+          }}
+        >
+          <Label htmlFor="access-bulk">{t("bulk.title")}</Label>
+          <Textarea id="access-bulk" rows={6} value={bulkText} placeholder={t("bulk.placeholder")} onChange={(e) => setBulkText(e.target.value)} />
+          <p className="text-xs text-muted-foreground">{t("bulk.hint")}</p>
+          <Button type="submit" variant="outline" disabled={pending || bulkText.trim() === ""}>
+            <UserPlus />
+            {t("bulk.submit")}
+          </Button>
+        </form>
+        {bulk && !bulk.ok ? <FormAlert tone="error">{errorText(bulk.error)}</FormAlert> : null}
+        {bulk?.ok ? (
+          <div className="mt-3 space-y-2 text-sm" aria-live="polite">
+            <p className="font-medium">
+              {t("bulk.summary", {
+                done: bulk.results.filter((r) => r.outcome !== "error").length,
+                failed: bulk.results.filter((r) => r.outcome === "error").length + bulk.parseErrors.length,
+              })}
+            </p>
+            {bulk.tooMany ? <p className="text-muted-foreground">{t("bulk.tooMany")}</p> : null}
+            <ul className="space-y-1">
+              {bulk.parseErrors.map((e) => (
+                <li key={`p${e.line}`} className="text-muted-foreground">
+                  {t("bulk.line", { line: e.line })}: {t(`bulk.parse.${e.key}`)}
+                </li>
+              ))}
+              {bulk.results.filter((r) => r.outcome === "error").map((r) => (
+                <li key={`r${r.line}`} className="text-muted-foreground">
+                  {t("bulk.line", { line: r.line })} ({r.email}): {errorText(r.error ?? "unknown")}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </details>
 
       {rows.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>

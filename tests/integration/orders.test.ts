@@ -2,11 +2,12 @@ import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
+import { addDays, todayIn } from "@/lib/dates";
 import { productSchema } from "@/lib/validation/product";
 import { supplierSettingsSchema } from "@/lib/validation/supplier-settings";
 import { getDb } from "@/server/db/client";
-import { addresses, carts, orders } from "@/server/db/schema";
-import { setProductActive, updateProduct } from "@/server/domain/catalog/products";
+import { addresses, carts, orders, products } from "@/server/db/schema";
+import { adjustStock, setProductActive, updateProduct } from "@/server/domain/catalog/products";
 import { updateSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import type { AdminCtx, OrgCtx, SupplierCtx } from "@/server/domain/context";
 import { setCustomerBlocked } from "@/server/domain/customers/customers";
@@ -15,7 +16,7 @@ import { getCart, listCarts, setCartQuantity } from "@/server/domain/orders/cart
 import { getOrder, listBuyerOrders, listSupplierOrders, orderLinkTarget, reorder } from "@/server/domain/orders/queries";
 import { submitOrder, type SubmitInput } from "@/server/domain/orders/submit";
 import { cancelByBuyer, cancelBySupplier, confirmOrder, markDelivered, rejectOrder } from "@/server/domain/orders/transitions";
-import { createPriceList, setPriceOverrides } from "@/server/domain/pricing/price-lists";
+import { createPriceList, setListItems } from "@/server/domain/pricing/price-lists";
 import { testDatabaseUrl } from "./test-database";
 import { connectBuyer, createAdmin, createBuyer, createSupplier, createTestCategory, createTestProduct, productInput } from "./helpers";
 
@@ -82,6 +83,89 @@ describe("cart", () => {
   });
 });
 
+describe("delivery day", () => {
+  it("is requested at checkout, agreed at confirmation, and validated both times", async () => {
+    const { supplier, buyer, water } = await setup();
+    const today = todayIn("Asia/Tbilisi");
+    await setCartQuantity(buyer, supplier.orgId, water, 2000);
+    await expect(
+      submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier, { deliveryDate: addDays(today, -1) })),
+    ).rejects.toEqual(new StateError("invalid_delivery_date"));
+    await expect(
+      submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier, { deliveryDate: addDays(today, 91) })),
+    ).rejects.toEqual(new StateError("invalid_delivery_date"));
+    await expect(
+      submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier, { deliveryDate: "2026-13-40" })),
+    ).rejects.toEqual(new StateError("invalid_delivery_date"));
+
+    const asked = addDays(today, 2);
+    const placed = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier, { deliveryDate: asked }))) as { orderId: string };
+    const pending = (await getOrder(buyer, placed.orderId)).order;
+    expect(pending.requestedDeliveryDate).toBe(asked);
+    expect(pending.deliveryDate).toBeNull();
+
+    await expect(confirmOrder(supplier, placed.orderId, [], undefined, addDays(today, -3))).rejects.toEqual(new StateError("invalid_delivery_date"));
+    const agreed = addDays(today, 3);
+    await confirmOrder(supplier, placed.orderId, [], undefined, agreed);
+    const confirmed = (await getOrder(supplier, placed.orderId)).order;
+    expect(confirmed.deliveryDate).toBe(agreed);
+    expect(confirmed.requestedDeliveryDate).toBe(asked);
+  });
+
+  it("is optional on both sides", async () => {
+    const { supplier, buyer, water } = await setup();
+    await setCartQuantity(buyer, supplier.orgId, water, 2000);
+    const placed = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+    await confirmOrder(supplier, placed.orderId, []);
+    const order = (await getOrder(buyer, placed.orderId)).order;
+    expect(order.requestedDeliveryDate).toBeNull();
+    expect(order.deliveryDate).toBeNull();
+  });
+});
+
+describe("stock count follows confirmation", () => {
+  async function stockOf(productId: string): Promise<number | null> {
+    const [row] = await getDb().select({ s: products.stockMilli }).from(products).where(eq(products.id, productId));
+    return row.s;
+  }
+
+  it("is reduced when the supplier confirms, can go negative, and returns on cancel", async () => {
+    const { supplier, buyer, water } = await setup();
+    const untracked = await createTestProduct(supplier, categoryId, { name: "[TEST] Untracked", sku: "UNT" });
+    await adjustStock(supplier, water, { mode: "set", qtyMilli: 5000 });
+    await setCartQuantity(buyer, supplier.orgId, water, 8000);
+    await setCartQuantity(buyer, supplier.orgId, untracked, 2000);
+    const { orderId } = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+
+    expect(await stockOf(water)).toBe(5000); // pending: nothing taken yet
+    const items = (await getOrder(supplier, orderId)).items;
+    const waterItem = items.find((i) => i.productId === water)!;
+    await confirmOrder(supplier, orderId, [{ itemId: waterItem.id, confirmedQtyMilli: 7000 }]);
+    expect(await stockOf(water)).toBe(-2000); // 5 - 7: oversold, shown as minus
+    expect(await stockOf(untracked)).toBeNull(); // not tracked stays not tracked
+
+    await cancelBySupplier(supplier, orderId, "out of stock");
+    expect(await stockOf(water)).toBe(5000);
+  });
+
+  it("a rejected or buyer-cancelled pending order never touches stock, delivery changes nothing", async () => {
+    const { supplier, buyer, water } = await setup();
+    await adjustStock(supplier, water, { mode: "set", qtyMilli: 10000 });
+    await setCartQuantity(buyer, supplier.orgId, water, 3000);
+    const first = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+    await rejectOrder(supplier, first.orderId, "no stock today");
+    await setCartQuantity(buyer, supplier.orgId, water, 3000);
+    const second = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+    await cancelByBuyer(buyer, second.orderId);
+    expect(await stockOf(water)).toBe(10_000);
+    await setCartQuantity(buyer, supplier.orgId, water, 3000);
+    const third = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+    await confirmOrder(supplier, third.orderId, []);
+    await markDelivered(supplier, third.orderId);
+    expect(await stockOf(water)).toBe(7000);
+  });
+});
+
 describe("submitOrder", () => {
   it("persists the order with item snapshots, history, and clears the cart", async () => {
     const { supplier, buyer, cheese, water } = await setup();
@@ -120,7 +204,7 @@ describe("submitOrder", () => {
     const buyer = await createBuyer();
     const product = await createTestProduct(supplier, categoryId, { basePrice: "10" });
     const list = await createPriceList(supplier, "[TEST] VIP");
-    await setPriceOverrides(supplier, list, [{ productId: product, priceMinor: 700 }]);
+    await setListItems(supplier, list, [{ productId: product, included: true, priceMinor: 700 }]);
     await connectBuyer(supplier, buyer, list);
     await setCartQuantity(buyer, supplier.orgId, product, 2000);
     const result = await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier));

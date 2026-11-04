@@ -1,13 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Page } from "@playwright/test";
 import "../../scripts/load-env";
-import { grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
+import { allowEmail, grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
 import { adminWithCategory, approveSupplier, inviteCustomer, onboardSupplier } from "./flows";
 
-// Sign-in is invite-only: unknown addresses get no link, the admin manages the
-// allow-list, and a valid invitation link opens the door for its recipient.
+// Sign-in is closed until the business is accepted: unknown addresses get no
+// link, the admin manages the allow-list, and an invitation link alone opens nothing.
 
-const NOT_REGISTERED = "ეს ელფოსტა რეგისტრირებული არ არის";
+const NOT_REGISTERED = "ეს ელფოსტა ჯერ დადასტურებული არ არის";
 const SENT = "შეამოწმეთ ელფოსტა";
 
 async function requestLink(page: Page, email: string, next = "") {
@@ -86,7 +86,7 @@ test("an account that is not on the list is signed out at the door (second line 
   await expect(page).toHaveURL(/\/login\?next=/);
 });
 
-test("a supplier's invitation link lets its recipient request a sign-in link", async ({ browser }) => {
+test("a supplier's invitation link does not open the door: the address must be accepted first", async ({ browser }) => {
   test.setTimeout(180_000);
   const suffix = Date.now().toString(36);
   const category = `[E2E] პროდუქტები ${suffix}`;
@@ -103,12 +103,13 @@ test("a supplier's invitation link lets its recipient request a sign-in link", a
   // Without the link: refused.
   await requestLink(visitor, stranger);
   await expect(visitor.getByText(NOT_REGISTERED)).toBeVisible();
-  // With the link in `next` (what the invite page sends signed-out visitors to): allowed.
+  // With the invitation link in `next` (what the invite page sends signed-out visitors to): still refused.
+  await requestLink(visitor, stranger, invitePath);
+  await expect(visitor.getByText(NOT_REGISTERED)).toBeVisible();
+  // Once the admin accepts the address, the same request works.
+  await allowEmail(stranger);
   await requestLink(visitor, stranger, invitePath);
   await expect(visitor.getByText(SENT, { exact: true })).toBeVisible();
-  // A made-up link is not enough.
-  await requestLink(visitor, `other-${suffix}@test.gusto.ge`, `/invite/${"A".repeat(43)}`);
-  await expect(visitor.getByText(NOT_REGISTERED)).toBeVisible();
 });
 
 test("a registered role skips the choice, and a waiting supplier shows up on the admin badge", async ({ browser }) => {

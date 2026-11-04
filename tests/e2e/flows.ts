@@ -74,8 +74,30 @@ export async function createProduct(
 
 /** Supplier invites a customer; returns the invite path. */
 export async function inviteCustomer(supplier: Page, businessName: string): Promise<string> {
+  const listName = "[E2E] ყველა პროდუქტი";
+  await supplier.goto("/supplier/pricing");
+  await supplier.waitForLoadState("networkidle");
+  const existing = supplier.getByRole("link", { name: new RegExp(listName.replace(/[[\]]/g, "\\$&")) });
+  if ((await existing.count()) === 0) {
+    await supplier.getByPlaceholder(/ახალი სიის სახელი/).fill(listName);
+    await supplier.getByRole("button", { name: "სიის შექმნა" }).click();
+  } else {
+    await existing.first().click();
+  }
+  await expect(supplier).toHaveURL(/\/supplier\/pricing\/[0-9a-f-]{36}$/);
+  await supplier.waitForLoadState("networkidle");
+  // Customers see only what is on their list: put every product on it, at base prices.
+  const tickAll = supplier.getByRole("button", { name: "ყველას მონიშვნა" });
+  // The product table streams in: wait for it (or the empty state) before deciding.
+  await expect(tickAll.or(supplier.getByText("პროდუქტები ჯერ არ გაქვთ."))).toBeVisible();
+  if ((await tickAll.count()) > 0) {
+    await tickAll.click();
+    await supplier.waitForLoadState("networkidle");
+  }
+
   await supplier.goto("/supplier/customers/new");
   await supplier.waitForLoadState("networkidle");
+  await supplier.getByRole("combobox", { name: "ფასების სია" }).selectOption({ label: listName });
   await supplier.getByLabel("ბიზნესის სახელი").fill(businessName);
   await supplier.getByLabel("ტელეფონი (WhatsApp)").fill("555 98 76 54");
   await supplier.getByRole("button", { name: "დამატება და ბმულის შექმნა" }).click();

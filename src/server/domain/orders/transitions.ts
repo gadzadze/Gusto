@@ -1,10 +1,11 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
+import { isDeliveryDateAllowed, parseDateInput, todayIn } from "@/lib/dates";
 import { computeTotals } from "@/lib/orders/totals";
 import { TRANSITIONS, type OrderAction } from "@/lib/orders/transitions";
 import { getDb, type Tx } from "@/server/db/client";
-import { orderItems, orders, orderStatusHistory } from "@/server/db/schema";
+import { orderItems, orders, orderStatusHistory, organizations, products } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
 import { recordOrderEvent } from "@/server/notifications/events";
@@ -15,7 +16,7 @@ import type { NotificationEvent } from "@/server/db/schema";
 // conditional UPDATE on the expected current status → history row, in one
 // transaction. Two people clicking at once: exactly one UPDATE matches.
 
-export type TransitionError = "stale_status" | "reason_required" | "nothing_confirmed" | "invalid_lines" | "suspended";
+export type TransitionError = "invalid_delivery_date" | "stale_status" | "reason_required" | "nothing_confirmed" | "invalid_lines" | "suspended";
 
 export const reasonSchema = z.string().trim().min(3).max(500);
 
@@ -64,6 +65,22 @@ async function applyTransition(
   });
 }
 
+/**
+ * Moves the supplier's stock count by `direction` x the confirmed quantity of
+ * each line (-1 on confirm, +1 when a confirmed order is cancelled). Products
+ * without a count (null) are left alone; the count may go below zero. Runs in
+ * the transition's transaction, which fires at most once per order.
+ */
+async function moveStock(tx: Tx, lines: { productId: string | null; qty: number }[], direction: 1 | -1) {
+  for (const { productId, qty } of lines) {
+    if (!productId || qty <= 0) continue;
+    await tx
+      .update(products)
+      .set({ stockMilli: sql`${products.stockMilli} + ${direction * qty}` })
+      .where(and(eq(products.id, productId), isNotNull(products.stockMilli)));
+  }
+}
+
 function cleanReason(action: OrderAction, reason: string | undefined): string | null {
   if (!TRANSITIONS[action].reasonRequired) return reason?.trim() || null;
   const parsed = reasonSchema.safeParse(reason ?? "");
@@ -90,9 +107,19 @@ export async function confirmOrder(
   orderId: string,
   lines: { itemId: string; confirmedQtyMilli: number }[],
   note?: string,
+  /** Agreed delivery day "YYYY-MM-DD"; omitted = none stated. */
+  deliveryDateInput?: string,
 ): Promise<void> {
   assertSupplierCanAct(ctx);
   if (!isUuid(orderId)) throw new NotFoundError("order");
+  let deliveryDate: string | null = null;
+  if (deliveryDateInput) {
+    const [org] = await getDb().select({ timezone: organizations.timezone }).from(organizations).where(eq(organizations.id, ctx.orgId));
+    deliveryDate = parseDateInput(deliveryDateInput);
+    if (!deliveryDate || !isDeliveryDateAllowed(deliveryDate, todayIn(org?.timezone ?? "UTC"))) {
+      throw new StateError<TransitionError>("invalid_delivery_date");
+    }
+  }
   await getDb().transaction(async (tx) => {
     const [order] = await tx
       .select({ pricesIncludeVat: orders.pricesIncludeVat })
@@ -124,9 +151,10 @@ export async function confirmOrder(
         .set({ confirmedQtyMilli: item.qty, lineTotalMinor: totals.lines[index].lineTotalMinor })
         .where(eq(orderItems.id, item.id));
     }
+    await moveStock(tx, confirmed.map((i) => ({ productId: i.productId, qty: i.qty })), -1);
     await tx
       .update(orders)
-      .set({ subtotalMinor: totals.subtotalMinor, vatMinor: totals.vatMinor, totalMinor: totals.totalMinor })
+      .set({ subtotalMinor: totals.subtotalMinor, vatMinor: totals.vatMinor, totalMinor: totals.totalMinor, deliveryDate })
       .where(eq(orders.id, orderId));
   });
   deliverAfterResponse(orderId);
@@ -151,7 +179,12 @@ export async function cancelBySupplier(ctx: OrgCtx, orderId: string, reason: str
   assertSupplierCanAct(ctx);
   if (!isUuid(orderId)) throw new NotFoundError("order");
   const note = cleanReason("supplier_cancel", reason);
-  await getDb().transaction((tx) => applyTransition(tx, ctx, orderId, "supplier_cancel", note));
+  await getDb().transaction(async (tx) => {
+    await applyTransition(tx, ctx, orderId, "supplier_cancel", note);
+    // Only confirmed orders can be cancelled by the supplier, so their stock was taken.
+    const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+    await moveStock(tx, items.map((i) => ({ productId: i.productId, qty: i.confirmedQtyMilli ?? 0 })), 1);
+  });
   deliverAfterResponse(orderId);
 }
 

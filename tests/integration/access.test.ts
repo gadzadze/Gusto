@@ -4,10 +4,10 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { customerSchema } from "@/lib/validation/customer";
 import { isEmailAllowed, pinnedRoleFor, registrationFor } from "@/server/auth/allow-list";
 import { getDb } from "@/server/db/client";
-import { allowedEmails, auditLogs, organizations } from "@/server/db/schema";
+import { allowedEmails, auditLogs } from "@/server/db/schema";
 import { allowEmail, listAllowedEmails, revokeEmail } from "@/server/domain/admin/access";
 import type { AdminCtx } from "@/server/domain/context";
-import { createCustomer, regenerateInvitation, setCustomerBlocked } from "@/server/domain/customers/customers";
+import { createCustomer } from "@/server/domain/customers/customers";
 import { NotFoundError, StateError } from "@/server/domain/errors";
 import { notifyAdminsSupplierPending } from "@/server/notifications/admin-alerts";
 import { createAdmin, createAuthUser, createSupplier, randomLegalId } from "./helpers";
@@ -86,51 +86,25 @@ describe("allow-list", () => {
   });
 });
 
-describe("invitations let the invited in", () => {
-  it("a valid invitation link authorizes any address; a made-up or used one does not", async () => {
-    const supplier = await createSupplier();
-    const { token } = await createCustomer(supplier, input());
-    const stranger = fresh();
-    expect(await isEmailAllowed(stranger)).toBe(false);
-    expect(await isEmailAllowed(stranger, `/invite/${token}`)).toBe(true);
-    expect(await isEmailAllowed(stranger, `/invite/${"A".repeat(43)}`)).toBe(false);
-    expect(await isEmailAllowed(stranger, "/buyer")).toBe(false);
-  });
-
-  it("a revoked or regenerated link stops working", async () => {
-    const supplier = await createSupplier();
-    const { customerId, token } = await createCustomer(supplier, input());
-    await regenerateInvitation(supplier, customerId); // revokes the old link
-    expect(await isEmailAllowed(fresh(), `/invite/${token}`)).toBe(false);
-  });
-
-  it("an open invitation addressed to an email lets that email in without the link", async () => {
+describe("invitations do not let anyone in", () => {
+  it("neither an invitation link nor an invitation addressed to an email opens the door", async () => {
     const supplier = await createSupplier();
     const invited = fresh();
-    const { customerId } = await createCustomer(supplier, input({ email: invited }));
-    expect(await isEmailAllowed(invited)).toBe(true);
-    expect(await isEmailAllowed(invited.toUpperCase())).toBe(true);
+    await createCustomer(supplier, input({ email: invited }));
+    // An open invitation exists for this address, and it is still refused:
+    // nobody gets a sign-in link or an account before the admin accepts them.
+    expect(await isEmailAllowed(invited)).toBe(false);
+    expect(await isEmailAllowed(invited.toUpperCase())).toBe(false);
     expect(await isEmailAllowed(fresh())).toBe(false);
-
-    // Blocked customer or suspended supplier: no longer a way in.
-    await setCustomerBlocked(supplier, customerId, true);
-    expect(await isEmailAllowed(invited)).toBe(false);
   });
 
-  it("a pending (unapproved) supplier's invitations don't work", async () => {
-    const supplier = await createSupplier("active");
-    const invited = fresh();
-    const { token } = await createCustomer(supplier, input({ email: invited }));
-    await getDb().update(organizations).set({ status: "suspended" }).where(eq(organizations.id, supplier.orgId));
-    expect(await isEmailAllowed(invited)).toBe(false);
-    expect(await isEmailAllowed(fresh(), `/invite/${token}`)).toBe(false);
-  });
-
-  it("a revocation beats an invitation", async () => {
+  it("the address can sign in once the admin accepts it, and not after a revocation", async () => {
     const supplier = await createSupplier();
     const invited = fresh();
     await createCustomer(supplier, input({ email: invited }));
     await allowEmail({ userId: admin.userId }, invited);
+    expect(await isEmailAllowed(invited)).toBe(true);
+    expect(await isEmailAllowed(invited.toUpperCase())).toBe(true);
     const [row] = await getDb().select().from(allowedEmails).where(eq(allowedEmails.email, invited));
     await revokeEmail(admin, row.id);
     expect(await isEmailAllowed(invited)).toBe(false);

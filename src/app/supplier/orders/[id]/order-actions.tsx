@@ -20,13 +20,29 @@ type Line = { itemId: string; name: string; orderedQty: string; unit: string };
 type Mode = null | "confirm" | "reject" | "cancel";
 
 /** Buttons exist only for actions valid in the current status; the server enforces it regardless. */
-export function SupplierOrderActions({ orderId, actions, lines }: { orderId: string; actions: OrderAction[]; lines: Line[] }) {
+export function SupplierOrderActions({
+  orderId,
+  actions,
+  lines,
+  requestedDate,
+  minDate,
+  maxDate,
+}: {
+  orderId: string;
+  actions: OrderAction[];
+  lines: Line[];
+  /** "YYYY-MM-DD" the buyer asked for, prefilled; null if none. */
+  requestedDate: string | null;
+  minDate: string;
+  maxDate: string;
+}) {
   const t = useTranslations("orders");
   const [mode, setMode] = useState<Mode>(null);
   const [quantities, setQuantities] = useState<Record<string, string>>(() =>
     Object.fromEntries(lines.map((l) => [l.itemId, l.orderedQty])),
   );
   const [text, setText] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState(requestedDate ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
@@ -71,6 +87,13 @@ export function SupplierOrderActions({ orderId, actions, lines }: { orderId: str
             ))}
           </ul>
           <div className="space-y-2">
+            <Label htmlFor="confirm-date">{t("actions.deliveryDate")}</Label>
+            <Input id="confirm-date" type="date" className="max-w-56" min={minDate} max={maxDate} value={deliveryDate} onChange={(e) => setDeliveryDate(e.target.value)} />
+            <p className="text-sm text-muted-foreground">
+              {requestedDate ? t("actions.deliveryDateRequested") : t("actions.deliveryDateNone")}
+            </p>
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="confirm-note">{t("actions.noteOptional")}</Label>
             <Textarea id="confirm-note" rows={2} value={text} onChange={(e) => setText(e.target.value)} />
           </div>
@@ -82,6 +105,7 @@ export function SupplierOrderActions({ orderId, actions, lines }: { orderId: str
                   confirmOrderAction(orderId, {
                     lines: lines.map((l) => ({ itemId: l.itemId, qty: quantities[l.itemId] })),
                     note: text || undefined,
+                    deliveryDate: deliveryDate || undefined,
                   }),
                 )
               }

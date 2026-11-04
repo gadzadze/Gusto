@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { BuyerCancelButton, ReorderButton } from "@/components/orders/order-buttons";
+import { SaveRegularOrder } from "@/components/orders/regular-order-controls";
 import { OrderView } from "@/components/orders/order-view";
 import { WhatsappShare } from "@/components/orders/whatsapp-share";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { isoWeekdayIn } from "@/lib/dates";
 import { availableActions } from "@/lib/orders/transitions";
 import { requireBuyer } from "@/server/auth/guards";
 import { NotFoundError } from "@/server/domain/errors";
@@ -52,6 +54,9 @@ async function Order({ params, searchParams }: PageProps<"/buyer/orders/[id]">) 
       {detail.order.status === "pending" ? <WhatsappShare detail={detail} kind="to_supplier" /> : null}
       <div className="flex flex-wrap items-start gap-3 border-t border-border pt-6">
         <ReorderButton orderId={id} />
+        {detail.order.status !== "rejected" && detail.order.status !== "cancelled" ? (
+          <SaveRegularOrder orderId={id} defaultName={detail.order.supplierName} defaultWeekday={isoWeekdayIn(detail.supplierTimezone, detail.order.createdAt)} />
+        ) : null}
         {actions.includes("buyer_cancel") ? <BuyerCancelButton orderId={id} /> : null}
       </div>
     </div>

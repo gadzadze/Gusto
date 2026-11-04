@@ -13,11 +13,13 @@ existing customers on Gusto, and those customers reorder in a few taps.
 - Admins approve or suspend suppliers and manage categories. All admin
   actions are audited.
 - Approved suppliers invite their existing customers with a single-use link
-  (copy, or send via WhatsApp) and assign per-customer price lists.
-- Buyers join from the link, browse their suppliers' catalogs at their own
-  prices, and search across suppliers in Georgian or Latin letters.
-- Buyers order from a per-supplier cart; suppliers confirm (adjusting
-  quantities), reject or deliver from an order inbox.
+  (copy, or send via WhatsApp) and give each one a list of the products it may order, with its own prices (a customer sees nothing until its list is set up).
+- Buyers join from the link once the admin has accepted their business,
+  browse their suppliers' catalogs at their own prices, and search across suppliers in Georgian or Latin letters.
+- Buyers order from a per-supplier cart, optionally asking for a delivery day; suppliers confirm (adjusting
+  quantities and agreeing the day), reject or deliver from an order inbox, and print a pick list per delivery day.
+- Suppliers keep a private stock count per product (buyers never see it) that follows confirmed orders, and see history plus a private note for each customer.
+- Buyers save regular orders and get a weekday reminder email with a one-tap fill of the cart.
 - In-app notifications (bell with unread count) and email for order events,
   with per-user email preferences. WhatsApp is a "send" button that opens a
   prefilled message; Gusto never records it as delivered.
@@ -238,20 +240,21 @@ order.
 - **WhatsApp** is user-sent only. A future Business API channel is sketched in
   [`docs/whatsapp-business-api.md`](docs/whatsapp-business-api.md).
 
-## Access: sign-in is invite-only
+## Access: sign-in is closed until the business is accepted
 
-Nobody can register themselves, which keeps spam out. An email address can
-request a sign-in link only if:
+Nobody can register themselves, which keeps spam and junk accounts out. An
+email address can request a sign-in link (or sign in with Google) only if the
+admin has put it on the **allow-list**: admin page `/admin/access`, or
+`npm run user:allow -- someone@example.com --note "Winiveria, owner" --role supplier`.
 
-1. it is on the **allow-list** (admin page `/admin/access`, or
-   `npm run user:allow -- someone@example.com --note "Winiveria, owner" --role supplier`); or
-2. the person is following a valid **supplier invitation link** (the single-use
-   link is the permission, so a WhatsApp-only invitation works); or
-3. a supplier addressed a valid invitation to that email.
+**A supplier's invitation does not open the door.** The invitation link only
+connects a buyer to that supplier after the buyer has signed in. A buyer a
+supplier wants to bring on is first added by the admin (business name and legal
+ID from the supplier; with both, the organization starts active), then opens the
+invitation link. Everyone else gets "this address isn't confirmed yet", no
+email, and no account.
 
-Revoking an address (admin page) blocks it, even if an invitation would
-otherwise let it in. Everything else gets "this address isn't registered" and
-no email, and no account is created.
+Revoking an address (admin page) blocks it.
 
 - **Your partners use their own company email and choose their own password.**
   You never create passwords. Add their company address (with business name and
@@ -301,7 +304,7 @@ requests a link on the sign-in page and opens it.
 ## First-run setup in the app
 
 Suppliers can't add products until at least one category exists:
-1. Grant yourself admin (below). Everyone else needs an invitation or an entry on `/admin/access`.
+1. Grant yourself admin (below). Everyone else needs an entry on `/admin/access` before they can sign in.
 2. Add categories at `/admin/categories`.
 3. Approve new suppliers at `/admin/suppliers`.
 
@@ -309,7 +312,7 @@ Suppliers can't add products until at least one category exists:
 
 `npm run db:seed` creates clearly fictional data, every name prefixed `[DEMO]`:
 a Tbilisi restaurant, a café, a beverage distributor and a food distributor,
-30 products, one custom price list, and seven orders in different statuses
+30 products, a price list per supplier, and seven orders in different statuses
 (with their notifications).
 
 - It refuses unless `DATABASE_URL` points at a local host (`localhost`,

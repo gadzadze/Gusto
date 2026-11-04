@@ -13,6 +13,8 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
   const tu = await getTranslations("units");
   const ts = await getTranslations("orderStatus");
   const format = await getFormatter();
+  // A calendar day has no time or zone: format it as UTC so it never shifts.
+  const formatDay = (day: string) => format.dateTime(new Date(`${day}T00:00:00Z`), { dateStyle: "medium", timeZone: "UTC" });
   const { order, items, history } = detail;
   const qty = (milli: number, unit: (typeof items)[number]["unit"]) => `${milliToInput(milli, ",")} ${tu(unit)}`;
 
@@ -38,6 +40,25 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
             {order.deliveryInstructions ? <span className="block text-muted-foreground">{order.deliveryInstructions}</span> : null}
           </dd>
         </div>
+        {order.requestedDeliveryDate || order.deliveryDate ? (
+          <div className="sm:col-span-2">
+            <dt className="text-muted-foreground">{t("detail.deliveryDay")}</dt>
+            <dd>
+              {order.deliveryDate ? (
+                <span className="font-medium">
+                  {t("detail.deliveryAgreed", { date: formatDay(order.deliveryDate) })}
+                </span>
+              ) : (
+                <span>{t("detail.deliveryRequested", { date: formatDay(order.requestedDeliveryDate as string) })}</span>
+              )}
+              {order.deliveryDate && order.requestedDeliveryDate && order.deliveryDate !== order.requestedDeliveryDate ? (
+                <span className="block text-muted-foreground">
+                  {t("detail.deliveryRequested", { date: formatDay(order.requestedDeliveryDate) })}
+                </span>
+              ) : null}
+            </dd>
+          </div>
+        ) : null}
         {order.note ? (
           <div className="sm:col-span-2">
             <dt className="text-muted-foreground">{t("detail.note")}</dt>

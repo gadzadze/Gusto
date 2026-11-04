@@ -1,5 +1,6 @@
 import "server-only";
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { z } from "zod";
 import type { CustomerValues } from "@/lib/validation/customer";
 import { getDb, type Tx } from "@/server/db/client";
 import {
@@ -75,7 +76,11 @@ export async function listCustomers(ctx: OrgCtx): Promise<CustomerListItem[]> {
     .limit(1000);
 }
 
-export type CustomerDetail = CustomerListItem & { contactEmail: string | null; connectedAt: Date | null };
+export type CustomerDetail = CustomerListItem & {
+  contactEmail: string | null;
+  connectedAt: Date | null;
+  privateNote: string | null;
+};
 
 export async function getCustomer(ctx: OrgCtx, customerId: string): Promise<CustomerDetail> {
   assertSupplier(ctx);
@@ -94,6 +99,7 @@ export async function getCustomer(ctx: OrgCtx, customerId: string): Promise<Cust
       priceListName: priceLists.name,
       inviteExpiresAt: openInviteExpiry,
       connectedAt: supplierCustomers.connectedAt,
+      privateNote: supplierCustomers.privateNote,
       createdAt: supplierCustomers.createdAt,
     })
     .from(supplierCustomers)
@@ -254,4 +260,19 @@ export async function setCustomerBlocked(ctx: OrgCtx, customerId: string, blocke
         .where(eq(supplierCustomers.id, customerId));
     }
   });
+}
+
+export const customerNoteSchema = z.string().trim().max(2000, "too_long");
+
+/** The supplier's private remark about a customer (empty clears it). */
+export async function setCustomerNote(ctx: OrgCtx, customerId: string, rawNote: string): Promise<void> {
+  assertCatalogWritable(ctx);
+  if (!isUuid(customerId)) throw new NotFoundError("customer");
+  const note = customerNoteSchema.parse(rawNote);
+  const updated = await getDb()
+    .update(supplierCustomers)
+    .set({ privateNote: note || null })
+    .where(and(eq(supplierCustomers.id, customerId), eq(supplierCustomers.supplierOrgId, ctx.orgId)))
+    .returning({ id: supplierCustomers.id });
+  if (updated.length === 0) throw new NotFoundError("customer");
 }

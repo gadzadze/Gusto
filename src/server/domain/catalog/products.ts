@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, ilike, or, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, isNotNull, lte, or, sql, type SQL } from "drizzle-orm";
 import type { ProductValues } from "@/lib/validation/product";
 import { getDb, type Tx } from "@/server/db/client";
 import { categories, products, type Product } from "@/server/db/schema";
@@ -16,7 +16,7 @@ import type { ImageStorage } from "@/server/storage/image-storage";
 
 export const PRODUCTS_PAGE_SIZE = 25;
 
-export type CatalogWriteError = "suspended" | "category_unavailable" | "sku_taken";
+export type CatalogWriteError = "suspended" | "category_unavailable" | "sku_taken" | "invalid_stock";
 
 /** Suppliers may edit while pending review (to prepare the catalog), not while suspended. */
 export function assertCatalogWritable(ctx: OrgCtx): asserts ctx is SupplierCtx {
@@ -42,12 +42,15 @@ export type ProductListFilters = {
   q?: string;
   categoryId?: string;
   status?: "all" | "active" | "inactive";
+  /** Only products with a stock count of 0 or less (needs restocking). */
+  lowStock?: boolean;
   page?: number;
 };
 
 export type ProductListItem = Pick<
   Product,
   | "id"
+  | "stockMilli"
   | "name"
   | "sku"
   | "brand"
@@ -71,6 +74,7 @@ export async function listSupplierProducts(
     filters.status === "active" ? eq(products.isActive, true) : undefined,
     filters.status === "inactive" ? eq(products.isActive, false) : undefined,
     filters.q ? searchCondition(filters.q) : undefined,
+    filters.lowStock ? and(isNotNull(products.stockMilli), lte(products.stockMilli, 0)) : undefined,
   );
 
   const db = getDb();
@@ -89,6 +93,7 @@ export async function listSupplierProducts(
       imagePath: products.imagePath,
       basePriceMinor: products.basePriceMinor,
       vatRateBp: products.vatRateBp,
+      stockMilli: products.stockMilli,
       isActive: products.isActive,
       updatedAt: products.updatedAt,
       categoryName: categories.name,
@@ -156,7 +161,7 @@ export async function createProduct(ctx: OrgCtx, values: ProductValues): Promise
       await assertCategoryUsable(tx, values.categoryId);
       const [row] = await tx
         .insert(products)
-        .values({ supplierOrgId: ctx.orgId, ...productColumns(values) })
+        .values({ supplierOrgId: ctx.orgId, ...productColumns(values), stockMilli: values.stock })
         .returning({ id: products.id });
       return row.id;
     });
@@ -259,4 +264,30 @@ export async function removeProductImage(ctx: OrgCtx, productId: string, storage
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function isUuid(value: string): boolean {
   return UUID_RE.test(value);
+}
+
+/**
+ * Hand-edits the stock count. "add": goods received, added to what is there
+ * (an untracked product starts from 0). "set": a recount, the absolute number
+ * replaces whatever the platform thought. Done in SQL so it cannot lose a
+ * concurrent order confirmation.
+ */
+export async function adjustStock(
+  ctx: OrgCtx,
+  productId: string,
+  change: { mode: "add" | "set"; qtyMilli: number },
+): Promise<number> {
+  assertCatalogWritable(ctx);
+  if (!isUuid(productId)) throw new NotFoundError("product");
+  const { mode, qtyMilli } = change;
+  if (!Number.isSafeInteger(qtyMilli) || qtyMilli < 0 || qtyMilli > 1_000_000_000 || (mode === "add" && qtyMilli === 0)) {
+    throw new StateError<CatalogWriteError>("invalid_stock");
+  }
+  const [row] = await getDb()
+    .update(products)
+    .set({ stockMilli: mode === "add" ? sql`coalesce(${products.stockMilli}, 0) + ${qtyMilli}` : qtyMilli })
+    .where(and(eq(products.id, productId), eq(products.supplierOrgId, ctx.orgId)))
+    .returning({ stock: products.stockMilli });
+  if (!row) throw new NotFoundError("product");
+  return row.stock as number;
 }

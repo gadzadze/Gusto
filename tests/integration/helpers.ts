@@ -95,8 +95,27 @@ export function productInput(categoryId: string, overrides: Partial<ProductInput
   };
 }
 
+/**
+ * Customers only see products on their price list, so by default every test
+ * product goes on one "everything, base prices" list per supplier, and
+ * connectBuyer puts customers on it. Tests about assortment pass their own
+ * list (or null for none) to connectBuyer.
+ */
+const everythingLists = new Map<string, Promise<string>>();
+function everythingList(supplier: OrgCtx): Promise<string> {
+  let list = everythingLists.get(supplier.orgId);
+  if (!list) {
+    list = import("@/server/domain/pricing/price-lists").then((m) => m.createPriceList(supplier, "[TEST] everything"));
+    everythingLists.set(supplier.orgId, list);
+  }
+  return list;
+}
+
 export async function createTestProduct(ctx: OrgCtx, categoryId: string, overrides: Partial<ProductInput> = {}) {
-  return createProduct(ctx, productSchema.parse(productInput(categoryId, overrides)));
+  const result = await createProduct(ctx, productSchema.parse(productInput(categoryId, overrides)));
+  const { setListItems } = await import("@/server/domain/pricing/price-lists");
+  await setListItems(ctx, await everythingList(ctx), [{ productId: result, included: true, priceMinor: null }]);
+  return result;
 }
 
 /** In-memory ImageStorage for tests; Supabase Storage in the app. */
@@ -119,18 +138,19 @@ export function memoryStorage(): ImageStorage & { files: Map<string, Buffer>; re
   };
 }
 
-/** Invites `buyer` as a customer of `supplier` (optionally on a price list) and accepts. */
+/** Invites `buyer` as a customer of `supplier` (on the supplier's test "everything" list unless one is given; null = none) and accepts. */
 export async function connectBuyer(
   supplier: SupplierCtx,
   buyer: OrgCtx,
-  priceListId: string | null = null,
+  priceListId: string | null | undefined = undefined,
 ): Promise<{ customerId: string }> {
+  const list = priceListId === undefined ? await everythingList(supplier) : priceListId;
   const { createCustomer } = await import("@/server/domain/customers/customers");
   const { acceptInvitationAsBuyer } = await import("@/server/domain/customers/invitations");
   const { customerSchema } = await import("@/lib/validation/customer");
   const { customerId, token } = await createCustomer(
     supplier,
-    customerSchema.parse({ businessName: "[TEST] Customer", phone: "555123456", priceListId: priceListId ?? "" }),
+    customerSchema.parse({ businessName: "[TEST] Customer", phone: "555123456", priceListId: list ?? "" }),
   );
   await acceptInvitationAsBuyer(buyer, token);
   return { customerId };

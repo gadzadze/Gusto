@@ -385,9 +385,13 @@ describe("cron route", () => {
     const { orderId } = await placeOrder(supplier, buyer);
     vi.spyOn(console, "info").mockImplementation(() => {});
 
-    const response = await cronPost(new Request(url, { method: "POST", headers: { authorization: "Bearer right-secret" } }));
-    expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ claimed: expect.any(Number), sent: expect.any(Number) });
+    // One call claims at most 50 rows, and other test files leave rows behind: drain until ours is done.
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const response = await cronPost(new Request(url, { method: "POST", headers: { authorization: "Bearer right-secret" } }));
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({ claimed: expect.any(Number), sent: expect.any(Number) });
+      if ((await rowsFor(orderId)).deliveries[0].status !== "pending") break;
+    }
     const [d] = (await rowsFor(orderId)).deliveries;
     expect(d.status).toBe("skipped");
     delete process.env.CRON_SECRET;

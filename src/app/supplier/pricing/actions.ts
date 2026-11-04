@@ -23,7 +23,9 @@ import {
   priceListNameSchema,
   renamePriceList,
   setDefaultPriceList,
-  setPriceOverrides,
+  setAllListItems,
+  setListItems,
+  copyPriceList,
   type BulkPreview,
   type PriceListError,
 } from "@/server/domain/pricing/price-lists";
@@ -84,31 +86,67 @@ export async function deletePriceListAction(priceListId: string): Promise<Err> {
   redirect("/supplier/pricing");
 }
 
-const overridesSchema = z
-  .array(z.object({ productId: z.uuid(), price: z.string().max(32) }))
+const itemsSchema = z
+  .array(z.object({ productId: z.uuid(), included: z.boolean(), price: z.string().max(32) }))
   .min(1)
   .max(500);
 
-/** Empty price = remove the override (product goes back to its base price). */
-export async function saveOverridesAction(
+/** Ticked + empty price = available at the base price; unticked = not available. */
+export async function saveItemsAction(
   priceListId: string,
   raw: unknown,
 ): Promise<{ ok: true } | Err | { ok: false; error: "invalid"; invalidProductIds: string[] }> {
   const ctx = await requireSupplier();
-  const parsed = overridesSchema.safeParse(raw);
+  const parsed = itemsSchema.safeParse(raw);
   if (!parsed.success || !id.safeParse(priceListId).success) return { ok: false, error: "invalid" };
-  const changes = parsed.data.map((c) => ({
-    productId: c.productId,
-    priceMinor: c.price.trim() === "" ? null : parseMoneyInput(c.price),
-    bad: c.price.trim() !== "" && parseMoneyInput(c.price) === null,
-  }));
+  const changes = parsed.data.map((c) => {
+    const blank = c.price.trim() === "";
+    const priceMinor = !c.included || blank ? null : parseMoneyInput(c.price);
+    return { productId: c.productId, included: c.included, priceMinor, bad: c.included && !blank && priceMinor === null };
+  });
   const invalidProductIds = changes.filter((c) => c.bad).map((c) => c.productId);
   if (invalidProductIds.length) return { ok: false, error: "invalid", invalidProductIds };
-  return runAction<{ ok: true }, Code>("saveOverrides", async () => {
-    await setPriceOverrides(ctx, priceListId, changes.map(({ productId, priceMinor }) => ({ productId, priceMinor })));
+  return runAction<{ ok: true }, Code>("saveItems", async () => {
+    await setListItems(ctx, priceListId, changes.map(({ productId, included, priceMinor }) => ({ productId, included, priceMinor })));
     refresh();
     return { ok: true };
   });
+}
+
+const filtersSchema = z.object({
+  q: z.string().max(100).optional(),
+  categoryId: z.string().max(40).optional(),
+  activeOnly: z.boolean().optional(),
+});
+
+/** "Tick all" / "untick all" for everything matching the current search and category. */
+export async function setAllItemsAction(
+  priceListId: string,
+  include: boolean,
+  rawFilters: unknown,
+): Promise<{ ok: true; count: number } | Err> {
+  const ctx = await requireSupplier();
+  const filters = filtersSchema.safeParse(rawFilters);
+  if (!filters.success || !id.safeParse(priceListId).success) return { ok: false, error: "invalid" };
+  return runAction<{ ok: true; count: number }, Code>("setAllItems", async () => {
+    const count = await setAllListItems(ctx, priceListId, include, filters.data);
+    refresh();
+    return { ok: true, count };
+  });
+}
+
+export async function copyPriceListAction(priceListId: string, name: string): Promise<Err> {
+  const ctx = await requireSupplier();
+  const invalid = nameError(name);
+  if (invalid) return invalid;
+  if (!id.safeParse(priceListId).success) return { ok: false, error: "invalid" };
+  let newId: string | null = null;
+  const result = await runAction<{ ok: true }, Code>("copyPriceList", async () => {
+    newId = await copyPriceList(ctx, priceListId, name);
+    return { ok: true };
+  });
+  if (!result.ok) return result;
+  redirect(`/supplier/pricing/${newId}`);
 }
 
 export type BulkPreviewView = {

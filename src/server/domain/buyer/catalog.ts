@@ -16,7 +16,7 @@ import {
 import { isUuid, searchCondition } from "@/server/domain/catalog/products";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError } from "@/server/domain/errors";
-import { effectivePriceSql } from "@/server/domain/pricing/resolve";
+import { availableToBuyerSql, effectivePriceSql } from "@/server/domain/pricing/resolve";
 
 // What a buyer can see: only suppliers they are actively connected to, only
 // while that supplier is approved (active), only active products, at the
@@ -45,6 +45,7 @@ export type ConnectedSupplier = {
   city: string;
   phone: string;
   currency: string;
+  timezone: string;
   minOrderMinor: number;
   pricesIncludeVat: boolean;
   deliveryArea: string | null;
@@ -59,13 +60,15 @@ const supplierColumns = {
   city: organizations.city,
   phone: organizations.phone,
   currency: organizations.currency,
+  timezone: organizations.timezone,
   minOrderMinor: supplierSettings.minOrderMinor,
   pricesIncludeVat: supplierSettings.pricesIncludeVat,
   deliveryArea: supplierSettings.deliveryArea,
   deliveryTerms: supplierSettings.deliveryTerms,
   orderCutoffNote: supplierSettings.orderCutoffNote,
-  productCount: sql<number>`(select count(*)::int from ${products}
-    where ${products.supplierOrgId} = ${organizations.id} and ${products.isActive})`,
+  productCount: sql<number>`(select count(*)::int from price_list_items pli
+    join ${products} on ${products.id} = pli.product_id
+    where pli.price_list_id = ${supplierCustomers.priceListId} and ${products.isActive})`,
 };
 
 export async function listConnectedSuppliers(ctx: OrgCtx): Promise<ConnectedSupplier[]> {
@@ -130,7 +133,11 @@ export async function listBuyerCatalog(
   // Throws NotFoundError unless the connection is active and the supplier approved.
   await getConnectedSupplier(ctx, supplierOrgId);
   const db = getDb();
-  const base = and(eq(products.supplierOrgId, supplierOrgId), eq(products.isActive, true));
+  const base = and(
+    eq(products.supplierOrgId, supplierOrgId),
+    eq(products.isActive, true),
+    availableToBuyerSql(ctx.orgId),
+  );
   const where = and(
     base,
     filters.categoryId && isUuid(filters.categoryId) ? eq(products.categoryId, filters.categoryId) : undefined,
@@ -208,7 +215,7 @@ export async function searchConnectedCatalogs(ctx: OrgCtx, query: string): Promi
     .innerJoin(organizations, eq(organizations.id, products.supplierOrgId))
     .innerJoin(supplierSettings, eq(supplierSettings.organizationId, organizations.id))
     .innerJoin(supplierCustomers, eq(supplierCustomers.supplierOrgId, products.supplierOrgId))
-    .where(and(visibleSupplierCondition(ctx.orgId), eq(products.isActive, true), condition))
+    .where(and(visibleSupplierCondition(ctx.orgId), eq(products.isActive, true), availableToBuyerSql(ctx.orgId), condition))
     .as("matches");
 
   const rows = await db
@@ -295,7 +302,7 @@ export async function listTopOrderedProducts(ctx: OrgCtx, limit = 10): Promise<T
       .innerJoin(organizations, eq(organizations.id, products.supplierOrgId))
       .innerJoin(supplierSettings, eq(supplierSettings.organizationId, organizations.id))
       .innerJoin(supplierCustomers, eq(supplierCustomers.supplierOrgId, organizations.id))
-      .where(and(inArray(products.id, ids), eq(products.isActive, true), visibleSupplierCondition(ctx.orgId))),
+      .where(and(inArray(products.id, ids), eq(products.isActive, true), availableToBuyerSql(ctx.orgId), visibleSupplierCondition(ctx.orgId))),
     db
       .select({ productId: cartItems.productId, qtyMilli: cartItems.qtyMilli })
       .from(cartItems)

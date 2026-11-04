@@ -2,6 +2,7 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
+import { parseBulkAccess } from "@/lib/access/bulk";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireAdmin } from "@/server/auth/guards";
 import { registerEmail } from "@/server/auth/register-email";
@@ -62,4 +63,42 @@ export async function restoreEmailAction(email: string): Promise<{ ok: true } | 
     refresh();
     return { ok: true };
   });
+}
+
+export type BulkResult =
+  | {
+      ok: true;
+      /** One outcome per input line that passed parsing, in order. */
+      results: { line: number; email: string; outcome: "allowed" | "restored" | "updated" | "already_allowed" | "error"; error?: string }[];
+      parseErrors: { line: number; key: "columns" | "role" | "name_or_id" }[];
+      tooMany: boolean;
+    }
+  | ActionError<AccessError>;
+
+/** Adds many addresses at once (one line each); every line is independent and audited like a single add. */
+export async function bulkAllowAction(text: string): Promise<BulkResult> {
+  const ctx = await requireAdmin();
+  if (typeof text !== "string" || text.length > 20_000) return { ok: false, error: "invalid" };
+  const { entries, errors, tooMany } = parseBulkAccess(text);
+  if (entries.length === 0 && errors.length === 0) return { ok: false, error: "invalid" };
+  const results: Extract<BulkResult, { ok: true }>["results"] = [];
+  for (const entry of entries) {
+    const outcome = await runAction<AllowActionResult, AccessError>("bulkAllowEmail", async () => {
+      const r = await registerEmail(
+        { userId: ctx.userId },
+        entry.email,
+        undefined,
+        entry.role === "" ? undefined : entry.role,
+        entry.businessName ? { businessName: entry.businessName, legalId: entry.legalId } : undefined,
+      );
+      return { ok: true, status: r.status, authUserFailed: r.authUser === "failed" };
+    });
+    results.push(
+      outcome.ok
+        ? { line: entry.line, email: entry.email, outcome: outcome.status }
+        : { line: entry.line, email: entry.email, outcome: "error", error: outcome.error },
+    );
+  }
+  refresh();
+  return { ok: true, results, parseErrors: errors, tooMany };
 }

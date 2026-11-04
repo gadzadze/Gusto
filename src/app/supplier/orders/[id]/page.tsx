@@ -8,6 +8,7 @@ import { WhatsappShare } from "@/components/orders/whatsapp-share";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { availableActions } from "@/lib/orders/transitions";
+import { addDays, MAX_DELIVERY_DAYS_AHEAD, todayIn } from "@/lib/dates";
 import { milliToInput } from "@/lib/quantity";
 import { requireSupplier } from "@/server/auth/guards";
 import { NotFoundError } from "@/server/domain/errors";
@@ -43,13 +44,16 @@ async function Order({ params }: PageProps<"/supplier/orders/[id]">) {
   return (
     <div className="max-w-3xl space-y-6">
       <OrderView detail={detail} viewer="supplier" />
-      {detail.order.status === "confirmed" || detail.order.status === "rejected" ? (
+      {detail.order.status === "confirmed" || detail.order.status === "rejected" || detail.order.status === "delivered" ? (
         <WhatsappShare detail={detail} kind={detail.order.status} />
       ) : null}
       <div className="border-t border-border pt-6">
         <SupplierOrderActions
           orderId={detail.order.id}
           actions={actions}
+          requestedDate={detail.order.requestedDeliveryDate}
+          minDate={todayIn(detail.supplierTimezone)}
+          maxDate={addDays(todayIn(detail.supplierTimezone), MAX_DELIVERY_DAYS_AHEAD)}
           lines={detail.items.map((i) => ({
             itemId: i.id,
             name: i.name,

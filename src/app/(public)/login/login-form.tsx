@@ -11,7 +11,7 @@ import { signInWithGoogle, submitLogin, type MagicLinkState } from "./actions";
 
 export type LoginError = "auth" | "not_allowed" | null;
 
-export function LoginForm({ next, error }: { next: string | null; error: LoginError }) {
+export function LoginForm({ next, error, contactEmail }: { next: string | null; error: LoginError; contactEmail: string | null }) {
   const t = useTranslations("login");
   const [state, formAction, pending] = useActionState<MagicLinkState, FormData>(submitLogin, {
     status: "idle",
@@ -48,6 +48,13 @@ export function LoginForm({ next, error }: { next: string | null; error: LoginEr
       {errorKey ? (
         <p role="alert" className="rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
           {t(`errors.${errorKey}`)}
+          {errorKey === "not_allowed" && contactEmail ? (
+            <>
+              {" "}
+              {t("notAllowedContact")}{" "}
+              <a href={`mailto:${contactEmail}`} className="font-medium underline">{contactEmail}</a>
+            </>
+          ) : null}
         </p>
       ) : null}
 

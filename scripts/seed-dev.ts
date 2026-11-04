@@ -79,13 +79,13 @@ async function main() {
   const { grantPlatformAdmin } = await import("../src/server/domain/admin/grant-admin");
   const { createCategory } = await import("../src/server/domain/catalog/categories");
   const { createProduct } = await import("../src/server/domain/catalog/products");
-  const { createCustomer, setCustomerPriceList } = await import("../src/server/domain/customers/customers");
+  const { createCustomer } = await import("../src/server/domain/customers/customers");
   const { acceptInvitationAsBuyer } = await import("../src/server/domain/customers/invitations");
   const { createOrganizationForUser } = await import("../src/server/domain/onboarding/create-organization");
   const { getCart, setCartQuantity } = await import("../src/server/domain/orders/cart");
   const { submitOrder } = await import("../src/server/domain/orders/submit");
   const { confirmOrder, markDelivered, rejectOrder } = await import("../src/server/domain/orders/transitions");
-  const { createPriceList, setPriceOverrides } = await import("../src/server/domain/pricing/price-lists");
+  const { createPriceList, setListItems } = await import("../src/server/domain/pricing/price-lists");
   const { randomUUID } = await import("node:crypto");
 
   const db = getDb();
@@ -158,26 +158,34 @@ async function main() {
     const drinkIds = await addProducts(drinks, drinksCat, BEVERAGES);
     const foodIds = await addProducts(food, foodCat, FOOD);
 
-    const connect = async (sup: typeof drinks, buy: typeof restaurant, name: string) => {
-      const { customerId, token } = await createCustomer(sup, customerSchema.parse({ businessName: name, phone: "555000002", priceListId: "" }));
+    // Customers see only what is on their price list, so each supplier gets one
+    // list with everything at base prices, and the restaurant gets its own for food.
+    const everything = async (sup: typeof drinks, name: string, ids: string[]) => {
+      const id = await createPriceList(sup, name);
+      await setListItems(sup, id, ids.map((productId) => ({ productId, included: true, priceMinor: null })));
+      return id;
+    };
+    const drinksList = await everything(drinks, "[DEMO] ყველა პროდუქტი", drinkIds);
+    const foodRestaurantList = await createPriceList(food, "[DEMO] რესტორნის ფასები");
+    // ~10% off the first five food items, base price for the rest.
+    await setListItems(
+      food,
+      foodRestaurantList,
+      foodIds.map((productId, i) => ({
+        productId,
+        included: true,
+        priceMinor: i < 5 ? Math.round(Number(FOOD[i].price.replace(",", ".")) * 90) : null,
+      })),
+    );
+
+    const connect = async (sup: typeof drinks, buy: typeof restaurant, name: string, priceListId: string) => {
+      const { customerId, token } = await createCustomer(sup, customerSchema.parse({ businessName: name, phone: "555000002", priceListId }));
       await acceptInvitationAsBuyer(buy, token);
       return customerId;
     };
-    const restaurantFood = await connect(food, restaurant, "[DEMO] რესტორანი „ვაკე“");
-    await connect(drinks, restaurant, "[DEMO] რესტორანი „ვაკე“");
-    await connect(drinks, cafe, "[DEMO] კაფე „რუსთაველი“");
-
-    // One custom price list: ~10% off the first five food items for the restaurant.
-    const listId = await createPriceList(food, "[DEMO] რესტორნის ფასები");
-    await setPriceOverrides(
-      food,
-      listId,
-      FOOD.slice(0, 5).map((item, i) => ({
-        productId: foodIds[i],
-        priceMinor: Math.round(Number(item.price.replace(",", ".")) * 90),
-      })),
-    );
-    await setCustomerPriceList(food, restaurantFood, listId);
+    await connect(food, restaurant, "[DEMO] რესტორანი „ვაკე“", foodRestaurantList);
+    await connect(drinks, restaurant, "[DEMO] რესტორანი „ვაკე“", drinksList);
+    await connect(drinks, cafe, "[DEMO] კაფე „რუსთაველი“", drinksList);
 
     const place = async (sup: typeof drinks, buy: typeof restaurant, lines: [string, number][], daysAgo: number) => {
       for (const [productId, qty] of lines) await setCartQuantity(buy, sup.orgId, productId, qty * 1000);

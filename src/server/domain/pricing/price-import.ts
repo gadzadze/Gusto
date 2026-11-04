@@ -11,7 +11,7 @@ import { products } from "@/server/db/schema";
 import { assertCatalogWritable } from "@/server/domain/catalog/products";
 import type { OrgCtx } from "@/server/domain/context";
 import { StateError } from "@/server/domain/errors";
-import { getPriceList, setPriceOverrides } from "./price-lists";
+import { getPriceList, setListItems } from "./price-lists";
 
 export type PriceRowError = { field: PriceImportField; key: "required" | "invalid_price" | "unknown_sku" | "duplicate_sku_in_file" };
 
@@ -82,6 +82,6 @@ export async function commitPriceImport(
   const { analysis, changes } = await plan(ctx, priceListId, sheet, mapping);
   if (mode === "all" && analysis.counts.error > 0) throw new StateError<PriceImportError>("has_errors");
   if (changes.length === 0) throw new StateError<PriceImportError>("nothing_to_import");
-  await setPriceOverrides(ctx, priceListId, changes);
+  await setListItems(ctx, priceListId, changes.map((c) => ({ ...c, included: true })));
   return { updated: changes.length, skipped: analysis.counts.error };
 }

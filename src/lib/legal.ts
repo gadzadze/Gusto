@@ -18,6 +18,11 @@ function clean(value: string | undefined): string | null {
   return trimmed ? trimmed : null;
 }
 
+/** Where people who are not yet accepted can write; null until LEGAL_CONTACT_EMAIL is set. */
+export function contactEmail(): string | null {
+  return clean(process.env.LEGAL_CONTACT_EMAIL);
+}
+
 export function legalOperator(): LegalOperator | null {
   const name = clean(process.env.LEGAL_ENTITY_NAME);
   if (!name) return null;

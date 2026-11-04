@@ -44,6 +44,7 @@ export async function viewOrderForAdmin(ctx: AdminCtx, number: number): Promise<
       order,
       items,
       counterpartyPhone: null,
+      supplierTimezone: "UTC", // admins only read; the value is for supplier-side forms
       history: history.map(({ actorOrgId, ...h }) => ({ ...h, byBuyer: actorOrgId === order.buyerOrgId })),
     };
   });

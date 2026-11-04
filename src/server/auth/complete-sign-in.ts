@@ -12,7 +12,7 @@ import { takeNextPath } from "./next-cookie";
  */
 export async function completeSignIn(user: User): Promise<string> {
   const next = await takeNextPath();
-  if (!user.email || !(await isEmailAllowed(user.email, next))) {
+  if (!user.email || !(await isEmailAllowed(user.email))) {
     // Not invited (or revoked): end the session before anything is created for them.
     const supabase = await createSupabaseServerClient();
     await supabase.auth.signOut();
