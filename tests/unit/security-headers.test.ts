@@ -35,8 +35,11 @@ describe("security headers (next.config)", () => {
     expect(csp).not.toContain("http:");
     for (const d of ["script-src", "style-src", "connect-src", "img-src"]) {
       const hosts = directive(d).split(" ").filter((v) => v.startsWith("https://"));
-      expect(hosts, d).toEqual([]);
+      // The one exception: connections to Hugging Face, where the background remover's
+      // model file (pinned and hash-checked) is downloaded once per device.
+      expect(hosts, d).toEqual(d === "connect-src" ? ["https://huggingface.co", "https://*.hf.co"] : []);
     }
+    expect(directive("script-src")).toContain("'wasm-unsafe-eval'"); // WebAssembly only, not string eval
     expect(directive("script-src")).not.toContain("'unsafe-eval'"); // only development needs it
   });
 

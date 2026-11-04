@@ -4,6 +4,7 @@ import { guessMapping, type RawSheet } from "@/lib/catalog/import";
 import { getDb } from "@/server/db/client";
 import { products, supplierSettings } from "@/server/db/schema";
 import { analyzeImport, commitImport } from "@/server/domain/catalog/import";
+import { createMissingCategories } from "@/server/domain/catalog/categories";
 import { listSupplierProducts } from "@/server/domain/catalog/products";
 import type { AdminCtx } from "@/server/domain/context";
 import { StateError } from "@/server/domain/errors";
@@ -43,6 +44,31 @@ describe("catalog import", () => {
     ]);
   });
 
+  it("matches category spellings and new packaging units from the file", async () => {
+    const supplier = await createSupplier();
+    // A standard category (Georgian name) and its English / short spellings.
+    await createMissingCategories(admin, ["სასმელები", "რძის პროდუქტები"]);
+    const result = await commitImport(
+      supplier,
+      sheet([
+        ["წყალი", "V-1", "  DRINKS ", "Btl.", "1,5"],
+        ["ლუდი კასრი", "V-2", "სასმელი", "კასრი", "120"],
+        ["რძე", "V-3", "Dairy", "pcs", "3"],
+        ["ქერი", "V-4", "dairy", "ტომარა", "40"],
+      ]),
+      guessMapping(headers),
+      "all",
+    );
+    expect(result).toMatchObject({ created: 4, updated: 0 });
+    const rows = (await listSupplierProducts(supplier, {})).items;
+    expect(Object.fromEntries(rows.map((p) => [p.sku, [p.unit, p.categoryName]]))).toEqual({
+      "V-1": ["bottle", "სასმელები"],
+      "V-2": ["keg", "სასმელები"],
+      "V-3": ["piece", "რძის პროდუქტები"],
+      "V-4": ["sack", "რძის პროდუქტები"],
+    });
+  });
+
   it("commits nothing in 'all' mode when any row is invalid", async () => {
     const supplier = await createSupplier();
     await expect(
@@ -70,7 +96,7 @@ describe("catalog import", () => {
         ["ყველი", "C-1", category.name, "კგ", "18,50"],
         ["No SKU item", "", category.name, "ბოთლი", "3"],
         ["Updated", "EX-2", category.name, "ც", "2,25"],
-        ["Broken", "C-9", category.name, "barrel", "1"],
+        ["Broken", "C-9", category.name, "parsec", "1"],
       ]),
       mapping,
       "valid_only",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { guessMapping, missingRequiredFields, parseImportRow, sheetFromCells } from "@/lib/catalog/import";
+import { guessMapping, missingRequiredFields, parseImportRow, sheetFromCells, categoryNamesInSheet } from "@/lib/catalog/import";
 import { parseUnit } from "@/lib/catalog/units";
 
 const CAT = "11111111-1111-4111-8111-111111111111";
@@ -43,7 +43,7 @@ describe("parseUnit", () => {
     expect(parseUnit("კგ")).toBe("kg");
     expect(parseUnit("ც.")).toBe("piece");
     expect(parseUnit("Box")).toBe("box");
-    expect(parseUnit("barrel")).toBeNull();
+    expect(parseUnit("parsec")).toBeNull();
   });
 });
 
@@ -83,7 +83,7 @@ describe("parseImportRow", () => {
 
   it("reports every problem in a bad row", () => {
     const parsed = parseImportRow(
-      row({ სახელი: "", კატეგორია: "Toys", ერთეული: "barrel", ფასი: "free" }),
+      row({ სახელი: "", კატეგორია: "Toys", ერთეული: "parsec", ფასი: "free" }),
       templateHeaders,
       mapping,
       categories,
@@ -98,5 +98,28 @@ describe("parseImportRow", () => {
         { field: "price", key: "invalid_price" },
       ]),
     );
+  });
+});
+
+describe("categoryNamesInSheet", () => {
+  const sheet = {
+    headers: ["სახელი", "კატეგორია", "ფასი"],
+    rows: [
+      ["ა", "სასმელები", "1"],
+      ["ბ", "  სურსათი ", "2"],
+      ["გ", "სასმელები", "3"],
+      ["დ", "", "4"],
+      ["ე", "Drinks", "5"],
+      ["ვ", "drinks", "6"],
+    ],
+  };
+
+  it("lists the distinct names in the category column, first spelling winning", () => {
+    expect(categoryNamesInSheet(sheet)).toEqual({ column: "კატეგორია", names: ["სასმელები", "სურსათი", "Drinks"] });
+  });
+
+  it("uses a column picked by hand, and returns null when there is none", () => {
+    expect(categoryNamesInSheet({ headers: ["a", "group"], rows: [["x", "G1"], ["y", "G2"]] })).toBeNull();
+    expect(categoryNamesInSheet({ headers: ["a", "group"], rows: [["x", "G1"], ["y", "G2"]] }, "group")?.names).toEqual(["G1", "G2"]);
   });
 });

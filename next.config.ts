@@ -23,7 +23,10 @@ function contentSecurityPolicy(): string {
   const dev = process.env.NODE_ENV !== "production";
   const directives: Record<string, string[]> = {
     "default-src": ["'self'"],
-    "script-src": ["'self'", "'unsafe-inline'", ...(dev ? ["'unsafe-eval'"] : [])],
+    // 'wasm-unsafe-eval' lets the background remover instantiate onnxruntime's WebAssembly (it allows
+    // WebAssembly only, not eval of strings).
+    "script-src": ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", ...(dev ? ["'unsafe-eval'"] : [])],
+    "worker-src": ["'self'", "blob:"],
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:", ...(supabaseOrigin ? [supabaseOrigin] : [])],
     "font-src": ["'self'", "data:"],
@@ -31,6 +34,9 @@ function contentSecurityPolicy(): string {
       "'self'",
       ...(supabaseOrigin ? [supabaseOrigin] : []),
       ...(sentryOrigin ? [sentryOrigin] : []),
+      // The background remover's model file (MIT, pinned and hash-checked), downloaded once per device.
+      "https://huggingface.co",
+      "https://*.hf.co",
       ...(dev ? ["ws:", "wss:"] : []),
     ],
     "frame-ancestors": ["'none'"],

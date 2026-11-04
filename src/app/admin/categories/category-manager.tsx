@@ -9,6 +9,7 @@ import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
 import {
   createCategoryAction,
+  createStandardCategoriesAction,
   moveCategoryAction,
   renameCategoryAction,
   setCategoryArchivedAction,
@@ -21,6 +22,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
   const tc = useTranslations("common");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
 
@@ -111,6 +113,28 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
           {t("add")}
         </Button>
       </form>
+
+      <div className="space-y-2">
+        <Button
+          type="button"
+          variant="outline"
+          disabled={pending}
+          onClick={() =>
+            startTransition(async () => {
+              setError(null);
+              setNotice(null);
+              const result = await createStandardCategoriesAction();
+              if (result.ok) setNotice(t("standardDone", { created: result.created.length, existing: result.existing.length }));
+              else setError(tc("error"));
+            })
+          }
+        >
+          <Plus />
+          {t("addStandard")}
+        </Button>
+        <p className="text-sm text-muted-foreground">{t("standardHint")}</p>
+        {notice ? <FormAlert tone="success">{notice}</FormAlert> : null}
+      </div>
 
       {active.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">{t("empty")}</p>

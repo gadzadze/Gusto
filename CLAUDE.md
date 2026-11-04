@@ -505,6 +505,25 @@ What this codebase relies on:
     reason.
 - **Categories:** a flat, admin-managed list with a Georgian `name`.
   Archiving hides a category from new products; existing products keep it.
+  Suppliers cannot create categories. The import screen lists the valid ones
+  when rows fail on `unknown_category`, and the admin can create the missing
+  ones straight from a supplier's file (`/admin/categories`, "from a product
+  file": `categoryNamesInSheet` in the browser, `createMissingCategories` on the
+  server: case-insensitive, archived names count as existing, audited).
+  `lib/catalog/read-sheet.ts` is the shared browser file reader.
+  **Matching** (`lib/catalog/categories-standard.ts`): a file's category text is
+  compared after `normalizeCategoryKey` (case, spaces, quotes, "და"/"&"/","
+  ignored), and for the **standard HoReCa categories** (`STANDARD_CATEGORIES`, 29
+  Georgian names with Georgian and English aliases) any alias reaches the
+  category Gusto has. `createMissingCategories` turns an alias into the standard
+  Georgian name, and Admin > Categories has an "add the standard categories"
+  button. Production was seeded with the standard set on 2026-11-04.
+- **Units are also the packaging** (`lib/catalog/units.ts`): piece, kg, g, l, ml,
+  box, pack, case, bottle, jar, bag, sack, keg, pallet, bunch, roll, bucket. The
+  import accepts many spellings per unit (Georgian, English, a few Russian), see
+  `unitAliasTable()`. The product's `შეფუთვა` column is free text. Adding a unit
+  means: `PRODUCT_UNITS`, the DB enum (migration), `units.*` and `unitNames.*` in
+  the messages, and its aliases.
 
 ## Environment variables
 
@@ -662,6 +681,38 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Uptime**: a Sentry uptime monitor ("Gusto health", every 5 minutes) checks
   `/api/health` of the production URL. Update its URL when a domain is attached.
 
+## Photo background remover
+
+`components/catalog/background-remover.tsx`, `lib/image/background-removal/*`.
+On the product form and the image manager, a chosen photo can be cleaned before
+it is uploaded: the subject is cut out and centred on a flat white 1200px square
+(a JPEG named `<name>-clean.jpg`). The supplier sees before and after and picks
+one; only the chosen file is uploaded, through the normal image action.
+
+- **It runs on the supplier's device.** A module Web Worker runs BiRefNet-lite
+  (MIT, ONNX) with `onnxruntime-web` on **WebGPU**; the photo is never sent
+  anywhere. **There is no CPU fallback on purpose**: at 1024x1024 the model needs
+  more working memory than a browser's WebAssembly can address (`std::bad_alloc`,
+  measured). No WebGPU = a short "not available" note instead of the button.
+- **The model** (114 MB fp16 when the device has `shader-f16`, else 224 MB fp32)
+  is fetched from Hugging Face by the browser once, pinned to a commit and
+  **verified against a SHA-256** (`config.ts`) before use, then cached in Cache
+  Storage. That is why the CSP `connect-src` names `huggingface.co`/`*.hf.co`
+  (the one exception, asserted in `tests/unit/security-headers.test.ts`), why
+  `script-src` has `'wasm-unsafe-eval'`, and why the privacy text mentions it.
+  To change the model, update the revision, size and hash together.
+- **onnxruntime's `.wasm`/`.mjs` (the asyncify and jspi builds) are served from `/ort/`**, copied from `node_modules` by
+  `scripts/copy-ort.mjs` (`predev`/`prebuild`; git-ignored, ESLint-ignored). Do
+  not install `@huggingface/transformers`: it drags in `onnxruntime-node`
+  (about 550 MB) for nothing.
+- A cut-out that kept almost nothing or almost everything (`maskCoverage`) is
+  flagged to the supplier. The pure maths is unit-tested (`math.ts`); the browser
+  run is `tests/e2e/background-removal.spec.ts`, which only runs with
+  `E2E_BG_MODEL_DIR` and `E2E_BG_PHOTO` set and **needs a real GPU**: software
+  WebGPU (SwiftShader) crashes on this model, so it was only driven up to the
+  button in the cloud sandbox. Run it, or try the feature by hand, on a machine
+  with a GPU.
+
 ## Launch specifics (milestone 6)
 
 - **Dashboards** compute from real rows only, with each number's definition
@@ -776,7 +827,7 @@ supplier request form.
 - **Claims must stay true.** The policy says: only essential cookies, no
   analytics or ads, IP addresses kept hashed and pruned within a day, backups
   kept about 14 days, admins never see catalogs or price lists, and lists the
-  processors (Supabase, Vercel, Resend, Google, Sentry). When you add analytics, error
+  processors (Supabase, Vercel, Resend, Google, Sentry) and the one-off model download from Hugging Face. When you add analytics, error
   monitoring (Sentry), a new processor, a new kind of personal data or change
   retention, update `legal` **and** `LEGAL_UPDATED` in `lib/legal.ts`.
   `tests/unit/legal.test.ts` ties the 14-day claim to the backup workflow.

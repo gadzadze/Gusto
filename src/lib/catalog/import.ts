@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeCategoryKey } from "@/lib/catalog/categories-standard";
 import { parseUnit } from "@/lib/catalog/units";
 import { parseMoneyInput } from "@/lib/money";
 import { toValidationKey } from "@/lib/validation/form-errors";
@@ -120,8 +121,8 @@ const SCHEMA_TO_IMPORT_FIELD: Record<string, ImportField> = {
 };
 
 /**
- * Validates one row. `categoryIdByName` maps lowercased category names to
- * IDs (active categories only). Unmapped optional columns take the same
+ * Validates one row. `categoryIdByName` is `buildCategoryLookup(...)` over the
+ * active categories (normalised names and standard aliases to IDs). Unmapped optional columns take the same
  * defaults as a new product form.
  */
 export function parseImportRow(
@@ -144,7 +145,7 @@ export function parseImportRow(
   if (!unit) errors.push({ field: "unit", key: unitText ? "invalid_unit" : "required" });
 
   const categoryText = cell("category");
-  const categoryId = categoryIdByName.get(categoryText.toLowerCase());
+  const categoryId = categoryIdByName.get(normalizeCategoryKey(categoryText));
   if (!categoryId) errors.push({ field: "category", key: categoryText ? "unknown_category" : "required" });
 
   const input: ProductInput = {
@@ -213,4 +214,25 @@ export function parsePriceRow(row: readonly string[], headers: readonly string[]
   else if (priceMinor === null) errors.push({ field: "price", key: "invalid_price" });
   if (errors.length > 0 || priceMinor === null) return { ok: false, sku, errors };
   return { ok: true, sku, priceMinor };
+}
+
+// ── Categories named in a file ──────────────────────────────────────────────
+
+export const MAX_CATEGORIES_FROM_FILE = 100;
+
+/**
+ * The distinct category names a product file uses (first spelling wins,
+ * case-insensitive), from the column that is, or looks like, the category one.
+ * `column` overrides the guess; null if there is no category column at all.
+ */
+export function categoryNamesInSheet(sheet: RawSheet, column?: string): { column: string; names: string[] } | null {
+  const header = column ?? guessMapping(sheet.headers).category;
+  const index = header ? sheet.headers.indexOf(header) : -1;
+  if (!header || index < 0) return null;
+  const seen = new Map<string, string>();
+  for (const row of sheet.rows) {
+    const name = (row[index] ?? "").trim();
+    if (name && !seen.has(name.toLowerCase())) seen.set(name.toLowerCase(), name);
+  }
+  return { column: header, names: [...seen.values()] };
 }

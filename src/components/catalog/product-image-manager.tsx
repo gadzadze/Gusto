@@ -3,6 +3,7 @@
 import { ImagePlus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { BackgroundRemover } from "@/components/catalog/background-remover";
 import { ProductImage } from "@/components/catalog/product-image";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -26,6 +27,8 @@ export function ProductImageManager({
   const t = useTranslations("products");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // A chosen photo waits here so the supplier can clean its background before it is uploaded.
+  const [staged, setStaged] = useState<File | null>(null);
 
   const imageErrorText = (code: ImageUploadError | "invalid" | "unknown") => {
     if (code === "empty" || code === "too_large" || code === "unsupported" || code === "upload_failed") {
@@ -44,6 +47,7 @@ export function ProductImageManager({
       formData.set("image", file);
       const result = await uploadProductImageAction(productId, formData);
       if (!result.ok) setError(imageErrorText(result.error));
+      else setStaged(null);
     });
   };
 
@@ -75,7 +79,7 @@ export function ProductImageManager({
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 e.target.value = "";
-                if (file) upload(file);
+                if (file) setStaged(file);
               }}
             />
           </label>
@@ -88,6 +92,19 @@ export function ProductImageManager({
         </div>
       </div>
       <p className="text-sm text-muted-foreground">{t("form.imageHint")}</p>
+      {staged ? (
+        <div className="space-y-3">
+          <BackgroundRemover file={staged} onUse={setStaged} disabled={disabled || pending} />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" disabled={disabled || pending} onClick={() => upload(staged)}>
+              {pending ? t("form.uploading") : t("form.uploadChosen", { name: staged.name })}
+            </Button>
+            <Button type="button" variant="ghost" disabled={pending} onClick={() => setStaged(null)}>
+              {t("form.cancelChosen")}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

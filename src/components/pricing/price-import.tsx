@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { guessPriceMapping, MAX_IMPORT_ROWS, type PriceImportMapping, type RawSheet } from "@/lib/catalog/import";
 import type { PriceImportAnalysis } from "@/server/domain/pricing/price-import";
-import { readSpreadsheet } from "@/app/supplier/products/import/read-sheet";
+import { readSpreadsheet } from "@/lib/catalog/read-sheet";
 import { analyzePriceImportAction, commitPriceImportAction } from "@/app/supplier/pricing/actions";
 
 /** SKU + price import into one price list. Same file handling as product import. */

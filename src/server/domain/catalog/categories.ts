@@ -1,6 +1,7 @@
 import "server-only";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
+import { normalizeCategoryKey, standardCategoryFor } from "@/lib/catalog/categories-standard";
 import { getDb } from "@/server/db/client";
 import { categories, products, type Category } from "@/server/db/schema";
 import { writeAudit } from "@/server/domain/audit";
@@ -148,3 +149,52 @@ export async function setCategoryArchived(ctx: AdminCtx, id: string, archived: b
   });
 }
 
+
+export type CreateMissingResult = { created: string[]; existing: string[]; invalid: string[] };
+
+/**
+ * Creates the categories that do not exist yet. A name that is a known alias of a
+ * standard category (English name, shorter form ...) creates the standard
+ * Georgian one instead, so every supplier's spelling ends up in one category.
+ * Names are compared the way the product import compares them (see
+ * normalizeCategoryKey), archived categories included. One transaction; every
+ * created category is audited like a single create.
+ */
+export async function createMissingCategories(ctx: AdminCtx, rawNames: string[]): Promise<CreateMissingResult> {
+  assertAdmin(ctx);
+  const result: CreateMissingResult = { created: [], existing: [], invalid: [] };
+  const wanted = new Map<string, { name: string; from: string }>();
+  for (const raw of rawNames) {
+    const parsed = categoryNameSchema.safeParse(raw);
+    if (!parsed.success) {
+      if (String(raw).trim()) result.invalid.push(String(raw).trim().slice(0, 80));
+      continue;
+    }
+    const name = standardCategoryFor(parsed.data) ?? parsed.data;
+    const key = normalizeCategoryKey(name);
+    if (key && !wanted.has(key)) wanted.set(key, { name, from: parsed.data });
+  }
+  if (wanted.size === 0) return result;
+  await getDb().transaction(async (tx) => {
+    const all = await tx.select({ name: categories.name, sortOrder: categories.sortOrder }).from(categories).for("update");
+    const have = new Set(all.map((c) => normalizeCategoryKey(c.name)));
+    let next = Math.max(0, ...all.map((c) => c.sortOrder)) + 10;
+    for (const [key, { name, from }] of wanted) {
+      if (have.has(key)) {
+        result.existing.push(name);
+        continue;
+      }
+      const [row] = await tx.insert(categories).values({ name, sortOrder: next }).returning({ id: categories.id });
+      next += 10;
+      await writeAudit(tx, {
+        actorUserId: ctx.userId,
+        action: "category.created",
+        targetType: "category",
+        targetId: row.id,
+        data: { name, ...(from !== name ? { askedAs: from } : {}), via: "bulk" },
+      });
+      result.created.push(name);
+    }
+  });
+  return result;
+}
