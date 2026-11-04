@@ -531,6 +531,14 @@ What this codebase relies on:
   (`cleanAmountText`: currency signs and words, "1,250.50" / "1.250,50"). Header
   aliases cover more Georgian, English and Russian spellings. The preview shows
   each row's category, where it came from, and any generated code.
+- **Photos in an .xlsx** (`lib/catalog/sheet-images.ts`, `read-sheet.ts` `readSpreadsheetWithPhotos`,
+  `prepare-photo.ts`): the browser unzips the file (`fflate`), follows first sheet -> drawing -> media, and
+  matches each floating picture to the row it starts in (only the first per row; PNG/JPEG/WebP; "place in
+  cell" pictures are not read). The preview shows thumbnails. Pictures never travel with the sheet: after
+  the commit, which returns `targets` (file row -> product id, only rows that have a code), the wizard
+  shrinks each picture (max 1600px, JPEG) and sends it through the normal `uploadProductImageAction`
+  one by one. They are the supplier's own uploads (private); a photo in the file replaces an existing one.
+  Files over 60 MB are refused. Fixture: `tests/unit/fixtures/gusto-products-with-photos.xlsx`.
 - **Units are also the packaging** (`lib/catalog/units.ts`): piece, kg, g, l, ml,
   box, pack, case, bottle, jar, bag, sack, keg, pallet, bunch, roll, bucket. The
   import accepts many spellings per unit (Georgian, English, a few Russian), see
@@ -749,7 +757,7 @@ one; only the chosen file is uploaded, through the normal image action.
 - **Rate limits** (`server/security/rate-limit.ts`, rules in `RATE_LIMITS`):
   order submit 10/min/org (a repeated idempotency key doesn't count), invite
   create or regenerate 30/h/supplier, invite accept 10/min/IP (hashed, in the
-  action: it knows the headers), image upload 30/h/supplier. Over the limit
+  action: it knows the headers), image upload 300/h/supplier (an import attaches a photo per product). Over the limit
   throws `StateError("rate_limited")`; every UI maps that code. The cron route
   prunes old windows.
 - **Suspended buyers can't submit** (`buyer_suspended`, read from the database,

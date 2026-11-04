@@ -91,12 +91,12 @@ describe("catalog import", () => {
     // Without the options the same file is rejected for its missing category column.
     await expect(analyzeImport(supplier, plain, mapping)).rejects.toEqual(new StateError("missing_columns"));
 
-    expect(await commitImport(supplier, plain, mapping, "valid_only", options)).toEqual({ created: 3, updated: 0, skipped: 1 });
+    expect(await commitImport(supplier, plain, mapping, "valid_only", options)).toMatchObject({ created: 3, updated: 0, skipped: 1 });
     // The same list again, reordered and with a new price: same codes, so everything updates.
     const again: RawSheet = { ...plain, rows: [plain.rows[2], plain.rows[0], ["ქათმის უძვლო ბარკალი", "კგ", "9"]] };
     const second = await analyzeImport(supplier, again, mapping, options);
     expect(second.counts).toEqual({ create: 0, update: 3, error: 0 });
-    expect(await commitImport(supplier, again, mapping, "all", options)).toEqual({ created: 0, updated: 3, skipped: 0 });
+    expect(await commitImport(supplier, again, mapping, "all", options)).toMatchObject({ created: 0, updated: 3, skipped: 0 });
     const items = (await listSupplierProducts(supplier, {})).items;
     expect(items).toHaveLength(3);
     expect(items.find((p) => p.name.startsWith("ქათმის"))?.basePriceMinor).toBe(900);
@@ -145,7 +145,11 @@ describe("catalog import", () => {
       mapping,
       "valid_only",
     );
-    expect(result).toEqual({ created: 2, updated: 1, skipped: 1 });
+    expect(result).toMatchObject({ created: 2, updated: 1, skipped: 1 });
+    // Rows with a code (new or updated) say which product they became, for attaching photos;
+    // the row without a code can't be matched.
+    expect(result.targets.map((t) => t.rowNumber).sort()).toEqual([2, 4]);
+    expect(result.targets.find((t) => t.rowNumber === 4)?.productId).toBe(existingId);
 
     const [updated] = await getDb().select().from(products).where(eq(products.id, existingId));
     expect(updated).toMatchObject({ name: "Updated", basePriceMinor: 225, unit: "piece" });
@@ -164,7 +168,7 @@ describe("catalog import", () => {
     const b = await createSupplier();
     const ofA = await createTestProduct(a, category.id, { sku: "SHARED", basePrice: "1" });
     const result = await commitImport(b, sheet([["B's", "SHARED", category.name, "ც", "99"]]), guessMapping(headers), "all");
-    expect(result).toEqual({ created: 1, updated: 0, skipped: 0 });
+    expect(result).toMatchObject({ created: 1, updated: 0, skipped: 0 });
     const [row] = await getDb().select().from(products).where(eq(products.id, ofA));
     expect(row.basePriceMinor).toBe(100);
   });

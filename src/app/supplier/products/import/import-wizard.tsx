@@ -3,7 +3,7 @@
 import { CircleAlert, CircleCheck, Download, FileSpreadsheet, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -24,7 +24,10 @@ import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { NEW_PRODUCT_DEFAULTS } from "@/lib/validation/product";
 import type { ImportAnalysis, ImportCommitResult } from "@/server/domain/catalog/import";
 import { analyzeImportAction, commitImportAction } from "./actions";
-import { readSpreadsheet } from "@/lib/catalog/read-sheet";
+import { preparePhotoFile } from "@/lib/catalog/prepare-photo";
+import { readSpreadsheetWithPhotos } from "@/lib/catalog/read-sheet";
+import type { SheetImage } from "@/lib/catalog/sheet-images";
+import { uploadProductImageAction } from "../actions";
 
 type Step =
   | { kind: "file" }
@@ -33,6 +36,16 @@ type Step =
   | { kind: "done"; result: ImportCommitResult };
 
 const PREVIEW_LIMIT = 200;
+
+type PhotoData = { photos: Map<number, SheetImage>; skipped: number };
+
+/** Small preview of a picture taken from the file (an object URL, released on unmount). */
+function PhotoThumb({ image, alt }: { image: SheetImage; alt: string }) {
+  const url = useMemo(() => URL.createObjectURL(new Blob([image.bytes as BlobPart], { type: image.mime })), [image]);
+  useEffect(() => () => URL.revokeObjectURL(url), [url]);
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={url} alt={alt} className="size-12 rounded-md border border-border object-cover" />;
+}
 
 type Fallbacks = { categoryMode: "error" | "default" | "guess"; categoryId: string; unit: ProductUnit | ""; autoSku: boolean };
 
@@ -52,6 +65,8 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
     ...(fallbacks.autoSku ? { autoSku: true } : {}),
   };
   const [pending, startTransition] = useTransition();
+  const [photoData, setPhotoData] = useState<PhotoData | null>(null);
+  const [upload, setUpload] = useState<{ done: number; total: number; failed: number } | null>(null);
 
   const actionErrorText = (code: string) =>
     ["missing_columns", "has_errors", "nothing_to_import", "suspended"].includes(code)
@@ -61,11 +76,14 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
   const onFile = (file: File) => {
     setError(null);
     startTransition(async () => {
-      const result = await readSpreadsheet(file);
-      if (typeof result === "string") {
-        setError(t(`fileErrors.${result}`, { max: MAX_IMPORT_ROWS }));
+      const read = await readSpreadsheetWithPhotos(file);
+      if (typeof read === "string") {
+        setError(t(`fileErrors.${read}`, { max: MAX_IMPORT_ROWS }));
         return;
       }
+      const result = read.sheet;
+      setPhotoData({ photos: read.photos, skipped: read.skippedPhotos });
+      setUpload(null);
       const mapping = guessMapping(result.headers, savedMapping);
       // A file with no category or no code column gets the sensible fallback switched on; the preview shows what it did.
       setFallbacks({ categoryMode: mapping.category ? "error" : "guess", categoryId: "", unit: "", autoSku: !mapping.sku });
@@ -88,7 +106,32 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
       const result = await commitImportAction({ sheet: s.sheet, mapping: s.mapping, mode, options });
       if (!result.ok) return setError(actionErrorText(result.error));
       setStep({ kind: "done", result: result.result });
+      void uploadPhotos(result.result.targets);
     });
+  };
+
+  // Photos go up one by one after the products exist, each through the normal image action.
+  const uploadPhotos = async (targets: ImportCommitResult["targets"]) => {
+    const jobs = targets.flatMap((target) => {
+      const image = photoData?.photos.get(target.rowNumber - 2);
+      return image ? [{ productId: target.productId, image }] : [];
+    });
+    if (jobs.length === 0) return;
+    let done = 0;
+    let failed = 0;
+    setUpload({ done, total: jobs.length, failed });
+    for (const job of jobs) {
+      try {
+        const formData = new FormData();
+        formData.set("image", await preparePhotoFile(job.image));
+        const outcome = await uploadProductImageAction(job.productId, formData);
+        if (!outcome.ok) failed += 1;
+      } catch {
+        failed += 1;
+      }
+      done += 1;
+      setUpload({ done, total: jobs.length, failed });
+    }
   };
 
   const rowErrorText = (key: string) =>
@@ -241,6 +284,19 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
             })}
           </p>
           {step.analysis.counts.error > 0 ? <FormAlert tone="error">{t("hasErrorsNote")}</FormAlert> : null}
+          {photoData && (photoData.photos.size > 0 || photoData.skipped > 0) ? (
+            <div className="space-y-1 rounded-xl border border-border p-4 text-sm">
+              <p className="font-medium">
+                {t("photos.found", {
+                  count: photoData.photos.size,
+                  missing: step.analysis.rows.filter((r) => r.action !== "error" && !photoData.photos.has(r.rowNumber - 2)).length,
+                })}
+              </p>
+              {photoData.skipped > 0 ? <p className="text-muted-foreground">{t("photos.skipped", { count: photoData.skipped })}</p> : null}
+              {!step.mapping.sku && !fallbacks.autoSku ? <p className="text-destructive">{t("photos.noCode")}</p> : null}
+              <p className="text-muted-foreground">{t("photos.private")}</p>
+            </div>
+          ) : null}
           {step.analysis.rows.some((r) => r.action === "error" && r.errors.some((e) => e.key === "unknown_category")) ? (
             <div className="space-y-1 rounded-xl border border-border p-4 text-sm">
               <p className="font-medium">{t("validCategories")}</p>
@@ -252,6 +308,7 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
             <THead>
               <TR>
                 <TH className="w-16">{t("columns.row")}</TH>
+                {photoData && photoData.photos.size > 0 ? <TH className="w-16">{t("preview.photo")}</TH> : null}
                 <TH>{t("columns.product")}</TH>
                 <TH>{t("columns.result")}</TH>
               </TR>
@@ -264,6 +321,13 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
                 .map((row) => (
                   <TR key={row.rowNumber}>
                     <TD className="tabular-nums text-muted-foreground">{row.rowNumber}</TD>
+                    {photoData && photoData.photos.size > 0 ? (
+                      <TD>
+                        {photoData.photos.get(row.rowNumber - 2) ? (
+                          <PhotoThumb image={photoData.photos.get(row.rowNumber - 2)!} alt={row.name} />
+                        ) : null}
+                      </TD>
+                    ) : null}
                     <TD>{row.name || "-"}</TD>
                     <TD>
                       {row.action === "error" ? (
@@ -312,8 +376,15 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
       {step.kind === "done" ? (
         <div className="space-y-4">
           <FormAlert tone="success">
-            {t("doneTitle")}. {t("doneBody", step.result)}
+            {t("doneTitle")}. {t("doneBody", { created: step.result.created, updated: step.result.updated, skipped: step.result.skipped })}
           </FormAlert>
+          {upload ? (
+            <FormAlert tone={upload.done < upload.total ? "warning" : upload.failed > 0 ? "warning" : "success"}>
+              {upload.done < upload.total
+                ? t("photos.uploading", { done: upload.done, total: upload.total })
+                : t("photos.uploaded", { ok: upload.total - upload.failed, failed: upload.failed })}
+            </FormAlert>
+          ) : null}
           {step.result.created + step.result.updated > 0 ? (
             <FormAlert tone="warning">
               <strong>{t("doneCheckTitle")}.</strong> {t("doneCheckBody")}

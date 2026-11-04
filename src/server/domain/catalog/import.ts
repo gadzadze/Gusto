@@ -36,7 +36,13 @@ export type ImportAnalysis = {
   counts: { create: number; update: number; error: number };
 };
 
-export type ImportCommitResult = { created: number; updated: number; skipped: number };
+/** `targets` say which product each imported row became (by file row), for attaching photos afterwards. */
+export type ImportCommitResult = {
+  created: number;
+  updated: number;
+  skipped: number;
+  targets: { rowNumber: number; productId: string }[];
+};
 
 export type ImportError = "missing_columns" | "has_errors" | "nothing_to_import" | "invalid_options";
 
@@ -182,7 +188,20 @@ export async function commitImport(
       .set({ importMapping: mapping as Record<string, string> })
       .where(eq(supplierSettings.organizationId, ctx.orgId));
 
-    return { created, updated, skipped: analysis.counts.error };
+    const skus = planned.flatMap((p) => (p.values.sku ? [p.values.sku] : []));
+    const saved = skus.length
+      ? await tx
+          .select({ id: products.id, sku: products.sku })
+          .from(products)
+          .where(and(eq(products.supplierOrgId, ctx.orgId), inArray(products.sku, skus)))
+      : [];
+    const idBySku = new Map(saved.map((p) => [p.sku as string, p.id]));
+    const targets = planned.flatMap((p) => {
+      const productId = p.values.sku ? idBySku.get(p.values.sku) : undefined;
+      return productId ? [{ rowNumber: p.rowNumber, productId }] : [];
+    });
+
+    return { created, updated, skipped: analysis.counts.error, targets };
   });
 }
 
