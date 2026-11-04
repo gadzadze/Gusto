@@ -76,7 +76,7 @@ describe("import options", () => {
   const row = (name: string, unit = "კგ", price = "8,5", extra: string[] = []) => [name, unit, price, ...extra];
 
   it("recognises more header spellings", () => {
-    expect(guessMapping(["Product name", "Group", "Barcode", "Price (GEL)", "UoM"]).sku).toBe("Barcode");
+    expect(guessMapping(["Product name", "Group", "Barcode", "Price (GEL)", "UoM"]).barcode).toBe("Barcode");
     expect(guessMapping(["პროდუქტის დასახელება", "ჯგუფი", "ფასი"]).category).toBe("ჯგუფი");
     expect(guessMapping(["Наименование", "Цена", "Ед"]).name).toBe("Наименование");
   });

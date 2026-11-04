@@ -176,6 +176,13 @@
       "when": 1793780677509,
       "tag": "0024_more_packaging_units",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793788987760,
+      "tag": "0025_shared_product_images",
+      "breakpoints": true
     }
   ]
 }

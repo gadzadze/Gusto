@@ -63,6 +63,7 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
     description: product.description ?? "",
     brand: product.brand ?? "",
     sku: product.sku ?? "",
+    barcode: product.barcode ?? "",
     categoryId: product.categoryId,
     unit: product.unit,
     packDescription: product.packDescription ?? "",
@@ -90,7 +91,7 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">{t("form.sectionImage")}</h2>
-        <ProductImageManager productId={product.id} name={product.name} imagePath={product.imagePath} disabled={readOnly} />
+        <ProductImageManager productId={product.id} name={product.name} imagePath={product.imagePath} shared={product.imageSource === "shared"} disabled={readOnly} />
       </section>
 
       <StockPanel

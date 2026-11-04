@@ -17,11 +17,14 @@ export function ProductImageManager({
   productId,
   name,
   imagePath,
+  shared,
   disabled,
 }: {
   productId: string;
   name: string;
   imagePath: string | null;
+  /** The photo came from the shared library (Open Food Facts), not from this supplier. */
+  shared?: boolean;
   disabled?: boolean;
 }) {
   const t = useTranslations("products");
@@ -92,6 +95,7 @@ export function ProductImageManager({
         </div>
       </div>
       <p className="text-sm text-muted-foreground">{t("form.imageHint")}</p>
+      {shared && imagePath ? <p className="text-sm text-muted-foreground">{t("form.sharedPhoto")}</p> : null}
       {staged ? (
         <div className="space-y-3">
           <BackgroundRemover file={staged} onUse={setStaged} disabled={disabled || pending} />

@@ -4,7 +4,7 @@
 // until LEGAL_ENTITY_NAME is set. Nothing here is a placeholder shown to users.
 
 /** Date of the current wording. Change it whenever the text in messages/ka.json (`legal`) changes. */
-export const LEGAL_UPDATED = "2026-11-04";
+export const LEGAL_UPDATED = "2026-11-05";
 
 export type LegalOperator = {
   name: string;

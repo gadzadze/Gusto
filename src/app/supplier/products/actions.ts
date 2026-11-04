@@ -15,6 +15,7 @@ import {
   updateProduct,
   type CatalogWriteError,
 } from "@/server/domain/catalog/products";
+import { findPhotos, listPhotoCandidates, type PhotoFetchResult } from "@/server/domain/catalog/photo-fetch";
 import { ImageError, MAX_IMAGE_BYTES, type ImageErrorCode } from "@/server/storage/images";
 import { supabaseImageStorage } from "@/server/storage/image-storage";
 
@@ -102,5 +103,29 @@ export async function removeProductImageAction(productId: string): Promise<{ ok:
     await removeProductImage(ctx, productId, supabaseImageStorage());
     refresh();
     return { ok: true };
+  });
+}
+
+/** Ids of this supplier's products that have a barcode but no photo, for the bulk "find photos" button. */
+export async function listPhotoCandidatesAction(): Promise<{ ok: true; productIds: string[] } | ProductError> {
+  const ctx = await requireSupplier();
+  return runAction<{ ok: true; productIds: string[] }, CatalogWriteError>("listPhotoCandidates", async () => ({
+    ok: true,
+    productIds: await listPhotoCandidates(ctx),
+  }));
+}
+
+/** Looks up photos by barcode for one small batch of products (the client sends batches). */
+export async function findPhotosAction(
+  productIds: string[],
+): Promise<{ ok: true; result: PhotoFetchResult } | ActionError<CatalogWriteError | "rate_limited">> {
+  const ctx = await requireSupplier();
+  if (!Array.isArray(productIds) || productIds.length > 100 || productIds.some((id) => typeof id !== "string")) {
+    return { ok: false, error: "invalid" };
+  }
+  return runAction<{ ok: true; result: PhotoFetchResult }, CatalogWriteError | "rate_limited">("findPhotos", async () => {
+    const result = await findPhotos(ctx, productIds, supabaseImageStorage());
+    refresh();
+    return { ok: true, result };
   });
 }
