@@ -227,7 +227,7 @@ export async function setProductImage(
 
   const updated = await getDb()
     .update(products)
-    .set({ imagePath: prefix, imageSource: "own", imageSourceUrl: null })
+    .set({ imagePath: prefix, imageSource: "own" })
     .where(and(eq(products.id, product.id), eq(products.supplierOrgId, ctx.orgId)))
     .returning({ id: products.id });
   if (updated.length === 0) {
@@ -253,7 +253,7 @@ export async function removeProductImage(ctx: OrgCtx, productId: string, storage
   if (!product.imagePath) return;
   await getDb()
     .update(products)
-    .set({ imagePath: null, imageSource: "own", imageSourceUrl: null })
+    .set({ imagePath: null, imageSource: "own" })
     .where(and(eq(products.id, product.id), eq(products.supplierOrgId, ctx.orgId)));
   if (product.imageSource === "shared") return;
   await storage.remove(imageFilePaths(product.imagePath)).catch((error: unknown) => {

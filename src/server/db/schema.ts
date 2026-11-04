@@ -233,8 +233,6 @@ export const products = pgTable(
     imagePath: text("image_path"),
     // "own": uploaded by the supplier (private, removable). "shared": from the shared photo library (never deleted by a supplier).
     imageSource: text("image_source").notNull().default("own"),
-    // Page a web photo was found on (supplier-chosen web photos only; shown as the source).
-    imageSourceUrl: text("image_source_url"),
     // In the supplier org's currency, minor units.
     basePriceMinor: bigint("base_price_minor", { mode: "number" }).notNull(),
     vatRateBp: integer("vat_rate_bp").notNull(),

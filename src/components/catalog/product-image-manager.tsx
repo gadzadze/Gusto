@@ -18,7 +18,6 @@ export function ProductImageManager({
   name,
   imagePath,
   shared,
-  sourceUrl,
   disabled,
 }: {
   productId: string;
@@ -26,8 +25,6 @@ export function ProductImageManager({
   imagePath: string | null;
   /** The photo came from the shared library (Open Food Facts), not from this supplier. */
   shared?: boolean;
-  /** Page a web photo was taken from, if the supplier picked one from a web search. */
-  sourceUrl?: string | null;
   disabled?: boolean;
 }) {
   const t = useTranslations("products");
@@ -98,14 +95,6 @@ export function ProductImageManager({
         </div>
       </div>
       <p className="text-sm text-muted-foreground">{t("form.imageHint")}</p>
-      {sourceUrl && imagePath ? (
-        <p className="text-sm text-muted-foreground">
-          {t("form.webPhoto")}{" "}
-          <a href={sourceUrl} target="_blank" rel="noopener noreferrer" className="text-brand underline underline-offset-2">
-            {new URL(sourceUrl).hostname}
-          </a>
-        </p>
-      ) : null}
       {shared && imagePath ? <p className="text-sm text-muted-foreground">{t("form.sharedPhoto")}</p> : null}
       {staged ? (
         <div className="space-y-3">

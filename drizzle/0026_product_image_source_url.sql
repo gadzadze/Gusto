@@ -1,1 +1,0 @@
-ALTER TABLE "products" ADD COLUMN "image_source_url" text;
