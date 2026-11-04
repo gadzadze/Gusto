@@ -1,11 +1,13 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { parseQuantityInput } from "@/lib/quantity";
 import { fieldErrorsFrom } from "@/lib/validation/form-errors";
 import { productSchema } from "@/lib/validation/product";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireSupplier } from "@/server/auth/guards";
 import {
+  adjustStock,
   createProduct,
   removeProductImage,
   setProductActive,
@@ -35,6 +37,22 @@ export async function updateProductAction(productId: string, raw: unknown): Prom
   if (!parsed.success) return { ok: false, error: "invalid", fieldErrors: fieldErrorsFrom(parsed.error) };
   return runAction<{ ok: true }, CatalogWriteError>("updateProduct", async () => {
     await updateProduct(ctx, productId, parsed.data);
+    refresh();
+    return { ok: true };
+  });
+}
+
+/** "add": goods received, added to the count. "set": a recount, replaces it. */
+export async function adjustStockAction(
+  productId: string,
+  mode: "add" | "set",
+  quantity: string,
+): Promise<{ ok: true } | ProductError> {
+  const ctx = await requireSupplier();
+  const qtyMilli = parseQuantityInput(typeof quantity === "string" ? quantity : "");
+  if ((mode !== "add" && mode !== "set") || qtyMilli === null) return { ok: false, error: "invalid_stock" };
+  return runAction<{ ok: true }, CatalogWriteError>("adjustStock", async () => {
+    await adjustStock(ctx, productId, { mode, qtyMilli });
     refresh();
     return { ok: true };
   });

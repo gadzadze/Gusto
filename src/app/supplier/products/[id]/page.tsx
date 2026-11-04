@@ -6,12 +6,13 @@ import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductActiveToggle } from "@/components/catalog/product-active-toggle";
 import { ProductForm } from "@/components/catalog/product-form";
 import { ProductImageManager } from "@/components/catalog/product-image-manager";
+import { StockPanel } from "@/components/catalog/stock-panel";
 import { ProductStatusBadge } from "@/components/catalog/product-status-badge";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { minorToInput } from "@/lib/money";
-import { milliToInput } from "@/lib/quantity";
+import { formatQuantityNumber, milliToInput } from "@/lib/quantity";
 import type { ProductInput } from "@/lib/validation/product";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
@@ -42,6 +43,7 @@ const IMAGE_ERRORS = new Set(["empty", "too_large", "unsupported", "upload_faile
 async function EditProduct({ params, searchParams }: PageProps<"/supplier/products/[id]">) {
   const ctx = await requireSupplier();
   const t = await getTranslations("products");
+  const tu = await getTranslations("units");
   const { id } = await params;
   const query = await searchParams;
 
@@ -90,6 +92,12 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
         <h2 className="text-sm font-semibold text-muted-foreground">{t("form.sectionImage")}</h2>
         <ProductImageManager productId={product.id} name={product.name} imagePath={product.imagePath} disabled={readOnly} />
       </section>
+
+      <StockPanel
+        productId={product.id}
+        currentLabel={product.stockMilli === null ? null : `${formatQuantityNumber(product.stockMilli)} ${tu(product.unit)}`}
+        disabled={readOnly}
+      />
 
       <ProductForm
         key={product.updatedAt.toISOString()}

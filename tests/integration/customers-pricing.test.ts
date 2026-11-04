@@ -1,5 +1,6 @@
 import { eq, sql } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
+import { productSchema } from "@/lib/validation/product";
 import { customerSchema } from "@/lib/validation/customer";
 import { onboardingSchema } from "@/lib/validation/onboarding";
 import { getDb } from "@/server/db/client";
@@ -11,7 +12,7 @@ import {
   searchConnectedCatalogs,
 } from "@/server/domain/buyer/catalog";
 import { getCart, setCartQuantity } from "@/server/domain/orders/cart";
-import { getSupplierProduct, listSupplierProducts, setProductActive } from "@/server/domain/catalog/products";
+import { adjustStock, getSupplierProduct, listSupplierProducts, setProductActive, updateProduct } from "@/server/domain/catalog/products";
 import type { AdminCtx, OrgCtx, SupplierCtx } from "@/server/domain/context";
 import {
   createCustomer,
@@ -51,6 +52,7 @@ import {
   createSupplier,
   createTestCategory,
   createTestProduct,
+  productInput,
   randomLegalId,
 } from "./helpers";
 
@@ -422,8 +424,26 @@ describe("stock count", () => {
     expect(JSON.stringify(seen)).not.toMatch(/stock/i);
     const [group] = await searchConnectedCatalogs(buyer, "Counted");
     expect(JSON.stringify(group)).not.toMatch(/stock/i);
-    // Informational only: ordering is not limited by it.
+    // Ordering is not limited by it.
     await setCartQuantity(buyer, supplier.orgId, p, 50_000);
+  });
+
+  it("goods received are added, a recount replaces the number, and an untracked product starts from 0", async () => {
+    const supplier = await createSupplier();
+    const p = await createTestProduct(supplier, categoryId, { name: "[TEST] Adjusted", stock: "10" });
+    expect(await adjustStock(supplier, p, { mode: "add", qtyMilli: 4000 })).toBe(14000);
+    expect(await adjustStock(supplier, p, { mode: "set", qtyMilli: 9000 })).toBe(9000);
+    expect(await adjustStock(supplier, p, { mode: "set", qtyMilli: 0 })).toBe(0);
+    const fresh = await createTestProduct(supplier, categoryId, { name: "[TEST] Fresh" });
+    expect(await adjustStock(supplier, fresh, { mode: "add", qtyMilli: 2500 })).toBe(2500);
+    await expect(adjustStock(supplier, p, { mode: "add", qtyMilli: 0 })).rejects.toEqual(new StateError("invalid_stock"));
+    await expect(adjustStock(supplier, p, { mode: "set", qtyMilli: -1 })).rejects.toEqual(new StateError("invalid_stock"));
+    // Another supplier cannot touch it.
+    await expect(adjustStock(await createSupplier(), p, { mode: "set", qtyMilli: 1 })).rejects.toBeInstanceOf(NotFoundError);
+    // Editing the product's other details leaves the count alone.
+    await adjustStock(supplier, p, { mode: "set", qtyMilli: 7000 });
+    await updateProduct(supplier, p, productSchema.parse(productInput(categoryId, { name: "[TEST] Renamed" })));
+    expect((await getSupplierProduct(supplier, p)).stockMilli).toBe(7000);
   });
 });
 

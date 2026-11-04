@@ -6,7 +6,7 @@ import { productSchema } from "@/lib/validation/product";
 import { supplierSettingsSchema } from "@/lib/validation/supplier-settings";
 import { getDb } from "@/server/db/client";
 import { addresses, carts, orders, products } from "@/server/db/schema";
-import { setProductActive, updateProduct } from "@/server/domain/catalog/products";
+import { adjustStock, setProductActive, updateProduct } from "@/server/domain/catalog/products";
 import { updateSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import type { AdminCtx, OrgCtx, SupplierCtx } from "@/server/domain/context";
 import { setCustomerBlocked } from "@/server/domain/customers/customers";
@@ -91,7 +91,7 @@ describe("stock count follows confirmation", () => {
   it("is reduced when the supplier confirms, can go negative, and returns on cancel", async () => {
     const { supplier, buyer, water } = await setup();
     const untracked = await createTestProduct(supplier, categoryId, { name: "[TEST] Untracked", sku: "UNT" });
-    await updateProduct(supplier, water, productSchema.parse(productInput(categoryId, { name: "წყალი", sku: "WAT", unit: "bottle", basePrice: "1,20", stock: "5" })));
+    await adjustStock(supplier, water, { mode: "set", qtyMilli: 5000 });
     await setCartQuantity(buyer, supplier.orgId, water, 8000);
     await setCartQuantity(buyer, supplier.orgId, untracked, 2000);
     const { orderId } = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
@@ -109,7 +109,7 @@ describe("stock count follows confirmation", () => {
 
   it("a rejected or buyer-cancelled pending order never touches stock, delivery changes nothing", async () => {
     const { supplier, buyer, water } = await setup();
-    await updateProduct(supplier, water, productSchema.parse(productInput(categoryId, { name: "წყალი", sku: "WAT", unit: "bottle", basePrice: "1,20", stock: "10" })));
+    await adjustStock(supplier, water, { mode: "set", qtyMilli: 10000 });
     await setCartQuantity(buyer, supplier.orgId, water, 3000);
     const first = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
     await rejectOrder(supplier, first.orderId, "no stock today");
