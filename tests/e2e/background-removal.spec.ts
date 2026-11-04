@@ -5,11 +5,13 @@ import { MODELS } from "../../src/lib/image/background-removal/config";
 import { signInAsNewUser } from "./auth-helpers";
 import { adminWithCategory, onboardSupplier } from "./flows";
 
-// Needs a browser with WebGPU and the model file, so it only runs on request:
+// Needs a browser with a real GPU (WebGPU) and the model file, so it only runs on request.
+// NOT yet run to completion: the cloud sandbox has no GPU and software WebGPU crashes on this model.
+//
 //   E2E_BG_MODEL_DIR  folder holding model.onnx and/or model_fp16.onnx (the files from MODELS)
 //   E2E_BG_PHOTO      a product photo to clean
 //   PLAYWRIGHT_CHROMIUM_EXECUTABLE  as usual
-// Only the model file served for the device's path is needed (model.onnx for the CPU path).
+// Only the model file for the device (model_fp16.onnx with shader-f16, else model.onnx) is needed.
 // The model request is answered from disk, so nothing is downloaded; the hash check still runs.
 const modelDir = process.env.E2E_BG_MODEL_DIR;
 const photo = process.env.E2E_BG_PHOTO;
@@ -18,8 +20,7 @@ test.skip(!modelDir || !photo, "set E2E_BG_MODEL_DIR and E2E_BG_PHOTO to run the
 test.use({
   launchOptions: {
     executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
-    // Headless Chromium without a GPU has no WebGPU adapter, so the remover takes its CPU (WebAssembly)
-    // path with the 224 MB model. Pass E2E_BG_CHROME_ARGS (space separated) to try other browser flags.
+    // Extra browser flags, space separated (for example to enable WebGPU on a machine where it is off).
     args: process.env.E2E_BG_CHROME_ARGS?.split(" ").filter(Boolean) ?? [],
   },
 });

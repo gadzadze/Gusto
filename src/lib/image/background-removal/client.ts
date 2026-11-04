@@ -1,22 +1,20 @@
 import type { ModelVariant } from "./config";
-import type { Provider, WorkerRequest, WorkerResponse } from "./messages";
+import type { WorkerRequest, WorkerResponse } from "./messages";
 
-export type Capability = { supported: false } | { supported: true; variant: ModelVariant; provider: Provider };
+export type Capability = { supported: false } | { supported: true; variant: ModelVariant };
 
 /**
- * Where the model can run: on the GPU (WebGPU) where there is one, otherwise on
- * the CPU (WebAssembly), which works anywhere but is much slower and needs the
- * bigger model file. Devices that report little memory are left out.
+ * Background removal needs WebGPU: the model's working memory (several GB at
+ * 1024x1024) is more than a browser's WebAssembly can address, so there is no
+ * CPU fallback. Decides which model file this device can run.
  */
 export async function detectCapability(): Promise<Capability> {
   try {
-    if (typeof Worker === "undefined" || typeof OffscreenCanvas === "undefined" || typeof WebAssembly === "undefined") return { supported: false };
     const gpu = (navigator as Navigator & { gpu?: { requestAdapter(): Promise<{ features: { has(name: string): boolean } } | null> } }).gpu;
-    const adapter = gpu ? await gpu.requestAdapter() : null;
-    if (adapter) return { supported: true, provider: "webgpu", variant: adapter.features.has("shader-f16") ? "fp16" : "fp32" };
-    const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
-    if (memory !== undefined && memory < 4) return { supported: false };
-    return { supported: true, provider: "wasm", variant: "fp32" };
+    if (!gpu || typeof Worker === "undefined" || typeof OffscreenCanvas === "undefined") return { supported: false };
+    const adapter = await gpu.requestAdapter();
+    if (!adapter) return { supported: false };
+    return { supported: true, variant: adapter.features.has("shader-f16") ? "fp16" : "fp32" };
   } catch {
     return { supported: false };
   }
@@ -37,7 +35,6 @@ let worker: Worker | null = null;
 export function removeBackground(
   file: File,
   variant: ModelVariant,
-  provider: Provider,
   onProgress: (progress: Progress) => void,
 ): Promise<{ file: File; coverage: number }> {
   worker ??= new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
@@ -55,7 +52,7 @@ export function removeBackground(
       worker = null;
       reject(new RemovalFailure("failed"));
     };
-    const request: WorkerRequest = { type: "run", file, variant, provider };
+    const request: WorkerRequest = { type: "run", file, variant };
     current.postMessage(request);
   });
 }

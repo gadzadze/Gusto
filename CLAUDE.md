@@ -671,11 +671,10 @@ it is uploaded: the subject is cut out and centred on a flat white 1200px square
 one; only the chosen file is uploaded, through the normal image action.
 
 - **It runs on the supplier's device.** A module Web Worker runs BiRefNet-lite
-  (MIT, ONNX) with `onnxruntime-web`; the photo is never sent anywhere. On
-  **WebGPU** where the device has it (a few seconds); otherwise on the CPU
-  through WebAssembly (about a minute, always the 224 MB model, and the hint
-  says so). Devices reporting under 4 GB of memory, or without Worker /
-  OffscreenCanvas / WebAssembly, get a short "not available" note instead.
+  (MIT, ONNX) with `onnxruntime-web` on **WebGPU**; the photo is never sent
+  anywhere. **There is no CPU fallback on purpose**: at 1024x1024 the model needs
+  more working memory than a browser's WebAssembly can address (`std::bad_alloc`,
+  measured). No WebGPU = a short "not available" note instead of the button.
 - **The model** (114 MB fp16 when the device has `shader-f16`, else 224 MB fp32)
   is fetched from Hugging Face by the browser once, pinned to a commit and
   **verified against a SHA-256** (`config.ts`) before use, then cached in Cache
@@ -690,9 +689,10 @@ one; only the chosen file is uploaded, through the normal image action.
 - A cut-out that kept almost nothing or almost everything (`maskCoverage`) is
   flagged to the supplier. The pure maths is unit-tested (`math.ts`); the browser
   run is `tests/e2e/background-removal.spec.ts`, which only runs with
-  `E2E_BG_MODEL_DIR` and `E2E_BG_PHOTO` set; headless Chromium has no GPU, so it
-  exercises the CPU path (the WebGPU path could not be run in the cloud sandbox:
-  software WebGPU crashes on this model, so check it on a real machine).
+  `E2E_BG_MODEL_DIR` and `E2E_BG_PHOTO` set and **needs a real GPU**: software
+  WebGPU (SwiftShader) crashes on this model, so it was only driven up to the
+  button in the cloud sandbox. Run it, or try the feature by hand, on a machine
+  with a GPU.
 
 ## Launch specifics (milestone 6)
 

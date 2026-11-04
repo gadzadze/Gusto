@@ -58,13 +58,13 @@ export function BackgroundRemover({ file, onUse, disabled }: { file: File | null
 
   if (!file || capability === null) return null;
   if (!capability.supported) return <p className="text-sm text-muted-foreground">{t("unsupported")}</p>;
-  const { variant, provider } = capability;
+  const variant = capability.variant;
 
   const start = async () => {
     setError(null);
     setRunning(true);
     try {
-      const cleaned = await removeBackground(file, variant, provider, setProgress);
+      const cleaned = await removeBackground(file, variant, setProgress);
       if (resultUrl.current) URL.revokeObjectURL(resultUrl.current);
       const url = URL.createObjectURL(cleaned.file);
       resultUrl.current = url;
@@ -138,9 +138,7 @@ export function BackgroundRemover({ file, onUse, disabled }: { file: File | null
               <p className="text-sm text-muted-foreground">{stageText}</p>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              {t(provider === "webgpu" ? "hint" : "hintSlow", { size: Math.round(MODELS[variant].bytes / 1_000_000) })}
-            </p>
+            <p className="text-sm text-muted-foreground">{t("hint", { size: Math.round(MODELS[variant].bytes / 1_000_000) })}</p>
           )}
         </div>
       )}

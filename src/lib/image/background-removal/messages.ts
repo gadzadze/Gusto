@@ -2,9 +2,7 @@
 
 import type { ModelVariant } from "./config";
 
-export type Provider = "webgpu" | "wasm";
-
-export type WorkerRequest = { type: "run"; file: Blob; variant: ModelVariant; provider: Provider };
+export type WorkerRequest = { type: "run"; file: Blob; variant: ModelVariant };
 
 export type WorkerProgress = { type: "progress"; stage: "download" | "verify" | "load" | "run" | "finish"; ratio?: number };
 export type WorkerDone = { type: "done"; blob: Blob; coverage: number };
