@@ -16,8 +16,10 @@ existing customers on Gusto, and those customers reorder in a few taps.
   (copy, or send via WhatsApp) and give each one a list of the products it may order, with its own prices (a customer sees nothing until its list is set up).
 - Buyers join from the link once the admin has accepted their business,
   browse their suppliers' catalogs at their own prices, and search across suppliers in Georgian or Latin letters.
-- Buyers order from a per-supplier cart; suppliers confirm (adjusting
-  quantities), reject or deliver from an order inbox.
+- Buyers order from a per-supplier cart, optionally asking for a delivery day; suppliers confirm (adjusting
+  quantities and agreeing the day), reject or deliver from an order inbox, and print a pick list per delivery day.
+- Suppliers keep a private stock count per product (buyers never see it) that follows confirmed orders, and see history plus a private note for each customer.
+- Buyers save regular orders and get a weekday reminder email with a one-tap fill of the cart.
 - In-app notifications (bell with unread count) and email for order events,
   with per-user email preferences. WhatsApp is a "send" button that opens a
   prefilled message; Gusto never records it as delivered.

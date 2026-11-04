@@ -88,6 +88,8 @@ export async function inviteCustomer(supplier: Page, businessName: string): Prom
   await supplier.waitForLoadState("networkidle");
   // Customers see only what is on their list: put every product on it, at base prices.
   const tickAll = supplier.getByRole("button", { name: "ყველას მონიშვნა" });
+  // The product table streams in: wait for it (or the empty state) before deciding.
+  await expect(tickAll.or(supplier.getByText("პროდუქტები ჯერ არ გაქვთ."))).toBeVisible();
   if ((await tickAll.count()) > 0) {
     await tickAll.click();
     await supplier.waitForLoadState("networkidle");

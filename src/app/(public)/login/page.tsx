@@ -5,6 +5,7 @@ import { DemoAccounts } from "@/components/demo-accounts";
 import { Logo } from "@/components/logo";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { contactEmail } from "@/lib/legal";
 import { safeNextPath } from "@/lib/safe-next";
 import { LoginForm, type LoginError } from "./login-form";
 
@@ -49,7 +50,7 @@ async function LoginFormFromParams({ searchParams }: Pick<PageProps<"/login">, "
   const params = await searchParams;
   const next = safeNextPath(params.next);
   const error: LoginError = params.error === "auth" ? "auth" : params.error === "not_allowed" ? "not_allowed" : null;
-  return <LoginForm next={next} error={error} />;
+  return <LoginForm next={next} error={error} contactEmail={contactEmail()} />;
 }
 
 function FormSkeleton() {

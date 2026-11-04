@@ -14,6 +14,7 @@ import {
   regenerateInvitation,
   revokeInvitations,
   setCustomerBlocked,
+  setCustomerNote,
   setCustomerPriceList,
   type CustomerError,
 } from "@/server/domain/customers/customers";
@@ -113,6 +114,16 @@ export async function setCustomerBlockedAction(customerId: string, blocked: bool
   if (!id.safeParse(customerId).success) return { ok: false, error: "invalid" };
   return runAction<{ ok: true }, CustomerError>("setCustomerBlocked", async () => {
     await setCustomerBlocked(ctx, customerId, blocked === true);
+    refresh();
+    return { ok: true };
+  });
+}
+
+export async function setCustomerNoteAction(customerId: string, note: string): Promise<{ ok: true } | Err> {
+  const ctx = await requireSupplier();
+  if (!id.safeParse(customerId).success || typeof note !== "string" || note.length > 2000) return { ok: false, error: "invalid" };
+  return runAction<{ ok: true }, CustomerError>("setCustomerNote", async () => {
+    await setCustomerNote(ctx, customerId, note);
     refresh();
     return { ok: true };
   });

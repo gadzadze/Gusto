@@ -45,6 +45,7 @@ export type ConnectedSupplier = {
   city: string;
   phone: string;
   currency: string;
+  timezone: string;
   minOrderMinor: number;
   pricesIncludeVat: boolean;
   deliveryArea: string | null;
@@ -59,6 +60,7 @@ const supplierColumns = {
   city: organizations.city,
   phone: organizations.phone,
   currency: organizations.currency,
+  timezone: organizations.timezone,
   minOrderMinor: supplierSettings.minOrderMinor,
   pricesIncludeVat: supplierSettings.pricesIncludeVat,
   deliveryArea: supplierSettings.deliveryArea,

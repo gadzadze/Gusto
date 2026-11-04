@@ -1,6 +1,7 @@
 import "server-only";
 import { and, asc, eq } from "drizzle-orm";
 import { z } from "zod";
+import { parseDateInput, isDeliveryDateAllowed, todayIn } from "@/lib/dates";
 import { computeTotals, minimumOrderShortfall } from "@/lib/orders/totals";
 import { isOrderableQuantity } from "@/lib/quantity";
 import { getDb, type Tx } from "@/server/db/client";
@@ -30,6 +31,7 @@ export type SubmitError =
   | "supplier_unavailable"
   | "buyer_suspended"
   | "buyer_not_verified"
+  | "invalid_delivery_date"
   | "rate_limited";
 
 /** What the buyer reviewed on the checkout page. Anything else is a change. */
@@ -47,6 +49,8 @@ export const submitInputSchema = z.object({
     })
     .optional(),
   note: z.string().trim().max(1000, "too_long").optional(),
+  /** Wanted delivery day, "YYYY-MM-DD" (optional). */
+  deliveryDate: z.string().trim().max(10).optional(),
 });
 export type SubmitInput = z.infer<typeof submitInputSchema>;
 
@@ -120,6 +124,7 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
           currency: organizations.currency,
           pricesIncludeVat: supplierSettings.pricesIncludeVat,
           minOrderMinor: supplierSettings.minOrderMinor,
+          timezone: organizations.timezone,
         })
         .from(supplierCustomers)
         .innerJoin(organizations, eq(organizations.id, supplierCustomers.supplierOrgId))
@@ -133,6 +138,14 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
           ),
         );
       if (!supplier) throw new StateError<SubmitError>("supplier_unavailable");
+
+      let requestedDeliveryDate: string | null = null;
+      if (input.deliveryDate) {
+        requestedDeliveryDate = parseDateInput(input.deliveryDate);
+        if (!requestedDeliveryDate || !isDeliveryDateAllowed(requestedDeliveryDate, todayIn(supplier.timezone))) {
+          throw new StateError<SubmitError>("invalid_delivery_date");
+        }
+      }
 
       // 3. Current products and this buyer's current prices.
       const lines = await tx
@@ -223,6 +236,7 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
           deliveryAddress: address.addressLine,
           deliveryInstructions: address.instructions,
           note: input.note || null,
+          requestedDeliveryDate,
           subtotalMinor: totals.subtotalMinor,
           vatMinor: totals.vatMinor,
           totalMinor: totals.totalMinor,

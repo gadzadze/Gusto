@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, isNotNull, lte, or, sql, type SQL } from "drizzle-orm";
 import type { ProductValues } from "@/lib/validation/product";
 import { getDb, type Tx } from "@/server/db/client";
 import { categories, products, type Product } from "@/server/db/schema";
@@ -42,6 +42,8 @@ export type ProductListFilters = {
   q?: string;
   categoryId?: string;
   status?: "all" | "active" | "inactive";
+  /** Only products with a stock count of 0 or less (needs restocking). */
+  lowStock?: boolean;
   page?: number;
 };
 
@@ -72,6 +74,7 @@ export async function listSupplierProducts(
     filters.status === "active" ? eq(products.isActive, true) : undefined,
     filters.status === "inactive" ? eq(products.isActive, false) : undefined,
     filters.q ? searchCondition(filters.q) : undefined,
+    filters.lowStock ? and(isNotNull(products.stockMilli), lte(products.stockMilli, 0)) : undefined,
   );
 
   const db = getDb();

@@ -111,6 +111,8 @@ export type OrderDetail = {
   items: OrderItem[];
   /** Contact phone of the other organization, for the "send on WhatsApp" buttons. */
   counterpartyPhone: string | null;
+  /** Timezone of the supplier: a delivery day is a day on its calendar. */
+  supplierTimezone: string;
   history: { fromStatus: OrderStatus | null; toStatus: OrderStatus; note: string | null; createdAt: Date; byBuyer: boolean }[];
 };
 
@@ -122,8 +124,9 @@ export async function getOrder(ctx: OrgCtx, orderId: string): Promise<OrderDetai
   const [order] = await db.select().from(orders).where(and(eq(orders.id, orderId), eq(scope, ctx.orgId)));
   if (!order) throw new NotFoundError("order");
   const otherOrgId = ctx.orgType === "buyer" ? order.supplierOrgId : order.buyerOrgId;
-  const [[other], items, history] = await Promise.all([
+  const [[other], [supplierOrg], items, history] = await Promise.all([
     db.select({ phone: organizations.phone }).from(organizations).where(eq(organizations.id, otherOrgId)),
+    db.select({ timezone: organizations.timezone }).from(organizations).where(eq(organizations.id, order.supplierOrgId)),
     db.select().from(orderItems).where(eq(orderItems.orderId, orderId)).orderBy(asc(orderItems.lineNo)),
     db
       .select({
@@ -141,6 +144,7 @@ export async function getOrder(ctx: OrgCtx, orderId: string): Promise<OrderDetai
     order,
     items,
     counterpartyPhone: other?.phone ?? null,
+    supplierTimezone: supplierOrg?.timezone ?? "UTC",
     history: history.map(({ actorOrgId, ...h }) => ({ ...h, byBuyer: actorOrgId === order.buyerOrgId })),
   };
 }

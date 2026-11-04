@@ -3,6 +3,7 @@ import {
   bigint,
   boolean,
   check,
+  date,
   foreignKey,
   index,
   integer,
@@ -304,6 +305,8 @@ export const supplierCustomers = pgTable(
     // Null = base prices. Must be one of this supplier's lists (composite FK).
     priceListId: uuid("price_list_id"),
     connectedAt: timestamp("connected_at", { withTimezone: true }),
+    // The supplier's private remark about this customer; never shown to the buyer.
+    privateNote: text("private_note"),
     ...timestamps,
   },
   (t) => [
@@ -405,6 +408,10 @@ export const orders = pgTable(
     deliveryAddress: text("delivery_address").notNull(),
     deliveryInstructions: text("delivery_instructions"),
     note: text("note"),
+    // Calendar days on the supplier's calendar: what the buyer asked for, and
+    // what the supplier agreed to when confirming.
+    requestedDeliveryDate: date("requested_delivery_date", { mode: "string" }),
+    deliveryDate: date("delivery_date", { mode: "string" }),
     // Current totals: ordered quantities while pending, confirmed ones after.
     subtotalMinor: bigint("subtotal_minor", { mode: "number" }).notNull(),
     vatMinor: bigint("vat_minor", { mode: "number" }).notNull(),
@@ -654,3 +661,49 @@ export type Notification = typeof notifications.$inferSelect;
 export type NotificationEvent = (typeof notificationEvent.enumValues)[number];
 export type NotificationDelivery = typeof notificationDeliveries.$inferSelect;
 export type AllowedEmail = typeof allowedEmails.$inferSelect;
+
+// A buyer's saved "regular order": the products and quantities they reorder
+// from one supplier, with the weekday they usually do it. It never creates an
+// order by itself: on that weekday the buyer gets a reminder and puts it in
+// the cart with one tap, then checks out as usual (prices and availability
+// are re-resolved at that moment).
+export const regularOrders = pgTable(
+  "regular_orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    buyerOrgId: uuid("buyer_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    supplierOrgId: uuid("supplier_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    // ISO weekday, Monday = 1 ... Sunday = 7, in the buyer organization's timezone.
+    weekday: integer("weekday").notNull(),
+    // The day (buyer's calendar) a reminder was last claimed; makes reminders at-most-once per day.
+    lastRemindedOn: date("last_reminded_on", { mode: "string" }),
+    createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    ...timestamps,
+  },
+  (t) => [
+    index("regular_orders_buyer_idx").on(t.buyerOrgId),
+    check("regular_orders_weekday_range", sql`${t.weekday} between 1 and 7`),
+  ],
+);
+
+export const regularOrderItems = pgTable(
+  "regular_order_items",
+  {
+    regularOrderId: uuid("regular_order_id")
+      .notNull()
+      .references(() => regularOrders.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    qtyMilli: integer("qty_milli").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.regularOrderId, t.productId] }),
+    check("regular_order_items_qty_positive", sql`${t.qtyMilli} > 0`),
+  ],
+);

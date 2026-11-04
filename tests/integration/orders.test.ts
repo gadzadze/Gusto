@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
 import postgres from "postgres";
 import { beforeAll, describe, expect, it } from "vitest";
+import { addDays, todayIn } from "@/lib/dates";
 import { productSchema } from "@/lib/validation/product";
 import { supplierSettingsSchema } from "@/lib/validation/supplier-settings";
 import { getDb } from "@/server/db/client";
@@ -79,6 +80,46 @@ describe("cart", () => {
     const { supplier, cheese } = await setup();
     const stranger = await createBuyer();
     await expect(setCartQuantity(stranger, supplier.orgId, cheese, 1000)).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("delivery day", () => {
+  it("is requested at checkout, agreed at confirmation, and validated both times", async () => {
+    const { supplier, buyer, water } = await setup();
+    const today = todayIn("Asia/Tbilisi");
+    await setCartQuantity(buyer, supplier.orgId, water, 2000);
+    await expect(
+      submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier, { deliveryDate: addDays(today, -1) })),
+    ).rejects.toEqual(new StateError("invalid_delivery_date"));
+    await expect(
+      submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier, { deliveryDate: addDays(today, 91) })),
+    ).rejects.toEqual(new StateError("invalid_delivery_date"));
+    await expect(
+      submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier, { deliveryDate: "2026-13-40" })),
+    ).rejects.toEqual(new StateError("invalid_delivery_date"));
+
+    const asked = addDays(today, 2);
+    const placed = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier, { deliveryDate: asked }))) as { orderId: string };
+    const pending = (await getOrder(buyer, placed.orderId)).order;
+    expect(pending.requestedDeliveryDate).toBe(asked);
+    expect(pending.deliveryDate).toBeNull();
+
+    await expect(confirmOrder(supplier, placed.orderId, [], undefined, addDays(today, -3))).rejects.toEqual(new StateError("invalid_delivery_date"));
+    const agreed = addDays(today, 3);
+    await confirmOrder(supplier, placed.orderId, [], undefined, agreed);
+    const confirmed = (await getOrder(supplier, placed.orderId)).order;
+    expect(confirmed.deliveryDate).toBe(agreed);
+    expect(confirmed.requestedDeliveryDate).toBe(asked);
+  });
+
+  it("is optional on both sides", async () => {
+    const { supplier, buyer, water } = await setup();
+    await setCartQuantity(buyer, supplier.orgId, water, 2000);
+    const placed = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+    await confirmOrder(supplier, placed.orderId, []);
+    const order = (await getOrder(buyer, placed.orderId)).order;
+    expect(order.requestedDeliveryDate).toBeNull();
+    expect(order.deliveryDate).toBeNull();
   });
 });
 

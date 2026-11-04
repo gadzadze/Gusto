@@ -19,6 +19,7 @@ const id = z.uuid();
 const confirmInput = z.object({
   lines: z.array(z.object({ itemId: z.uuid(), qty: z.string().max(20) })).max(500),
   note: z.string().max(500).optional(),
+  deliveryDate: z.string().max(10).optional(),
 });
 
 /** Confirm with optional quantity changes ("8", "2,5"; "0" = not available). */
@@ -29,7 +30,7 @@ export async function confirmOrderAction(orderId: string, raw: unknown): Promise
   const lines = parsed.data.lines.map((l) => ({ itemId: l.itemId, confirmedQtyMilli: parseQuantityInput(l.qty) }));
   if (lines.some((l) => l.confirmedQtyMilli === null)) return { ok: false, error: "invalid_lines" };
   return runAction<{ ok: true }, TransitionError>("confirmOrder", async () => {
-    await confirmOrder(ctx, orderId, lines as { itemId: string; confirmedQtyMilli: number }[], parsed.data.note);
+    await confirmOrder(ctx, orderId, lines as { itemId: string; confirmedQtyMilli: number }[], parsed.data.note, parsed.data.deliveryDate || undefined);
     refresh();
     return { ok: true };
   });

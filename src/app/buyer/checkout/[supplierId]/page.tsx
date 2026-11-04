@@ -12,6 +12,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatMoney } from "@/lib/money";
 import { milliToInput } from "@/lib/quantity";
 import { requireBuyer } from "@/server/auth/guards";
+import { addDays, MAX_DELIVERY_DAYS_AHEAD, todayIn } from "@/lib/dates";
 import { listAddresses } from "@/server/domain/buyer/addresses";
 import { NotFoundError } from "@/server/domain/errors";
 import { getCart } from "@/server/domain/orders/cart";
@@ -95,6 +96,8 @@ async function Checkout({ params }: PageProps<"/buyer/checkout/[supplierId]">) {
 
       <CheckoutForm
         supplierOrgId={cart.supplier.id}
+        minDate={todayIn(cart.supplier.timezone)}
+        maxDate={addDays(todayIn(cart.supplier.timezone), MAX_DELIVERY_DAYS_AHEAD)}
         canSubmit={canSubmit}
         expected={orderable.map((l) => ({ productId: l.productId, qtyMilli: l.qtyMilli, unitPriceMinor: l.unitPriceMinor }))}
         addresses={addresses.map((a) => ({

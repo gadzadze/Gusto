@@ -1,0 +1,1 @@
+ALTER TABLE "supplier_customers" ADD COLUMN "private_note" text;

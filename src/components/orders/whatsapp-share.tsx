@@ -11,7 +11,7 @@ import { appUrl } from "@/server/notifications/links";
  * sends it; Gusto records nothing as delivered (CLAUDE.md, product honesty
  * rules), and the copy says "send", never "sent".
  */
-export async function WhatsappShare({ detail, kind }: { detail: OrderDetail; kind: "to_supplier" | "confirmed" | "rejected" }) {
+export async function WhatsappShare({ detail, kind }: { detail: OrderDetail; kind: "to_supplier" | "confirmed" | "rejected" | "delivered" }) {
   const { order, items, counterpartyPhone } = detail;
   if (!counterpartyPhone) return null;
   const t = await getTranslations("notifications.whatsapp");
@@ -22,9 +22,16 @@ export async function WhatsappShare({ detail, kind }: { detail: OrderDetail; kin
     count: items.length,
     total: formatMoney(order.totalMinor, order.currency),
     link: `${appUrl()}/o/${order.number}`,
+    date: order.deliveryDate ?? "",
   };
   const message =
-    kind === "to_supplier" ? t("toSupplier", values) : kind === "confirmed" ? t("toBuyerConfirmed", values) : t("toBuyerRejected", values);
+    kind === "to_supplier"
+      ? t("toSupplier", values)
+      : kind === "confirmed"
+        ? t(order.deliveryDate ? "toBuyerConfirmedWithDate" : "toBuyerConfirmed", values)
+        : kind === "delivered"
+          ? t("toBuyerDelivered", values)
+          : t("toBuyerRejected", values);
   const href = whatsappLink(counterpartyPhone, message);
   if (!href) return null;
   return (

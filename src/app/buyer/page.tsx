@@ -11,6 +11,8 @@ import { listConnectedSuppliers } from "@/server/domain/buyer/catalog";
 import { toProductViews } from "@/components/buyer/product-view";
 import { ProductCard } from "@/components/buyer/product-card";
 import { listTopOrderedProducts } from "@/server/domain/buyer/catalog";
+import { RegularOrderButtons } from "@/components/orders/regular-order-controls";
+import { listRegularOrders } from "@/server/domain/orders/regular";
 import { listBuyerOrders, listOpenBuyerOrders } from "@/server/domain/orders/queries";
 import { ReorderButton } from "@/components/orders/order-buttons";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
@@ -32,12 +34,15 @@ export default async function BuyerDashboardPage() {
 async function Dashboard() {
   const ctx = await requireBuyer();
   const t = await getTranslations("buyer");
-  const [suppliers, recent, open, top] = await Promise.all([
+  const [suppliers, recent, open, top, regular] = await Promise.all([
     listConnectedSuppliers(ctx),
     listBuyerOrders(ctx, 1, 5),
     listOpenBuyerOrders(ctx),
     listTopOrderedProducts(ctx, 10),
+    listRegularOrders(ctx),
   ]);
+  const tr = await getTranslations("regular");
+  const dueToday = regular.filter((r) => r.dueToday);
   const to = await getTranslations("orders");
   const td = await getTranslations("buyer.dashboard");
   const topViews = await Promise.all(
@@ -52,6 +57,23 @@ async function Dashboard() {
   return (
     <div className="space-y-6">
       <BuyerSearchForm />
+      {regular.length > 0 ? (
+        <section className="space-y-3" aria-labelledby="regular-orders">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="regular-orders" className="text-sm font-semibold text-muted-foreground">
+              {dueToday.length > 0 ? tr("dueTitle") : tr("title")}
+            </h2>
+            <Link href="/buyer/regular" className="text-sm font-medium text-brand hover:underline">{tr("viewAll")}</Link>
+          </div>
+          {(dueToday.length > 0 ? dueToday : regular.slice(0, 3)).map((r) => (
+            <div key={r.id} className="space-y-2 rounded-xl border border-border px-4 py-3">
+              <p className="font-medium">{r.name}</p>
+              <p className="text-sm text-muted-foreground">{r.supplierName} · {tr("every", { day: tr(`days.${r.weekday as 1}`) })}</p>
+              <RegularOrderButtons id={r.id} />
+            </div>
+          ))}
+        </section>
+      ) : null}
       <section className="space-y-3" aria-labelledby="open-orders">
         <h2 id="open-orders" className="text-sm font-semibold text-muted-foreground">{td("open")}</h2>
         {open.length === 0 ? (

@@ -6,6 +6,7 @@ import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductImage } from "@/components/catalog/product-image";
 import { ProductStatusBadge } from "@/components/catalog/product-status-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
@@ -47,21 +48,22 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
   const categoryId = isUuid(one(params.category)) ? one(params.category) : "";
   const statusParam = one(params.status);
   const status = statusParam === "active" || statusParam === "inactive" ? statusParam : "all";
+  const lowStock = one(params.stock) === "low";
   const page = Number.parseInt(one(params.page), 10) || 1;
 
   const [list, categories, settings] = await Promise.all([
-    listSupplierProducts(ctx, { q, categoryId: categoryId || undefined, status, page }),
+    listSupplierProducts(ctx, { q, categoryId: categoryId || undefined, status, lowStock, page }),
     listActiveCategories(),
     getSupplierSettings(ctx),
   ]);
   const readOnly = ctx.orgStatus === "suspended";
-  const filtered = Boolean(q || categoryId || status !== "all");
+  const filtered = Boolean(q || categoryId || status !== "all" || lowStock);
 
   return (
     <div className="space-y-5">
       {readOnly ? <Notice icon={PackageSearch} title={t("suspendedReadOnly")} /> : null}
 
-      <form method="get" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_14rem_12rem_auto]">
+      <form method="get" className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_14rem_12rem_14rem_auto]">
         <label className="sr-only" htmlFor="q">{tc("search")}</label>
         <Input id="q" name="q" type="search" defaultValue={q} placeholder={tc("searchPlaceholder")} className="sm:col-span-2 lg:col-span-1" />
         <label className="sr-only" htmlFor="category">{t("filters.category")}</label>
@@ -76,6 +78,11 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
           <option value="all">{t("filters.status")}: {tc("all")}</option>
           <option value="active">{t("filters.active")}</option>
           <option value="inactive">{t("filters.inactive")}</option>
+        </Select>
+        <label className="sr-only" htmlFor="stock">{t("filters.stock")}</label>
+        <Select id="stock" name="stock" defaultValue={lowStock ? "low" : ""}>
+          <option value="">{t("filters.stock")}: {tc("all")}</option>
+          <option value="low">{t("filters.stockLow")}</option>
         </Select>
         <Button type="submit" variant="outline" className="sm:col-span-2 lg:col-span-1">
           <Search />
@@ -148,6 +155,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                       ) : (
                         <>
                           {formatQuantityNumber(p.stockMilli)} <span className="text-muted-foreground">{tu(p.unit)}</span>
+                          {p.stockMilli <= 0 ? <Badge className="ml-2">{t("stockLowBadge")}</Badge> : null}
                         </>
                       )}
                     </TD>
@@ -177,7 +185,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
           </ul>
           <Pagination
             basePath="/supplier/products"
-            params={{ q, category: categoryId, status: status === "all" ? undefined : status }}
+            params={{ q, category: categoryId, status: status === "all" ? undefined : status, stock: lowStock ? "low" : undefined }}
             page={list.page}
             pageCount={list.pageCount}
           />

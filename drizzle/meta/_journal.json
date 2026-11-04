@@ -148,6 +148,27 @@
       "when": 1793772005703,
       "tag": "0020_stock_may_go_negative",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793773032316,
+      "tag": "0021_order_delivery_dates",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793773161383,
+      "tag": "0022_customer_private_note",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793773331164,
+      "tag": "0023_regular_orders",
+      "breakpoints": true
     }
   ]
 }

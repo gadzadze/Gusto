@@ -19,8 +19,12 @@ export function CheckoutForm({
   expected,
   addresses,
   canSubmit,
+  minDate,
+  maxDate,
 }: {
   supplierOrgId: string;
+  minDate: string;
+  maxDate: string;
   expected: { productId: string; qtyMilli: number; unitPriceMinor: number }[];
   addresses: Address[];
   canSubmit: boolean;
@@ -33,6 +37,7 @@ export function CheckoutForm({
   const [addressId, setAddressId] = useState(addresses[0]?.id ?? "new");
   const [newAddress, setNewAddress] = useState({ city: "", addressLine: "", instructions: "" });
   const [note, setNote] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [changes, setChanges] = useState<string[] | null>(null);
   const [pending, startTransition] = useTransition();
@@ -45,6 +50,7 @@ export function CheckoutForm({
         idempotencyKey,
         expected,
         note: note || undefined,
+        deliveryDate: deliveryDate || undefined,
         ...(addressId === "new"
           ? { newAddress: { ...newAddress, instructions: newAddress.instructions || undefined } }
           : { addressId }),
@@ -112,6 +118,21 @@ export function CheckoutForm({
           </div>
         ) : null}
       </fieldset>
+
+      <div className="space-y-2">
+        <Label htmlFor="delivery-date">{t("deliveryDate")}</Label>
+        <Input
+          id="delivery-date"
+          type="date"
+          className="max-w-56"
+          min={minDate}
+          max={maxDate}
+          value={deliveryDate}
+          onChange={(e) => setDeliveryDate(e.target.value)}
+          aria-describedby="delivery-date-hint"
+        />
+        <p id="delivery-date-hint" className="text-sm text-muted-foreground">{t("deliveryDateHint")}</p>
+      </div>
 
       <div className="space-y-2">
         <Label htmlFor="note">{t("note")}</Label>

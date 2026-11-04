@@ -30,9 +30,12 @@ prices openly, and an empty marketplace convinces nobody.
 - **Supplier:** sign-up and admin approval. Catalog with Excel/CSV import and
   per-customer assortment and prices (a list says which products a
   customer may order, and at what price). Customer invites. Order inbox with
-  confirm (quantities adjustable) / reject / delivered.
+  confirm (quantities adjustable, delivery day agreed) / reject / delivered.
+  Optional stock count per product (supplier-only), a per-customer history and
+  private note, and a printable pick list per delivery day.
 - **Buyer:** join from an invite, a catalog showing their own prices, one cart
-  per supplier, checkout, order tracking, one-tap reorder.
+  per supplier, checkout (with an optional wanted delivery day), order tracking,
+  one-tap reorder, and regular orders (saved reorders with a weekday reminder).
 - **Notifications:** in-app and email, plus a user-clicked `wa.me` "send on
   WhatsApp" button.
 - **Admin:** approve or suspend suppliers, manage categories, look up orders,
@@ -49,8 +52,10 @@ prices openly, and an empty marketplace convinces nobody.
 - Automated WhatsApp Business API messages. They need Meta approval, paid
   templates and recipient opt-in; that comes after the pilot.
 - Order statuses beyond the five below, product substitutions, the
-  "changes requested" flow, saved lists, analytics charts, multi-language UI,
-  native apps.
+  "changes requested" flow, analytics charts, multi-language UI, native apps.
+  (Regular orders, decided 2026-11-04, are the one kind of saved list that
+  exists: a reminder plus a one-tap cart fill. They never create an order by
+  themselves.)
 
 ## Product honesty rules
 
@@ -205,6 +210,13 @@ Tables (snake_case in SQL, camelCase in TypeScript):
   - owner: `supplier_org_id`; `category_id`;
   - name, description, brand, sku, `unit`, `pack_description`, `image_path`;
   - `base_price_minor`, `vat_rate_bp`, `min_qty_milli`, `qty_step_milli`;
+  - `stock_milli`: the supplier's own count, null = not tracked. **Never
+    selected by buyer-side queries** (a test asserts it). Confirming an order
+    subtracts the confirmed quantities, a supplier cancel of a confirmed order
+    adds them back, rejects/pending cancels/delivery change nothing; the count
+    may go negative (oversold). Hand edits are "received" (adds) or "recount"
+    (replaces), both single SQL updates (`adjustStock`); the product form does
+    not touch it on edit;
   - `is_active`, `search_text`.
 - `price_lists`, `price_list_items`: per-supplier **assortment lists**. An item
   means "customers on this list may see and order this product"; its
@@ -212,16 +224,24 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `supplier_customers`:
   - supplier org ↔ buyer org;
   - `status` `invited` | `active` | `blocked`;
-  - `price_list_id` (null means the customer sees no products yet).
+  - `price_list_id` (null means the customer sees no products yet);
+  - `private_note`: the supplier's remark, never shown to the buyer. The
+    customer page also shows history from `domain/customers/insights.ts`
+    (order value counts confirmed + delivered only).
 - `invitations`: `token_hash`, `expires_at`, `revoked_at`, `accepted_at`, and
   the target supplier_customers row.
 - `carts`, `cart_items`: persisted, one cart per (buyer org, supplier org).
+- `regular_orders`, `regular_order_items`: a buyer's saved reorder with one
+  supplier and a weekday (max 10 per buyer).
 - `orders`:
   - `number` (sequence, shown as `GST-1001`), buyer org, supplier org,
     `status`;
   - currency, totals (subtotal, VAT, total);
   - address snapshot, note;
-  - `idempotency_key`, unique per buyer org.
+  - `idempotency_key`, unique per buyer org;
+  - `requested_delivery_date` (buyer, optional) and `delivery_date` (agreed by
+    the supplier when confirming): calendar days (`lib/dates.ts`), today up to
+    90 days ahead on the **supplier's** timezone calendar.
 - `order_items`: product ID (nullable on delete) plus an **immutable
   snapshot**: name, sku, unit, pack description, unit price, VAT rate,
   `ordered_qty_milli`, `confirmed_qty_milli`, line totals.
@@ -501,7 +521,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `CRON_SECRET`
 - `NEXT_PUBLIC_SENTRY_DSN` (public, build time), `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (build-only, **secret**): see Operations.
-- `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build).
+- `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build). `LEGAL_CONTACT_EMAIL` alone is also the contact line on the sign-in "not accepted" message.
 
 Missing optional integrations degrade loudly, not silently. With no
 `RESEND_API_KEY`, emails are written to the server log prefixed `[DEV EMAIL]`
@@ -618,6 +638,29 @@ and the delivery row is marked `skipped`, not `sent`.
   Suspense by `AppShell` for buyers and suppliers. The list lives at
   `/buyer/notifications` and `/supplier/notifications` (shared view);
   clicking a row marks it read and redirects to `/o/<number>`.
+
+## Later additions (2026-11-04)
+
+- **Regular orders** (`domain/orders/regular.ts`, `/buyer/regular`, dashboard
+  card): saved from a placed order. The cron route (`/api/cron/notifications`)
+  also runs `sendRegularOrderReminders`: on the chosen weekday, from 08:00 in the
+  buyer organization's timezone, once per day (claimed with a conditional
+  UPDATE before sending, so a send failure loses that day's reminder rather
+  than risking duplicates), one email per organization to members with
+  order-update emails on. Loading into the cart re-resolves prices and skips
+  products that are no longer available.
+- **Delivery day**: asked at checkout, agreed at confirm (prefilled with the
+  request), shown on both sides and in the confirm WhatsApp text.
+- **Pick list** (`/supplier/orders/pick`, `domain/orders/pick-list.ts`): confirmed
+  orders for one delivery day (or `none`), totals per product grouped by
+  category, plus the stops; prints cleanly.
+- **Admin Access page** has a bulk box (`lib/access/bulk.ts`: email, name, legal
+  ID, role per line, max 100). The "not accepted yet" sign-in message shows a
+  mailto link when `LEGAL_CONTACT_EMAIL` is set (`contactEmail()` in
+  `lib/legal.ts`).
+- **Needs-restocking filter** on the supplier product list (stock 0 or below).
+- **Uptime**: a Sentry uptime monitor ("Gusto health", every 5 minutes) checks
+  `/api/health` of the production URL. Update its URL when a domain is attached.
 
 ## Launch specifics (milestone 6)
 

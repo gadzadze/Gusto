@@ -1,10 +1,11 @@
 import "server-only";
 import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
+import { isDeliveryDateAllowed, parseDateInput, todayIn } from "@/lib/dates";
 import { computeTotals } from "@/lib/orders/totals";
 import { TRANSITIONS, type OrderAction } from "@/lib/orders/transitions";
 import { getDb, type Tx } from "@/server/db/client";
-import { orderItems, orders, orderStatusHistory, products } from "@/server/db/schema";
+import { orderItems, orders, orderStatusHistory, organizations, products } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
 import { recordOrderEvent } from "@/server/notifications/events";
@@ -15,7 +16,7 @@ import type { NotificationEvent } from "@/server/db/schema";
 // conditional UPDATE on the expected current status → history row, in one
 // transaction. Two people clicking at once: exactly one UPDATE matches.
 
-export type TransitionError = "stale_status" | "reason_required" | "nothing_confirmed" | "invalid_lines" | "suspended";
+export type TransitionError = "invalid_delivery_date" | "stale_status" | "reason_required" | "nothing_confirmed" | "invalid_lines" | "suspended";
 
 export const reasonSchema = z.string().trim().min(3).max(500);
 
@@ -106,9 +107,19 @@ export async function confirmOrder(
   orderId: string,
   lines: { itemId: string; confirmedQtyMilli: number }[],
   note?: string,
+  /** Agreed delivery day "YYYY-MM-DD"; omitted = none stated. */
+  deliveryDateInput?: string,
 ): Promise<void> {
   assertSupplierCanAct(ctx);
   if (!isUuid(orderId)) throw new NotFoundError("order");
+  let deliveryDate: string | null = null;
+  if (deliveryDateInput) {
+    const [org] = await getDb().select({ timezone: organizations.timezone }).from(organizations).where(eq(organizations.id, ctx.orgId));
+    deliveryDate = parseDateInput(deliveryDateInput);
+    if (!deliveryDate || !isDeliveryDateAllowed(deliveryDate, todayIn(org?.timezone ?? "UTC"))) {
+      throw new StateError<TransitionError>("invalid_delivery_date");
+    }
+  }
   await getDb().transaction(async (tx) => {
     const [order] = await tx
       .select({ pricesIncludeVat: orders.pricesIncludeVat })
@@ -143,7 +154,7 @@ export async function confirmOrder(
     await moveStock(tx, confirmed.map((i) => ({ productId: i.productId, qty: i.qty })), -1);
     await tx
       .update(orders)
-      .set({ subtotalMinor: totals.subtotalMinor, vatMinor: totals.vatMinor, totalMinor: totals.totalMinor })
+      .set({ subtotalMinor: totals.subtotalMinor, vatMinor: totals.vatMinor, totalMinor: totals.totalMinor, deliveryDate })
       .where(eq(orders.id, orderId));
   });
   deliverAfterResponse(orderId);

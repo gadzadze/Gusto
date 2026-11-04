@@ -4,13 +4,15 @@ import { productSchema } from "@/lib/validation/product";
 import { customerSchema } from "@/lib/validation/customer";
 import { onboardingSchema } from "@/lib/validation/onboarding";
 import { getDb } from "@/server/db/client";
-import { invitations, organizations, supplierCustomers } from "@/server/db/schema";
+import { addresses, invitations, organizations, supplierCustomers } from "@/server/db/schema";
 import {
   getConnectedSupplier,
   listBuyerCatalog,
   listConnectedSuppliers,
   searchConnectedCatalogs,
 } from "@/server/domain/buyer/catalog";
+import { getCustomerInsights } from "@/server/domain/customers/insights";
+import { submitOrder } from "@/server/domain/orders/submit";
 import { getCart, setCartQuantity } from "@/server/domain/orders/cart";
 import { adjustStock, getSupplierProduct, listSupplierProducts, setProductActive, updateProduct } from "@/server/domain/catalog/products";
 import type { AdminCtx, OrgCtx, SupplierCtx } from "@/server/domain/context";
@@ -21,6 +23,7 @@ import {
   regenerateInvitation,
   revokeInvitations,
   setCustomerBlocked,
+  setCustomerNote,
   setCustomerPriceList,
 } from "@/server/domain/customers/customers";
 import {
@@ -411,6 +414,42 @@ describe("assortment per customer", () => {
   });
 });
 
+describe("customer insights and note", () => {
+  it("summarises only this supplier's orders with this buyer, and keeps a private note", async () => {
+    const supplier = await createSupplier();
+    const other = await createSupplier();
+    const buyer = await createBuyer();
+    const { customerId } = await connectBuyer(supplier, buyer);
+    await connectBuyer(other, buyer);
+    expect((await getCustomerInsights(supplier, customerId)).orderCount).toBe(0);
+
+    const p = await createTestProduct(supplier, categoryId, { name: "[TEST] Often", basePrice: "10" });
+    const q = await createTestProduct(other, categoryId, { name: "[TEST] Elsewhere", basePrice: "5" });
+    const [address] = await getDb().select({ id: addresses.id }).from(addresses).where(eq(addresses.organizationId, buyer.orgId));
+    for (const [sup, product] of [[supplier, p], [other, q]] as const) {
+      await setCartQuantity(buyer, sup.orgId, product, 2000);
+      const cart = await getCart(buyer, sup.orgId);
+      await submitOrder(buyer, sup.orgId, {
+        idempotencyKey: crypto.randomUUID(),
+        expected: cart.lines.map((l) => ({ productId: l.productId, qtyMilli: l.qtyMilli, unitPriceMinor: l.unitPriceMinor })),
+        addressId: address.id,
+      });
+    }
+    const insights = await getCustomerInsights(supplier, customerId);
+    expect(insights.orderCount).toBe(1);
+    expect(insights.valueMinor).toBe(0); // still pending: not counted as order value
+    expect(insights.topProducts.map((t) => t.name)).toEqual(["[TEST] Often"]);
+    expect(insights.recent).toHaveLength(1);
+
+    await setCustomerNote(supplier, customerId, "  pays on Fridays  ");
+    expect((await getCustomer(supplier, customerId)).privateNote).toBe("pays on Fridays");
+    await setCustomerNote(supplier, customerId, "");
+    expect((await getCustomer(supplier, customerId)).privateNote).toBeNull();
+    await expect(setCustomerNote(other, customerId, "x")).rejects.toBeInstanceOf(NotFoundError);
+    await expect(getCustomerInsights(other, customerId)).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
 describe("stock count", () => {
   it("is stored for the supplier and never reaches a buyer", async () => {
     const supplier = await createSupplier();
@@ -440,6 +479,9 @@ describe("stock count", () => {
     await expect(adjustStock(supplier, p, { mode: "set", qtyMilli: -1 })).rejects.toEqual(new StateError("invalid_stock"));
     // Another supplier cannot touch it.
     await expect(adjustStock(await createSupplier(), p, { mode: "set", qtyMilli: 1 })).rejects.toBeInstanceOf(NotFoundError);
+    // The "needs restocking" filter: tracked products at 0 or below only.
+    await adjustStock(supplier, p, { mode: "set", qtyMilli: 0 });
+    expect((await listSupplierProducts(supplier, { lowStock: true })).items.map((i) => i.id)).toEqual([p]);
     // Editing the product's other details leaves the count alone.
     await adjustStock(supplier, p, { mode: "set", qtyMilli: 7000 });
     await updateProduct(supplier, p, productSchema.parse(productInput(categoryId, { name: "[TEST] Renamed" })));

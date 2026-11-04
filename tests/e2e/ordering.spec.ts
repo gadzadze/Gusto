@@ -46,6 +46,8 @@ test("order loop: cart → checkout → supplier confirms with a change → deli
   await expect(buyer).toHaveURL(/\/buyer\/checkout\//);
   await buyer.waitForLoadState("networkidle");
   await buyer.getByLabel("შენიშვნა მომწოდებლისთვის").fill("მიწოდება 11:00-მდე");
+  const wanted = new Date(Date.now() + 3 * 86_400_000).toISOString().slice(0, 10);
+  await buyer.getByLabel("სასურველი მიწოდების დღე (არასავალდებულო)").fill(wanted);
   await buyer.getByRole("button", { name: "შეკვეთის გაგზავნა" }).click();
   await expect(buyer).toHaveURL(/\/buyer\/orders\/[0-9a-f-]{36}\?placed=1$/);
   await expect(buyer.getByText("შეკვეთა გაიგზავნა")).toBeVisible();
@@ -59,10 +61,20 @@ test("order loop: cart → checkout → supplier confirms with a change → deli
   await supplier.waitForLoadState("networkidle");
   await expect(supplier.getByText("მიწოდება 11:00-მდე")).toBeVisible();
   await supplier.getByRole("button", { name: "დადასტურება" }).click();
+  // The requested delivery day is prefilled for the supplier to keep or change.
+  await expect(supplier.getByLabel("მიწოდების დღე", { exact: true })).toHaveValue(wanted);
   await supplier.getByRole("textbox", { name: "მაწონი: დადასტურებული რაოდენობა" }).fill("2");
   await supplier.getByLabel("შენიშვნა კლიენტისთვის (არასავალდებულო)").fill("მაწონი მხოლოდ 2 დარჩა");
   await supplier.getByRole("button", { name: "დადასტურება" }).click();
   await expect(supplier.getByText("დადასტურებული").first()).toBeVisible();
+
+  // The pick list for that day totals the confirmed quantities (2 მაწონი, not the 3 ordered).
+  await supplier.goto(`/supplier/orders/pick?day=${wanted}`);
+  await expect(supplier.getByText("მაწონი")).toBeVisible();
+  await expect(supplier.getByText(/^2 /).first()).toBeVisible();
+  await expect(supplier.getByText(`GST-${number}`).first()).toBeVisible();
+  await supplier.getByRole("link", { name: `GST-${number}` }).click();
+  await supplier.waitForLoadState("networkidle");
 
   // Buyer sees the confirmation, the change, and the new total (33,60 − 2,40 = 31,20).
   await buyer.goto(buyerOrderUrl);
@@ -70,6 +82,7 @@ test("order loop: cart → checkout → supplier confirms with a change → deli
   await expect(buyer.getByText("შეკვეთილი 3 ც")).toBeVisible();
   await expect(buyer.getByText("დადასტურდა 2 ც")).toBeVisible();
   await expect(buyer.getByText("მაწონი მხოლოდ 2 დარჩა")).toBeVisible();
+  await expect(buyer.getByText(/შეთანხმებული:/)).toBeVisible();
   await expect(buyer.getByText("31,20 ₾").first()).toBeVisible();
   // Cancel is no longer offered once confirmed.
   await expect(buyer.getByRole("button", { name: "შეკვეთის გაუქმება" })).toHaveCount(0);

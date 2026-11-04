@@ -77,3 +77,21 @@ export function renderOrderEmail(data: OrderEmailData): RenderedEmail {
 </body></html>`;
   return { subject, text, html };
 }
+
+/** Reminder that regular orders are due today; `link` opens the regular-orders page. */
+export function renderRegularOrderReminder(names: string[], link: string): RenderedEmail {
+  const subject = t("regular.subject", { count: names.length });
+  const intro = t("regular.intro");
+  const list = names.map((n) => `- ${n}`);
+  const footer = t("email.footer");
+  const text = [intro, "", ...list, "", t("regular.open", { link }), "", "-", footer].join("\n");
+  const html = `<!doctype html>
+<html lang="ka"><body style="margin:0;padding:24px;background:#ffffff;color:#0b0b0c;font-family:Arial,sans-serif;font-size:15px;line-height:1.5">
+<p style="margin:0 0 16px;font-size:17px;font-weight:600">${escapeHtml(subject)}</p>
+<p style="margin:0 0 16px">${escapeHtml(intro)}</p>
+<p style="margin:0 0 20px">${list.map(escapeHtml).join("<br>")}</p>
+<p style="margin:0 0 24px"><a href="${escapeHtml(link)}" style="display:inline-block;padding:10px 18px;background:#0b0b0c;color:#ffffff;text-decoration:none;border-radius:6px">${escapeHtml(t("regular.openLabel"))}</a></p>
+<p style="margin:0;color:#57534e;font-size:13px">${escapeHtml(footer)}</p>
+</body></html>`;
+  return { subject, text, html };
+}
