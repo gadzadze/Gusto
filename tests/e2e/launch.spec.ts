@@ -145,7 +145,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   await supplier.goto("/supplier");
   await expect(tile("ელოდება თქვენს გადაწყვეტილებას").locator("p").nth(1)).toHaveText("0");
   await expect(tile("შეკვეთების ღირებულება, 30 დღე").locator("p").nth(1)).toContainText("18,50");
-  await expect(tile("ტოპ 5 პროდუქტი, 30 დღე")).toContainText("ყველი სულგუნი");
+  await expect(tile("ყველაზე მოთხოვნადი 5 პროდუქტი, 30 დღე")).toContainText("ყველი სულგუნი");
   await expect(supplier.getByText("შეკვეთილი თანხაა და არა შემოსავალი", { exact: false })).toBeVisible();
   await expect(supplier.locator("main")).not.toContainText("გაყიდვ");
 
@@ -196,7 +196,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   await buyer.getByRole("link", { name: /შეკვეთის გაფორმება/ }).click();
   await buyer.waitForLoadState("networkidle");
   await buyer.getByRole("button", { name: "შეკვეთის გაგზავნა" }).click();
-  await expect(buyer.getByText("თქვენი ორგანიზაცია შეჩერებულია")).toBeVisible();
+  await expect(buyer.getByText("თქვენი ანგარიში შეჩერებულია")).toBeVisible();
 
   await admin.getByRole("button", { name: "აღდგენა" }).click();
   await admin.getByLabel("მიზეზი").fill("[E2E] ტესტი დასრულდა");

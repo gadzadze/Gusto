@@ -5,7 +5,7 @@ import { expect, test } from "@playwright/test";
 
 test("the landing page explains Gusto, lets you try the tour and links to both doors", async ({ page }) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toContainText("რამდენიმე შეხებით");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText("ზარებისა და ჩატების გარეშე");
   // Primary doors: supplier request and sign in.
   await expect(page.getByRole("link", { name: /გაწევრიანება/ }).first()).toHaveAttribute("href", "/suppliers");
   await expect(page.getByRole("link", { name: "შესვლა" }).first()).toHaveAttribute("href", "/start");
