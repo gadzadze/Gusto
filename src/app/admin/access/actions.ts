@@ -7,10 +7,11 @@ import { runAction, type ActionError } from "@/server/actions/result";
 import { requireAdmin } from "@/server/auth/guards";
 import { registerEmail } from "@/server/auth/register-email";
 import { revokeEmail, allowEmail, type AccessError } from "@/server/domain/admin/access";
+import { sendWelcomeEmail } from "@/server/auth/welcome-email";
 import { ensureAuthUser } from "@/server/supabase/admin";
 
 export type AllowActionResult =
-  | { ok: true; status: "allowed" | "restored" | "updated" | "already_allowed"; authUserFailed: boolean }
+  | { ok: true; status: "allowed" | "restored" | "updated" | "already_allowed"; authUserFailed: boolean; welcome: "sent" | "skipped" | "failed" | "none" }
   | ActionError<AccessError>;
 
 const allowSchema = z.object({
@@ -39,7 +40,7 @@ export async function allowEmailAction(raw: unknown): Promise<AllowActionResult>
       businessName ? { businessName, legalId } : undefined,
     );
     refresh();
-    return { ok: true, status: result.status, authUserFailed: result.authUser === "failed" };
+    return { ok: true, status: result.status, authUserFailed: result.authUser === "failed", welcome: result.welcome };
   });
 }
 
@@ -60,6 +61,7 @@ export async function restoreEmailAction(email: string): Promise<{ ok: true } | 
     await allowEmail({ userId: ctx.userId }, email);
     // Best effort, as in registerEmail: the sign-in action creates the user if this fails.
     await ensureAuthUser(email.trim().toLowerCase()).catch(() => undefined);
+    await sendWelcomeEmail(email.trim().toLowerCase());
     refresh();
     return { ok: true };
   });
@@ -69,7 +71,7 @@ export type BulkResult =
   | {
       ok: true;
       /** One outcome per input line that passed parsing, in order. */
-      results: { line: number; email: string; outcome: "allowed" | "restored" | "updated" | "already_allowed" | "error"; error?: string }[];
+      results: { line: number; email: string; outcome: "allowed" | "restored" | "updated" | "already_allowed" | "error"; error?: string; welcome?: "sent" | "skipped" | "failed" | "none" }[];
       parseErrors: { line: number; key: "columns" | "role" | "name_or_id" }[];
       tooMany: boolean;
     }
@@ -91,11 +93,11 @@ export async function bulkAllowAction(text: string): Promise<BulkResult> {
         entry.role === "" ? undefined : entry.role,
         entry.businessName ? { businessName: entry.businessName, legalId: entry.legalId } : undefined,
       );
-      return { ok: true, status: r.status, authUserFailed: r.authUser === "failed" };
+      return { ok: true, status: r.status, authUserFailed: r.authUser === "failed", welcome: r.welcome };
     });
     results.push(
       outcome.ok
-        ? { line: entry.line, email: entry.email, outcome: outcome.status }
+        ? { line: entry.line, email: entry.email, outcome: outcome.status, welcome: outcome.welcome }
         : { line: entry.line, email: entry.email, outcome: "error", error: outcome.error },
     );
   }

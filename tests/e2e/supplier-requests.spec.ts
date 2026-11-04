@@ -41,7 +41,7 @@ test("a prospective supplier asks to be onboarded and the admin approves", async
   await visitor.goto("/login");
   await visitor.waitForLoadState("networkidle");
   await visitor.getByLabel("ელფოსტა").fill(email);
-  await visitor.getByRole("button", { name: "პირველი შესვლა - გამომიგზავნეთ ბმული" }).click();
+  await visitor.getByRole("button", { name: "პაროლის დაყენება ან აღდგენა" }).click();
   await expect(visitor.getByText("ეს ელფოსტა ჯერ დადასტურებული არ არის")).toBeVisible();
 
   // 2. The admin sees it, and the sidebar count.
@@ -57,7 +57,8 @@ test("a prospective supplier asks to be onboarded and the admin approves", async
 
   // 3. Approve: the address is now registered as a vetted supplier.
   await card.getByRole("button", { name: "დადასტურება" }).click();
-  await expect(admin.getByText("დადასტურდა.", { exact: false }).first()).toBeVisible();
+  // No email provider in the test environment: the welcome email is reported as not sent, never as sent.
+  await expect(admin.getByText(/დადასტურდა, მაგრამ წერილი არ გაიგზავნა/).first()).toBeVisible();
   await admin.goto("/admin/access");
   await expect(admin.getByRole("listitem").filter({ hasText: email })).toContainText(legalId);
 

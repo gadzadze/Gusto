@@ -45,7 +45,7 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
           startTransition(async () => {
             const result = await allowEmailAction({ email, note, role, businessName, legalId });
             if (result.ok) {
-              setMessage({ tone: "success", text: result.authUserFailed ? t("authUserWarning") : t(`done.${result.status}`) });
+              setMessage({ tone: "success", text: result.authUserFailed ? t("authUserWarning") : result.welcome !== "none" ? t(`welcome.${result.welcome}`) : t(`done.${result.status}`) });
               setEmail("");
               setNote("");
               setRole("");
@@ -122,6 +122,11 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
                 failed: bulk.results.filter((r) => r.outcome === "error").length + bulk.parseErrors.length,
               })}
             </p>
+            {bulk.results.some((r) => r.welcome === "skipped" || r.welcome === "failed") ? (
+              <p className="text-muted-foreground">
+                {t("bulk.welcomeNote", { count: bulk.results.filter((r) => r.welcome === "skipped" || r.welcome === "failed").length })}
+              </p>
+            ) : null}
             {bulk.tooMany ? <p className="text-muted-foreground">{t("bulk.tooMany")}</p> : null}
             <ul className="space-y-1">
               {bulk.parseErrors.map((e) => (

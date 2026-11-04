@@ -95,10 +95,7 @@ export function LoginForm({ next, error, contactEmail }: { next: string | null; 
         <Button type="submit" name="intent" value="password" className="w-full" disabled={pending}>
           {pending ? t("signingIn") : t("signIn")}
         </Button>
-        <div className="flex flex-wrap justify-between gap-x-4 gap-y-1 text-sm">
-          <Button type="submit" name="intent" value="link" variant="link" className="h-auto p-0" disabled={pending}>
-            {t("firstTime")}
-          </Button>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
           <Button type="submit" name="intent" value="reset" variant="link" className="h-auto p-0" disabled={pending}>
             {t("forgot")}
           </Button>
