@@ -1,9 +1,10 @@
-import { Nunito } from "next/font/google";
+import { Google_Sans } from "next/font/google";
 
-// Rounded Latin and digits for the landing page only. Georgian falls through to
-// Noto Sans Georgian, which the root layout already loads.
-export const nunito = Nunito({
-  variable: "--font-nunito",
-  subsets: ["latin", "latin-ext"],
-  weight: ["400", "600", "700", "800"],
+// Google Sans for the landing page only: a clean geometric sans that has real Georgian
+// letters, so Latin, digits and Georgian come from one family. The app keeps Inter and
+// Noto Sans Georgian (its layouts, like the phone bottom bar, are measured with them).
+export const landingFont = Google_Sans({
+  variable: "--font-landing",
+  subsets: ["latin", "latin-ext", "georgian"],
+  weight: ["400", "500", "600", "700"],
 });
