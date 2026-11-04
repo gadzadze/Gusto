@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductImage } from "@/components/catalog/product-image";
-import { FindPhotosButton } from "@/components/catalog/find-photos";
 import { ProductStatusBadge } from "@/components/catalog/product-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -95,7 +94,6 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
         <p className="text-sm text-muted-foreground">{tc("total", { count: list.total })}</p>
         {readOnly ? null : (
           <div className="flex flex-wrap gap-2">
-            <FindPhotosButton />
             <Button asChild variant="outline">
               <Link href="/supplier/products/import">
                 <FileUp />

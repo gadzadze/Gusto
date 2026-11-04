@@ -183,6 +183,13 @@
       "when": 1793788987760,
       "tag": "0025_shared_product_images",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793792801407,
+      "tag": "0026_drop_photo_lookup",
+      "breakpoints": true
     }
   ]
 }

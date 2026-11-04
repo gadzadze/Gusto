@@ -24,8 +24,6 @@ export const RATE_LIMITS = {
   /** Public "onboard me" supplier requests: 5 per hour per client IP (stored hashed). */
   supplierRequest: { name: "supplier_request", limit: 5, windowSeconds: 3600 },
   /** Product image upload: 300 per hour per supplier (a catalog import attaches a photo per product). */
-  /** Automatic photo lookup: 40 batches per hour per supplier (each batch is at most 20 products). */
-  photoFetch: { name: "photo_fetch", limit: 40, windowSeconds: 3600 },
   imageUpload: { name: "image_upload", limit: 300, windowSeconds: 3600 },
 } as const;
 

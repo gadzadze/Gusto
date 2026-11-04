@@ -539,18 +539,11 @@ What this codebase relies on:
   shrinks each picture (max 1600px, JPEG) and sends it through the normal `uploadProductImageAction`
   one by one. They are the supplier's own uploads (private); a photo in the file replaces an existing one.
   Files over 60 MB are refused. Fixture: `tests/unit/fixtures/gusto-products-with-photos.xlsx`.
-- **Automatic photos by barcode** (`server/domain/catalog/photo-fetch.ts`, `components/catalog/find-photos.tsx`):
-  products have an optional `barcode` (8-14 digits; import field with its own aliases; it also stands in
-  for a missing code). For a product with a barcode and no photo, `findPhotos` first looks in
-  `shared_product_images` (one photo per barcode, reused by every supplier), then asks Open Food Facts
-  (`/api/v2/product/<barcode>`; photos CC BY-SA, credit shown on the product page) and only ever downloads
-  from `images.openfoodfacts.org` over https. Only the barcode leaves our server (see Privacy). It never
-  replaces an existing photo. `products.image_source` is `own` (supplier upload: private, deleted on
-  replace/remove) or `shared` (library photo: **never deleted by a supplier**; replace/remove only
-  detaches). Supplier uploads never enter the library. Triggers: the import (after file photos, for rows
-  without one) and the "find photos" button on the product list; batches of 20, rate limit
-  `photoFetch` 40/h. Name-only matching is not built (too unreliable; Open Food Facts search is
-  rate-limited and weak for Georgian).
+- **Barcode** (`products.barcode`, optional, 8-14 digits; import field with its own aliases; it also stands
+  in for a missing product code, so a barcode column gives stable codes). It is plain supplier data: Gusto does
+  not look photos up anywhere. **Photos come from the supplier**: pictures placed in the .xlsx, or uploaded on
+  the product page. Fetching photos from Open Food Facts or the open web was built and removed on 2026-11-05
+  (free sources cover few Georgian wholesale goods; web search APIs are paid and the photos are copyrighted).
 - **Units are also the packaging** (`lib/catalog/units.ts`): piece, kg, g, l, ml,
   box, pack, case, bottle, jar, bag, sack, keg, pallet, bunch, roll, bucket. The
   import accepts many spellings per unit (Georgian, English, a few Russian), see
