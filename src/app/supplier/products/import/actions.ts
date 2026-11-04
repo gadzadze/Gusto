@@ -2,7 +2,7 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
-import { importMappingSchema, rawSheetSchema } from "@/lib/catalog/import";
+import { importMappingSchema, importOptionsSchema, rawSheetSchema } from "@/lib/catalog/import";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireSupplier } from "@/server/auth/guards";
 import {
@@ -14,7 +14,7 @@ import {
 } from "@/server/domain/catalog/import";
 import type { CatalogWriteError } from "@/server/domain/catalog/products";
 
-const payloadSchema = z.object({ sheet: rawSheetSchema, mapping: importMappingSchema });
+const payloadSchema = z.object({ sheet: rawSheetSchema, mapping: importMappingSchema, options: importOptionsSchema });
 
 type ImportActionError = ActionError<ImportError | CatalogWriteError>;
 
@@ -24,7 +24,7 @@ export async function analyzeImportAction(raw: unknown): Promise<{ ok: true; ana
   if (!parsed.success) return { ok: false, error: "invalid" };
   return runAction<{ ok: true; analysis: ImportAnalysis }, ImportError | CatalogWriteError>("analyzeImport", async () => ({
     ok: true,
-    analysis: await analyzeImport(ctx, parsed.data.sheet, parsed.data.mapping),
+    analysis: await analyzeImport(ctx, parsed.data.sheet, parsed.data.mapping, parsed.data.options),
   }));
 }
 
@@ -33,7 +33,7 @@ export async function commitImportAction(raw: unknown): Promise<{ ok: true; resu
   const parsed = payloadSchema.extend({ mode: z.enum(["all", "valid_only"]) }).safeParse(raw);
   if (!parsed.success) return { ok: false, error: "invalid" };
   return runAction<{ ok: true; result: ImportCommitResult }, ImportError | CatalogWriteError>("commitImport", async () => {
-    const result = await commitImport(ctx, parsed.data.sheet, parsed.data.mapping, parsed.data.mode);
+    const result = await commitImport(ctx, parsed.data.sheet, parsed.data.mapping, parsed.data.mode, parsed.data.options);
     refresh();
     return { ok: true, result };
   });

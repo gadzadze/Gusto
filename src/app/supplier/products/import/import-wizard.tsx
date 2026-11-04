@@ -17,8 +17,10 @@ import {
   missingRequiredFields,
   REQUIRED_IMPORT_FIELDS,
   type ImportMapping,
+  type ImportOptions,
   type RawSheet,
 } from "@/lib/catalog/import";
+import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { NEW_PRODUCT_DEFAULTS } from "@/lib/validation/product";
 import type { ImportAnalysis, ImportCommitResult } from "@/server/domain/catalog/import";
 import { analyzeImportAction, commitImportAction } from "./actions";
@@ -32,11 +34,23 @@ type Step =
 
 const PREVIEW_LIMIT = 200;
 
-export function ImportWizard({ savedMapping, categoryNames }: { savedMapping: ImportMapping | null; categoryNames: string[] }) {
+type Fallbacks = { categoryMode: "error" | "default" | "guess"; categoryId: string; unit: ProductUnit | ""; autoSku: boolean };
+
+export function ImportWizard({ savedMapping, categories }: { savedMapping: ImportMapping | null; categories: { id: string; name: string }[] }) {
+  const categoryNames = categories.map((c) => c.name);
   const t = useTranslations("import");
   const tv = useTranslations("validation");
   const [step, setStep] = useState<Step>({ kind: "file" });
   const [error, setError] = useState<string | null>(null);
+  const tu = useTranslations("unitNames");
+  const [fallbacks, setFallbacks] = useState<Fallbacks>({ categoryMode: "error", categoryId: "", unit: "", autoSku: false });
+  // What the supplier chose to fill in where the file has nothing (the server re-checks all of it).
+  const options: ImportOptions = {
+    ...(fallbacks.categoryMode === "default" && fallbacks.categoryId ? { defaultCategoryId: fallbacks.categoryId } : {}),
+    ...(fallbacks.categoryMode === "guess" ? { guessCategory: true } : {}),
+    ...(fallbacks.unit ? { defaultUnit: fallbacks.unit } : {}),
+    ...(fallbacks.autoSku ? { autoSku: true } : {}),
+  };
   const [pending, startTransition] = useTransition();
 
   const actionErrorText = (code: string) =>
@@ -52,14 +66,17 @@ export function ImportWizard({ savedMapping, categoryNames }: { savedMapping: Im
         setError(t(`fileErrors.${result}`, { max: MAX_IMPORT_ROWS }));
         return;
       }
-      setStep({ kind: "mapping", fileName: file.name, sheet: result, mapping: guessMapping(result.headers, savedMapping) });
+      const mapping = guessMapping(result.headers, savedMapping);
+      // A file with no category or no code column gets the sensible fallback switched on; the preview shows what it did.
+      setFallbacks({ categoryMode: mapping.category ? "error" : "guess", categoryId: "", unit: "", autoSku: !mapping.sku });
+      setStep({ kind: "mapping", fileName: file.name, sheet: result, mapping });
     });
   };
 
   const analyze = (s: Extract<Step, { kind: "mapping" | "preview" }>) => {
     setError(null);
     startTransition(async () => {
-      const result = await analyzeImportAction({ sheet: s.sheet, mapping: s.mapping });
+      const result = await analyzeImportAction({ sheet: s.sheet, mapping: s.mapping, options });
       if (!result.ok) return setError(actionErrorText(result.error));
       setStep({ kind: "preview", fileName: s.fileName, sheet: s.sheet, mapping: s.mapping, analysis: result.analysis });
     });
@@ -68,14 +85,14 @@ export function ImportWizard({ savedMapping, categoryNames }: { savedMapping: Im
   const commit = (s: Extract<Step, { kind: "preview" }>, mode: "all" | "valid_only") => {
     setError(null);
     startTransition(async () => {
-      const result = await commitImportAction({ sheet: s.sheet, mapping: s.mapping, mode });
+      const result = await commitImportAction({ sheet: s.sheet, mapping: s.mapping, mode, options });
       if (!result.ok) return setError(actionErrorText(result.error));
       setStep({ kind: "done", result: result.result });
     });
   };
 
   const rowErrorText = (key: string) =>
-    key === "invalid_unit" || key === "unknown_category" || key === "duplicate_sku_in_file"
+    key === "invalid_unit" || key === "unknown_category" || key === "category_not_guessed" || key === "duplicate_sku_in_file"
       ? t(`rowErrors.${key}`)
       : tv(key as "required");
 
@@ -146,11 +163,65 @@ export function ImportWizard({ savedMapping, categoryNames }: { savedMapping: Im
               </div>
             ))}
           </div>
+          <section className="space-y-4 rounded-xl border border-border p-4">
+            <div>
+              <h2 className="font-semibold">{t("fallbacks.title")}</h2>
+              <p className="text-sm text-muted-foreground">{t("fallbacks.hint")}</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="fb-category">{t("fallbacks.category")}</Label>
+                <Select
+                  id="fb-category"
+                  value={fallbacks.categoryMode}
+                  onChange={(e) => setFallbacks({ ...fallbacks, categoryMode: e.target.value as Fallbacks["categoryMode"] })}
+                >
+                  <option value="error">{t("fallbacks.categoryError")}</option>
+                  <option value="guess">{t("fallbacks.categoryGuess")}</option>
+                  <option value="default">{t("fallbacks.categoryDefault")}</option>
+                </Select>
+                {fallbacks.categoryMode === "default" ? (
+                  <Select
+                    aria-label={t("fallbacks.categoryDefault")}
+                    value={fallbacks.categoryId}
+                    onChange={(e) => setFallbacks({ ...fallbacks, categoryId: e.target.value })}
+                  >
+                    <option value="">{t("fallbacks.pickCategory")}</option>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </Select>
+                ) : null}
+                {fallbacks.categoryMode === "guess" ? <p className="text-xs text-muted-foreground">{t("fallbacks.guessHint")}</p> : null}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fb-unit">{t("fallbacks.unit")}</Label>
+                <Select id="fb-unit" value={fallbacks.unit} onChange={(e) => setFallbacks({ ...fallbacks, unit: e.target.value as ProductUnit | "" })}>
+                  <option value="">{t("fallbacks.unitError")}</option>
+                  {PRODUCT_UNITS.map((u) => (
+                    <option key={u} value={u}>{tu(u)}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="space-y-1 sm:col-span-2">
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-[var(--brand)]"
+                    checked={fallbacks.autoSku}
+                    onChange={(e) => setFallbacks({ ...fallbacks, autoSku: e.target.checked })}
+                  />
+                  {t("fallbacks.autoSku")}
+                </label>
+                <p className="text-xs text-muted-foreground">{t("fallbacks.autoSkuHint")}</p>
+              </div>
+            </div>
+          </section>
           <p className="text-sm text-muted-foreground">
             {t("defaultsNote", { vat: NEW_PRODUCT_DEFAULTS.vatRate })}
           </p>
           <div className="flex flex-wrap gap-3">
-            <Button disabled={pending || missingRequiredFields(step.mapping).length > 0} onClick={() => analyze(step)}>
+            <Button disabled={pending || missingRequiredFields(step.mapping, options).length > 0 || (fallbacks.categoryMode === "default" && !fallbacks.categoryId)} onClick={() => analyze(step)}>
               {pending ? t("checking") : t("checkRows")}
             </Button>
             <Button variant="outline" onClick={() => setStep({ kind: "file" })}>
@@ -205,10 +276,17 @@ export function ImportWizard({ savedMapping, categoryNames }: { savedMapping: Im
                           ))}
                         </span>
                       ) : (
-                        <Badge tone={row.action === "create" ? "green" : "blue"}>
-                          {row.action === "create" ? <CircleCheck aria-hidden /> : <RefreshCw aria-hidden />}
-                          {t(`action.${row.action}`)}
-                        </Badge>
+                        <span className="flex flex-col items-start gap-1">
+                          <Badge tone={row.action === "create" ? "green" : "blue"}>
+                            {row.action === "create" ? <CircleCheck aria-hidden /> : <RefreshCw aria-hidden />}
+                            {t(`action.${row.action}`)}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">
+                            {row.category}
+                            {row.categorySource === "guess" ? ` (${t("preview.guessed")})` : row.categorySource === "default" ? ` (${t("preview.chosen")})` : ""}
+                            {row.skuGenerated ? ` · ${t("preview.code")}: ${row.sku}` : ""}
+                          </span>
+                        </span>
                       )}
                     </TD>
                   </TR>

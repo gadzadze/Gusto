@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { generateSku } from "@/lib/catalog/auto-sku";
+import { guessCategoryFromName } from "@/lib/catalog/category-guess";
 import { normalizeCategoryKey } from "@/lib/catalog/categories-standard";
-import { parseUnit } from "@/lib/catalog/units";
-import { parseMoneyInput } from "@/lib/money";
+import { PRODUCT_UNITS, parseUnit, type ProductUnit } from "@/lib/catalog/units";
+import { cleanAmountText, parseMoneyInput } from "@/lib/money";
 import { toValidationKey } from "@/lib/validation/form-errors";
 import { NEW_PRODUCT_DEFAULTS, productSchema, type ProductInput, type ProductValues } from "@/lib/validation/product";
 
@@ -46,11 +48,11 @@ export const importMappingSchema = z
 // Header spellings recognized automatically, normalized (lowercase, no
 // punctuation/spaces). Includes the downloadable template's Georgian headers.
 const HEADER_ALIASES: Record<ImportField, string[]> = {
-  name: ["სახელი", "დასახელება", "პროდუქტი", "name", "product", "productname"],
-  sku: ["sku", "კოდი", "არტიკული", "artikuli", "code"],
-  category: ["კატეგორია", "category"],
-  unit: ["ერთეული", "unit", "uom"],
-  price: ["ფასი", "price", "ფასი₾", "ფასილარი"],
+  name: ["სახელი", "დასახელება", "პროდუქტი", "პროდუქტისდასახელება", "პროდუქციისდასახელება", "საქონელი", "საქონლისდასახელება", "name", "product", "productname", "item", "itemname", "goods", "наименование", "товар", "название"],
+  sku: ["sku", "კოდი", "პროდუქტისკოდი", "არტიკული", "artikuli", "code", "productcode", "itemcode", "article", "barcode", "ბარკოდი", "შტრიხკოდი", "ean", "артикул", "код"],
+  category: ["კატეგორია", "ჯგუფი", "პროდუქტისჯგუფი", "category", "group", "productgroup", "категория", "группа"],
+  unit: ["ერთეული", "ზომისერთეული", "განზომილება", "unit", "uom", "unitofmeasure", "measure", "ед", "единица"],
+  price: ["ფასი", "ფასიდღგთი", "ფასიდღგსგარეშე", "ღირებულება", "price", "unitprice", "cost", "ფასი₾", "ფასილარი", "ფასიგელი", "цена"],
   vatRate: ["დღგ", "დღგ%", "vat", "vat%", "vatrate"],
   minQty: ["მინრაოდენობა", "მინიმალურირაოდენობა", "minqty", "minquantity", "min"],
   qtyStep: ["ბიჯი", "step", "qtystep", "increment"],
@@ -98,12 +100,41 @@ export type RowErrorKey =
   | ReturnType<typeof toValidationKey>
   | "invalid_unit"
   | "unknown_category"
+  | "category_not_guessed"
   | "duplicate_sku_in_file";
 
 export type RowError = { field: ImportField; key: RowErrorKey };
 
+/**
+ * What to do when a file lacks something Gusto needs. Each option only fills a
+ * gap: a cell that has text is never replaced (a misspelt category stays an
+ * error rather than being silently moved to another).
+ */
+export type ImportOptions = {
+  /** Category for rows whose category cell is empty (or whose column is not mapped). */
+  defaultCategoryId?: string;
+  /** Guess the category from the product name for such rows (needs the standard category to exist). */
+  guessCategory?: boolean;
+  /** Unit for rows whose unit cell is empty (or whose column is not mapped). */
+  defaultUnit?: ProductUnit;
+  /** Make a product code from the name for rows with no code. */
+  autoSku?: boolean;
+};
+
+export const importOptionsSchema = z
+  .object({
+    defaultCategoryId: z.uuid().optional(),
+    guessCategory: z.boolean().optional(),
+    defaultUnit: z.enum(PRODUCT_UNITS).optional(),
+    autoSku: z.boolean().optional(),
+  })
+  .default({});
+
+/** Where a value that was not in the file came from, shown in the preview. */
+export type RowMeta = { categoryId: string; categorySource: "file" | "default" | "guess"; skuGenerated: boolean };
+
 export type ParsedRow =
-  | { ok: true; values: ProductValues }
+  | { ok: true; values: ProductValues; meta: RowMeta }
   | { ok: false; errors: RowError[]; name: string };
 
 const SCHEMA_TO_IMPORT_FIELD: Record<string, ImportField> = {
@@ -130,6 +161,7 @@ export function parseImportRow(
   headers: readonly string[],
   mapping: ImportMapping,
   categoryIdByName: ReadonlyMap<string, string>,
+  options: ImportOptions = {},
 ): ParsedRow {
   const cell = (field: ImportField): string => {
     const header = mapping[field];
@@ -141,22 +173,39 @@ export function parseImportRow(
 
   const errors: RowError[] = [];
   const unitText = cell("unit");
-  const unit = parseUnit(unitText);
+  const unit = unitText ? parseUnit(unitText) : (options.defaultUnit ?? null);
   if (!unit) errors.push({ field: "unit", key: unitText ? "invalid_unit" : "required" });
 
   const categoryText = cell("category");
-  const categoryId = categoryIdByName.get(normalizeCategoryKey(categoryText));
-  if (!categoryId) errors.push({ field: "category", key: categoryText ? "unknown_category" : "required" });
+  let categoryId = categoryIdByName.get(normalizeCategoryKey(categoryText));
+  let categorySource: RowMeta["categorySource"] = "file";
+  if (!categoryText) {
+    // Nothing in the file: fall back to what the supplier chose, and only then.
+    if (options.defaultCategoryId) {
+      categoryId = options.defaultCategoryId;
+      categorySource = "default";
+    } else if (options.guessCategory) {
+      const guessed = guessCategoryFromName(cell("name"));
+      categoryId = guessed ? categoryIdByName.get(normalizeCategoryKey(guessed)) : undefined;
+      categorySource = "guess";
+      if (!categoryId) errors.push({ field: "category", key: "category_not_guessed" });
+    }
+  }
+  if (!categoryId && !errors.some((e) => e.field === "category")) {
+    errors.push({ field: "category", key: categoryText ? "unknown_category" : "required" });
+  }
+  const skuText = cell("sku");
+  const sku = skuText || (options.autoSku && cell("name") ? generateSku(cell("name")) : "");
 
   const input: ProductInput = {
     name: cell("name"),
-    sku: cell("sku"),
+    sku,
     brand: cell("brand"),
     description: cell("description"),
     packDescription: cell("packDescription"),
     categoryId: categoryId ?? "",
     unit: unit ?? "piece",
-    basePrice: cell("price"),
+    basePrice: cleanAmountText(cell("price")),
     vatRate: orDefault("vatRate", NEW_PRODUCT_DEFAULTS.vatRate),
     minQty: orDefault("minQty", NEW_PRODUCT_DEFAULTS.minQty),
     qtyStep: orDefault("qtyStep", NEW_PRODUCT_DEFAULTS.qtyStep),
@@ -171,12 +220,18 @@ export function parseImportRow(
     }
   }
   if (errors.length > 0 || !parsed.success) return { ok: false, errors, name: input.name };
-  return { ok: true, values: parsed.data };
+  return { ok: true, values: parsed.data, meta: { categoryId: categoryId as string, categorySource, skuGenerated: !skuText && Boolean(sku) } };
 }
 
 /** Required fields that have no column assigned. */
-export function missingRequiredFields(mapping: ImportMapping): ImportField[] {
-  return REQUIRED_IMPORT_FIELDS.filter((f) => !mapping[f]);
+export function missingRequiredFields(mapping: ImportMapping, options: ImportOptions = {}): ImportField[] {
+  return REQUIRED_IMPORT_FIELDS.filter((f) => {
+    if (mapping[f]) return false;
+    // A fallback the supplier chose stands in for a missing column.
+    if (f === "category") return !(options.defaultCategoryId || options.guessCategory);
+    if (f === "unit") return !options.defaultUnit;
+    return true;
+  });
 }
 
 // ── Price list overrides: SKU + price only ──────────────────────────────────

@@ -11,7 +11,7 @@ export async function adminWithCategory(browser: Browser, category: string): Pro
   await page.goto("/admin/categories");
   await page.waitForLoadState("networkidle");
   await page.getByPlaceholder("ახალი კატეგორია").fill(category);
-  await page.getByRole("button", { name: "დამატება" }).click();
+  await page.getByRole("button", { name: "დამატება", exact: true }).click();
   await expect(page.getByText(category)).toBeVisible();
   return page;
 }

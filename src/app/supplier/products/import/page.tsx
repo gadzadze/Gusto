@@ -38,5 +38,5 @@ async function Import() {
   if (categories.length === 0) {
     return <EmptyState icon={Tags} title={t("noCategoriesTitle")} body={t("noCategoriesBody")} />;
   }
-  return <ImportWizard savedMapping={savedMapping} categoryNames={categories.map((c) => c.name)} />;
+  return <ImportWizard savedMapping={savedMapping} categories={categories} />;
 }

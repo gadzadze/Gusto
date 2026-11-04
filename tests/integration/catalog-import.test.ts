@@ -36,9 +36,9 @@ describe("catalog import", () => {
       guessMapping(headers),
     );
     expect(analysis.counts).toEqual({ create: 1, update: 1, error: 2 });
-    expect(analysis.rows).toEqual([
-      { rowNumber: 2, action: "create", name: "New one", sku: "NEW-1" },
-      { rowNumber: 3, action: "update", name: "Existing renamed", sku: "EX-1" },
+    expect(analysis.rows).toMatchObject([
+      { rowNumber: 2, action: "create", name: "New one", sku: "NEW-1", category: category.name, categorySource: "file", skuGenerated: false },
+      { rowNumber: 3, action: "update", name: "Existing renamed", sku: "EX-1", categorySource: "file", skuGenerated: false },
       { rowNumber: 4, action: "error", name: "Bad", errors: [{ field: "category", key: "unknown_category" }] },
       { rowNumber: 5, action: "error", name: "Dup", errors: [{ field: "sku", key: "duplicate_sku_in_file" }] },
     ]);
@@ -67,6 +67,50 @@ describe("catalog import", () => {
       "V-3": ["piece", "რძის პროდუქტები"],
       "V-4": ["sack", "რძის პროდუქტები"],
     });
+  });
+
+  it("imports a plain name / unit / price list: guesses categories, makes stable codes, and updates on re-import", async () => {
+    const supplier = await createSupplier();
+    await createMissingCategories(admin, ["ყველი", "ხორცი და ფრინველი", "რძის პროდუქტები"]);
+    const plain: RawSheet = {
+      headers: ["დასახელება", "ერთეული", "ფასი"],
+      rows: [
+        ["ყველი პარმეზანი", "კგ", "30"],
+        ["ქათმის უძვლო ბარკალი", "კგ", "8,50"],
+        ["რძე 3,2% 1 ლ", "ცალი", "3,40 ₾"],
+        ["QZ-77 უცნობი", "ცალი", "1"],
+      ],
+    };
+    const mapping = guessMapping(plain.headers);
+    const options = { guessCategory: true, autoSku: true } as const;
+
+    const analysis = await analyzeImport(supplier, plain, mapping, options);
+    expect(analysis.counts).toEqual({ create: 3, update: 0, error: 1 });
+    expect(analysis.rows[0]).toMatchObject({ action: "create", category: "ყველი", categorySource: "guess", skuGenerated: true });
+    expect(analysis.rows[3]).toMatchObject({ action: "error", errors: [{ field: "category", key: "category_not_guessed" }] });
+    // Without the options the same file is rejected for its missing category column.
+    await expect(analyzeImport(supplier, plain, mapping)).rejects.toEqual(new StateError("missing_columns"));
+
+    expect(await commitImport(supplier, plain, mapping, "valid_only", options)).toEqual({ created: 3, updated: 0, skipped: 1 });
+    // The same list again, reordered and with a new price: same codes, so everything updates.
+    const again: RawSheet = { ...plain, rows: [plain.rows[2], plain.rows[0], ["ქათმის უძვლო ბარკალი", "კგ", "9"]] };
+    const second = await analyzeImport(supplier, again, mapping, options);
+    expect(second.counts).toEqual({ create: 0, update: 3, error: 0 });
+    expect(await commitImport(supplier, again, mapping, "all", options)).toEqual({ created: 0, updated: 3, skipped: 0 });
+    const items = (await listSupplierProducts(supplier, {})).items;
+    expect(items).toHaveLength(3);
+    expect(items.find((p) => p.name.startsWith("ქათმის"))?.basePriceMinor).toBe(900);
+  });
+
+  it("uses one chosen category for rows without one, and refuses a category that is not active", async () => {
+    const supplier = await createSupplier();
+    const plain: RawSheet = { headers: ["სახელი", "ერთეული", "ფასი"], rows: [["რამე", "ც", "2"]] };
+    const mapping = guessMapping(plain.headers);
+    const analysis = await analyzeImport(supplier, plain, mapping, { defaultCategoryId: category.id });
+    expect(analysis.rows[0]).toMatchObject({ action: "create", category: category.name, categorySource: "default", skuGenerated: false });
+    await expect(
+      analyzeImport(supplier, plain, mapping, { defaultCategoryId: "11111111-1111-4111-8111-111111111111" }),
+    ).rejects.toEqual(new StateError("invalid_options"));
   });
 
   it("commits nothing in 'all' mode when any row is invalid", async () => {

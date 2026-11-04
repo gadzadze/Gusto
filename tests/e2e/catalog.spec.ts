@@ -18,7 +18,7 @@ test("admin sets up a category; a supplier builds a catalog by hand and by impor
   grantAdmin(adminEmail);
   await adminPage.goto("/admin/categories");
   await adminPage.getByPlaceholder("ახალი კატეგორია").fill(category);
-  await adminPage.getByRole("button", { name: "დამატება" }).click();
+  await adminPage.getByRole("button", { name: "დამატება", exact: true }).click();
   await expect(adminPage.getByText(category)).toBeVisible();
 
   // Supplier: onboard (pending review) and create a product with a photo.
