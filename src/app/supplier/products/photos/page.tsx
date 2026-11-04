@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireSupplier } from "@/server/auth/guards";
 import { listProductsNeedingPhotos } from "@/server/domain/catalog/photo-fetch";
+import { webImageSearchEnabled } from "@/server/domain/catalog/web-image-search";
 
 export default async function PhotoReviewPage() {
   const t = await getTranslations("photoSuggest");
@@ -28,7 +29,7 @@ async function Body() {
   return (
     <div className="max-w-4xl space-y-5">
       <p className="text-sm text-muted-foreground">{t("intro")}</p>
-      <PhotoSuggestions products={items} disabled={ctx.orgStatus === "suspended"} />
+      <PhotoSuggestions products={items} disabled={ctx.orgStatus === "suspended"} webEnabled={webImageSearchEnabled()} />
     </div>
   );
 }

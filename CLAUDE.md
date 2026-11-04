@@ -557,7 +557,16 @@ What this codebase relies on:
   until the supplier picks one; the pick is re-fetched by barcode on the server (the browser never names an
   image URL). Product names (Latin) are sent to Open Food Facts for this, see the privacy text. The CSP
   `img-src` names `images.openfoodfacts.org` for the thumbnails (asserted in `security-headers.test.ts`).
-  Rate limit `photoSearch` 150/h. Searching the open web for images is NOT built (copyright, search-API terms).
+  Rate limit `photoSearch` 150/h. **Web photo search** (`server/domain/catalog/web-image-search.ts`, optional, hidden unless
+  `IMAGE_SEARCH_API_KEY` + `IMAGE_SEARCH_ENGINE_ID` are set; Google Programmable Search, image mode, **not
+  verified against the live API**): the supplier picks; the photo is stored as THAT supplier's own private
+  upload (`image_source = own`, never in the shared library) and `products.image_source_url` keeps the page
+  it came from (shown on the product page; cleared on replace/remove). Copyright is the supplier's call, and
+  the screen says so. Safeguards: candidates are HMAC-signed by the server and only valid for the supplier
+  they were issued to (the browser never sends a URL); downloads are https only, public addresses only
+  (DNS result checked, redirects re-checked, max 2), 4 MB, 10 s; previews are fetched server-side and sent as
+  data URLs so the CSP needs no extra image hosts. Rate limit `webImageSearch` 60/h; the Google free quota is
+  100 searches/day for the whole project. Product names go to Google (see Privacy).
 - **Units are also the packaging** (`lib/catalog/units.ts`): piece, kg, g, l, ml,
   box, pack, case, bottle, jar, bag, sack, keg, pallet, bunch, roll, bucket. The
   import accepts many spellings per unit (Georgian, English, a few Russian), see

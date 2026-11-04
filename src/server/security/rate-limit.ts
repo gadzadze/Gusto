@@ -28,6 +28,8 @@ export const RATE_LIMITS = {
   photoFetch: { name: "photo_fetch", limit: 40, windowSeconds: 3600 },
   /** Photo suggestions by name: 150 searches per hour per supplier (each product is one search). */
   photoSearch: { name: "photo_search", limit: 150, windowSeconds: 3600 },
+  /** Web image search: 60 searches per hour per supplier (the search API has a small daily quota). */
+  webImageSearch: { name: "web_image_search", limit: 60, windowSeconds: 3600 },
   imageUpload: { name: "image_upload", limit: 300, windowSeconds: 3600 },
 } as const;
 

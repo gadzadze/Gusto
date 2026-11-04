@@ -16,6 +16,7 @@ import {
   type CatalogWriteError,
 } from "@/server/domain/catalog/products";
 import { applyPhotoCandidate, findPhotos, listPhotoCandidates, searchPhotoCandidates, type PhotoCandidate, type PhotoFetchResult, type SearchOutcome } from "@/server/domain/catalog/photo-fetch";
+import { applyWebImage, searchWebImages, type WebSearchOutcome } from "@/server/domain/catalog/web-image-search";
 import { ImageError, MAX_IMAGE_BYTES, type ImageErrorCode } from "@/server/storage/images";
 import { supabaseImageStorage } from "@/server/storage/image-storage";
 
@@ -157,3 +158,28 @@ export async function applyPhotoCandidateAction(
 }
 
 export type { PhotoCandidate };
+
+/** Web photo suggestions for one product (only when the search is configured). */
+export async function searchWebImagesAction(
+  productId: string,
+): Promise<{ ok: true; outcome: WebSearchOutcome } | ActionError<CatalogWriteError | "rate_limited">> {
+  const ctx = await requireSupplier();
+  if (typeof productId !== "string") return { ok: false, error: "invalid" };
+  return runAction<{ ok: true; outcome: WebSearchOutcome }, CatalogWriteError | "rate_limited">("searchWebImages", async () => ({
+    ok: true,
+    outcome: await searchWebImages(ctx, productId),
+  }));
+}
+
+export async function applyWebImageAction(
+  productId: string,
+  token: string,
+): Promise<{ ok: true; status: "attached" | "failed" } | ActionError<CatalogWriteError | "rate_limited">> {
+  const ctx = await requireSupplier();
+  if (typeof productId !== "string" || typeof token !== "string" || token.length > 4000) return { ok: false, error: "invalid" };
+  return runAction<{ ok: true; status: "attached" | "failed" }, CatalogWriteError | "rate_limited">("applyWebImage", async () => {
+    const status = await applyWebImage(ctx, productId, token, supabaseImageStorage());
+    if (status === "attached") refresh();
+    return { ok: true, status };
+  });
+}
