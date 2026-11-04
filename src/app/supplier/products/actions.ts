@@ -15,7 +15,6 @@ import {
   updateProduct,
   type CatalogWriteError,
 } from "@/server/domain/catalog/products";
-import { applyPhotoCandidate, findPhotos, listPhotoCandidates, searchPhotoCandidates, type PhotoCandidate, type PhotoFetchResult, type SearchOutcome } from "@/server/domain/catalog/photo-fetch";
 import { ImageError, MAX_IMAGE_BYTES, type ImageErrorCode } from "@/server/storage/images";
 import { supabaseImageStorage } from "@/server/storage/image-storage";
 
@@ -105,55 +104,3 @@ export async function removeProductImageAction(productId: string): Promise<{ ok:
     return { ok: true };
   });
 }
-
-/** Ids of this supplier's products that have a barcode but no photo, for the bulk "find photos" button. */
-export async function listPhotoCandidatesAction(): Promise<{ ok: true; productIds: string[] } | ProductError> {
-  const ctx = await requireSupplier();
-  return runAction<{ ok: true; productIds: string[] }, CatalogWriteError>("listPhotoCandidates", async () => ({
-    ok: true,
-    productIds: await listPhotoCandidates(ctx),
-  }));
-}
-
-/** Looks up photos by barcode for one small batch of products (the client sends batches). */
-export async function findPhotosAction(
-  productIds: string[],
-): Promise<{ ok: true; result: PhotoFetchResult } | ActionError<CatalogWriteError | "rate_limited">> {
-  const ctx = await requireSupplier();
-  if (!Array.isArray(productIds) || productIds.length > 100 || productIds.some((id) => typeof id !== "string")) {
-    return { ok: false, error: "invalid" };
-  }
-  return runAction<{ ok: true; result: PhotoFetchResult }, CatalogWriteError | "rate_limited">("findPhotos", async () => {
-    const result = await findPhotos(ctx, productIds, supabaseImageStorage());
-    refresh();
-    return { ok: true, result };
-  });
-}
-
-/** Suggestions (Open Food Facts products with photos) for one product, found by its name. */
-export async function searchPhotoCandidatesAction(
-  productId: string,
-): Promise<{ ok: true; outcome: SearchOutcome } | ActionError<CatalogWriteError | "rate_limited">> {
-  const ctx = await requireSupplier();
-  if (typeof productId !== "string") return { ok: false, error: "invalid" };
-  return runAction<{ ok: true; outcome: SearchOutcome }, CatalogWriteError | "rate_limited">("searchPhotoCandidates", async () => ({
-    ok: true,
-    outcome: await searchPhotoCandidates(ctx, productId),
-  }));
-}
-
-/** The supplier picked one suggestion for a product. */
-export async function applyPhotoCandidateAction(
-  productId: string,
-  barcode: string,
-): Promise<{ ok: true; status: "attached" | "not_found" | "unavailable" } | ActionError<CatalogWriteError>> {
-  const ctx = await requireSupplier();
-  if (typeof productId !== "string" || typeof barcode !== "string") return { ok: false, error: "invalid" };
-  return runAction<{ ok: true; status: "attached" | "not_found" | "unavailable" }, CatalogWriteError>("applyPhotoCandidate", async () => {
-    const status = await applyPhotoCandidate(ctx, productId, barcode, supabaseImageStorage());
-    if (status === "attached") refresh();
-    return { ok: true, status };
-  });
-}
-
-export type { PhotoCandidate };

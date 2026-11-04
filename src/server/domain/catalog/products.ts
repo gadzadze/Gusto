@@ -227,7 +227,7 @@ export async function setProductImage(
 
   const updated = await getDb()
     .update(products)
-    .set({ imagePath: prefix, imageSource: "own" })
+    .set({ imagePath: prefix })
     .where(and(eq(products.id, product.id), eq(products.supplierOrgId, ctx.orgId)))
     .returning({ id: products.id });
   if (updated.length === 0) {
@@ -235,8 +235,7 @@ export async function setProductImage(
     throw new NotFoundError("product");
   }
 
-  // A shared photo belongs to every supplier who uses it: only our own uploads are deleted.
-  if (product.imagePath && product.imageSource === "own") {
+  if (product.imagePath) {
     await storage.remove(imageFilePaths(product.imagePath)).catch((error: unknown) => {
       console.error("[catalog] old image cleanup failed", {
         productId: product.id,
@@ -253,9 +252,8 @@ export async function removeProductImage(ctx: OrgCtx, productId: string, storage
   if (!product.imagePath) return;
   await getDb()
     .update(products)
-    .set({ imagePath: null, imageSource: "own" })
+    .set({ imagePath: null })
     .where(and(eq(products.id, product.id), eq(products.supplierOrgId, ctx.orgId)));
-  if (product.imageSource === "shared") return;
   await storage.remove(imageFilePaths(product.imagePath)).catch((error: unknown) => {
     console.error("[catalog] image removal failed", {
       productId: product.id,

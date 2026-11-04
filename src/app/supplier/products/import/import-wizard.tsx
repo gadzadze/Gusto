@@ -24,7 +24,6 @@ import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { NEW_PRODUCT_DEFAULTS } from "@/lib/validation/product";
 import type { ImportAnalysis, ImportCommitResult } from "@/server/domain/catalog/import";
 import { analyzeImportAction, commitImportAction } from "./actions";
-import { lookupPhotos, PhotoLookupSummary, type PhotoLookupTotals } from "@/components/catalog/find-photos";
 import { preparePhotoFile } from "@/lib/catalog/prepare-photo";
 import { readSpreadsheetWithPhotos } from "@/lib/catalog/read-sheet";
 import type { SheetImage } from "@/lib/catalog/sheet-images";
@@ -68,7 +67,6 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
   const [pending, startTransition] = useTransition();
   const [photoData, setPhotoData] = useState<PhotoData | null>(null);
   const [upload, setUpload] = useState<{ done: number; total: number; failed: number } | null>(null);
-  const [lookup, setLookup] = useState<PhotoLookupTotals | null>(null);
 
   const actionErrorText = (code: string) =>
     ["missing_columns", "has_errors", "nothing_to_import", "suspended"].includes(code)
@@ -86,7 +84,6 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
       const result = read.sheet;
       setPhotoData({ photos: read.photos, skipped: read.skippedPhotos });
       setUpload(null);
-      setLookup(null);
       const mapping = guessMapping(result.headers, savedMapping);
       // A file with no category or no code column gets the sensible fallback switched on; the preview shows what it did.
       setFallbacks({ categoryMode: mapping.category ? "error" : "guess", categoryId: "", unit: "", autoSku: !mapping.sku });
@@ -109,15 +106,8 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
       const result = await commitImportAction({ sheet: s.sheet, mapping: s.mapping, mode, options });
       if (!result.ok) return setError(actionErrorText(result.error));
       setStep({ kind: "done", result: result.result });
-      void afterImport(result.result.targets);
+      void uploadPhotos(result.result.targets);
     });
-  };
-
-  // First the photos that came with the file, then a barcode lookup for the rest.
-  const afterImport = async (targets: ImportCommitResult["targets"]) => {
-    await uploadPhotos(targets);
-    const withoutPhoto = targets.filter((target) => !photoData?.photos.has(target.rowNumber - 2)).map((target) => target.productId);
-    if (withoutPhoto.length > 0) await lookupPhotos(withoutPhoto, setLookup);
   };
 
   // Photos go up one by one after the products exist, each through the normal image action.
@@ -395,7 +385,6 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
                 : t("photos.uploaded", { ok: upload.total - upload.failed, failed: upload.failed })}
             </FormAlert>
           ) : null}
-          {lookup && (lookup.attached + lookup.notFound + lookup.failed > 0 || lookup.done < lookup.total) ? <PhotoLookupSummary totals={lookup} /> : null}
           {step.result.created + step.result.updated > 0 ? (
             <FormAlert tone="warning">
               <strong>{t("doneCheckTitle")}.</strong> {t("doneCheckBody")}

@@ -37,9 +37,7 @@ describe("security headers (next.config)", () => {
       const hosts = directive(d).split(" ").filter((v) => v.startsWith("https://"));
       // The one exception: connections to Hugging Face, where the background remover's
       // model file (pinned and hash-checked) is downloaded once per device.
-      // And img-src: thumbnails of photo suggestions from Open Food Facts (the picked photo is copied to our storage).
-      const allowed = d === "connect-src" ? ["https://huggingface.co", "https://*.hf.co"] : d === "img-src" ? ["https://images.openfoodfacts.org"] : [];
-      expect(hosts, d).toEqual(allowed);
+      expect(hosts, d).toEqual(d === "connect-src" ? ["https://huggingface.co", "https://*.hf.co"] : []);
     }
     expect(directive("script-src")).toContain("'wasm-unsafe-eval'"); // WebAssembly only, not string eval
     expect(directive("script-src")).not.toContain("'unsafe-eval'"); // only development needs it
@@ -50,7 +48,7 @@ describe("security headers (next.config)", () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://abcd1234.supabase.co/some/path";
     try {
       const csp = (await headers()).get("Content-Security-Policy")!;
-      expect(csp).toContain("img-src 'self' data: blob: https://abcd1234.supabase.co https://images.openfoodfacts.org");
+      expect(csp).toContain("img-src 'self' data: blob: https://abcd1234.supabase.co");
       expect(csp).toContain("connect-src 'self' https://abcd1234.supabase.co");
       expect(csp).not.toContain("/some/path");
     } finally {
