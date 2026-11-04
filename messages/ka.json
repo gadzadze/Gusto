@@ -278,6 +278,16 @@
     "admin": "ადმინისტრირება",
     "signOut": "გასვლა",
     "menu": "ნავიგაცია",
+    "bar": {
+      "suppliers": "მომწოდე\u00adბლები",
+      "products": "პროდუქ\u00adტები",
+      "orders": "შეკვეთე\u00adბი",
+      "customers": "კლიენ\u00adტები",
+      "organizations": "ორგანიზა\u00adციები",
+      "requests": "მოთხოვ\u00adნები"
+    },
+    "more": "მეტი",
+    "closeMore": "მენიუს დახურვა",
     "products": "პროდუქტები",
     "settings": "პარამეტრები",
     "suppliers": "მომწოდებლები",
