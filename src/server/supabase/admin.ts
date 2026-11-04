@@ -28,6 +28,23 @@ export function explainAdminApiError(message: string, key: string): string {
 }
 
 /**
+ * A one-time sign-in link for an existing auth user, as a URL on our own site
+ * (/auth/confirm verifies the token hash). Never log it. The lifetime is
+ * Supabase's email OTP expiry (Auth settings).
+ */
+export async function signInLinkFor(email: string): Promise<string> {
+  const { data, error } = await adminClient().auth.admin.generateLink({ type: "magiclink", email });
+  const hashed = data?.properties?.hashed_token;
+  if (error || !hashed) {
+    throw new Error(`could not create the sign-in link: ${explainAdminApiError(error?.message ?? "no token", serviceRoleKey())}`);
+  }
+  const url = new URL("/auth/confirm", serverEnv().NEXT_PUBLIC_APP_URL);
+  url.searchParams.set("token_hash", hashed);
+  url.searchParams.set("type", "magiclink");
+  return url.toString();
+}
+
+/**
  * Makes sure an auth user exists for this address (confirmed, so a sign-in link
  * works at once). Needed because sign-ups are switched off in Supabase: only
  * users we create can sign in. Idempotent.

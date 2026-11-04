@@ -150,7 +150,16 @@ real need appears).
     `submitOnboarding` / the invite action refuse the other (`wrong_role`).
 12. **Partners use their own company address and their own password.** Nobody
     creates accounts or passwords for them. The first sign-in is the emailed link
-    (proof they control the mailbox); until `profiles.password_set_at` is set,
+    (proof they control the mailbox). **The link is sent automatically when the
+    business is accepted** (`server/auth/welcome-email.ts`: admin adds or restores an
+    address, bulk add, or approves a supplier request; re-adding an already allowed
+    address sends nothing). It is generated with `signInLinkFor` (our own
+    `/auth/confirm` URL), sent directly (never through the outbox, never stored or
+    logged), and the admin screens say sent / not sent (no email provider
+    configured) / failed. A lost or expired link is replaced from the sign-in page
+    ("set or reset password", the `reset` intent, which lands on `/account/password`);
+    there is no separate "first sign-in" button. Link lifetime is Supabase's email OTP
+    expiry (Auth settings). Until `profiles.password_set_at` is set,
     every guard sends them to `/account/password` (`decideAccess` →
     `set_password`). After that: email + password (`submitLogin`), "forgot" =
     the same link landing on `/account/password`, change in the shell. Magic

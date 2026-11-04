@@ -41,7 +41,7 @@ export function RequestList({ rows }: { rows: RequestRow[] }) {
         setRejecting(null);
         setNote("");
         if (action === "approve") {
-          setMessage({ tone: "success", text: result.authUserFailed ? t("approvedAuthWarning") : t("approved") });
+          setMessage({ tone: "success", text: result.authUserFailed ? t("approvedAuthWarning") : result.welcome ? t(`approvedWelcome.${result.welcome}`) : t("approved") });
         }
         return;
       }

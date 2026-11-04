@@ -14,7 +14,7 @@ async function requestLink(page: Page, email: string, next = "") {
   await page.goto(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   await page.waitForLoadState("networkidle");
   await page.getByLabel("ელფოსტა").fill(email);
-  await page.getByRole("button", { name: "პირველი შესვლა - გამომიგზავნეთ ბმული" }).click();
+  await page.getByRole("button", { name: "პაროლის დაყენება ან აღდგენა" }).click();
 }
 
 test("an unregistered address gets no sign-in link", async ({ page }) => {
@@ -35,7 +35,8 @@ test("admin registers an address, it can sign in, revoking blocks it again", asy
   await admin.getByLabel("ელფოსტა", { exact: true }).fill(person);
   await admin.getByLabel("შენიშვნა").fill("[E2E] pilot supplier");
   await admin.getByRole("button", { name: "დამატება" }).click();
-  await expect(admin.getByText("ელფოსტა დაემატა.")).toBeVisible();
+  // No email provider in the test environment, so the welcome email is reported as not sent (never as sent).
+  await expect(admin.getByText(/ელფოსტა დაემატა, მაგრამ წერილი არ გაიგზავნა/)).toBeVisible();
   const row = admin.getByRole("listitem").filter({ hasText: person });
   await expect(row).toContainText("აქვს წვდომა");
   await expect(row).toContainText("[E2E] pilot supplier");
