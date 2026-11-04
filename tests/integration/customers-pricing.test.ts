@@ -11,7 +11,7 @@ import {
   searchConnectedCatalogs,
 } from "@/server/domain/buyer/catalog";
 import { getCart, setCartQuantity } from "@/server/domain/orders/cart";
-import { setProductActive } from "@/server/domain/catalog/products";
+import { getSupplierProduct, listSupplierProducts, setProductActive } from "@/server/domain/catalog/products";
 import type { AdminCtx, OrgCtx, SupplierCtx } from "@/server/domain/context";
 import {
   createCustomer,
@@ -406,6 +406,24 @@ describe("assortment per customer", () => {
 
     expect(await setAllListItems(supplier, list, false)).toBe(2);
     expect((await listPriceListProducts(supplier, list, { onlyIncluded: true })).items).toEqual([]);
+  });
+});
+
+describe("stock count", () => {
+  it("is stored for the supplier and never reaches a buyer", async () => {
+    const supplier = await createSupplier();
+    const p = await createTestProduct(supplier, categoryId, { name: "[TEST] Counted", stock: "12,5" });
+    expect((await getSupplierProduct(supplier, p)).stockMilli).toBe(12500);
+    expect((await listSupplierProducts(supplier, {})).items[0].stockMilli).toBe(12500);
+
+    const buyer = await createBuyer();
+    await connectBuyer(supplier, buyer);
+    const seen = (await listBuyerCatalog(buyer, supplier.orgId, {})).items[0];
+    expect(JSON.stringify(seen)).not.toMatch(/stock/i);
+    const [group] = await searchConnectedCatalogs(buyer, "Counted");
+    expect(JSON.stringify(group)).not.toMatch(/stock/i);
+    // Informational only: ordering is not limited by it.
+    await setCartQuantity(buyer, supplier.orgId, p, 50_000);
   });
 });
 

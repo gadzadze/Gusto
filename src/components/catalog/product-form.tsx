@@ -157,6 +157,9 @@ export function ProductForm({
           <Field id="qtyStep" label={t("form.qtyStep")} hint={t("form.qtyStepHint")} error={err("qtyStep")}>
             <Input inputMode="decimal" {...input("qtyStep", t("form.qtyStepHint"))} />
           </Field>
+          <Field id="stock" label={t("form.stock")} hint={t("form.stockHint")} error={err("stock")}>
+            <Input inputMode="decimal" {...input("stock", t("form.stockHint"))} />
+          </Field>
         </div>
       </section>
 

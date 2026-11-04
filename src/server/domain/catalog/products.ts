@@ -48,6 +48,7 @@ export type ProductListFilters = {
 export type ProductListItem = Pick<
   Product,
   | "id"
+  | "stockMilli"
   | "name"
   | "sku"
   | "brand"
@@ -89,6 +90,7 @@ export async function listSupplierProducts(
       imagePath: products.imagePath,
       basePriceMinor: products.basePriceMinor,
       vatRateBp: products.vatRateBp,
+      stockMilli: products.stockMilli,
       isActive: products.isActive,
       updatedAt: products.updatedAt,
       categoryName: categories.name,
@@ -138,6 +140,7 @@ function productColumns(values: ProductValues) {
     vatRateBp: values.vatRate,
     minQtyMilli: values.minQty,
     qtyStepMilli: values.qtyStep,
+    stockMilli: values.stock,
     searchText: productSearchText(values),
   };
 }

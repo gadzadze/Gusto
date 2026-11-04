@@ -134,6 +134,13 @@
       "when": 1793740248635,
       "tag": "0018_list_items_nullable_price",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793771589615,
+      "tag": "0019_product_stock",
+      "breakpoints": true
     }
   ]
 }

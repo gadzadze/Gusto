@@ -14,6 +14,7 @@ import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatMoney } from "@/lib/money";
+import { formatQuantityNumber } from "@/lib/quantity";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
 import { isUuid, listSupplierProducts } from "@/server/domain/catalog/products";
@@ -118,6 +119,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                   <TH>{t("columns.product")}</TH>
                   <TH>{t("columns.category")}</TH>
                   <TH className="text-right">{t("columns.price")}</TH>
+                  <TH className="text-right">{t("columns.stock")}</TH>
                   <TH>{t("columns.status")}</TH>
                 </TR>
               </THead>
@@ -140,6 +142,15 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                       {formatMoney(p.basePriceMinor, settings.currency)}{" "}
                       <span className="text-muted-foreground">{t("perUnit", { unit: tu(p.unit) })}</span>
                     </TD>
+                    <TD className="whitespace-nowrap text-right tabular-nums">
+                      {p.stockMilli === null ? (
+                        <span className="text-muted-foreground">{t("stockNotTracked")}</span>
+                      ) : (
+                        <>
+                          {formatQuantityNumber(p.stockMilli)} <span className="text-muted-foreground">{tu(p.unit)}</span>
+                        </>
+                      )}
+                    </TD>
                     <TD><ProductStatusBadge isActive={p.isActive} /></TD>
                   </TR>
                 ))}
@@ -156,6 +167,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                     <span className="block truncate font-medium">{p.name}</span>
                     <span className="block text-sm tabular-nums text-muted-foreground">
                       {formatMoney(p.basePriceMinor, settings.currency)} {t("perUnit", { unit: tu(p.unit) })}
+                      {p.stockMilli === null ? "" : ` · ${t("columns.stock")}: ${formatQuantityNumber(p.stockMilli)} ${tu(p.unit)}`}
                     </span>
                   </span>
                   <ProductStatusBadge isActive={p.isActive} />

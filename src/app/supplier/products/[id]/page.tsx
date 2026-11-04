@@ -69,6 +69,7 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
     vatRate: String(product.vatRateBp / 100).replace(".", ","),
     minQty: milliToInput(product.minQtyMilli, ","),
     qtyStep: milliToInput(product.qtyStepMilli, ","),
+    stock: product.stockMilli === null ? "" : milliToInput(product.stockMilli, ","),
   };
   const imageError = typeof query.image === "string" && IMAGE_ERRORS.has(query.image) ? query.image : null;
 
