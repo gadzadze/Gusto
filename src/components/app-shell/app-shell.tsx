@@ -34,7 +34,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
-      <aside className="hidden border-r border-border bg-surface-2 md:flex md:min-h-dvh md:flex-col print:!hidden">
+      <aside className="hidden border-r border-border bg-surface-2 md:sticky md:top-0 md:flex md:h-dvh md:flex-col print:!hidden">
         <div className="flex items-center justify-between gap-2 px-5 pb-4 pt-5">
           <Logo />
           {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
@@ -43,7 +43,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           {title ? <p className="truncate text-sm font-medium" title={title}>{title}</p> : null}
           <Badge tone="brand" className="mt-1.5">{roleLabel}</Badge>
         </div>
-        <div className="flex-1 px-3">
+        <div className="min-h-0 flex-1 overflow-y-auto px-3">
           <SidebarNav {...navProps} />
         </div>
         <div className="border-t border-border p-3">
