@@ -55,7 +55,7 @@ describe("legal documents", () => {
 
   it("names the processors the code actually uses", () => {
     const text = allText(ka.legal.privacy as never);
-    for (const processor of ["Supabase", "Vercel", "Resend", "Google", "Sentry"]) expect(text).toContain(processor);
+    for (const processor of ["Supabase", "Vercel", "Resend", "Google", "Sentry", "Hugging Face"]) expect(text).toContain(processor);
   });
 
   it("the last-updated date is a real date", () => {

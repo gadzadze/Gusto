@@ -662,6 +662,38 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Uptime**: a Sentry uptime monitor ("Gusto health", every 5 minutes) checks
   `/api/health` of the production URL. Update its URL when a domain is attached.
 
+## Photo background remover
+
+`components/catalog/background-remover.tsx`, `lib/image/background-removal/*`.
+On the product form and the image manager, a chosen photo can be cleaned before
+it is uploaded: the subject is cut out and centred on a flat white 1200px square
+(a JPEG named `<name>-clean.jpg`). The supplier sees before and after and picks
+one; only the chosen file is uploaded, through the normal image action.
+
+- **It runs on the supplier's device.** A module Web Worker runs BiRefNet-lite
+  (MIT, ONNX) with `onnxruntime-web`; the photo is never sent anywhere. On
+  **WebGPU** where the device has it (a few seconds); otherwise on the CPU
+  through WebAssembly (about a minute, always the 224 MB model, and the hint
+  says so). Devices reporting under 4 GB of memory, or without Worker /
+  OffscreenCanvas / WebAssembly, get a short "not available" note instead.
+- **The model** (114 MB fp16 when the device has `shader-f16`, else 224 MB fp32)
+  is fetched from Hugging Face by the browser once, pinned to a commit and
+  **verified against a SHA-256** (`config.ts`) before use, then cached in Cache
+  Storage. That is why the CSP `connect-src` names `huggingface.co`/`*.hf.co`
+  (the one exception, asserted in `tests/unit/security-headers.test.ts`), why
+  `script-src` has `'wasm-unsafe-eval'`, and why the privacy text mentions it.
+  To change the model, update the revision, size and hash together.
+- **onnxruntime's `.wasm`/`.mjs` (the asyncify and jspi builds) are served from `/ort/`**, copied from `node_modules` by
+  `scripts/copy-ort.mjs` (`predev`/`prebuild`; git-ignored, ESLint-ignored). Do
+  not install `@huggingface/transformers`: it drags in `onnxruntime-node`
+  (about 550 MB) for nothing.
+- A cut-out that kept almost nothing or almost everything (`maskCoverage`) is
+  flagged to the supplier. The pure maths is unit-tested (`math.ts`); the browser
+  run is `tests/e2e/background-removal.spec.ts`, which only runs with
+  `E2E_BG_MODEL_DIR` and `E2E_BG_PHOTO` set; headless Chromium has no GPU, so it
+  exercises the CPU path (the WebGPU path could not be run in the cloud sandbox:
+  software WebGPU crashes on this model, so check it on a real machine).
+
 ## Launch specifics (milestone 6)
 
 - **Dashboards** compute from real rows only, with each number's definition
@@ -776,7 +808,7 @@ supplier request form.
 - **Claims must stay true.** The policy says: only essential cookies, no
   analytics or ads, IP addresses kept hashed and pruned within a day, backups
   kept about 14 days, admins never see catalogs or price lists, and lists the
-  processors (Supabase, Vercel, Resend, Google, Sentry). When you add analytics, error
+  processors (Supabase, Vercel, Resend, Google, Sentry) and the one-off model download from Hugging Face. When you add analytics, error
   monitoring (Sentry), a new processor, a new kind of personal data or change
   retention, update `legal` **and** `LEGAL_UPDATED` in `lib/legal.ts`.
   `tests/unit/legal.test.ts` ties the 14-day claim to the backup workflow.

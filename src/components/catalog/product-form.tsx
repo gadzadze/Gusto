@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { describedBy, Field } from "@/components/forms/field";
+import { BackgroundRemover } from "@/components/catalog/background-remover";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
@@ -179,6 +180,7 @@ export function ProductForm({
             />
           </label>
           <p className="text-sm text-muted-foreground">{t("form.imageHint")}</p>
+          <BackgroundRemover file={image} onUse={setImage} disabled={disabled} />
         </section>
       ) : null}
 
