@@ -54,3 +54,24 @@ export function roundHalfUp(numerator: bigint, denominator: bigint): bigint {
 export function lineTotalMinor(unitPriceMinor: number, qtyMilli: number): number {
   return Number(roundHalfUp(BigInt(unitPriceMinor) * BigInt(qtyMilli), 1000n));
 }
+
+/**
+ * Makes a price cell from a real-world file parseable: currency signs and words
+ * ("₾", "GEL", "ლარი") are dropped, and when both "," and "." appear the last
+ * one is the decimal mark ("1,250.50" and "1.250,50" both mean 1250.50).
+ * Anything that is still not an amount stays as it is, so it is reported.
+ */
+export function cleanAmountText(input: string): string {
+  let text = input
+    .replace(/[₾$€£]/g, "")
+    .replace(/(?<!\p{L})(gel|lari|ლარი|ლარის|lar|usd|eur)(?!\p{L})\.?/giu, "")
+    .replace(/[\s\u00a0]/g, "");
+  const lastComma = text.lastIndexOf(",");
+  const lastDot = text.lastIndexOf(".");
+  if (lastComma >= 0 && lastDot >= 0) {
+    const decimal = lastComma > lastDot ? "," : ".";
+    const thousands = decimal === "," ? "." : ",";
+    text = text.split(thousands).join("");
+  }
+  return text;
+}

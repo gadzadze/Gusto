@@ -62,6 +62,7 @@ describe("parseImportRow", () => {
     const parsed = parseImportRow(row(), templateHeaders, mapping, categories);
     expect(parsed).toEqual({
       ok: true,
+      meta: { categoryId: CAT, categorySource: "file", skuGenerated: false },
       values: expect.objectContaining({
         name: "სულგუნი",
         sku: "S-1",
@@ -119,7 +120,7 @@ describe("categoryNamesInSheet", () => {
   });
 
   it("uses a column picked by hand, and returns null when there is none", () => {
-    expect(categoryNamesInSheet({ headers: ["a", "group"], rows: [["x", "G1"], ["y", "G2"]] })).toBeNull();
-    expect(categoryNamesInSheet({ headers: ["a", "group"], rows: [["x", "G1"], ["y", "G2"]] }, "group")?.names).toEqual(["G1", "G2"]);
+    expect(categoryNamesInSheet({ headers: ["a", "bucket"], rows: [["x", "G1"], ["y", "G2"]] })).toBeNull();
+    expect(categoryNamesInSheet({ headers: ["a", "bucket"], rows: [["x", "G1"], ["y", "G2"]] }, "bucket")?.names).toEqual(["G1", "G2"]);
   });
 });

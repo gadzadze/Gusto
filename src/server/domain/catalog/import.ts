@@ -6,8 +6,10 @@ import {
   parseImportRow,
   type ImportField,
   type ImportMapping,
+  type ImportOptions,
   type RawSheet,
   type RowError,
+  type RowMeta,
 } from "@/lib/catalog/import";
 import type { ProductValues } from "@/lib/validation/product";
 import { getDb } from "@/server/db/client";
@@ -17,7 +19,16 @@ import { StateError } from "@/server/domain/errors";
 import { assertCatalogWritable, productSearchText } from "./products";
 
 export type ImportRowResult =
-  | { rowNumber: number; action: "create" | "update"; name: string; sku: string | null }
+  | {
+      rowNumber: number;
+      action: "create" | "update";
+      name: string;
+      sku: string | null;
+      /** What the row will be filed under, and whether the file said so. */
+      category: string;
+      categorySource: RowMeta["categorySource"];
+      skuGenerated: boolean;
+    }
   | { rowNumber: number; action: "error"; name: string; errors: RowError[] };
 
 export type ImportAnalysis = {
@@ -27,12 +38,12 @@ export type ImportAnalysis = {
 
 export type ImportCommitResult = { created: number; updated: number; skipped: number };
 
-export type ImportError = "missing_columns" | "has_errors" | "nothing_to_import";
+export type ImportError = "missing_columns" | "has_errors" | "nothing_to_import" | "invalid_options";
 
 type Planned = { rowNumber: number; values: ProductValues; existingId: string | null };
 
-async function plan(ctx: OrgCtx, sheet: RawSheet, mapping: ImportMapping) {
-  const missing = missingRequiredFields(mapping);
+async function plan(ctx: OrgCtx, sheet: RawSheet, mapping: ImportMapping, options: ImportOptions) {
+  const missing = missingRequiredFields(mapping, options);
   if (missing.length > 0) throw new StateError<ImportError>("missing_columns");
 
   const db = getDb();
@@ -41,13 +52,18 @@ async function plan(ctx: OrgCtx, sheet: RawSheet, mapping: ImportMapping) {
     .from(categories)
     .where(eq(categories.isArchived, false));
   const categoryIdByName = buildCategoryLookup(activeCategories);
+  const categoryNameById = new Map(activeCategories.map((c) => [c.id, c.name]));
+  // A chosen fallback category must be a real, active one.
+  if (options.defaultCategoryId && !categoryNameById.has(options.defaultCategoryId)) {
+    throw new StateError<ImportError>("invalid_options");
+  }
 
   const results: ImportRowResult[] = [];
   const planned: Planned[] = [];
   const seenSkus = new Set<string>();
   const parsedRows = sheet.rows.map((row, i) => ({
     rowNumber: i + 2, // 1-based, after the header row, as the spreadsheet shows it
-    parsed: parseImportRow(row, sheet.headers, mapping, categoryIdByName),
+    parsed: parseImportRow(row, sheet.headers, mapping, categoryIdByName, options),
   }));
 
   const skus = parsedRows.flatMap((r) => (r.parsed.ok && r.parsed.values.sku ? [r.parsed.values.sku] : []));
@@ -79,7 +95,15 @@ async function plan(ctx: OrgCtx, sheet: RawSheet, mapping: ImportMapping) {
     }
     const existingId = sku ? (existingBySku.get(sku) ?? null) : null;
     planned.push({ rowNumber, values: parsed.values, existingId });
-    results.push({ rowNumber, action: existingId ? "update" : "create", name: parsed.values.name, sku });
+    results.push({
+      rowNumber,
+      action: existingId ? "update" : "create",
+      name: parsed.values.name,
+      sku,
+      category: categoryNameById.get(parsed.meta.categoryId) ?? "",
+      categorySource: parsed.meta.categorySource,
+      skuGenerated: parsed.meta.skuGenerated,
+    });
   }
 
   const counts = { create: 0, update: 0, error: 0 };
@@ -88,9 +112,14 @@ async function plan(ctx: OrgCtx, sheet: RawSheet, mapping: ImportMapping) {
 }
 
 /** Dry run for the preview: what each row would do, and why bad rows fail. */
-export async function analyzeImport(ctx: OrgCtx, sheet: RawSheet, mapping: ImportMapping): Promise<ImportAnalysis> {
+export async function analyzeImport(
+  ctx: OrgCtx,
+  sheet: RawSheet,
+  mapping: ImportMapping,
+  options: ImportOptions = {},
+): Promise<ImportAnalysis> {
   assertCatalogWritable(ctx);
-  return (await plan(ctx, sheet, mapping)).analysis;
+  return (await plan(ctx, sheet, mapping, options)).analysis;
 }
 
 /**
@@ -104,9 +133,10 @@ export async function commitImport(
   sheet: RawSheet,
   mapping: ImportMapping,
   mode: "all" | "valid_only",
+  options: ImportOptions = {},
 ): Promise<ImportCommitResult> {
   assertCatalogWritable(ctx);
-  const { analysis, planned } = await plan(ctx, sheet, mapping);
+  const { analysis, planned } = await plan(ctx, sheet, mapping, options);
   if (mode === "all" && analysis.counts.error > 0) throw new StateError<ImportError>("has_errors");
   if (planned.length === 0) throw new StateError<ImportError>("nothing_to_import");
 

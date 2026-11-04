@@ -518,6 +518,19 @@ What this codebase relies on:
   category Gusto has. `createMissingCategories` turns an alias into the standard
   Georgian name, and Admin > Categories has an "add the standard categories"
   button. Production was seeded with the standard set on 2026-11-04.
+- **Import fallbacks** (`ImportOptions` in `lib/catalog/import.ts`, chosen on the
+  mapping screen, re-checked on the server): where a file has no category column
+  (or an empty category cell) the supplier can make it an error (default), use
+  one chosen category, or **guess it from the product name**
+  (`lib/catalog/category-guess.ts`, standard categories only, null = reported,
+  preview labels the row "guessed"); an empty unit can take a chosen default; a
+  missing code can be **generated from the name** (`lib/catalog/auto-sku.ts`,
+  `A-` + 10 characters, stable, so re-importing the same list updates instead of
+  duplicating; renaming a product makes a new one). A cell that has text is never
+  replaced: a misspelt category stays `unknown_category`. Price cells are cleaned
+  (`cleanAmountText`: currency signs and words, "1,250.50" / "1.250,50"). Header
+  aliases cover more Georgian, English and Russian spellings. The preview shows
+  each row's category, where it came from, and any generated code.
 - **Units are also the packaging** (`lib/catalog/units.ts`): piece, kg, g, l, ml,
   box, pack, case, bottle, jar, bag, sack, keg, pallet, bunch, roll, bucket. The
   import accepts many spellings per unit (Georgian, English, a few Russian), see
