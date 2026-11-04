@@ -15,7 +15,7 @@ import {
   updateProduct,
   type CatalogWriteError,
 } from "@/server/domain/catalog/products";
-import { findPhotos, listPhotoCandidates, type PhotoFetchResult } from "@/server/domain/catalog/photo-fetch";
+import { applyPhotoCandidate, findPhotos, listPhotoCandidates, searchPhotoCandidates, type PhotoCandidate, type PhotoFetchResult, type SearchOutcome } from "@/server/domain/catalog/photo-fetch";
 import { ImageError, MAX_IMAGE_BYTES, type ImageErrorCode } from "@/server/storage/images";
 import { supabaseImageStorage } from "@/server/storage/image-storage";
 
@@ -129,3 +129,31 @@ export async function findPhotosAction(
     return { ok: true, result };
   });
 }
+
+/** Suggestions (Open Food Facts products with photos) for one product, found by its name. */
+export async function searchPhotoCandidatesAction(
+  productId: string,
+): Promise<{ ok: true; outcome: SearchOutcome } | ActionError<CatalogWriteError | "rate_limited">> {
+  const ctx = await requireSupplier();
+  if (typeof productId !== "string") return { ok: false, error: "invalid" };
+  return runAction<{ ok: true; outcome: SearchOutcome }, CatalogWriteError | "rate_limited">("searchPhotoCandidates", async () => ({
+    ok: true,
+    outcome: await searchPhotoCandidates(ctx, productId),
+  }));
+}
+
+/** The supplier picked one suggestion for a product. */
+export async function applyPhotoCandidateAction(
+  productId: string,
+  barcode: string,
+): Promise<{ ok: true; status: "attached" | "not_found" | "unavailable" } | ActionError<CatalogWriteError>> {
+  const ctx = await requireSupplier();
+  if (typeof productId !== "string" || typeof barcode !== "string") return { ok: false, error: "invalid" };
+  return runAction<{ ok: true; status: "attached" | "not_found" | "unavailable" }, CatalogWriteError>("applyPhotoCandidate", async () => {
+    const status = await applyPhotoCandidate(ctx, productId, barcode, supabaseImageStorage());
+    if (status === "attached") refresh();
+    return { ok: true, status };
+  });
+}
+
+export type { PhotoCandidate };

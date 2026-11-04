@@ -549,8 +549,15 @@ What this codebase relies on:
   replace/remove) or `shared` (library photo: **never deleted by a supplier**; replace/remove only
   detaches). Supplier uploads never enter the library. Triggers: the import (after file photos, for rows
   without one) and the "find photos" button on the product list; batches of 20, rate limit
-  `photoFetch` 40/h. Name-only matching is not built (too unreliable; Open Food Facts search is
-  rate-limited and weak for Georgian).
+  `photoFetch` 40/h.
+  **Suggestions by name** (`/supplier/products/photos`, `components/catalog/photo-suggestions.tsx`,
+  `lib/catalog/latin-name.ts`): for products with no photo, the name is written in Latin letters (two
+  spellings), searched on Open Food Facts (rate-limited and flaky: one search per ~3.5 s, unavailable is
+  reported as such, not as "nothing found"), and up to 6 products with photos are shown. Nothing is applied
+  until the supplier picks one; the pick is re-fetched by barcode on the server (the browser never names an
+  image URL). Product names (Latin) are sent to Open Food Facts for this, see the privacy text. The CSP
+  `img-src` names `images.openfoodfacts.org` for the thumbnails (asserted in `security-headers.test.ts`).
+  Rate limit `photoSearch` 150/h. Searching the open web for images is NOT built (copyright, search-API terms).
 - **Units are also the packaging** (`lib/catalog/units.ts`): piece, kg, g, l, ml,
   box, pack, case, bottle, jar, bag, sack, keg, pallet, bunch, roll, bucket. The
   import accepts many spellings per unit (Georgian, English, a few Russian), see

@@ -28,7 +28,8 @@ function contentSecurityPolicy(): string {
     "script-src": ["'self'", "'unsafe-inline'", "'wasm-unsafe-eval'", ...(dev ? ["'unsafe-eval'"] : [])],
     "worker-src": ["'self'", "blob:"],
     "style-src": ["'self'", "'unsafe-inline'"],
-    "img-src": ["'self'", "data:", "blob:", ...(supabaseOrigin ? [supabaseOrigin] : [])],
+    // images.openfoodfacts.org: thumbnails of photo suggestions (the chosen photo is copied to our storage).
+    "img-src": ["'self'", "data:", "blob:", ...(supabaseOrigin ? [supabaseOrigin] : []), "https://images.openfoodfacts.org"],
     "font-src": ["'self'", "data:"],
     "connect-src": [
       "'self'",

@@ -26,6 +26,8 @@ export const RATE_LIMITS = {
   /** Product image upload: 300 per hour per supplier (a catalog import attaches a photo per product). */
   /** Automatic photo lookup: 40 batches per hour per supplier (each batch is at most 20 products). */
   photoFetch: { name: "photo_fetch", limit: 40, windowSeconds: 3600 },
+  /** Photo suggestions by name: 150 searches per hour per supplier (each product is one search). */
+  photoSearch: { name: "photo_search", limit: 150, windowSeconds: 3600 },
   imageUpload: { name: "image_upload", limit: 300, windowSeconds: 3600 },
 } as const;
 

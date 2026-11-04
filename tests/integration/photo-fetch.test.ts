@@ -152,3 +152,77 @@ describe("automatic product photos", () => {
     expect(await findPhotos(supplier, [id], memoryStorage(), down)).toEqual({ attached: 0, notFound: 0, failed: 1 });
   });
 });
+
+describe("photo suggestions by name", () => {
+  const offSearch = (hits: Record<string, unknown>[], image: Buffer, opts: { fail?: boolean } = {}) => {
+    const calls: string[] = [];
+    const fetcher = async (url: string) => {
+      calls.push(url);
+      const u = new URL(url);
+      if (u.pathname.endsWith("search.pl")) {
+        if (opts.fail) return new Response("<html>unavailable</html>", { status: 200, headers: { "content-type": "text/html" } });
+        return Response.json({ products: hits });
+      }
+      if (u.hostname === "world.openfoodfacts.org") {
+        const code = u.pathname.split("/").pop()!.replace(".json", "");
+        return Response.json({ product: { image_front_url: `https://images.openfoodfacts.org/images/products/${code}/front.400.jpg` } });
+      }
+      return new Response(new Uint8Array(image), { headers: { "content-type": "image/png" } });
+    };
+    return { fetcher, calls };
+  };
+  const thumb = (code: string) => `https://images.openfoodfacts.org/images/products/${code}/front.200.jpg`;
+
+  it("suggests products with photos, applies only the one picked, and shares it", async () => {
+    const { searchPhotoCandidates, applyPhotoCandidate } = await import("@/server/domain/catalog/photo-fetch");
+    const supplier = await createSupplier();
+    const other = await createSupplier();
+    const storage = memoryStorage();
+    const id = await productWithBarcode(supplier, null);
+    const code = barcodeFor();
+    const nophoto = barcodeFor();
+    const off = offSearch(
+      [
+        { code, product_name: "Kazbegi", brands: "Kazbegi", quantity: "0.5 l", image_front_small_url: thumb(code) },
+        { code: nophoto, product_name: "No photo" },
+        { code: "abc", product_name: "Bad code", image_front_small_url: thumb("abc") },
+        { code: barcodeFor(), product_name: "Elsewhere", image_front_small_url: "https://evil.example/x.jpg" },
+      ],
+      await png(),
+    );
+
+    const outcome = await searchPhotoCandidates(supplier, id, off.fetcher, () => ["kazbegi"]);
+    expect(outcome.unavailable).toBe(false);
+    expect(outcome.candidates.map((c) => c.barcode)).toEqual([code]);
+    // Suggesting changes nothing.
+    expect((await getDb().select().from(products).where(eq(products.id, id)))[0].imagePath).toBeNull();
+
+    expect(await applyPhotoCandidate(supplier, id, code, storage, off.fetcher)).toBe("attached");
+    const [row] = await getDb().select().from(products).where(eq(products.id, id));
+    expect(row).toMatchObject({ imageSource: "shared" });
+    expect(row.imagePath).toMatch(/^shared\//);
+
+    // Another supplier picking the same barcode reuses the library photo without downloading again.
+    const otherId = await productWithBarcode(other, null);
+    const callsBefore = off.calls.length;
+    expect(await applyPhotoCandidate(other, otherId, code, storage, off.fetcher)).toBe("attached");
+    expect(off.calls.length).toBe(callsBefore);
+  });
+
+  it("cannot be used on another supplier's product", async () => {
+    const { applyPhotoCandidate } = await import("@/server/domain/catalog/photo-fetch");
+    const owner = await createSupplier();
+    const intruder = await createSupplier();
+    const id = await productWithBarcode(owner, null);
+    const off = offSearch([], await png());
+    await expect(applyPhotoCandidate(intruder, id, barcodeFor(), memoryStorage(), off.fetcher)).rejects.toThrow();
+  });
+
+  it("reports an unavailable service instead of 'nothing found'", async () => {
+    const { searchPhotoCandidates } = await import("@/server/domain/catalog/photo-fetch");
+    const supplier = await createSupplier();
+    const id = await productWithBarcode(supplier, null);
+    const off = offSearch([], await png(), { fail: true });
+    expect(await searchPhotoCandidates(supplier, id, off.fetcher, () => ["x1", "x2"])).toEqual({ candidates: [], unavailable: true });
+  });
+});

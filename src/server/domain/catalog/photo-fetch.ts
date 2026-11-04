@@ -2,8 +2,10 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 import { getDb } from "@/server/db/client";
+import { latinSearchQueries } from "@/lib/catalog/latin-name";
 import { products, sharedProductImages } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
+import { NotFoundError } from "@/server/domain/errors";
 import { assertCatalogWritable, isUuid } from "@/server/domain/catalog/products";
 import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 import type { ImageStorage } from "@/server/storage/image-storage";
@@ -169,4 +171,135 @@ export async function findPhotos(
     result.attached += updated.length;
   }
   return result;
+}
+
+// ---- Suggestions by product name -------------------------------------------------
+// For products with no barcode: search Open Food Facts for the product name written in
+// Latin letters and show the closest products with photos. Nothing is applied until the
+// supplier picks one (applyPhotoCandidate), and the pick is re-fetched by barcode on the
+// server, so the browser cannot name an arbitrary image.
+
+const OFF_SEARCH_URL = "https://world.openfoodfacts.org/cgi/search.pl";
+const MAX_CANDIDATES = 6;
+
+export type PhotoCandidate = { barcode: string; name: string; brands: string; quantity: string; thumbnail: string };
+export type SearchOutcome = { candidates: PhotoCandidate[]; unavailable: boolean };
+
+type OffHit = { code?: unknown; product_name?: unknown; brands?: unknown; quantity?: unknown; image_front_small_url?: unknown; image_front_url?: unknown };
+
+const asText = (v: unknown) => (typeof v === "string" ? v.slice(0, 120) : "");
+
+async function searchOff(query: string, fetcher: Fetcher): Promise<OffHit[]> {
+  const url = new URL(OFF_SEARCH_URL);
+  url.search = new URLSearchParams({
+    search_terms: query,
+    search_simple: "1",
+    action: "process",
+    json: "1",
+    page_size: "12",
+    fields: "code,product_name,brands,quantity,image_front_small_url,image_front_url",
+  }).toString();
+  const response = await fetcher(url.toString(), {
+    headers: { "User-Agent": USER_AGENT, Accept: "application/json" },
+    signal: AbortSignal.timeout(API_TIMEOUT_MS * 2),
+  });
+  // Their search is rate-limited and sometimes answers with an HTML "unavailable" page.
+  if (!response.ok || !(response.headers.get("content-type") ?? "").includes("json")) throw new Error(`off search ${response.status}`);
+  const body = (await response.json()) as { products?: OffHit[] };
+  return Array.isArray(body.products) ? body.products : [];
+}
+
+/** Closest Open Food Facts products (with a photo) for one of the supplier's products. */
+export async function searchPhotoCandidates(
+  ctx: OrgCtx,
+  productId: string,
+  fetcher: Fetcher = fetch,
+  queriesFor: (name: string, brand: string | null) => string[] = latinSearchQueries,
+): Promise<SearchOutcome> {
+  assertCatalogWritable(ctx);
+  if (!isUuid(productId)) throw new NotFoundError("product");
+  const [product] = await getDb()
+    .select({ name: products.name, brand: products.brand, imagePath: products.imagePath })
+    .from(products)
+    .where(and(eq(products.id, productId), eq(products.supplierOrgId, ctx.orgId)));
+  if (!product) throw new NotFoundError("product");
+  if (product.imagePath) return { candidates: [], unavailable: false };
+  await consumeRateLimit(RATE_LIMITS.photoSearch, ctx.orgId);
+
+  const seen = new Set<string>();
+  const candidates: PhotoCandidate[] = [];
+  let failures = 0;
+  const queries = queriesFor(product.name, product.brand);
+  for (const query of queries) {
+    try {
+      for (const hit of await searchOff(query, fetcher)) {
+        const code = asText(hit.code);
+        const thumb = asText(hit.image_front_small_url) || asText(hit.image_front_url);
+        if (!BARCODE_RE.test(code) || seen.has(code) || !thumb) continue;
+        if (new URL(thumb).hostname !== OFF_IMAGE_HOST) continue;
+        seen.add(code);
+        candidates.push({
+          barcode: code,
+          name: asText(hit.product_name),
+          brands: asText(hit.brands),
+          quantity: asText(hit.quantity),
+          thumbnail: thumb,
+        });
+      }
+    } catch {
+      failures += 1;
+    }
+    if (candidates.length >= MAX_CANDIDATES) break;
+  }
+  return { candidates: candidates.slice(0, MAX_CANDIDATES), unavailable: candidates.length === 0 && queries.length > 0 && failures === queries.length };
+}
+
+/** The supplier picked a suggestion: fetch that barcode's photo ourselves, share it, and attach it. */
+export async function applyPhotoCandidate(
+  ctx: OrgCtx,
+  productId: string,
+  barcode: string,
+  storage: ImageStorage,
+  fetcher: Fetcher = fetch,
+): Promise<"attached" | "not_found" | "unavailable"> {
+  assertCatalogWritable(ctx);
+  if (!isUuid(productId)) throw new NotFoundError("product");
+  if (!BARCODE_RE.test(barcode)) return "not_found";
+  const db = getDb();
+  const [product] = await db
+    .select({ id: products.id, imagePath: products.imagePath })
+    .from(products)
+    .where(and(eq(products.id, productId), eq(products.supplierOrgId, ctx.orgId)));
+  if (!product) throw new NotFoundError("product");
+  if (product.imagePath) return "not_found";
+
+  let path: string | undefined = (
+    await db.select({ p: sharedProductImages.imagePath }).from(sharedProductImages).where(eq(sharedProductImages.barcode, barcode))
+  )[0]?.p;
+  if (!path) {
+    try {
+      const bytes = await downloadFromOff(barcode, fetcher);
+      path = bytes ? ((await addToLibrary(barcode, bytes, storage)) ?? undefined) : undefined;
+    } catch (error) {
+      return error instanceof ImageError ? "not_found" : "unavailable";
+    }
+  }
+  if (!path) return "not_found";
+  const updated = await db
+    .update(products)
+    .set({ imagePath: path, imageSource: "shared" })
+    .where(and(eq(products.id, product.id), eq(products.supplierOrgId, ctx.orgId), isNull(products.imagePath)))
+    .returning({ id: products.id });
+  return updated.length > 0 ? "attached" : "not_found";
+}
+
+/** Products without a photo (and without a barcode to look one up by), for the review page. */
+export async function listProductsNeedingPhotos(ctx: OrgCtx, limit = 30): Promise<{ id: string; name: string; brand: string | null }[]> {
+  assertCatalogWritable(ctx);
+  return getDb()
+    .select({ id: products.id, name: products.name, brand: products.brand })
+    .from(products)
+    .where(and(eq(products.supplierOrgId, ctx.orgId), isNull(products.imagePath), eq(products.isActive, true)))
+    .orderBy(products.name)
+    .limit(limit);
 }

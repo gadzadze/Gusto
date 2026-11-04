@@ -1,4 +1,4 @@
-import { FileUp, PackageSearch, Plus, Search } from "lucide-react";
+import { FileUp, ImageDown, PackageSearch, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -43,6 +43,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
   const t = await getTranslations("products");
   const tc = await getTranslations("common");
   const tu = await getTranslations("units");
+  const tp = await getTranslations("photoLookup");
 
   const params = await searchParams;
   const q = one(params.q).slice(0, 100);
@@ -96,6 +97,12 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
         {readOnly ? null : (
           <div className="flex flex-wrap gap-2">
             <FindPhotosButton />
+            <Button asChild variant="outline">
+              <Link href="/supplier/products/photos">
+                <ImageDown />
+                {tp("review")}
+              </Link>
+            </Button>
             <Button asChild variant="outline">
               <Link href="/supplier/products/import">
                 <FileUp />
