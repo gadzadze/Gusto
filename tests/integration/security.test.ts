@@ -125,12 +125,12 @@ describe("limits on real actions", () => {
     await createCustomer(other, customerSchema.parse({ businessName: "[TEST] X", phone: "555123456", priceListId: "" }));
   });
 
-  it("image upload: 30 per hour per supplier (checked before any image work)", async () => {
+  it("image upload: 300 per hour per supplier (checked before any image work)", async () => {
     const supplier = await createSupplier();
     const product = await createTestProduct(supplier, categoryId);
     const storage = memoryStorage();
     // Not an image: each attempt fails validation, but still counts.
-    for (let i = 0; i < 30; i++) await expect(setProductImage(supplier, product, new Uint8Array([1, 2, 3]), storage)).rejects.not.toEqual(limited);
+    for (let i = 0; i < 300; i++) await expect(setProductImage(supplier, product, new Uint8Array([1, 2, 3]), storage)).rejects.not.toEqual(limited);
     await expect(setProductImage(supplier, product, new Uint8Array([1, 2, 3]), storage)).rejects.toEqual(limited);
   });
 });
