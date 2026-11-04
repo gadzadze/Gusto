@@ -211,8 +211,9 @@ export const products = pgTable(
     vatRateBp: integer("vat_rate_bp").notNull(),
     minQtyMilli: integer("min_qty_milli").notNull().default(1000),
     qtyStepMilli: integer("qty_step_milli").notNull().default(1000),
-    // Supplier's own stock count in milli-units; null = not tracked. Informational
-    // only and never selected by buyer-side queries.
+    // Supplier's own stock count in milli-units; null = not tracked. Moves with
+    // order confirmation/cancellation and may go negative (oversold). Never
+    // selected by buyer-side queries.
     stockMilli: integer("stock_milli"),
     isActive: boolean("is_active").notNull().default(true),
     // Lowercased fields + transliteration skeletons; see search/translit.ts.
@@ -231,7 +232,6 @@ export const products = pgTable(
     check("products_price_nonneg", sql`${t.basePriceMinor} >= 0`),
     check("products_min_qty_positive", sql`${t.minQtyMilli} > 0`),
     check("products_qty_step_positive", sql`${t.qtyStepMilli} > 0`),
-    check("products_stock_nonneg", sql`${t.stockMilli} >= 0`),
     check("products_vat_range", sql`${t.vatRateBp} between 0 and 10000`),
   ],
 );

@@ -141,6 +141,13 @@
       "when": 1793771589615,
       "tag": "0019_product_stock",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793772005703,
+      "tag": "0020_stock_may_go_negative",
+      "breakpoints": true
     }
   ]
 }

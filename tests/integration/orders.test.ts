@@ -5,7 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { productSchema } from "@/lib/validation/product";
 import { supplierSettingsSchema } from "@/lib/validation/supplier-settings";
 import { getDb } from "@/server/db/client";
-import { addresses, carts, orders } from "@/server/db/schema";
+import { addresses, carts, orders, products } from "@/server/db/schema";
 import { setProductActive, updateProduct } from "@/server/domain/catalog/products";
 import { updateSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import type { AdminCtx, OrgCtx, SupplierCtx } from "@/server/domain/context";
@@ -79,6 +79,49 @@ describe("cart", () => {
     const { supplier, cheese } = await setup();
     const stranger = await createBuyer();
     await expect(setCartQuantity(stranger, supplier.orgId, cheese, 1000)).rejects.toBeInstanceOf(NotFoundError);
+  });
+});
+
+describe("stock count follows confirmation", () => {
+  async function stockOf(productId: string): Promise<number | null> {
+    const [row] = await getDb().select({ s: products.stockMilli }).from(products).where(eq(products.id, productId));
+    return row.s;
+  }
+
+  it("is reduced when the supplier confirms, can go negative, and returns on cancel", async () => {
+    const { supplier, buyer, water } = await setup();
+    const untracked = await createTestProduct(supplier, categoryId, { name: "[TEST] Untracked", sku: "UNT" });
+    await updateProduct(supplier, water, productSchema.parse(productInput(categoryId, { name: "წყალი", sku: "WAT", unit: "bottle", basePrice: "1,20", stock: "5" })));
+    await setCartQuantity(buyer, supplier.orgId, water, 8000);
+    await setCartQuantity(buyer, supplier.orgId, untracked, 2000);
+    const { orderId } = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+
+    expect(await stockOf(water)).toBe(5000); // pending: nothing taken yet
+    const items = (await getOrder(supplier, orderId)).items;
+    const waterItem = items.find((i) => i.productId === water)!;
+    await confirmOrder(supplier, orderId, [{ itemId: waterItem.id, confirmedQtyMilli: 7000 }]);
+    expect(await stockOf(water)).toBe(-2000); // 5 - 7: oversold, shown as minus
+    expect(await stockOf(untracked)).toBeNull(); // not tracked stays not tracked
+
+    await cancelBySupplier(supplier, orderId, "out of stock");
+    expect(await stockOf(water)).toBe(5000);
+  });
+
+  it("a rejected or buyer-cancelled pending order never touches stock, delivery changes nothing", async () => {
+    const { supplier, buyer, water } = await setup();
+    await updateProduct(supplier, water, productSchema.parse(productInput(categoryId, { name: "წყალი", sku: "WAT", unit: "bottle", basePrice: "1,20", stock: "10" })));
+    await setCartQuantity(buyer, supplier.orgId, water, 3000);
+    const first = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+    await rejectOrder(supplier, first.orderId, "no stock today");
+    await setCartQuantity(buyer, supplier.orgId, water, 3000);
+    const second = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+    await cancelByBuyer(buyer, second.orderId);
+    expect(await stockOf(water)).toBe(10_000);
+    await setCartQuantity(buyer, supplier.orgId, water, 3000);
+    const third = (await submitOrder(buyer, supplier.orgId, await reviewed(buyer, supplier))) as { orderId: string };
+    await confirmOrder(supplier, third.orderId, []);
+    await markDelivered(supplier, third.orderId);
+    expect(await stockOf(water)).toBe(7000);
   });
 });
 

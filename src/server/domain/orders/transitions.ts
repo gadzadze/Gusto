@@ -1,10 +1,10 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, isNotNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { computeTotals } from "@/lib/orders/totals";
 import { TRANSITIONS, type OrderAction } from "@/lib/orders/transitions";
 import { getDb, type Tx } from "@/server/db/client";
-import { orderItems, orders, orderStatusHistory } from "@/server/db/schema";
+import { orderItems, orders, orderStatusHistory, products } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
 import { recordOrderEvent } from "@/server/notifications/events";
@@ -62,6 +62,22 @@ async function applyTransition(
     event: EVENT_FOR_ACTION[action],
     actor: { userId: ctx.userId, orgId: ctx.orgId },
   });
+}
+
+/**
+ * Moves the supplier's stock count by `direction` x the confirmed quantity of
+ * each line (-1 on confirm, +1 when a confirmed order is cancelled). Products
+ * without a count (null) are left alone; the count may go below zero. Runs in
+ * the transition's transaction, which fires at most once per order.
+ */
+async function moveStock(tx: Tx, lines: { productId: string | null; qty: number }[], direction: 1 | -1) {
+  for (const { productId, qty } of lines) {
+    if (!productId || qty <= 0) continue;
+    await tx
+      .update(products)
+      .set({ stockMilli: sql`${products.stockMilli} + ${direction * qty}` })
+      .where(and(eq(products.id, productId), isNotNull(products.stockMilli)));
+  }
 }
 
 function cleanReason(action: OrderAction, reason: string | undefined): string | null {
@@ -124,6 +140,7 @@ export async function confirmOrder(
         .set({ confirmedQtyMilli: item.qty, lineTotalMinor: totals.lines[index].lineTotalMinor })
         .where(eq(orderItems.id, item.id));
     }
+    await moveStock(tx, confirmed.map((i) => ({ productId: i.productId, qty: i.qty })), -1);
     await tx
       .update(orders)
       .set({ subtotalMinor: totals.subtotalMinor, vatMinor: totals.vatMinor, totalMinor: totals.totalMinor })
@@ -151,7 +168,12 @@ export async function cancelBySupplier(ctx: OrgCtx, orderId: string, reason: str
   assertSupplierCanAct(ctx);
   if (!isUuid(orderId)) throw new NotFoundError("order");
   const note = cleanReason("supplier_cancel", reason);
-  await getDb().transaction((tx) => applyTransition(tx, ctx, orderId, "supplier_cancel", note));
+  await getDb().transaction(async (tx) => {
+    await applyTransition(tx, ctx, orderId, "supplier_cancel", note);
+    // Only confirmed orders can be cancelled by the supplier, so their stock was taken.
+    const items = await tx.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+    await moveStock(tx, items.map((i) => ({ productId: i.productId, qty: i.confirmedQtyMilli ?? 0 })), 1);
+  });
   deliverAfterResponse(orderId);
 }
 
