@@ -358,6 +358,15 @@ Black, burgundy and white.
 | `--brand-soft` | `#F6E9EB` | `#2A1418` | Selected rows, subtle brand fills |
 | `--danger` | `#DC2626` | `#F87171` | Errors only, always with an icon |
 
+- **Light and dark are both first-class.** The theme is `data-theme="light|dark"` on `<html>`,
+  set by an inline script in `layout.tsx` before first paint (the saved choice in `localStorage`
+  key `gusto-theme`, else the device's setting), changed by `components/theme-toggle.tsx`
+  (light / dark / device; in the shell sidebar, as a single cycling 44px button in the phone
+  header, and on the sign-in page). Tokens live in `globals.css`: `:root` = light,
+  `:root[data-theme="dark"]` = dark, and Tailwind's `dark:` variant is bound to the attribute. The
+  contrast test reads both blocks. Without JavaScript the page stays light. The landing page
+  (`.lp`) has its own fixed light palette and does not follow the theme. Never use
+  `prefers-color-scheme` in components: use the tokens or `dark:`.
 - **Black is the primary action color.** Burgundy is the accent. Destructive
   or negative actions (reject, cancel) are outlined buttons with an icon, never
   burgundy-filled, so "Confirm" and "Reject" cannot be confused.
