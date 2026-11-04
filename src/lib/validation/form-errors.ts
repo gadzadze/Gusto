@@ -9,6 +9,7 @@ export const VALIDATION_KEYS = [
   "invalid_quantity",
   "invalid_vat",
   "invalid_email",
+  "invalid_barcode",
 ] as const;
 export type ValidationKey = (typeof VALIDATION_KEYS)[number];
 

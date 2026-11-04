@@ -157,6 +157,7 @@ export async function commitImport(
         description: values.description,
         brand: values.brand,
         sku: values.sku,
+        barcode: values.barcode,
         categoryId: values.categoryId,
         unit: values.unit,
         packDescription: values.packDescription,

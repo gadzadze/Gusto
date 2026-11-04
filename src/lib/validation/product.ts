@@ -15,6 +15,21 @@ const optionalText = (max: number) =>
     .optional()
     .transform((v) => (v ? v : null));
 
+/** Optional barcode (EAN/UPC/GTIN): 8 to 14 digits. Spaces are ignored. */
+export const barcodeField = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value, ctx) => {
+    const digits = (value ?? "").replace(/\s+/g, "");
+    if (!digits) return null;
+    if (!/^\d{8,14}$/.test(digits)) {
+      ctx.addIssue({ code: "custom", message: "invalid_barcode" });
+      return z.NEVER;
+    }
+    return digits;
+  });
+
 export const moneyField = z
   .string()
   .trim()
@@ -82,6 +97,7 @@ export const productSchema = z
     description: optionalText(2000),
     brand: optionalText(100),
     sku: optionalText(64),
+    barcode: barcodeField,
     categoryId: z.uuid("required"),
     unit: z.enum(PRODUCT_UNITS, { message: "required" }),
     packDescription: optionalText(100),
@@ -101,6 +117,7 @@ export const NEW_PRODUCT_DEFAULTS: ProductInput = {
   description: "",
   brand: "",
   sku: "",
+  barcode: "",
   categoryId: "",
   unit: "piece",
   packDescription: "",

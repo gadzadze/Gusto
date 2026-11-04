@@ -117,6 +117,9 @@ export function ProductForm({
           <Field id="brand" label={t("form.brand")} error={err("brand")} optional>
             <Input {...input("brand")} />
           </Field>
+          <Field id="barcode" label={t("form.barcode")} hint={t("form.barcodeHint")} error={err("barcode")} optional>
+            <Input inputMode="numeric" autoComplete="off" {...input("barcode", t("form.barcodeHint"))} />
+          </Field>
           <Field id="sku" label={t("form.sku")} hint={t("form.skuHint")} error={err("sku")} optional>
             <Input autoComplete="off" {...input("sku", t("form.skuHint"))} />
           </Field>

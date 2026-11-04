@@ -26,6 +26,7 @@ export const IMPORT_FIELDS = [
   "qtyStep",
   "packDescription",
   "brand",
+  "barcode",
   "description",
 ] as const;
 export type ImportField = (typeof IMPORT_FIELDS)[number];
@@ -49,7 +50,7 @@ export const importMappingSchema = z
 // punctuation/spaces). Includes the downloadable template's Georgian headers.
 const HEADER_ALIASES: Record<ImportField, string[]> = {
   name: ["სახელი", "დასახელება", "პროდუქტი", "პროდუქტისდასახელება", "პროდუქციისდასახელება", "საქონელი", "საქონლისდასახელება", "name", "product", "productname", "item", "itemname", "goods", "наименование", "товар", "название"],
-  sku: ["sku", "კოდი", "პროდუქტისკოდი", "არტიკული", "artikuli", "code", "productcode", "itemcode", "article", "barcode", "ბარკოდი", "შტრიხკოდი", "ean", "артикул", "код"],
+  sku: ["sku", "კოდი", "პროდუქტისკოდი", "არტიკული", "artikuli", "code", "productcode", "itemcode", "article", "артикул", "код"],
   category: ["კატეგორია", "ჯგუფი", "პროდუქტისჯგუფი", "category", "group", "productgroup", "категория", "группа"],
   unit: ["ერთეული", "ზომისერთეული", "განზომილება", "unit", "uom", "unitofmeasure", "measure", "ед", "единица"],
   price: ["ფასი", "ფასიდღგთი", "ფასიდღგსგარეშე", "ღირებულება", "price", "unitprice", "cost", "ფასი₾", "ფასილარი", "ფასიგელი", "цена"],
@@ -58,6 +59,7 @@ const HEADER_ALIASES: Record<ImportField, string[]> = {
   qtyStep: ["ბიჯი", "step", "qtystep", "increment"],
   packDescription: ["შეფუთვა", "pack", "package", "packaging"],
   brand: ["ბრენდი", "brand"],
+  barcode: ["შტრიხკოდი", "ბარკოდი", "barcode", "ean", "ean13", "gtin", "upc", "штрихкод"],
   description: ["აღწერა", "description"],
 };
 
@@ -148,6 +150,7 @@ const SCHEMA_TO_IMPORT_FIELD: Record<string, ImportField> = {
   qtyStep: "qtyStep",
   packDescription: "packDescription",
   brand: "brand",
+  barcode: "barcode",
   description: "description",
 };
 
@@ -195,12 +198,14 @@ export function parseImportRow(
     errors.push({ field: "category", key: categoryText ? "unknown_category" : "required" });
   }
   const skuText = cell("sku");
-  const sku = skuText || (options.autoSku && cell("name") ? generateSku(cell("name")) : "");
+  // A barcode is a stable code too, so it stands in for a missing product code.
+  const sku = skuText || cell("barcode").replace(/\s+/g, "") || (options.autoSku && cell("name") ? generateSku(cell("name")) : "");
 
   const input: ProductInput = {
     name: cell("name"),
     sku,
     brand: cell("brand"),
+    barcode: cell("barcode"),
     description: cell("description"),
     packDescription: cell("packDescription"),
     categoryId: categoryId ?? "",

@@ -197,6 +197,20 @@ export const categories = pgTable(
   ],
 );
 
+// Photos fetched automatically from Open Food Facts, one per barcode, reusable by every
+// supplier who has that product. Supplier uploads are never put here.
+export const sharedProductImages = pgTable("shared_product_images", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  barcode: text("barcode").notNull().unique(),
+  source: text("source").notNull(),
+  sourceUrl: text("source_url").notNull(),
+  // Credit line shown wherever the photo is shown.
+  attribution: text("attribution").notNull(),
+  // Storage path prefix, like products.image_path.
+  imagePath: text("image_path").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const products = pgTable(
   "products",
   {
@@ -211,10 +225,14 @@ export const products = pgTable(
     description: text("description"),
     brand: text("brand"),
     sku: text("sku"),
+    // EAN/UPC/GTIN digits; used to look up a shared photo. Optional.
+    barcode: text("barcode"),
     unit: productUnit("unit").notNull(),
     packDescription: text("pack_description"),
     // Storage path prefix of the processed image (see server/storage), or null.
     imagePath: text("image_path"),
+    // "own": uploaded by the supplier (private, removable). "shared": from the shared photo library (never deleted by a supplier).
+    imageSource: text("image_source").notNull().default("own"),
     // In the supplier org's currency, minor units.
     basePriceMinor: bigint("base_price_minor", { mode: "number" }).notNull(),
     vatRateBp: integer("vat_rate_bp").notNull(),
@@ -230,6 +248,7 @@ export const products = pgTable(
     ...timestamps,
   },
   (t) => [
+    check("products_image_source_check", sql`${t.imageSource} in ('own', 'shared')`),
     uniqueIndex("products_supplier_sku_key")
       .on(t.supplierOrgId, t.sku)
       .where(sql`${t.sku} is not null`),
