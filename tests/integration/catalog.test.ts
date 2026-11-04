@@ -228,6 +228,9 @@ describe("createMissingCategories", () => {
     expect(names.filter((n) => n.toLowerCase() === `${base} dairy`.toLowerCase())).toHaveLength(1);
     // Running it again changes nothing.
     expect((await createMissingCategories(admin, [`${base} Dairy`])).created).toEqual([]);
+    // A known alias creates the standard Georgian category, once.
+    const viaAlias = await createMissingCategories(admin, ["Beer", "ლუდი"]);
+    expect(viaAlias.created.concat(viaAlias.existing)).toEqual(["ლუდი"]);
     // A supplier cannot.
     const supplier = await createSupplier();
     await expect(createMissingCategories(supplier as never, ["x"])).rejects.toBeInstanceOf(NotFoundError);

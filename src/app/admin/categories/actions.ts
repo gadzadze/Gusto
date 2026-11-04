@@ -4,6 +4,7 @@ import { refresh } from "next/cache";
 import { z } from "zod";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireAdmin } from "@/server/auth/guards";
+import { STANDARD_CATEGORIES } from "@/lib/catalog/categories-standard";
 import {
   categoryNameSchema,
   createCategory,
@@ -75,6 +76,16 @@ export async function createCategoriesFromFileAction(names: unknown): Promise<({
   if (!parsed.success) return { ok: false, error: "invalid" };
   return runAction<{ ok: true } & CreateMissingResult, CategoryError>("createCategoriesFromFile", async () => {
     const result = await createMissingCategories(ctx, parsed.data);
+    refresh();
+    return { ok: true, ...result };
+  });
+}
+
+/** Adds the standard HoReCa categories that are not there yet (existing ones are left alone). */
+export async function createStandardCategoriesAction(): Promise<({ ok: true } & CreateMissingResult) | ActionError<CategoryError>> {
+  const ctx = await requireAdmin();
+  return runAction<{ ok: true } & CreateMissingResult, CategoryError>("createStandardCategories", async () => {
+    const result = await createMissingCategories(ctx, STANDARD_CATEGORIES.map((c) => c.name));
     refresh();
     return { ok: true, ...result };
   });

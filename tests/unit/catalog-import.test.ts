@@ -43,7 +43,7 @@ describe("parseUnit", () => {
     expect(parseUnit("კგ")).toBe("kg");
     expect(parseUnit("ც.")).toBe("piece");
     expect(parseUnit("Box")).toBe("box");
-    expect(parseUnit("barrel")).toBeNull();
+    expect(parseUnit("parsec")).toBeNull();
   });
 });
 
@@ -83,7 +83,7 @@ describe("parseImportRow", () => {
 
   it("reports every problem in a bad row", () => {
     const parsed = parseImportRow(
-      row({ სახელი: "", კატეგორია: "Toys", ერთეული: "barrel", ფასი: "free" }),
+      row({ სახელი: "", კატეგორია: "Toys", ერთეული: "parsec", ფასი: "free" }),
       templateHeaders,
       mapping,
       categories,

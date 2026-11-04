@@ -1,5 +1,6 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
+import { buildCategoryLookup } from "@/lib/catalog/categories-standard";
 import {
   missingRequiredFields,
   parseImportRow,
@@ -39,7 +40,7 @@ async function plan(ctx: OrgCtx, sheet: RawSheet, mapping: ImportMapping) {
     .select({ id: categories.id, name: categories.name })
     .from(categories)
     .where(eq(categories.isArchived, false));
-  const categoryIdByName = new Map(activeCategories.map((c) => [c.name.trim().toLowerCase(), c.id]));
+  const categoryIdByName = buildCategoryLookup(activeCategories);
 
   const results: ImportRowResult[] = [];
   const planned: Planned[] = [];

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
+import { buildCategoryLookup, normalizeCategoryKey, standardCategoryFor } from "@/lib/catalog/categories-standard";
 import { categoryNamesInSheet, MAX_CATEGORIES_FROM_FILE, MAX_IMPORT_ROWS, type RawSheet } from "@/lib/catalog/import";
 import { readSpreadsheet } from "@/lib/catalog/read-sheet";
 import { createCategoriesFromFileAction } from "./actions";
@@ -24,9 +25,17 @@ export function CategoriesFromFile({ existingNames }: { existingNames: string[] 
   const [pending, startTransition] = useTransition();
 
   const found = sheet ? categoryNamesInSheet(sheet, column) : null;
-  const have = new Set(existingNames.map((n) => n.toLowerCase()));
-  const missing = found ? found.names.filter((n) => !have.has(n.toLowerCase())) : [];
-  const known = found ? found.names.length - missing.length : 0;
+  // A name Gusto already recognises (its own, or a standard alias of a category it has) is not missing.
+  const lookup = buildCategoryLookup(existingNames.map((name) => ({ id: name, name })));
+  const unknown = found ? found.names.filter((n) => !lookup.has(normalizeCategoryKey(n))) : [];
+  // What would be created: the standard Georgian name where the file's spelling is a known alias.
+  const toCreate = new Map<string, { target: string; from: string }>();
+  for (const from of unknown) {
+    const target = standardCategoryFor(from) ?? from;
+    if (!toCreate.has(normalizeCategoryKey(target))) toCreate.set(normalizeCategoryKey(target), { target, from });
+  }
+  const missing = [...toCreate.values()];
+  const known = found ? found.names.length - unknown.length : 0;
   const tooMany = missing.length > MAX_CATEGORIES_FROM_FILE;
 
   const onFile = (file: File) => {
@@ -43,7 +52,7 @@ export function CategoriesFromFile({ existingNames }: { existingNames: string[] 
 
   const create = () =>
     startTransition(async () => {
-      const result = await createCategoriesFromFileAction(missing);
+      const result = await createCategoriesFromFileAction(missing.map((m) => m.from));
       if (result.ok) {
         setSheet(null);
         setMessage({ tone: "success", text: t("done", { created: result.created.length, existing: result.existing.length }) });
@@ -95,8 +104,10 @@ export function CategoriesFromFile({ existingNames }: { existingNames: string[] 
             <>
               <p className="text-sm font-medium">{t("willCreate", { count: missing.length })}</p>
               <ul className="flex flex-wrap gap-2">
-                {missing.map((n) => (
-                  <li key={n} className="rounded-full border border-border bg-brand-soft px-3 py-1 text-sm">{n}</li>
+                {missing.map((m) => (
+                  <li key={m.target} className="rounded-full border border-border bg-brand-soft px-3 py-1 text-sm">
+                    {m.from === m.target ? m.target : `${m.from} → ${m.target}`}
+                  </li>
                 ))}
               </ul>
               {known > 0 ? <p className="text-sm text-muted-foreground">{t("alreadyThere", { count: known })}</p> : null}

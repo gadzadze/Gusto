@@ -511,6 +511,19 @@ What this codebase relies on:
   file": `categoryNamesInSheet` in the browser, `createMissingCategories` on the
   server: case-insensitive, archived names count as existing, audited).
   `lib/catalog/read-sheet.ts` is the shared browser file reader.
+  **Matching** (`lib/catalog/categories-standard.ts`): a file's category text is
+  compared after `normalizeCategoryKey` (case, spaces, quotes, "და"/"&"/","
+  ignored), and for the **standard HoReCa categories** (`STANDARD_CATEGORIES`, 29
+  Georgian names with Georgian and English aliases) any alias reaches the
+  category Gusto has. `createMissingCategories` turns an alias into the standard
+  Georgian name, and Admin > Categories has an "add the standard categories"
+  button. Production was seeded with the standard set on 2026-11-04.
+- **Units are also the packaging** (`lib/catalog/units.ts`): piece, kg, g, l, ml,
+  box, pack, case, bottle, jar, bag, sack, keg, pallet, bunch, roll, bucket. The
+  import accepts many spellings per unit (Georgian, English, a few Russian), see
+  `unitAliasTable()`. The product's `შეფუთვა` column is free text. Adding a unit
+  means: `PRODUCT_UNITS`, the DB enum (migration), `units.*` and `unitNames.*` in
+  the messages, and its aliases.
 
 ## Environment variables
 

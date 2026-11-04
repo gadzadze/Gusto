@@ -54,6 +54,14 @@ export const productUnit = pgEnum("product_unit", [
   "pack",
   "case",
   "bottle",
+  "jar",
+  "bag",
+  "sack",
+  "keg",
+  "pallet",
+  "bunch",
+  "roll",
+  "bucket",
 ]);
 export const buyerBusinessType = pgEnum("buyer_business_type", [
   "restaurant",
