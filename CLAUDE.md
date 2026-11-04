@@ -379,6 +379,12 @@ Black, burgundy and white.
     compete with the brand or with errors.
 - **Layout:** sidebar on desktop, bottom navigation on mobile. No horizontal
   scroll at 360px width. Touch targets ≥44px.
+  The phone bottom bar (`BottomNav` in `components/app-shell/nav-links.tsx`) has five slots: with more
+  than five items the first four show and the rest sit behind "More" (`nav.more`). Georgian words run
+  about 6.9px per letter at 10px, so the long labels have soft-hyphenated variants in `nav.bar.*`
+  (`BAR_LABELS`) that wrap at a syllable on narrow phones; the real name stays as `aria-label`. A
+  new nav item with a long label needs a `nav.bar.*` entry; `tests/e2e/bottom-nav.spec.ts` fails if
+  any label is cut off at 360px or 320px.
 - **States:** every list has empty, loading (skeleton) and error states.
 - **Avoid:** gradients, emoji as icons, decorative motion, modals for
   multi-step flows (use pages or sheets).
