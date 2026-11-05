@@ -11,7 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatPhone } from "@/lib/phone";
 import { requireSupplier } from "@/server/auth/guards";
+import { listInvitingBuyers } from "@/server/domain/buyer/supplier-invites";
 import { listCustomers } from "@/server/domain/customers/customers";
+import { InvitingBuyers } from "@/components/customers/inviting-buyers";
 
 export default async function CustomersPage() {
   const t = await getTranslations("customers");
@@ -29,12 +31,17 @@ async function Customers() {
   const ctx = await requireSupplier();
   const t = await getTranslations("customers");
   const format = await getFormatter();
-  const customers = await listCustomers(ctx);
+  const [customers, invitingBuyers] = await Promise.all([listCustomers(ctx), listInvitingBuyers(ctx)]);
   const canInvite = ctx.orgStatus === "active";
 
   return (
     <div className="space-y-5">
       <p className="max-w-2xl text-sm text-muted-foreground">{t("intro")}</p>
+      {canInvite ? (
+        <InvitingBuyers
+          rows={invitingBuyers.map((b) => ({ inviteId: b.inviteId, buyerName: b.buyerName, invitedAt: format.dateTime(b.invitedAt, { dateStyle: "medium" }) }))}
+        />
+      ) : null}
       {ctx.orgStatus === "pending_review" ? <Notice icon={Users} tone="amber" title={t("notActive")} /> : null}
       {canInvite ? (
         <Button asChild>

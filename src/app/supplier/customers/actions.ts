@@ -18,6 +18,7 @@ import {
   setCustomerPriceList,
   type CustomerError,
 } from "@/server/domain/customers/customers";
+import { connectInvitingBuyer, type SupplierInviteError } from "@/server/domain/buyer/supplier-invites";
 import { serverEnv } from "@/server/env";
 import { sendEmail } from "@/server/notifications/email";
 
@@ -126,5 +127,16 @@ export async function setCustomerNoteAction(customerId: string, note: string): P
     await setCustomerNote(ctx, customerId, note);
     refresh();
     return { ok: true };
+  });
+}
+
+/** The supplier accepts a buyer who invited them: the buyer becomes an active customer. */
+export async function connectInvitingBuyerAction(inviteId: string): Promise<{ ok: true; customerId: string } | ActionError<SupplierInviteError | CustomerError>> {
+  const ctx = await requireSupplier();
+  if (!id.safeParse(inviteId).success) return { ok: false, error: "invalid" };
+  return runAction<{ ok: true; customerId: string }, SupplierInviteError | CustomerError>("connectInvitingBuyer", async () => {
+    const { customerId } = await connectInvitingBuyer(ctx, inviteId);
+    refresh();
+    return { ok: true, customerId };
   });
 }

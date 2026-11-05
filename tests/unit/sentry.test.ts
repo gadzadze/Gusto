@@ -37,6 +37,8 @@ describe("scrubUrl", () => {
     expect(scrubUrl(`https://app.example/invite/${INVITE_TOKEN}`)).toBe("https://app.example/invite/[token]");
     expect(scrubUrl("/invite/short")).toBe("/invite/[token]");
     expect(scrubUrl("/invite/[token]")).toBe("/invite/[token]");
+    // A buyer's invitation to a supplier lives under /suppliers/invite/<token>.
+    expect(scrubUrl(`https://app.example/suppliers/invite/${INVITE_TOKEN}`)).toBe("https://app.example/suppliers/invite/[token]");
   });
 
   it("leaves normal routes alone", () => {

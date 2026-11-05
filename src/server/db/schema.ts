@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   bigint,
   boolean,
   check,
@@ -600,6 +601,39 @@ export const supplierRequestStatus = pgEnum("supplier_request_status", ["new", "
 // A prospective supplier's "please onboard me" form (public page /suppliers).
 // It creates no account and no sign-in access: the admin checks the business,
 // then approves, which registers the address on the allow-list.
+// A buyer invites a supplier it already works with. The link opens the public join form
+// with the buyer's name and the supplier's name filled in; it grants nothing (the admin
+// still approves the business). Only the SHA-256 of the token is stored.
+export const buyerSupplierInvites = pgTable(
+  "buyer_supplier_invites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    buyerOrgId: uuid("buyer_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    // What the buyer entered: the supplier's name and how to reach them (private to the buyer).
+    supplierName: text("supplier_name").notNull(),
+    contactPhone: text("contact_phone"),
+    contactEmail: text("contact_email"),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    // The supplier sent a join request with this link.
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    // Set when that supplier has an organization; the supplier then sees this buyer
+    // under "buyers who invited you" until they connect or ignore it.
+    supplierOrgId: uuid("supplier_org_id").references(() => organizations.id, { onDelete: "set null" }),
+    connectedAt: timestamp("connected_at", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    uniqueIndex("buyer_supplier_invites_token_hash_key").on(t.tokenHash),
+    index("buyer_supplier_invites_buyer_idx").on(t.buyerOrgId, t.createdAt),
+    index("buyer_supplier_invites_supplier_idx").on(t.supplierOrgId),
+  ],
+);
+
 export const supplierRequests = pgTable(
   "supplier_requests",
   {
@@ -617,6 +651,8 @@ export const supplierRequests = pgTable(
     adminNote: text("admin_note"),
     reviewedByUserId: uuid("reviewed_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    // The buyer's invitation this request came from, if any (shown to the admin).
+    inviteId: uuid("invite_id").references((): AnyPgColumn => buyerSupplierInvites.id, { onDelete: "set null" }),
     createdAt: timestamps.createdAt,
   },
   (t) => [

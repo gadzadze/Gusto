@@ -1,8 +1,10 @@
-import { Store } from "lucide-react";
+import { Plus, Store } from "lucide-react";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { SupplierCard } from "@/components/buyer/supplier-card";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
@@ -12,7 +14,17 @@ export default async function BuyerSuppliersPage() {
   const t = await getTranslations("buyer");
   return (
     <>
-      <PageHeader title={t("suppliersTitle")} />
+      <PageHeader
+        title={t("suppliersTitle")}
+        actions={
+          <Button asChild variant="outline">
+            <Link href="/buyer/suppliers/invite">
+              <Plus />
+              {t("inviteSupplier")}
+            </Link>
+          </Button>
+        }
+      />
       <Suspense fallback={<Skeleton className="h-48 w-full" />}>
         <Suppliers />
       </Suspense>

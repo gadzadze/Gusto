@@ -1,3 +1,4 @@
+import { linkInvitesToSupplier } from "@/server/domain/buyer/supplier-invites";
 import "server-only";
 import { and, eq, sql } from "drizzle-orm";
 import type { OnboardingValues } from "@/lib/validation/onboarding";
@@ -30,7 +31,11 @@ export class OnboardingError extends Error {
  * `preapprovedLegalId` is that vetted ID, it replaces whatever was typed, and
  * the organization starts `active`.
  */
-export type CreateOptions = { preapprovedLegalId?: string | null };
+export type CreateOptions = {
+  preapprovedLegalId?: string | null;
+  /** The address the person signed in with: a supplier's buyer invitations are matched by it. */
+  signInEmail?: string | null;
+};
 
 export async function createOrganizationForUser(
   userId: string,
@@ -101,6 +106,7 @@ export async function createOrganizationInTx(
     await tx
       .insert(supplierSettings)
       .values({ organizationId: org.id, deliveryArea: input.deliveryArea });
+    await linkInvitesToSupplier(tx, options.signInEmail, org.id);
   } else {
     await tx.insert(addresses).values({
       organizationId: org.id,

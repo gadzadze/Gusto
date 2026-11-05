@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { submitSupplierRequest, type RequestFormState } from "./actions";
 
-export function RequestForm() {
+export function RequestForm({ inviteToken, defaultBusinessName }: { inviteToken?: string; defaultBusinessName?: string }) {
   const t = useTranslations("supplierRequest");
   const [state, action, pending] = useActionState<RequestFormState, FormData>(submitSupplierRequest, { status: "idle" });
 
@@ -35,6 +35,7 @@ export function RequestForm() {
           {t(`errors.${state.error}`)}
         </p>
       ) : null}
+      {inviteToken ? <input type="hidden" name="invite" value={inviteToken} /> : null}
       {/* Trap for bots; people never see or reach it. */}
       <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label>
@@ -45,7 +46,7 @@ export function RequestForm() {
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
           <Field id="businessName" label={t("businessName")} error={err("businessName")}>
-            <Input id="businessName" name="businessName" autoComplete="organization" required />
+            <Input id="businessName" name="businessName" autoComplete="organization" defaultValue={defaultBusinessName} required />
           </Field>
         </div>
         <Field id="legalId" label={t("legalId")} hint={t("legalIdHint")} error={err("legalId")}>
