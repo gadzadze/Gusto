@@ -69,3 +69,22 @@ export const onboardingSchema = z.discriminatedUnion("kind", [
 
 export type OnboardingInput = z.input<typeof onboardingSchema>;
 export type OnboardingValues = z.output<typeof onboardingSchema>;
+
+// First onboarding may also choose both sides at once (a business that buys and resells):
+// one set of details, two organizations (see createBothForUser).
+export const bothOnboardingSchema = z.object({
+  kind: z.literal("both"),
+  ...common,
+  businessType: z.enum(BUYER_BUSINESS_TYPES, { message: "required" }),
+  addressLine: requiredText(240),
+  deliveryInstructions: optionalText(500),
+  deliveryArea: requiredText(240),
+});
+
+export const onboardingWithBothSchema = z.discriminatedUnion("kind", [
+  buyerOnboardingSchema,
+  supplierOnboardingSchema,
+  bothOnboardingSchema,
+]);
+
+export type OnboardingWithBothValues = z.output<typeof onboardingWithBothSchema>;

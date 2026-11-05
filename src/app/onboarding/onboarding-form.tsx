@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Truck } from "lucide-react";
+import { Building2, Repeat, Truck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -11,13 +11,13 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { zodFormResolver } from "@/lib/validation/form-resolver";
-import { BUYER_BUSINESS_TYPES, onboardingSchema } from "@/lib/validation/onboarding";
+import { BUYER_BUSINESS_TYPES, onboardingWithBothSchema } from "@/lib/validation/onboarding";
 import { submitOnboarding, type OnboardingResult } from "./actions";
 
 // One flat set of fields for both kinds; the shared Zod schema (also run by
 // the Server Action) decides which ones apply.
 type FormFields = {
-  kind: "buyer" | "supplier" | "";
+  kind: "buyer" | "supplier" | "both" | "";
   businessName: string;
   businessType: string;
   legalId: string;
@@ -29,15 +29,24 @@ type FormFields = {
   deliveryArea: string;
 };
 
-const resolver = zodFormResolver<FormFields>(onboardingSchema);
+const resolver = zodFormResolver<FormFields>(onboardingWithBothSchema);
 
 export function OnboardingForm({
   lockedKind = null,
   registered = { businessName: null, legalId: null },
+  defaults,
+  submit = submitOnboarding,
+  offerBoth = true,
 }: {
   lockedKind?: "buyer" | "supplier" | null;
   /** What the admin verified when registering this address. */
   registered?: { businessName: string | null; legalId: string | null };
+  /** Starting values (adding a second side starts from the first one's details). */
+  defaults?: Partial<Pick<FormFields, "businessName" | "legalId" | "contactName" | "phone" | "city">>;
+  /** The action the form posts to (adding a second side has its own). */
+  submit?: (raw: unknown) => Promise<OnboardingResult>;
+  /** "Both" is offered at first onboarding only. */
+  offerBoth?: boolean;
 }) {
   const t = useTranslations("onboarding");
   const [pending, startTransition] = useTransition();
@@ -52,12 +61,12 @@ export function OnboardingForm({
     resolver,
     defaultValues: {
       kind: lockedKind ?? "",
-      businessName: registered.businessName ?? "",
+      businessName: registered.businessName ?? defaults?.businessName ?? "",
       businessType: "",
-      legalId: registered.legalId ?? "",
-      contactName: "",
-      phone: "",
-      city: "",
+      legalId: registered.legalId ?? defaults?.legalId ?? "",
+      contactName: defaults?.contactName ?? "",
+      phone: defaults?.phone ?? "",
+      city: defaults?.city ?? "",
       addressLine: "",
       deliveryInstructions: "",
       deliveryArea: "",
@@ -68,7 +77,7 @@ export function OnboardingForm({
   const onSubmit = handleSubmit((values) => {
     setFormError(null);
     startTransition(async () => {
-      const result = await submitOnboarding(values);
+      const result = await submit(values);
       // On success the action redirects and never returns.
       setFormError(result.error);
       for (const [field, key] of Object.entries(result.fieldErrors ?? {})) {
@@ -97,7 +106,7 @@ export function OnboardingForm({
       {lockedKind ? <input type="hidden" {...register("kind")} /> : null}
       <fieldset className="space-y-3" hidden={lockedKind !== null}>
         <legend className="mb-3 text-sm font-medium">{t("kindLegend")}</legend>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={cn("grid gap-3", offerBoth ? "sm:grid-cols-3" : "sm:grid-cols-2")}>
           <KindOption
             value="buyer"
             icon={Building2}
@@ -114,6 +123,16 @@ export function OnboardingForm({
             checked={kind === "supplier"}
             registration={register("kind")}
           />
+          {offerBoth && lockedKind === null ? (
+            <KindOption
+              value="both"
+              icon={Repeat}
+              title={t("kindBoth")}
+              hint={t("kindBothHint")}
+              checked={kind === "both"}
+              registration={register("kind")}
+            />
+          ) : null}
         </div>
         {err("kind") ? <p className="text-sm text-destructive">{t("kindRequired")}</p> : null}
       </fieldset>
@@ -123,7 +142,7 @@ export function OnboardingForm({
           <div className="sm:col-span-2">
             <Field
               id="businessName"
-              label={kind === "buyer" ? t("businessName") : t("supplierBusinessName")}
+              label={kind === "supplier" ? t("supplierBusinessName") : t("businessName")}
               error={err("businessName")}
             >
               <Input autoComplete="organization" {...input("businessName")} />
@@ -134,7 +153,7 @@ export function OnboardingForm({
             <Input inputMode="numeric" readOnly={registered.legalId !== null} {...input("legalId", t("legalIdHint"))} />
           </Field>
 
-          {kind === "buyer" ? (
+          {kind !== "supplier" ? (
             <Field id="businessType" label={t("businessType")} error={err("businessType")}>
               <Select {...input("businessType")}>
                 <option value="">{t("businessTypePlaceholder")}</option>
@@ -159,7 +178,7 @@ export function OnboardingForm({
             <Input autoComplete="address-level2" placeholder={t("cityPlaceholder")} {...input("city")} />
           </Field>
 
-          {kind === "buyer" ? (
+          {kind !== "supplier" ? (
             <>
               <div className="sm:col-span-2">
                 <Field id="addressLine" label={t("addressLine")} error={err("addressLine")}>
@@ -178,7 +197,8 @@ export function OnboardingForm({
                 </Field>
               </div>
             </>
-          ) : (
+          ) : null}
+          {kind !== "buyer" ? (
             <div className="sm:col-span-2">
               <Field
                 id="deliveryArea"
@@ -189,7 +209,7 @@ export function OnboardingForm({
                 <Input {...input("deliveryArea", t("deliveryAreaHint"))} />
               </Field>
             </div>
-          )}
+          ) : null}
 
           <div className="sm:col-span-2">
             <Button type="submit" className="w-full sm:w-auto" disabled={pending}>
@@ -210,7 +230,7 @@ function KindOption({
   checked,
   registration,
 }: {
-  value: "buyer" | "supplier";
+  value: "buyer" | "supplier" | "both";
   icon: typeof Building2;
   title: string;
   hint: string;

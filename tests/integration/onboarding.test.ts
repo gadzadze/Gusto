@@ -12,6 +12,7 @@ import {
 } from "@/server/db/schema";
 import {
   OnboardingError,
+  createBothForUser,
   createOrganizationForUser,
 } from "@/server/domain/onboarding/create-organization";
 import { createAuthUser, randomLegalId } from "./helpers";
@@ -210,5 +211,88 @@ describe("organization invariants in the database", () => {
       getDb().update(organizations).set({ legalId }).where(eq(organizations.id, second.orgId)),
     ).rejects.toThrow();
     expect(first.orgId).not.toBe(second.orgId);
+  });
+});
+
+describe("a business that buys and resells has both sides", () => {
+  const sameBusiness = (legalId: string) => ({
+    legalId,
+    businessName: "[TEST] Reseller",
+    contactName: "Gela",
+    phone: "599 11 22 33",
+    city: "თბილისი",
+  });
+
+  it("adds the other side at once when the first side is active and the legal ID is the same", async () => {
+    const user = await createAuthUser();
+    const legalId = randomLegalId();
+    await createOrganizationForUser(user.id, buyerInput({ legalId }), { preapprovedLegalId: legalId });
+    const added = await createOrganizationForUser(user.id, supplierInput({ legalId }), { addSide: true });
+    expect(added.status).toBe("active");
+    const orgs = await orgsOf(user.id);
+    expect(orgs.map((o) => o.org.type).sort()).toEqual(["buyer", "supplier"]);
+    expect(orgs.every((o) => o.org.legalId === legalId)).toBe(true);
+    // The supplier side starts with its settings row, like any supplier.
+    const [settings] = await getDb().select().from(supplierSettings).where(eq(supplierSettings.organizationId, added.orgId));
+    expect(settings).toBeDefined();
+  });
+
+  it("waits for review when the first side is not active yet, or the legal ID differs", async () => {
+    const waiting = await createAuthUser();
+    const id = randomLegalId();
+    await createOrganizationForUser(waiting.id, buyerInput({ legalId: id }));
+    expect((await createOrganizationForUser(waiting.id, supplierInput({ legalId: id }), { addSide: true })).status).toBe("pending_review");
+
+    const other = await createAuthUser();
+    const first = randomLegalId();
+    await createOrganizationForUser(other.id, buyerInput({ legalId: first }), { preapprovedLegalId: first });
+    expect((await createOrganizationForUser(other.id, supplierInput({ legalId: randomLegalId() }), { addSide: true })).status).toBe("pending_review");
+  });
+
+  it("refuses a side the person already has, and adding a side before any organization exists", async () => {
+    const user = await createAuthUser();
+    await expect(createOrganizationForUser(user.id, supplierInput(), { addSide: true })).rejects.toEqual(new OnboardingError("not_onboarded"));
+    await createOrganizationForUser(user.id, buyerInput());
+    await expect(createOrganizationForUser(user.id, buyerInput(), { addSide: true })).rejects.toEqual(new OnboardingError("already_has_kind"));
+    // Without addSide a second organization is still refused (one onboarding per person).
+    await expect(createOrganizationForUser(user.id, supplierInput())).rejects.toEqual(new OnboardingError("already_onboarded"));
+  });
+
+  it("creates both sides together, both active when vetted and both waiting otherwise", async () => {
+    const vetted = await createAuthUser();
+    const id = randomLegalId();
+    const common = sameBusiness(id);
+    const result = await createBothForUser(
+      vetted.id,
+      { kind: "buyer", ...common, businessType: "retailer", addressLine: "Rustaveli 5", deliveryInstructions: undefined },
+      { kind: "supplier", ...common, deliveryArea: "Tbilisi" },
+      { preapprovedLegalId: id },
+    );
+    expect([result.buyer.status, result.supplier.status]).toEqual(["active", "active"]);
+    expect((await orgsOf(vetted.id)).length).toBe(2);
+
+    const unvetted = await createAuthUser();
+    const both = await createBothForUser(
+      unvetted.id,
+      { kind: "buyer", ...sameBusiness(randomLegalId()), businessType: "retailer", addressLine: "Rustaveli 5", deliveryInstructions: undefined },
+      { kind: "supplier", ...sameBusiness(randomLegalId()), deliveryArea: "Tbilisi" },
+    );
+    expect([both.buyer.status, both.supplier.status]).toEqual(["pending_review", "pending_review"]);
+  });
+
+  it("rolls back both sides when one cannot be created", async () => {
+    const user = await createAuthUser();
+    const legalId = randomLegalId();
+    // Someone else already has a supplier with this legal ID.
+    const rival = await createAuthUser();
+    await createOrganizationForUser(rival.id, supplierInput({ legalId }));
+    await expect(
+      createBothForUser(
+        user.id,
+        { kind: "buyer", ...sameBusiness(legalId), businessType: "retailer", addressLine: "Rustaveli 5", deliveryInstructions: undefined },
+        { kind: "supplier", ...sameBusiness(legalId), deliveryArea: "Tbilisi" },
+      ),
+    ).rejects.toEqual(new OnboardingError("legal_id_taken"));
+    expect(await orgsOf(user.id)).toHaveLength(0);
   });
 });

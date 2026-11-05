@@ -23,7 +23,10 @@ export type AccessState =
       isPlatformAdmin: boolean;
       /** The person has chosen their own password (until then every area asks for it). */
       passwordSet: boolean;
+      /** The organization this request acts as (the chosen one when the person has several). */
       membership: OrgMembership | null;
+      /** All of the person's organizations, e.g. a buyer and a supplier side. */
+      memberships: OrgMembership[];
     };
 
 export type AccessDecision = "allow" | "login" | "set_password" | "onboarding" | "pending" | "not_found";

@@ -1,10 +1,12 @@
 import "server-only";
 import { asc, eq } from "drizzle-orm";
+import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { getDb } from "@/server/db/client";
 import { organizationMemberships, organizations, profiles } from "@/server/db/schema";
 import { createSupabaseServerClient } from "@/server/supabase/server";
+import { ACTIVE_ORG_COOKIE, pickActive } from "./active-org";
 import {
   decideAccess,
   type AccessState,
@@ -42,33 +44,36 @@ export const getAccessState = cache(async (): Promise<AccessState> => {
     .leftJoin(organizationMemberships, eq(organizationMemberships.userId, profiles.id))
     .leftJoin(organizations, eq(organizations.id, organizationMemberships.organizationId))
     .where(eq(profiles.id, data.user.id))
-    .orderBy(asc(organizationMemberships.createdAt))
-    .limit(1);
+    // Oldest first, buyer before supplier when both were created together.
+    .orderBy(asc(organizationMemberships.createdAt), asc(organizations.type));
 
-  const row = rows[0];
-  const membership: OrgMembership | null =
-    row?.orgId && row.orgType && row.orgStatus && row.orgName && row.role
-      ? {
-          orgId: row.orgId,
-          orgType: row.orgType,
-          orgStatus: row.orgStatus,
-          orgName: row.orgName,
-          role: row.role,
-        }
-      : null;
+  const memberships: OrgMembership[] = [];
+  for (const row of rows) {
+    if (row.orgId && row.orgType && row.orgStatus && row.orgName && row.role) {
+      memberships.push({ orgId: row.orgId, orgType: row.orgType, orgStatus: row.orgStatus, orgName: row.orgName, role: row.role });
+    }
+  }
+  const chosen = (await cookies()).get(ACTIVE_ORG_COOKIE)?.value;
 
   return {
     signedIn: true,
     userId: data.user.id,
     email: data.user.email ?? null,
-    isPlatformAdmin: row?.isPlatformAdmin ?? false,
-    passwordSet: row?.passwordSetAt != null,
-    membership,
+    isPlatformAdmin: rows[0]?.isPlatformAdmin ?? false,
+    passwordSet: rows[0]?.passwordSetAt != null,
+    membership: pickActive(memberships, chosen),
+    memberships,
   };
 });
 
 async function enforce(requirement: Requirement) {
   const state = await getAccessState();
+  // A person with both sides who opens the other side's area (a bookmark, a link): switch to it
+  // instead of showing "not found". /switch only accepts their own organizations.
+  if (state.signedIn && state.passwordSet && (requirement === "buyer" || requirement === "supplier")) {
+    const other = state.membership?.orgType !== requirement ? state.memberships.find((m) => m.orgType === requirement) : undefined;
+    if (other) redirect(`/switch?org=${other.orgId}`);
+  }
   switch (decideAccess(state, requirement)) {
     case "login":
       redirect("/login");

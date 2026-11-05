@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Area } from "./nav";
+import { SideSwitch, type Side } from "./side-switch";
 import { BottomNav, SidebarNav } from "./nav-links";
 
 export type ShellProps = {
@@ -22,12 +23,16 @@ export type ShellProps = {
   showAdminLink: boolean;
   /** Notification bell (buyer and supplier areas); rendered in Suspense by the shell. */
   bell?: React.ReactNode;
+  /** The person's own organizations, when there is more than one (buyer and supplier side). */
+  sides?: Side[];
+  /** The side this person could still add (an "also sell / also buy" link), or null. */
+  addSide?: "buyer" | "supplier" | null;
   /** Counts shown next to nav items, keyed by href. */
   navBadges?: Record<string, number>;
   children: React.ReactNode;
 };
 
-export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, navBadges, children }: ShellProps) {
+export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, sides, addSide, navBadges, children }: ShellProps) {
   const t = await getTranslations();
   const roleLabel = t(`roles.${area}`);
   const navProps = { area, homeHref, showAdminLink, badges: navBadges };
@@ -41,7 +46,13 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
         </div>
         <div className="px-5 pb-5">
           {title ? <p className="truncate text-sm font-medium" title={title}>{title}</p> : null}
-          <Badge tone="brand" className="mt-1.5">{roleLabel}</Badge>
+          {sides && sides.length > 1 ? (
+            <div className="mt-2">
+              <SideSwitch sides={sides} />
+            </div>
+          ) : (
+            <Badge tone="brand" className="mt-1.5">{roleLabel}</Badge>
+          )}
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-3">
           <SidebarNav {...navProps} />
@@ -51,6 +62,11 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           <Link href="/account/password" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
             {t("nav.changePassword")}
           </Link>
+          {addSide ? (
+            <Link href="/account/add-side" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
+              {t(`nav.addSide.${addSide}`)}
+            </Link>
+          ) : null}
           <div className="px-3 pb-2">
             <ThemeToggle />
           </div>
@@ -62,7 +78,11 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
         <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden print:hidden">
           <div className="flex min-w-0 items-center gap-3">
             <Logo className="h-6" />
-            {title ? <span className="truncate text-sm text-muted-foreground">{title}</span> : null}
+            {sides && sides.length > 1 ? (
+              <SideSwitch sides={sides} compact />
+            ) : title ? (
+              <span className="truncate text-sm text-muted-foreground">{title}</span>
+            ) : null}
           </div>
           <div className="flex items-center">
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}

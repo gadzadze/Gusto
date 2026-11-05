@@ -15,7 +15,7 @@ import {
 import { writeAudit } from "@/server/domain/audit";
 
 export class OnboardingError extends Error {
-  constructor(public readonly code: "already_onboarded" | "legal_id_taken") {
+  constructor(public readonly code: "already_onboarded" | "legal_id_taken" | "already_has_kind" | "not_onboarded") {
     super(code);
     this.name = "OnboardingError";
   }
@@ -33,6 +33,12 @@ export class OnboardingError extends Error {
  */
 export type CreateOptions = {
   preapprovedLegalId?: string | null;
+  /**
+   * Adds a second side (buyer or supplier) for a person who already has an organization.
+   * It starts `active` at once when the person's other side is active and the legal ID is the
+   * same (the admin already vetted that business); otherwise it waits for review.
+   */
+  addSide?: boolean;
   /** The address the person signed in with: a supplier's buyer invitations are matched by it. */
   signInEmail?: string | null;
 };
@@ -68,14 +74,20 @@ export async function createOrganizationInTx(
   await tx.select({ id: profiles.id }).from(profiles).where(eq(profiles.id, userId)).for("update");
 
   const existing = await tx
-    .select({ id: organizationMemberships.id })
+    .select({ type: organizations.type, status: organizations.status, legalId: organizations.legalId })
     .from(organizationMemberships)
-    .where(eq(organizationMemberships.userId, userId))
-    .limit(1);
-  if (existing.length > 0) throw new OnboardingError("already_onboarded");
+    .innerJoin(organizations, eq(organizations.id, organizationMemberships.organizationId))
+    .where(eq(organizationMemberships.userId, userId));
+  if (options.addSide) {
+    if (existing.length === 0) throw new OnboardingError("not_onboarded");
+    if (existing.some((m) => m.type === input.kind)) throw new OnboardingError("already_has_kind");
+  } else if (existing.length > 0) {
+    throw new OnboardingError("already_onboarded");
+  }
 
   const legalId = options.preapprovedLegalId ?? input.legalId;
-  const status: OrgStatus = options.preapprovedLegalId ? "active" : "pending_review";
+  const sameBusinessActive = existing.some((m) => m.status === "active" && m.legalId === legalId);
+  const status: OrgStatus = options.preapprovedLegalId || (options.addSide && sameBusinessActive) ? "active" : "pending_review";
   // One organization per legal ID and kind (the unique index is the backstop).
   const [taken] = await tx
     .select({ id: organizations.id })
@@ -122,8 +134,41 @@ export async function createOrganizationInTx(
     action: "organization.created",
     targetType: "organization",
     targetId: org.id,
-    data: { type: org.type, status: org.status, preapproved: !!options.preapprovedLegalId },
+    data: { type: org.type, status: org.status, preapproved: !!options.preapprovedLegalId, addedSide: !!options.addSide },
   });
 
   return { orgId: org.id, orgType: org.type, status: org.status };
+}
+
+/**
+ * A business that buys and resells chooses both sides at first onboarding: one set of
+ * details, two organizations (buyer first), in one transaction. Both start `active` when
+ * the admin vetted the address, both wait for review otherwise.
+ */
+export async function createBothForUser(
+  userId: string,
+  buyer: Extract<OnboardingValues, { kind: "buyer" }>,
+  supplier: Extract<OnboardingValues, { kind: "supplier" }>,
+  options: CreateOptions = {},
+): Promise<{ buyer: { orgId: string; status: OrgStatus }; supplier: { orgId: string; status: OrgStatus } }> {
+  return getDb().transaction(async (tx) => {
+    const b = await createOrganizationInTx(tx, userId, buyer, options);
+    const s = await createOrganizationInTx(tx, userId, supplier, { ...options, addSide: true });
+    return { buyer: { orgId: b.orgId, status: b.status }, supplier: { orgId: s.orgId, status: s.status } };
+  });
+}
+
+/** What a second side starts from: the person's own organization's details. */
+export async function organizationPrefill(orgId: string) {
+  const [org] = await getDb()
+    .select({
+      businessName: organizations.name,
+      legalId: organizations.legalId,
+      contactName: organizations.contactName,
+      phone: organizations.phone,
+      city: organizations.city,
+    })
+    .from(organizations)
+    .where(eq(organizations.id, orgId));
+  return org ?? null;
 }
