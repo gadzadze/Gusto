@@ -49,7 +49,7 @@ export async function createSupplierRequest(values: SupplierRequestValues, invit
     if (inserted.length === 0) return "duplicate" as const;
     // A buyer's invitation link is claimed only by a request that was really stored;
     // an unusable token just leaves this a plain request.
-    const inviteId = await claimSupplierInvite(tx, inviteToken);
+    const inviteId = await claimSupplierInvite(tx, inviteToken, values.businessName);
     if (inviteId) await tx.update(supplierRequests).set({ inviteId }).where(eq(supplierRequests.id, inserted[0].id));
     return "created" as const;
   });

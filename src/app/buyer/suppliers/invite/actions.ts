@@ -8,14 +8,13 @@ import { supplierInviteSchema } from "@/lib/validation/supplier-invite";
 import { whatsappLink } from "@/lib/whatsapp";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireBuyer } from "@/server/auth/guards";
-import { createSupplierInvite, revokeSupplierInvite, type SupplierInviteError } from "@/server/domain/buyer/supplier-invites";
+import { createSupplierInvite, getOrCreateInviteLink, regenerateInviteLink, revokeSupplierInvite, type SupplierInviteError } from "@/server/domain/buyer/supplier-invites";
 import { serverEnv } from "@/server/env";
 import { sendEmail } from "@/server/notifications/email";
 
 export type SupplierInviteLinks = {
   inviteUrl: string;
   whatsappUrl: string | null;
-  orderText: string; // for pasting under an order written in WhatsApp
   emailSent: boolean | null; // null = no email address given
 };
 
@@ -42,7 +41,7 @@ export async function createSupplierInviteAction(raw: unknown): Promise<{ ok: tr
         emailSent = false;
       }
     }
-    return { ok: true, links: { inviteUrl, orderText: t("orderFooter", { link: inviteUrl }), whatsappUrl: parsed.data.phone ? whatsappLink(parsed.data.phone, text) : null, emailSent } };
+    return { ok: true, links: { inviteUrl, whatsappUrl: parsed.data.phone ? whatsappLink(parsed.data.phone, text) : null, emailSent } };
   });
 }
 
@@ -53,5 +52,22 @@ export async function revokeSupplierInviteAction(inviteId: string): Promise<{ ok
     await revokeSupplierInvite(ctx, inviteId);
     refresh();
     return { ok: true };
+  });
+}
+
+export type PersonalLink = { url: string; text: string };
+
+async function personalLink(token: string): Promise<PersonalLink> {
+  const t = await getTranslations("supplierInvite");
+  const url = `${serverEnv().NEXT_PUBLIC_APP_URL}/suppliers/invite/${token}`;
+  return { url, text: t("orderFooter", { link: url }) };
+}
+
+/** The buyer's own reusable link (made on first use). */
+export async function personalLinkAction(regenerate = false): Promise<{ ok: true; link: PersonalLink } | Err> {
+  const ctx = await requireBuyer();
+  return runAction<{ ok: true; link: PersonalLink }, SupplierInviteError | "rate_limited">("personalInviteLink", async () => {
+    const token = regenerate ? await regenerateInviteLink(ctx) : await getOrCreateInviteLink(ctx);
+    return { ok: true, link: await personalLink(token) };
   });
 }

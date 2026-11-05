@@ -26,6 +26,9 @@ test("a buyer invites a supplier and the request arrives with the buyer's name",
   await buyer.getByRole("link", { name: "მომწოდებლის მოწვევა" }).click();
   await expect(buyer).toHaveURL(/\/buyer\/suppliers\/invite$/);
   await buyer.waitForLoadState("networkidle");
+  // The personal link is ready without a tap: the ready-made text with the link.
+  await expect(buyer.getByTestId("personal-link-text")).toContainText("/suppliers/invite/");
+  await expect(buyer.getByRole("button", { name: "გაზიარება" })).toBeVisible();
   await buyer.getByLabel("მომწოდებლის დასახელება").fill(supplierName);
   await buyer.getByRole("button", { name: "ბმულის შექმნა" }).click();
   // Neither phone nor email: the buyer has no way to send the link.

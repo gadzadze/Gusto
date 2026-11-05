@@ -8,6 +8,9 @@ import { createSupplierRequest, reviewSupplierRequest } from "@/server/domain/ad
 import {
   connectInvitingBuyer,
   createSupplierInvite,
+  getInviteLink,
+  getOrCreateInviteLink,
+  regenerateInviteLink,
   listInvitingBuyers,
   listSupplierInvites,
   previewSupplierInvite,
@@ -134,5 +137,46 @@ describe("a buyer invites a supplier", () => {
     const [stored] = await getDb().select().from(buyerSupplierInvites).where(eq(buyerSupplierInvites.id, inviteId));
     expect(stored.supplierOrgId).toBeNull();
     expect(await listInvitingBuyers({ userId: user.id, orgId, orgType: "supplier", orgStatus: "active" })).toEqual([]);
+  });
+});
+
+describe("a buyer's personal invitation link", () => {
+  it("is made once, serves several suppliers, and each request is tracked on its own", async () => {
+    const buyer = await createBuyer();
+    expect(await getInviteLink(buyer)).toBeNull();
+    const token = await getOrCreateInviteLink(buyer);
+    expect(await getOrCreateInviteLink(buyer)).toBe(token);
+    expect(await getInviteLink(buyer)).toBe(token);
+    expect(await previewSupplierInvite(token)).toMatchObject({ supplierName: "" });
+
+    const a = requestFor(`pl-a-${Date.now()}@test.gusto.ge`);
+    const b = { ...requestFor(`pl-b-${Date.now()}@test.gusto.ge`), businessName: "[TEST] Bakery" };
+    expect(await createSupplierRequest(a, token)).toBe("created");
+    expect(await createSupplierRequest(b, token)).toBe("created"); // not single use
+    expect(await previewSupplierInvite(token)).not.toBeNull(); // still open
+
+    const list = await listSupplierInvites(buyer);
+    expect(list.map((i) => i.supplierName).sort()).toEqual(["[TEST] Bakery", "[TEST] Dairy Ltd"]);
+    expect(list.every((i) => i.state === "joined")).toBe(true);
+    const rows = await getDb().select().from(supplierRequests).where(eq(supplierRequests.email, a.email));
+    expect(rows[0].inviteId).not.toBeNull();
+  });
+
+  it("is replaced on request, and the old one stops working", async () => {
+    const buyer = await createBuyer();
+    const old = await getOrCreateInviteLink(buyer);
+    const fresh = await regenerateInviteLink(buyer);
+    expect(fresh).not.toBe(old);
+    expect(await previewSupplierInvite(old)).toBeNull();
+    expect(await previewSupplierInvite(fresh)).not.toBeNull();
+    const req = requestFor(`pl-old-${Date.now()}@test.gusto.ge`);
+    expect(await createSupplierRequest(req, old)).toBe("created");
+    const [row] = await getDb().select().from(supplierRequests).where(eq(supplierRequests.email, req.email));
+    expect(row.inviteId).toBeNull(); // a plain request
+  });
+
+  it("works only for an active buyer", async () => {
+    const pending = await createBuyer("pending_review");
+    await expect(getOrCreateInviteLink(pending)).rejects.toEqual(new StateError("not_active"));
   });
 });

@@ -668,6 +668,21 @@ export const supplierRequests = pgTable(
   ],
 );
 
+// A buyer's reusable invitation link (one per buyer): pasted under any order in WhatsApp.
+// Unlike buyer_supplier_invites it isn't single use, so the raw token is kept to show the
+// link again; it grants nothing (a join request the admin vets), and the buyer can replace it.
+export const buyerInviteLinks = pgTable(
+  "buyer_invite_links",
+  {
+    buyerOrgId: uuid("buyer_org_id")
+      .primaryKey()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    token: text("token").notNull(),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [uniqueIndex("buyer_invite_links_token_key").on(t.token)],
+);
+
 export const auditLogs = pgTable(
   "audit_logs",
   {

@@ -1,8 +1,10 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import { and, desc, eq, gt, isNull, sql } from "drizzle-orm";
 import type { SupplierInviteValues } from "@/lib/validation/supplier-invite";
 import { getDb, type Tx } from "@/server/db/client";
 import {
+  buyerInviteLinks,
   buyerSupplierInvites,
   organizations,
   priceLists,
@@ -141,7 +143,14 @@ export async function previewSupplierInvite(token: string): Promise<SupplierInvi
     .from(buyerSupplierInvites)
     .innerJoin(organizations, eq(organizations.id, buyerSupplierInvites.buyerOrgId))
     .where(and(eq(buyerSupplierInvites.tokenHash, hashInviteToken(token)), isOpen, eq(organizations.status, "active")));
-  return row ?? null;
+  if (row) return row;
+  // The buyer's reusable personal link: no supplier name known yet.
+  const [personal] = await getDb()
+    .select({ buyerName: organizations.name })
+    .from(buyerInviteLinks)
+    .innerJoin(organizations, eq(organizations.id, buyerInviteLinks.buyerOrgId))
+    .where(and(eq(buyerInviteLinks.token, token), eq(organizations.status, "active")));
+  return personal ? { buyerName: personal.buyerName, supplierName: "" } : null;
 }
 
 /**
@@ -149,7 +158,7 @@ export async function previewSupplierInvite(token: string): Promise<SupplierInvi
  * (single use) and returns its id, or null when the token isn't usable (the request is
  * then stored as a plain one). Locks the row so two submissions can't both claim it.
  */
-export async function claimSupplierInvite(tx: Tx, token: string | null | undefined): Promise<string | null> {
+export async function claimSupplierInvite(tx: Tx, token: string | null | undefined, supplierName = ""): Promise<string | null> {
   if (!token || !looksLikeInviteToken(token)) return null;
   const [row] = await tx
     .select({ id: buyerSupplierInvites.id })
@@ -157,9 +166,61 @@ export async function claimSupplierInvite(tx: Tx, token: string | null | undefin
     .innerJoin(organizations, eq(organizations.id, buyerSupplierInvites.buyerOrgId))
     .where(and(eq(buyerSupplierInvites.tokenHash, hashInviteToken(token)), isOpen, eq(organizations.status, "active")))
     .for("update", { of: buyerSupplierInvites });
-  if (!row) return null;
-  await tx.update(buyerSupplierInvites).set({ usedAt: new Date() }).where(eq(buyerSupplierInvites.id, row.id));
-  return row.id;
+  if (row) {
+    await tx.update(buyerSupplierInvites).set({ usedAt: new Date() }).where(eq(buyerSupplierInvites.id, row.id));
+    return row.id;
+  }
+  // A personal link can be used by any number of suppliers: each request gets its own
+  // (already used) invitation row, so everything after this works as for a named invitation.
+  const [link] = await tx
+    .select({ buyerOrgId: buyerInviteLinks.buyerOrgId })
+    .from(buyerInviteLinks)
+    .innerJoin(organizations, eq(organizations.id, buyerInviteLinks.buyerOrgId))
+    .where(and(eq(buyerInviteLinks.token, token), eq(organizations.status, "active")));
+  if (!link) return null;
+  const now = new Date();
+  const [child] = await tx
+    .insert(buyerSupplierInvites)
+    .values({
+      buyerOrgId: link.buyerOrgId,
+      supplierName: supplierName || "-",
+      tokenHash: generateInviteToken().hash, // never used: the personal link is the way in
+      expiresAt: new Date(now.getTime() + SUPPLIER_INVITE_TTL_MS),
+      usedAt: now,
+    })
+    .returning({ id: buyerSupplierInvites.id });
+  return child.id;
+}
+
+/** The buyer's reusable invitation token, or null before the first one is made. */
+export async function getInviteLink(ctx: OrgCtx): Promise<string | null> {
+  if (ctx.orgType !== "buyer") throw new NotFoundError();
+  const [row] = await getDb().select({ token: buyerInviteLinks.token }).from(buyerInviteLinks).where(eq(buyerInviteLinks.buyerOrgId, ctx.orgId));
+  return row?.token ?? null;
+}
+
+/** The buyer's reusable invitation token, created on first use. */
+export async function getOrCreateInviteLink(ctx: OrgCtx): Promise<string> {
+  assertActiveBuyer(ctx);
+  const db = getDb();
+  const [existing] = await db.select({ token: buyerInviteLinks.token }).from(buyerInviteLinks).where(eq(buyerInviteLinks.buyerOrgId, ctx.orgId));
+  if (existing) return existing.token;
+  const token = randomBytes(32).toString("base64url");
+  await db.insert(buyerInviteLinks).values({ buyerOrgId: ctx.orgId, token }).onConflictDoNothing();
+  const [row] = await db.select({ token: buyerInviteLinks.token }).from(buyerInviteLinks).where(eq(buyerInviteLinks.buyerOrgId, ctx.orgId));
+  return row.token;
+}
+
+/** Replaces the link: the old one stops working at once. */
+export async function regenerateInviteLink(ctx: OrgCtx): Promise<string> {
+  assertActiveBuyer(ctx);
+  await consumeRateLimit(RATE_LIMITS.supplierInviteCreate, ctx.orgId);
+  const token = randomBytes(32).toString("base64url");
+  await getDb()
+    .insert(buyerInviteLinks)
+    .values({ buyerOrgId: ctx.orgId, token })
+    .onConflictDoUpdate({ target: buyerInviteLinks.buyerOrgId, set: { token, createdAt: new Date() } });
+  return token;
 }
 
 /**
