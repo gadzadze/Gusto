@@ -1,6 +1,6 @@
 "use client";
 
-import { Ban, RotateCcw, UserPlus } from "lucide-react";
+import { Ban, Check, Copy, MessageCircle, RotateCcw, UserPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { allowEmailAction, bulkAllowAction, restoreEmailAction, revokeEmailAction, type BulkResult } from "./actions";
+import { allowEmailAction, bulkAllowAction, createAccessLinkAction, restoreEmailAction, revokeEmailAction, type BulkResult } from "./actions";
 
 export type AccessRow = { id: string; email: string; note: string | null; role: "buyer" | "supplier" | null; businessName: string | null; legalId: string | null; revoked: boolean; addedAt: string };
 
+type HandOver = { id: string; email: string; link: string; whatsappUrl: string; hasPhone: boolean };
 type Message = { tone: "success" | "error"; text: string } | null;
 
 export function AccessManager({ rows }: { rows: AccessRow[] }) {
@@ -26,6 +27,8 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
   const [bulkText, setBulkText] = useState("");
   const [bulk, setBulk] = useState<BulkResult | null>(null);
   const [pending, startTransition] = useTransition();
+  const [handOver, setHandOver] = useState<HandOver | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const errorText = (code: string) => {
     if (code === "invalid_email" || code === "invalid") return t("errors.invalid_email");
@@ -176,6 +179,28 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
                   {t("restore")}
                 </Button>
               ) : (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={pending}
+                    onClick={() =>
+                      startTransition(async () => {
+                        const result = await createAccessLinkAction(row.id);
+                        setCopied(false);
+                        if (result.ok) {
+                          setMessage(null);
+                          setHandOver({ id: row.id, email: result.email, link: result.link, whatsappUrl: result.whatsappUrl, hasPhone: result.hasPhone });
+                        } else {
+                          setHandOver(null);
+                          setMessage({ tone: "error", text: result.error === "rate_limited" ? t("link.rateLimited") : errorText(result.error) });
+                        }
+                      })
+                    }
+                  >
+                    <MessageCircle />
+                    {t("link.create")}
+                  </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -190,7 +215,35 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
                   <Ban />
                   {t("revoke")}
                 </Button>
+                </>
               )}
+              {handOver?.id === row.id ? (
+                <div className="w-full space-y-3 rounded-lg border border-brand/30 bg-brand-soft/40 p-4">
+                  <p className="text-sm">{t("link.ready", { email: handOver.email })}</p>
+                  <p className="text-xs text-muted-foreground">{t("link.warning")}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button asChild size="sm">
+                      <a href={handOver.whatsappUrl} target="_blank" rel="noopener noreferrer">
+                        <MessageCircle />
+                        {t("link.whatsapp")}
+                      </a>
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      type="button"
+                      onClick={async () => {
+                        await navigator.clipboard.writeText(handOver.link);
+                        setCopied(true);
+                      }}
+                    >
+                      {copied ? <Check /> : <Copy />}
+                      {copied ? t("link.copied") : t("link.copy")}
+                    </Button>
+                  </div>
+                  {handOver.hasPhone ? null : <p className="text-xs text-muted-foreground">{t("link.noPhone")}</p>}
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>

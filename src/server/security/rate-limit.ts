@@ -26,6 +26,8 @@ export const RATE_LIMITS = {
   /** Product image upload: 300 per hour per supplier (a catalog import attaches a photo per product). */
   /** A buyer inviting suppliers: 20 per hour per buyer organization. */
   supplierInviteCreate: { name: "supplier_invite_create", limit: 20, windowSeconds: 3600 },
+  /** An admin creating a sign-in link to hand over: 30 per hour per admin. */
+  adminSignInLink: { name: "admin_sign_in_link", limit: 30, windowSeconds: 3600 },
   imageUpload: { name: "image_upload", limit: 300, windowSeconds: 3600 },
 } as const;
 
