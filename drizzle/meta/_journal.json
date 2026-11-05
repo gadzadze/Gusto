@@ -204,6 +204,13 @@
       "when": 1793867437069,
       "tag": "0028_buyer_invite_links",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1793887240584,
+      "tag": "0029_allowed_emails_both_role",
+      "breakpoints": true
     }
   ]
 }

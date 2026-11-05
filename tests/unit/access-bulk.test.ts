@@ -14,6 +14,12 @@ describe("parseBulkAccess", () => {
     ]);
   });
 
+  it("reads both (in Georgian or English) as a business that buys and resells", () => {
+    const { entries, errors } = parseBulkAccess("a@x.ge,შპს ა,405123456,ორივე\nb@x.ge,შპს ბ,204123456,Both");
+    expect(errors).toEqual([]);
+    expect(entries.map((e) => e.role)).toEqual(["both", "both"]);
+  });
+
   it("reports a bad role, a name without an id and too many columns by line", () => {
     const { entries, errors } = parseBulkAccess("a@x.ge,N,,\nb@x.ge,,,boss\nc@x.ge,N,1,buyer,extra");
     expect(entries).toEqual([]);

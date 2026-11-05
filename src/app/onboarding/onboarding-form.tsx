@@ -38,7 +38,7 @@ export function OnboardingForm({
   submit = submitOnboarding,
   offerBoth = true,
 }: {
-  lockedKind?: "buyer" | "supplier" | null;
+  lockedKind?: "buyer" | "supplier" | "both" | null;
   /** What the admin verified when registering this address. */
   registered?: { businessName: string | null; legalId: string | null };
   /** Starting values (adding a second side starts from the first one's details). */

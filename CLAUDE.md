@@ -146,8 +146,12 @@ real need appears).
     with business name + legal ID, which also makes the organization start
     `active`); scripts use
     `npm run user:allow`. Being allowed gives no role, but the admin may pin
-    `allowed_emails.intended_role`: onboarding then offers only that kind and
-    `submitOnboarding` / the invite action refuse the other (`wrong_role`).
+    `allowed_emails.intended_role` (`buyer`, `supplier` or `both`; text with a check constraint, since
+    the org-type enum can't hold `both`): onboarding then offers only that kind and
+    `submitOnboarding` / the invite action refuse the other (`wrong_role`). **`both`** is a business
+    that buys and resells: the form has no choice and creates both sides at once (active when the
+    address carries a vetted legal ID); a `both` address can also add either side later. Its legal
+    ID clashes with a `buyer` or `supplier` row for the same ID, since it uses the ID on both kinds.
 12. **Partners use their own company address and their own password.** Nobody
     creates accounts or passwords for them. The first sign-in is the emailed link
     (proof they control the mailbox). **The link is sent automatically when the
@@ -273,7 +277,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `notification_deliveries`: the outbox. Channel, recipient, payload,
   `status`, `attempts`, `next_attempt_at`, `last_error`, unique `dedupe_key`.
 - `audit_logs`: admin and security-relevant actions.
-- `allowed_emails`: the sign-in allow-list (lowercase email, note, optional `intended_role`, optional vetted `business_name` + `legal_id`, `revoked_at`); never deleted from.
+- `allowed_emails`: the sign-in allow-list (lowercase email, note, optional `intended_role` (`buyer`/`supplier`/`both`), optional vetted `business_name` + `legal_id`, `revoked_at`); never deleted from.
 - `supplier_requests`: public "onboard me" submissions (business name, legal ID, contact, phone, email, city, note; `status` new/contacted/approved/rejected, admin note, reviewer). At most one open request per legal ID and per email.
 - `buyer_supplier_invites`: a buyer's invitation to a supplier (buyer org, supplier name, phone/email, `token_hash`, `expires_at`, `revoked_at`, `used_at` when a join request used it, `supplier_org_id` once that supplier has an organization, `connected_at`); `supplier_requests.invite_id` points back to it.
 - `buyer_invite_links`: a buyer's reusable invitation link (buyer org as primary key, `token`; replaced on request). Each supplier that joins through it gets its own used `buyer_supplier_invites` row.
@@ -690,7 +694,7 @@ and the delivery row is marked `skipped`, not `sent`.
   A person with one side adds the other at `/account/add-side` (`createOrganizationForUser`
   with `addSide`): it starts **active at once when their other side is active and the legal ID
   is the same** (that business was already vetted), otherwise it waits for review like any new
-  business. An address pinned to one kind (`intended_role`) can't add the other. Notifications
+  business. An address pinned to one kind (`intended_role` `buyer`/`supplier`) can't add the other; one pinned `both` can add either. Notifications
   stay per user (one bell for both sides; `/o/<number>` routes to the right side). There is no
   link between what a business buys and its own catalog.
 - **Only `active` suppliers invite.** Pending suppliers can prepare price

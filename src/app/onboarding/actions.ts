@@ -35,6 +35,7 @@ export async function submitOnboarding(raw: unknown): Promise<OnboardingResult> 
 
   // The admin may have registered this address for one kind only.
   const pinned = registration?.role ?? null;
+  // "both" offers only "both"; a pinned buyer or supplier offers only that kind.
   if (pinned && pinned !== parsed.data.kind) return { ok: false, error: "wrong_role" };
 
   let destination: string;

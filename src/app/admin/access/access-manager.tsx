@@ -11,7 +11,7 @@ import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { allowEmailAction, bulkAllowAction, createAccessLinkAction, restoreEmailAction, revokeEmailAction, type BulkResult } from "./actions";
 
-export type AccessRow = { id: string; email: string; note: string | null; role: "buyer" | "supplier" | null; businessName: string | null; legalId: string | null; revoked: boolean; addedAt: string };
+export type AccessRow = { id: string; email: string; note: string | null; role: "buyer" | "supplier" | "both" | null; businessName: string | null; legalId: string | null; revoked: boolean; addedAt: string };
 
 type HandOver = { id: string; email: string; link: string; whatsappUrl: string; hasPhone: boolean };
 type Message = { tone: "success" | "error"; text: string } | null;
@@ -22,7 +22,7 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
   const [note, setNote] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [legalId, setLegalId] = useState("");
-  const [role, setRole] = useState<"" | "buyer" | "supplier">("");
+  const [role, setRole] = useState<"" | "buyer" | "supplier" | "both">("");
   const [message, setMessage] = useState<Message>(null);
   const [bulkText, setBulkText] = useState("");
   const [bulk, setBulk] = useState<BulkResult | null>(null);
@@ -78,10 +78,11 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="access-role">{t("role")}</Label>
-          <Select id="access-role" value={role} onChange={(e) => setRole(e.target.value as "" | "buyer" | "supplier")} aria-describedby="access-role-hint">
+          <Select id="access-role" value={role} onChange={(e) => setRole(e.target.value as "" | "buyer" | "supplier" | "both")} aria-describedby="access-role-hint">
             <option value="">{t("roles.any")}</option>
             <option value="supplier">{t("roles.supplier")}</option>
             <option value="buyer">{t("roles.buyer")}</option>
+            <option value="both">{t("roles.both")}</option>
           </Select>
         </div>
         <Button type="submit" disabled={pending}>

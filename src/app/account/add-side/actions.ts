@@ -27,7 +27,7 @@ export async function submitAddSide(raw: unknown): Promise<OnboardingResult> {
   if (!parsed.success) return { ok: false, error: "invalid", fieldErrors: fieldErrorsFrom(parsed.error) };
   // The admin may have registered this address for one kind only.
   const pinned = registration?.role ?? null;
-  if (pinned && pinned !== parsed.data.kind) return { ok: false, error: "wrong_role" };
+  if (pinned && pinned !== "both" && pinned !== parsed.data.kind) return { ok: false, error: "wrong_role" };
 
   let destination: string;
   try {
