@@ -1,11 +1,14 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { parseBulkAccess } from "@/lib/access/bulk";
+import { whatsappLink, whatsappShareLink } from "@/lib/whatsapp";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireAdmin } from "@/server/auth/guards";
 import { registerEmail } from "@/server/auth/register-email";
+import { createAccessLink } from "@/server/domain/admin/access-link";
 import { revokeEmail, allowEmail, type AccessError } from "@/server/domain/admin/access";
 import { sendWelcomeEmail } from "@/server/auth/welcome-email";
 import { ensureAuthUser } from "@/server/supabase/admin";
@@ -103,4 +106,21 @@ export async function bulkAllowAction(text: string): Promise<BulkResult> {
   }
   refresh();
   return { ok: true, results, parseErrors: errors, tooMany };
+}
+
+export type AccessLinkResult =
+  | { ok: true; email: string; link: string; whatsappUrl: string; hasPhone: boolean }
+  | ActionError<AccessError | "rate_limited">;
+
+/** A one-time sign-in link to hand over by WhatsApp while no email provider is connected. */
+export async function createAccessLinkAction(id: string): Promise<AccessLinkResult> {
+  const ctx = await requireAdmin();
+  if (!z.uuid().safeParse(id).success) return { ok: false, error: "invalid" };
+  return runAction<AccessLinkResult, AccessError | "rate_limited">("createAccessLink", async () => {
+    const { email, link, phone } = await createAccessLink(ctx, id);
+    const t = await getTranslations("admin.access.link");
+    const text = t("message", { link });
+    const direct = phone ? whatsappLink(phone, text) : null;
+    return { ok: true, email, link, whatsappUrl: direct ?? whatsappShareLink(text), hasPhone: direct !== null };
+  });
 }

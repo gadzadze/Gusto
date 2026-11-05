@@ -158,7 +158,13 @@ real need appears).
     logged), and the admin screens say sent / not sent (no email provider
     configured) / failed. A lost or expired link is replaced from the sign-in page
     ("set or reset password", the `reset` intent, which lands on `/account/password`);
-    there is no separate "first sign-in" button. Link lifetime is Supabase's email OTP
+    there is no separate "first sign-in" button. **Until an email provider is connected the
+    admin can hand the link over by hand**: "ბმულის შექმნა" on a row of `/admin/access`
+    (`domain/admin/access-link.ts`, 30/h per admin) makes the same one-time link, shows it once
+    with a WhatsApp button (the number of the address's supplier request if there is one,
+    otherwise WhatsApp asks who to send to) and a copy button. It is never stored or logged;
+    `access.link_created` is audited. Whoever opens it first gets in, so it is admin-only and
+    for the right person only. This is the one place a person's sign-in link is shown to anyone. Link lifetime is Supabase's email OTP
     expiry (Auth settings). Until `profiles.password_set_at` is set,
     every guard sends them to `/account/password` (`decideAccess` →
     `set_password`). After that: email + password (`submitLogin`), "forgot" =

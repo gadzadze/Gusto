@@ -8,3 +8,8 @@ export function whatsappLink(phone: string, text: string): string | null {
   if (digits.length < 8 || digits.length > 15) return null;
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
+
+/** A wa.me link with no recipient: WhatsApp lets the sender pick the chat. */
+export function whatsappShareLink(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`;
+}
