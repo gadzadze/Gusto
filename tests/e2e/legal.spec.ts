@@ -29,7 +29,7 @@ test("the documents are linked from the landing footer, sign-in and the request 
   await page.goto("/");
   const footer = page.locator("footer");
   await expect(footer.getByRole("link", { name: "მომსახურების პირობები" })).toHaveAttribute("href", "/terms");
-  await expect(footer.getByRole("link", { name: "კონფიდენციალურობა" })).toHaveAttribute("href", "/privacy");
+  await expect(footer.getByRole("link", { name: "კონფიდენციალურობის პოლიტიკა" })).toHaveAttribute("href", "/privacy");
 
   await page.goto("/login");
   await expect(page.getByRole("link", { name: "მომსახურების პირობებს" })).toHaveAttribute("href", "/terms");
