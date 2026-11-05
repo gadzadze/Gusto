@@ -263,6 +263,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `allowed_emails`: the sign-in allow-list (lowercase email, note, optional `intended_role`, optional vetted `business_name` + `legal_id`, `revoked_at`); never deleted from.
 - `supplier_requests`: public "onboard me" submissions (business name, legal ID, contact, phone, email, city, note; `status` new/contacted/approved/rejected, admin note, reviewer). At most one open request per legal ID and per email.
 - `buyer_supplier_invites`: a buyer's invitation to a supplier (buyer org, supplier name, phone/email, `token_hash`, `expires_at`, `revoked_at`, `used_at` when a join request used it, `supplier_org_id` once that supplier has an organization, `connected_at`); `supplier_requests.invite_id` points back to it.
+- `buyer_invite_links`: a buyer's reusable invitation link (buyer org as primary key, `token`; replaced on request). Each supplier that joins through it gets its own used `buyer_supplier_invites` row.
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
