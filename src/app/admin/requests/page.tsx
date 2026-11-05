@@ -63,6 +63,7 @@ async function Requests({ searchParams }: Pick<PageProps<"/admin/requests">, "se
           adminNote: r.adminNote,
           status: r.status,
           freeMail: isFreeMailAddress(r.email),
+          invitedByBuyer: r.invitedByBuyer,
           createdAt: format.dateTime(r.createdAt, { dateStyle: "medium", timeStyle: "short" }),
         }))}
       />

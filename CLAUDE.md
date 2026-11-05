@@ -262,6 +262,8 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `audit_logs`: admin and security-relevant actions.
 - `allowed_emails`: the sign-in allow-list (lowercase email, note, optional `intended_role`, optional vetted `business_name` + `legal_id`, `revoked_at`); never deleted from.
 - `supplier_requests`: public "onboard me" submissions (business name, legal ID, contact, phone, email, city, note; `status` new/contacted/approved/rejected, admin note, reviewer). At most one open request per legal ID and per email.
+- `buyer_supplier_invites`: a buyer's invitation to a supplier (buyer org, supplier name, phone/email, `token_hash`, `expires_at`, `revoked_at`, `used_at` when a join request used it, `supplier_org_id` once that supplier has an organization, `connected_at`); `supplier_requests.invite_id` points back to it.
+- `buyer_invite_links`: a buyer's reusable invitation link (buyer org as primary key, `token`; replaced on request). Each supplier that joins through it gets its own used `buyer_supplier_invites` row.
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
@@ -643,6 +645,21 @@ and the delivery row is marked `skipped`, not `sent`.
     win.
   - A new user's buyer org is created and connected in one transaction
     (`createOrganizationInTx`).
+- **A buyer can invite a supplier** (`domain/buyer/supplier-invites.ts`, `/buyer/suppliers/invite`,
+  table `buyer_supplier_invites`; only an `active` buyer, 20/h, at most 30 open). The buyer enters the
+  supplier's name and a phone or email, gets a one-time link `/suppliers/invite/<token>` (30 days, only
+  the hash is stored, shown once; WhatsApp button and a direct email, never through the outbox). The link
+  opens the public join form with the buyer's name and the supplier's name filled in, and the same
+  `unavailable` notice for every unusable token. **It grants nothing**: it creates an ordinary
+  `supplier_requests` row (`invite_id` set, single use, claimed only by a request that was really stored)
+  that the admin vets like any other, and the admin queue shows "invited by <buyer>". When the approved
+  supplier onboards, `linkInvitesToSupplier` attaches the invitation to their organization by the address
+  they signed in with. They then see the buyer under "buyers who invited you" on the Customers page and
+  `connectInvitingBuyer` makes the buyer an active customer in one tap (default price list if the supplier
+  has one; otherwise the buyer sees nothing until a list is assigned, as always). The buyer sees nothing of
+  the supplier until the supplier does that: a supplier decides who sees its catalog and prices. The
+  supplier's contact details the buyer typed are visible only to that buyer (privacy text mentions it).
+- **Personal link** (`buyer_invite_links`, one row per buyer, `/buyer/suppliers/invite`): a reusable invitation link made on the buyer's first visit, shown with the ready text `supplierInvite.orderFooter` (one benefit sentence + link) and a Share button (`navigator.share`, falling back to copy) to paste or send under an order written in WhatsApp. Unlike named invitations it is not single use, so the raw token is stored to show it again (it grants nothing: a request the admin vets, rate limited per IP); "replace" swaps the token and the old link stops working. `claimSupplierInvite` turns each request that arrives through it into its own used `buyer_supplier_invites` row (supplier name from the request), so tracking, linking and "buyers who invited you" work as for named invitations. The named form stays below it for tracking one specific supplier. For a valid link `/suppliers/invite/<token>` leads with a short Gusto pitch (`supplierRequest.invited*`) before the form.
 - **Only `active` suppliers invite.** Pending suppliers can prepare price
   lists; suspended suppliers are read-only.
 - **Buyers see a supplier only while** their connection is `active` *and*

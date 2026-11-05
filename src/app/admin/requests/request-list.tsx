@@ -23,6 +23,8 @@ export type RequestRow = {
   adminNote: string | null;
   status: "new" | "contacted" | "approved" | "rejected";
   freeMail: boolean;
+  /** The buyer whose invitation link this request came through, if any. */
+  invitedByBuyer: string | null;
   createdAt: string;
 };
 
@@ -64,6 +66,7 @@ export function RequestList({ rows }: { rows: RequestRow[] }) {
                 <div>
                   <p className="font-medium">{r.businessName}</p>
                   <p className="text-sm text-muted-foreground">{r.createdAt}</p>
+                  {r.invitedByBuyer ? <p className="mt-0.5 text-sm font-medium text-brand">{t("invitedBy", { name: r.invitedByBuyer })}</p> : null}
                 </div>
                 <Badge tone={r.status === "new" ? "amber" : r.status === "approved" ? "green" : "neutral"}>{t(`status.${r.status}`)}</Badge>
               </div>

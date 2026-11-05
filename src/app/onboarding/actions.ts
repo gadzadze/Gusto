@@ -41,6 +41,7 @@ export async function submitOnboarding(raw: unknown): Promise<OnboardingResult> 
     const { orgType, status } = await createOrganizationForUser(user.userId, parsed.data, {
       // Only a registration for this kind counts as vetted.
       preapprovedLegalId: pinned === null || pinned === parsed.data.kind ? preapprovedLegalId : null,
+      signInEmail: user.email,
     });
     destination = orgType === "buyer" ? "/buyer" : "/supplier";
     if (status === "pending_review") {

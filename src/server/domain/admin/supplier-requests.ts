@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, count, desc, eq, getTableColumns, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { SupplierRequestValues } from "@/lib/validation/supplier-request";
 import { getDb } from "@/server/db/client";
@@ -7,6 +7,7 @@ import { organizations, supplierRequests, type SupplierRequestStatus } from "@/s
 import { writeAudit } from "@/server/domain/audit";
 import { assertAdmin, type AdminCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
+import { claimSupplierInvite } from "@/server/domain/buyer/supplier-invites";
 import { allowEmail, type AccessError } from "./access";
 
 // Prospective suppliers who found Gusto through a partner's WhatsApp message
@@ -22,7 +23,7 @@ export type RequestError = "stale_status" | "note_required" | "legal_id_taken" |
  * already a registered supplier; the caller shows the same thank-you either
  * way, so the form can't be used to probe who is registered.
  */
-export async function createSupplierRequest(values: SupplierRequestValues): Promise<"created" | "duplicate"> {
+export async function createSupplierRequest(values: SupplierRequestValues, inviteToken?: string | null): Promise<"created" | "duplicate"> {
   const db = getDb();
   const [org] = await db
     .select({ id: organizations.id })
@@ -30,29 +31,42 @@ export async function createSupplierRequest(values: SupplierRequestValues): Prom
     .where(and(eq(organizations.type, "supplier"), eq(organizations.legalId, values.legalId)))
     .limit(1);
   if (org) return "duplicate";
-  const inserted = await db
-    .insert(supplierRequests)
-    .values({
-      businessName: values.businessName,
-      legalId: values.legalId,
-      contactName: values.contactName,
-      phone: values.phone,
-      email: values.email,
-      city: values.city,
-      note: values.note ?? null,
-    })
-    // The partial unique indexes (open request per ID / per address) decide.
-    .onConflictDoNothing()
-    .returning({ id: supplierRequests.id });
-  return inserted.length > 0 ? "created" : "duplicate";
+  return db.transaction(async (tx) => {
+    const inserted = await tx
+      .insert(supplierRequests)
+      .values({
+        businessName: values.businessName,
+        legalId: values.legalId,
+        contactName: values.contactName,
+        phone: values.phone,
+        email: values.email,
+        city: values.city,
+        note: values.note ?? null,
+      })
+      // The partial unique indexes (open request per ID / per address) decide.
+      .onConflictDoNothing()
+      .returning({ id: supplierRequests.id });
+    if (inserted.length === 0) return "duplicate" as const;
+    // A buyer's invitation link is claimed only by a request that was really stored;
+    // an unusable token just leaves this a plain request.
+    const inviteId = await claimSupplierInvite(tx, inviteToken, values.businessName);
+    if (inviteId) await tx.update(supplierRequests).set({ inviteId }).where(eq(supplierRequests.id, inserted[0].id));
+    return "created" as const;
+  });
 }
 
-export type RequestListItem = typeof supplierRequests.$inferSelect;
+export type RequestListItem = typeof supplierRequests.$inferSelect & { invitedByBuyer: string | null };
 
 export async function listSupplierRequests(ctx: AdminCtx, status?: SupplierRequestStatus): Promise<RequestListItem[]> {
   assertAdmin(ctx);
   return getDb()
-    .select()
+    .select({
+      ...getTableColumns(supplierRequests),
+      invitedByBuyer: sql<string | null>`(
+        select o.name from buyer_supplier_invites i join organizations o on o.id = i.buyer_org_id
+        where i.id = ${supplierRequests.inviteId}
+      )`,
+    })
     .from(supplierRequests)
     .where(status ? eq(supplierRequests.status, status) : undefined)
     // Open ones first, oldest waiting first; finished ones newest first.

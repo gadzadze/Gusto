@@ -45,7 +45,8 @@ export async function submitSupplierRequest(_prev: RequestFormState, formData: F
   }
 
   try {
-    const result = await createSupplierRequest(parsed.data);
+    const invite = String(formData.get("invite") ?? "");
+    const result = await createSupplierRequest(parsed.data, invite || null);
     if (result === "created") {
       const name = parsed.data.businessName;
       after(() => notifyAdminsSupplierRequest(name).catch(() => undefined));

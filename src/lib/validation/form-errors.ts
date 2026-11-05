@@ -10,6 +10,7 @@ export const VALIDATION_KEYS = [
   "invalid_vat",
   "invalid_email",
   "invalid_barcode",
+  "contact_required",
 ] as const;
 export type ValidationKey = (typeof VALIDATION_KEYS)[number];
 
