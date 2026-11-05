@@ -164,7 +164,12 @@ real need appears).
     with a WhatsApp button (the number of the address's supplier request if there is one,
     otherwise WhatsApp asks who to send to) and a copy button. It is never stored or logged;
     `access.link_created` is audited. Whoever opens it first gets in, so it is admin-only and
-    for the right person only. This is the one place a person's sign-in link is shown to anyone. Link lifetime is Supabase's email OTP
+    for the right person only. This is the one place a person's sign-in link is shown to anyone.
+    **Links Gusto makes point at `/auth/continue`, not `/auth/confirm`**: that page only shows a
+    "continue" button which POSTs the token to `/auth/confirm`. A plain GET to `/auth/confirm`
+    verifies at once, so a WhatsApp or mail link preview that merely fetches the URL used up the
+    one-time token before the person opened it (seen in production, 2026-11-05). GET stays for
+    the Supabase email templates and the e2e helpers. Link lifetime is Supabase's email OTP
     expiry (Auth settings). Until `profiles.password_set_at` is set,
     every guard sends them to `/account/password` (`decideAccess` →
     `set_password`). After that: email + password (`submitLogin`), "forgot" =
