@@ -17,6 +17,7 @@ export function InviteSupplierForm() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, ValidationKey>>({});
   const [copied, setCopied] = useState(false);
+  const [copiedText, setCopiedText] = useState(false);
 
   const known = ["not_active", "too_many_open", "stale_status", "rate_limited", "invalid"];
 
@@ -32,6 +33,7 @@ export function InviteSupplierForm() {
           setFieldErrors({});
           setLinks(null);
           setCopied(false);
+          setCopiedText(false);
           startTransition(async () => {
             const result = await createSupplierInviteAction({
               supplierName: String(data.get("supplierName") ?? ""),
@@ -87,6 +89,20 @@ export function InviteSupplierForm() {
               {copied ? <Check /> : <Copy />}
               {copied ? t("panel.copied") : t("panel.copy")}
             </Button>
+          </div>
+          <div className="space-y-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={async () => {
+                await navigator.clipboard.writeText(links.orderText);
+                setCopiedText(true);
+              }}
+            >
+              {copiedText ? <Check /> : <Copy />}
+              {copiedText ? t("panel.copied") : t("panel.copyText")}
+            </Button>
+            <p className="text-sm text-muted-foreground">{t("panel.copyTextNote")}</p>
           </div>
           {links.whatsappUrl ? (
             <div className="space-y-1">

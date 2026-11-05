@@ -15,6 +15,7 @@ import { sendEmail } from "@/server/notifications/email";
 export type SupplierInviteLinks = {
   inviteUrl: string;
   whatsappUrl: string | null;
+  orderText: string; // for pasting under an order written in WhatsApp
   emailSent: boolean | null; // null = no email address given
 };
 
@@ -41,7 +42,7 @@ export async function createSupplierInviteAction(raw: unknown): Promise<{ ok: tr
         emailSent = false;
       }
     }
-    return { ok: true, links: { inviteUrl, whatsappUrl: parsed.data.phone ? whatsappLink(parsed.data.phone, text) : null, emailSent } };
+    return { ok: true, links: { inviteUrl, orderText: t("orderFooter", { link: inviteUrl }), whatsappUrl: parsed.data.phone ? whatsappLink(parsed.data.phone, text) : null, emailSent } };
   });
 }
 

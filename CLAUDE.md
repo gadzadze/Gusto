@@ -658,6 +658,7 @@ and the delivery row is marked `skipped`, not `sent`.
   has one; otherwise the buyer sees nothing until a list is assigned, as always). The buyer sees nothing of
   the supplier until the supplier does that: a supplier decides who sees its catalog and prices. The
   supplier's contact details the buyer typed are visible only to that buyer (privacy text mentions it).
+- **Order text for WhatsApp**: after creating an invitation the buyer can also copy `supplierInvite.orderFooter` (one benefit sentence + the link) to paste under an order they write in WhatsApp. The link is the same invitation link. For a valid invitation `/suppliers/invite/<token>` leads with a short Gusto pitch (`supplierRequest.invited*`: catalog and per-customer prices in one place, orders arrive tidy, free) before the form.
 - **Only `active` suppliers invite.** Pending suppliers can prepare price
   lists; suspended suppliers are read-only.
 - **Buyers see a supplier only while** their connection is `active` *and*
