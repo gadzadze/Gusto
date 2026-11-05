@@ -29,7 +29,7 @@ export function explainAdminApiError(message: string, key: string): string {
 
 /**
  * A one-time sign-in link for an existing auth user, as a URL on our own site
- * (/auth/confirm verifies the token hash). Never log it. The lifetime is
+ * (/auth/continue, then /auth/confirm verifies the token hash). Never log it. The lifetime is
  * Supabase's email OTP expiry (Auth settings).
  */
 export async function signInLinkFor(email: string): Promise<string> {
@@ -38,7 +38,9 @@ export async function signInLinkFor(email: string): Promise<string> {
   if (error || !hashed) {
     throw new Error(`could not create the sign-in link: ${explainAdminApiError(error?.message ?? "no token", serviceRoleKey())}`);
   }
-  const url = new URL("/auth/confirm", serverEnv().NEXT_PUBLIC_APP_URL);
+  // /auth/continue shows a button that posts to /auth/confirm: a link preview (WhatsApp, mail
+  // scanners) fetches the URL without clicking, so it can no longer use up the one-time token.
+  const url = new URL("/auth/continue", serverEnv().NEXT_PUBLIC_APP_URL);
   url.searchParams.set("token_hash", hashed);
   url.searchParams.set("type", "magiclink");
   return url.toString();

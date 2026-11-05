@@ -24,11 +24,17 @@ test("an admin creates a one-time sign-in link and the person gets in with it", 
   const href = (await whatsapp.getAttribute("href")) ?? "";
   expect(href.startsWith("https://wa.me/?text=")).toBe(true);
   const text = decodeURIComponent(href.slice("https://wa.me/?text=".length));
-  const link = text.match(/https?:\/\/\S+\/auth\/confirm\?\S+/)?.[0];
+  const link = text.match(/https?:\/\/\S+\/auth\/continue\?\S+/)?.[0];
   expect(link).toBeTruthy();
 
   // The person opens it and lands on choosing a password (their first sign-in).
   const person = await (await browser.newContext()).newPage();
-  await person.goto(new URL(link!).pathname + new URL(link!).search);
+  const path = new URL(link!).pathname + new URL(link!).search;
+  // A link preview (WhatsApp, mail scanners) only fetches the page: that must not use the token up.
+  const preview = await person.request.get(path);
+  expect(preview.ok()).toBe(true);
+  await person.goto(path);
+  await expect(person).toHaveURL(/\/auth\/continue\?/);
+  await person.getByRole("button", { name: "გაგრძელება" }).click();
   await expect(person).toHaveURL(/\/account\/password$/);
 });
