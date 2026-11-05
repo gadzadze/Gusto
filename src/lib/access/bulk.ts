@@ -1,6 +1,6 @@
 // Parses the "add many addresses" box on the admin Access page. One business
 // per line: email, then optionally business name, legal ID and role
-// (buyer / supplier), separated by commas, semicolons or tabs. A header line
+// (buyer / supplier / both), separated by commas, semicolons or tabs. A header line
 // starting with "email" is skipped.
 
 export const BULK_MAX_LINES = 100;
@@ -10,15 +10,17 @@ export type BulkEntry = {
   email: string;
   businessName: string;
   legalId: string;
-  role: "" | "buyer" | "supplier";
+  role: "" | "buyer" | "supplier" | "both";
 };
 export type BulkParseError = { line: number; key: "columns" | "role" | "name_or_id" };
 
-const ROLE_WORDS: Record<string, "buyer" | "supplier"> = {
+const ROLE_WORDS: Record<string, "buyer" | "supplier" | "both"> = {
   buyer: "buyer",
   supplier: "supplier",
   მყიდველი: "buyer",
   მომწოდებელი: "supplier",
+  both: "both",
+  ორივე: "both",
 };
 
 export function parseBulkAccess(text: string): { entries: BulkEntry[]; errors: BulkParseError[]; tooMany: boolean } {

@@ -20,11 +20,11 @@ export async function isEmailAllowed(rawEmail: string): Promise<boolean> {
 }
 
 /**
- * The kind of organization this address was registered for ("buyer" or
- * "supplier"), or null when the admin left it open or there is no row. Onboarding
+ * The kind of organization this address was registered for ("buyer",
+ * "supplier" or "both"), or null when the admin left it open or there is no row. Onboarding
  * offers only this kind and the server refuses the other.
  */
-export async function pinnedRoleFor(rawEmail: string | null | undefined): Promise<"buyer" | "supplier" | null> {
+export async function pinnedRoleFor(rawEmail: string | null | undefined): Promise<"buyer" | "supplier" | "both" | null> {
   if (!rawEmail) return null;
   const [row] = await getDb()
     .select({ role: allowedEmails.intendedRole, revokedAt: allowedEmails.revokedAt })
@@ -34,7 +34,8 @@ export async function pinnedRoleFor(rawEmail: string | null | undefined): Promis
 }
 
 export type Registration = {
-  role: "buyer" | "supplier" | null;
+  /** "both" = a business that buys and resells: onboarding creates both sides. */
+  role: "buyer" | "supplier" | "both" | null;
   businessName: string | null;
   /** Set when the admin verified the business before registering the address. */
   legalId: string | null;

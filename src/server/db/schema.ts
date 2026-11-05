@@ -579,9 +579,10 @@ export const allowedEmails = pgTable(
     // Always stored lowercase and trimmed.
     email: text("email").notNull(),
     note: text("note"),
-    // What this person is registered as. Null = either; set = onboarding offers
-    // only this kind, and the server refuses the other.
-    intendedRole: orgType("intended_role"),
+    // What this person is registered as. Null = either (buyer, supplier or both at their
+    // choice); "buyer" / "supplier" = onboarding offers only that kind and the server refuses
+    // the other; "both" = a business that buys and resells: onboarding creates both sides.
+    intendedRole: text("intended_role").$type<"buyer" | "supplier" | "both">(),
     // What the admin verified before registering the address. With a legal ID
     // the person's organization starts `active` (already vetted); without one
     // it waits for review.
@@ -593,7 +594,11 @@ export const allowedEmails = pgTable(
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
     createdAt: timestamps.createdAt,
   },
-  (t) => [uniqueIndex("allowed_emails_email_key").on(t.email), check("allowed_emails_lowercase", sql`${t.email} = lower(btrim(${t.email}))`)],
+  (t) => [
+    uniqueIndex("allowed_emails_email_key").on(t.email),
+    check("allowed_emails_lowercase", sql`${t.email} = lower(btrim(${t.email}))`),
+    check("allowed_emails_intended_role_check", sql`${t.intendedRole} in ('buyer', 'supplier', 'both')`),
+  ],
 );
 
 export const supplierRequestStatus = pgEnum("supplier_request_status", ["new", "contacted", "approved", "rejected"]);

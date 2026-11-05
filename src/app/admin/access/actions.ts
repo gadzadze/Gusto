@@ -21,7 +21,7 @@ const allowSchema = z.object({
   email: z.string().max(254),
   note: z.string().max(200).optional(),
   // "" = either.
-  role: z.enum(["", "buyer", "supplier"]).optional(),
+  role: z.enum(["", "buyer", "supplier", "both"]).optional(),
   // Both or neither: together they mean "I verified this business".
   businessName: z.string().max(160).optional(),
   legalId: z.string().max(40).optional(),

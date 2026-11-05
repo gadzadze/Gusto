@@ -1,0 +1,2 @@
+ALTER TABLE "allowed_emails" ALTER COLUMN "intended_role" SET DATA TYPE text;--> statement-breakpoint
+ALTER TABLE "allowed_emails" ADD CONSTRAINT "allowed_emails_intended_role_check" CHECK ("allowed_emails"."intended_role" in ('buyer', 'supplier', 'both'));

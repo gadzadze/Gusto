@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
 import { authUsers } from "drizzle-orm/supabase";
 import { z } from "zod";
 import { normalizeEmail } from "@/lib/auth/invite-path";
@@ -23,7 +23,12 @@ export type Actor = { userId: string | null; label?: string };
 
 export type AllowResult = { status: "allowed" | "restored" | "updated" | "already_allowed"; email: string };
 
-export type IntendedRole = "buyer" | "supplier" | null;
+export type IntendedRole = "buyer" | "supplier" | "both" | null;
+
+/** The organization kinds a registered role covers ("both" = a buyer and a supplier side). */
+function kindsOf(role: "buyer" | "supplier" | "both"): ("buyer" | "supplier")[] {
+  return role === "both" ? ["buyer", "supplier"] : [role];
+}
 
 /** The business the admin verified (ID check, phone call) before registering the address. */
 export type VerifiedCompany = { businessName: string; legalId: string };
@@ -55,7 +60,7 @@ export async function allowEmail(
       const [org] = await tx
         .select({ id: organizations.id })
         .from(organizations)
-        .where(and(eq(organizations.legalId, verified.legalId), role ? eq(organizations.type, role) : undefined))
+        .where(and(eq(organizations.legalId, verified.legalId), role ? inArray(organizations.type, kindsOf(role)) : undefined))
         .limit(1);
       const [other] = await tx
         .select({ id: allowedEmails.id })
@@ -65,7 +70,8 @@ export async function allowEmail(
             eq(allowedEmails.legalId, verified.legalId),
             ne(allowedEmails.email, email),
             isNull(allowedEmails.revokedAt),
-            role ? eq(allowedEmails.intendedRole, role) : undefined,
+            // A "both" address uses the ID on both kinds, so it clashes with any pinned row.
+            role ? inArray(allowedEmails.intendedRole, role === "both" ? ["buyer", "supplier", "both"] : [role, "both"]) : undefined,
           ),
         )
         .limit(1);

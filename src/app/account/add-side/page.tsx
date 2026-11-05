@@ -33,7 +33,7 @@ async function AddSideGate() {
   if (!missing) redirect(homePathFor(state));
   const registration = await registrationFor(state.email);
   // An address the admin pinned to the other kind can't add this one.
-  if (registration?.role && registration.role !== missing) redirect(homePathFor(state));
+  if (registration?.role && registration.role !== "both" && registration.role !== missing) redirect(homePathFor(state));
   const own = state.memberships.find((m) => m.orgId === state.membership?.orgId) ?? state.memberships[0];
   const prefill = await organizationPrefill(own.orgId);
   return (

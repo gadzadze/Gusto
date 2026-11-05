@@ -221,3 +221,29 @@ describe("verified company on the allow-list", () => {
     expect(await registrationFor(email)).toBeNull();
   });
 });
+
+describe("a business that buys and resells is registered as both", () => {
+  it("can be pinned to both, and the vetted legal ID then clashes with either kind", async () => {
+    const email = fresh();
+    const legalId = randomLegalId();
+    expect(await allowEmail({ userId: admin.userId }, email, "Reseller", "both", { businessName: "[TEST] Reseller", legalId })).toMatchObject({ status: "allowed" });
+    expect(await pinnedRoleFor(email)).toBe("both");
+    expect(await registrationFor(email)).toEqual({ role: "both", businessName: "[TEST] Reseller", legalId });
+
+    // The same ID cannot be vetted again for either kind, nor for another "both" address.
+    for (const role of ["buyer", "supplier", "both"] as const) {
+      await expect(allowEmail({ userId: admin.userId }, fresh(), undefined, role, { businessName: "[TEST] Other", legalId })).rejects.toEqual(new StateError("legal_id_taken"));
+    }
+    // Changing the pin to one kind frees the other kind for that ID.
+    await allowEmail({ userId: admin.userId }, email, undefined, "buyer");
+    expect(await allowEmail({ userId: admin.userId }, fresh(), undefined, "supplier", { businessName: "[TEST] Supplier arm", legalId })).toMatchObject({ status: "allowed" });
+  });
+
+  it("only buyer, supplier or both can be stored", async () => {
+    const email = fresh();
+    await allowEmail({ userId: admin.userId }, email);
+    await expect(
+      getDb().execute(sql`update allowed_emails set intended_role = 'everyone' where email = ${email}`),
+    ).rejects.toThrow();
+  });
+});
