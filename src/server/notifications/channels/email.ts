@@ -74,11 +74,12 @@ export const emailChannel: Channel = {
     if (!user?.email) return { status: "skipped", note: "recipient has no email address" };
 
     // Which side the recipient is on decides what the counterparty is called.
-    const [membership] = await db
+    // (A person with both a buyer and a supplier side may be a member of either.)
+    const memberships = await db
       .select({ orgId: organizationMemberships.organizationId })
       .from(organizationMemberships)
       .where(eq(organizationMemberships.userId, delivery.recipientUserId));
-    const recipientType = membership?.orgId === order.buyerOrgId ? "buyer" : "supplier";
+    const recipientType = memberships.some((m) => m.orgId === order.buyerOrgId) ? "buyer" : "supplier";
 
     const email = renderOrderEmail({
       event: notification.event,

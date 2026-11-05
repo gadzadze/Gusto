@@ -221,7 +221,9 @@ Tables (snake_case in SQL, camelCase in TypeScript):
     `Asia/Tbilisi`), `currency` (default `GEL`).
   - `legal_id` (required at onboarding, unique per type). Buyers only: `business_type`.
 - `organization_memberships`: user ↔ org, `role` `owner` | `member`. A user
-  belongs to one org in the MVP; the schema allows more.
+  belongs to one org, or to **two when a business both buys and resells**: one
+  `buyer` and one `supplier` organization (never two of a kind), the same legal
+  ID allowed once per type. See "Both sides" below.
 - `supplier_settings`: `min_order_minor`, `prices_include_vat`,
   `delivery_area`, `delivery_terms`, `order_cutoff_note` (text fields).
 - `addresses`: buyer delivery locations.
@@ -671,6 +673,26 @@ and the delivery row is marked `skipped`, not `sent`.
   the supplier until the supplier does that: a supplier decides who sees its catalog and prices. The
   supplier's contact details the buyer typed are visible only to that buyer (privacy text mentions it).
 - **Personal link** (`buyer_invite_links`, one row per buyer, `/buyer/suppliers/invite`): a reusable invitation link made on the buyer's first visit, shown with the ready text `supplierInvite.orderFooter` (one benefit sentence + link) and a Share button (`navigator.share`, falling back to copy) to paste or send under an order written in WhatsApp. Unlike named invitations it is not single use, so the raw token is stored to show it again (it grants nothing: a request the admin vets, rate limited per IP); "replace" swaps the token and the old link stops working. `claimSupplierInvite` turns each request that arrives through it into its own used `buyer_supplier_invites` row (supplier name from the request), so tracking, linking and "buyers who invited you" work as for named invitations. The named form stays below it for tracking one specific supplier. For a valid link `/suppliers/invite/<token>` leads with a short Gusto pitch (`supplierRequest.invited*`) before the form.
+- **Both sides** (decided 2026-11-05): a business that buys from some suppliers and
+  resells to others has one login with a **buyer organization and a supplier
+  organization**, not one mixed organization (org type stays immutable and every query
+  stays scoped by `ctx.orgId`). `getAccessState` loads all memberships; the request acts
+  as the one chosen in the `gusto-org` cookie (`server/auth/active-org.ts` `pickActive`: the
+  remembered side while the person is a member, else the first active one, else a supplier
+  since a waiting supplier can prepare its catalog while a waiting buyer only sees
+  `/pending`, else the first). `/switch?org=<id>[&next=<path>]` (GET, own organizations only,
+  ignores RSC/prefetch requests because a prefetch must never change the side) sets the
+  cookie; the sidebar and phone header show `SideSwitch` (plain `<a>`, never `next/link`) for
+  a person with both sides. A guard that finds the other side's area opened (`/buyer` while
+  acting as a supplier) switches to it instead of 404, and `/o/<number>` looks at all of the
+  person's sides. First onboarding offers **both** (`createBothForUser`: one set of details,
+  two organizations, both active when the admin vetted the address, both waiting otherwise).
+  A person with one side adds the other at `/account/add-side` (`createOrganizationForUser`
+  with `addSide`): it starts **active at once when their other side is active and the legal ID
+  is the same** (that business was already vetted), otherwise it waits for review like any new
+  business. An address pinned to one kind (`intended_role`) can't add the other. Notifications
+  stay per user (one bell for both sides; `/o/<number>` routes to the right side). There is no
+  link between what a business buys and its own catalog.
 - **Only `active` suppliers invite.** Pending suppliers can prepare price
   lists; suspended suppliers are read-only.
 - **Buyers see a supplier only while** their connection is `active` *and*

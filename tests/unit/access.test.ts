@@ -9,6 +9,7 @@ const noOrg: AccessState = {
   isPlatformAdmin: false,
   passwordSet: true,
   membership: null,
+  memberships: [],
 };
 const withOrg = (orgType: "buyer" | "supplier", isPlatformAdmin = false): AccessState => ({
   signedIn: true,
@@ -23,6 +24,15 @@ const withOrg = (orgType: "buyer" | "supplier", isPlatformAdmin = false): Access
     orgName: "Org",
     role: "owner",
   },
+  memberships: [
+    {
+      orgId: "o1",
+      orgType,
+      orgStatus: orgType === "buyer" ? "active" : "pending_review",
+      orgName: "Org",
+      role: "owner",
+    },
+  ],
 });
 
 describe("decideAccess", () => {

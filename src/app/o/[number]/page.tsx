@@ -18,17 +18,19 @@ async function Resolve({ params }: PageProps<"/o/[number]">): Promise<null> {
   const { number } = await params;
   const state = await getAccessState();
   if (!state.signedIn) redirect(`/login?next=${encodeURIComponent(`/o/${number}`)}`);
-  if (!state.membership || !/^\d{1,15}$/.test(number)) notFound();
-  const target = await orderLinkTarget(
-    {
-      userId: state.userId,
-      orgId: state.membership.orgId,
-      orgType: state.membership.orgType,
-      orgStatus: state.membership.orgStatus,
-    },
-    Number(number),
-  );
-  if (!target) notFound();
-  redirect(target);
+  if (state.memberships.length === 0 || !/^\d{1,15}$/.test(number)) notFound();
+  // A person with both a buyer and a supplier side: the order belongs to whichever of their
+  // sides is a party to it. Look at the chosen side first, then the other one.
+  const ordered = [...state.memberships].sort((a, b) => Number(b.orgId === state.membership?.orgId) - Number(a.orgId === state.membership?.orgId));
+  for (const m of ordered) {
+    const found = await orderLinkTarget(
+      { userId: state.userId, orgId: m.orgId, orgType: m.orgType, orgStatus: m.orgStatus },
+      Number(number),
+    );
+    if (!found) continue;
+    if (m.orgId === state.membership?.orgId) redirect(found);
+    redirect(`/switch?org=${m.orgId}&next=${encodeURIComponent(found)}`);
+  }
+  notFound();
   return null;
 }
