@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { LandingNav } from "@/components/landing/nav";
-import { nunito } from "@/components/landing/landing-font";
+import { landingFont } from "@/components/landing/landing-font";
 import { BuyerPhone, HeroComposite, SupplierMock, TrustCard, buildTourViews } from "@/components/landing/panels";
 import { ProductTour } from "@/components/landing/product-tour";
 import { Reveal } from "@/components/landing/reveal";
@@ -47,7 +47,7 @@ export default async function LandingPage() {
   ];
 
   return (
-    <div className={`lp ${nunito.variable}`}>
+    <div className={`lp ${landingFont.variable}`}>
       <LandingNav />
 
       <main id="top">

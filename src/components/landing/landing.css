@@ -13,7 +13,7 @@
   --dark-line: #22304A;
   --dark-text: #ADBDCC;
   --ease: cubic-bezier(0.22, 0.8, 0.2, 1);
-  --font: var(--font-nunito), var(--font-noto-georgian), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font: var(--font-landing), var(--font-noto-georgian), system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
 .lp ::selection { background: var(--brand); color: #fff; }
@@ -51,6 +51,7 @@
 .lp .nav-sheet { margin-top: 8px; padding: 8px; border-radius: 24px; border: 1px solid rgba(11, 18, 32, 0.08); background: rgba(255, 255, 255, 0.92); -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); animation: sheet 0.35s var(--ease) both; }
 .lp .nav-sheet a { display: block; padding: 14px 16px; border-radius: 16px; font-size: 15px; font-weight: 700; text-decoration: none; color: var(--text); transition: background-color 0.3s var(--ease), color 0.3s var(--ease); }
 .lp .nav-sheet a:hover { background: rgba(11, 18, 32, 0.04); color: var(--brand); }
+.lp .nav-sheet a.sheet-join { display: none; }
 /* Buttons and links */
 .lp .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 26px; border-radius: 999px; background: var(--ink); color: #fff; font-family: var(--font); font-size: 16px; font-weight: 700; text-decoration: none; border: 1px solid var(--ink); cursor: pointer; transition: transform 0.25s var(--ease), background-color 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease); }
 .lp .btn:hover { background: var(--brand); border-color: var(--brand); }
@@ -65,11 +66,11 @@
 /* Type */
 .lp .kicker { margin: 0; font-size: 16px; font-weight: 700; color: var(--brand); }
 .lp .night .kicker { color: #F0A9B8; }
-.lp .h1 { margin: 0; font-weight: 700; font-size: clamp(44px, 5.6vw, 76px); line-height: 1.05; letter-spacing: -0.035em; }
-.lp .h2 { margin: 0; font-weight: 700; font-size: clamp(32px, 3.6vw, 48px); line-height: 1.12; letter-spacing: -0.025em; text-wrap: balance; }
-.lp .h3 { margin: 0; font-weight: 700; font-size: 18px; line-height: 1.35; }
-.lp .lead { margin: 0; font-size: 20px; line-height: 1.6; color: var(--text); max-width: 520px; text-wrap: pretty; }
-.lp .body { margin: 0; font-size: 18px; line-height: 1.6; color: var(--text); max-width: 480px; text-wrap: pretty; }
+.lp .h1 { margin: 0; font-weight: 700; font-size: clamp(34px, 4.1vw, 56px); line-height: 1.2; letter-spacing: -0.02em; text-wrap: balance; }
+.lp .h2 { margin: 0; font-weight: 700; font-size: clamp(32px, 3.6vw, 48px); line-height: 1.26; letter-spacing: -0.015em; text-wrap: balance; }
+.lp .h3 { margin: 0; font-weight: 700; font-size: 18px; line-height: 1.45; }
+.lp .lead { margin: 0; font-size: 20px; line-height: 1.7; color: var(--text); max-width: 520px; text-wrap: pretty; }
+.lp .body { margin: 0; font-size: 18px; line-height: 1.7; color: var(--text); max-width: 480px; text-wrap: pretty; }
 .lp .mono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; color: var(--muted); }
 @keyframes arrive { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 .lp .arrive { animation: arrive 0.9s var(--ease) both; }
@@ -163,7 +164,7 @@
 .lp .stage { min-height: 400px; padding: 48px 52px; }
 .lp .view { animation: swap 0.45s var(--ease) both; }
 .lp .view-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 56px; align-items: center; }
-.lp .view h3 { margin: 0 0 10px; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+.lp .view h3 { margin: 0 0 10px; font-size: 26px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.32; }
 .lp .view .cap { margin: 0; font-size: 17px; color: var(--text); max-width: 300px; }
 .lp .panel { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 24px 28px; }
 .lp .panel.tint { background: var(--alt); }
@@ -253,9 +254,20 @@
 }
 @media (max-width: 760px) {
 .lp .wrap { padding-left: 20px; padding-right: 20px; }
-.lp .nav { top: 8px; padding: 0 16px; }
-.lp .nav-pill { padding-left: 16px; }
-.lp .hero { padding-top: 128px; }
+/* Phones: a flat, full-width bar (logo left, actions right, hairline below), not a floating pill. */
+.lp .nav { top: 0; height: auto; padding: 0; pointer-events: auto; background: rgba(255, 255, 255, 0.94); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+.lp .nav-right .btn { display: none; }
+.lp .nav-outer { max-width: none; padding: 0; }
+.lp .nav-pill, .lp .nav-pill.scrolled { min-height: 60px; padding: 0 12px 0 20px; border: 0; border-radius: 0; background: transparent; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.lp .burger { width: 44px; height: 44px; border: 0; border-radius: 8px; }
+.lp .nav-sheet { margin: 0; padding: 0 20px 20px; border: 0; border-radius: 0; background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+.lp .nav-sheet a { padding: 16px 0; border-radius: 0; border-bottom: 1px solid var(--line); }
+.lp .nav-sheet a:nth-last-child(2) { border-bottom: 0; }
+.lp .nav-sheet a.sheet-join { display: flex; margin-top: 16px; padding: 0 26px; border: 1px solid var(--ink); border-radius: 999px; color: #fff; font-size: 16px; }
+.lp .nav-sheet a.sheet-join:hover { background: var(--ink); color: #fff; }
+.lp .nav-sheet a:hover { background: transparent; }
+.lp section[id], .lp [id="top"] { scroll-margin-top: 72px; }
+.lp .hero { padding-top: 48px; }
 .lp .dash { display: none; }
 .lp .phone { position: relative; left: auto; top: auto; margin: 0 auto; }
 .lp .composite { height: auto; }

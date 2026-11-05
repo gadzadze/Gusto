@@ -918,8 +918,8 @@ interface, a dark trust band and a closing call to action.
 - **Styles are scoped under `.lp`** in `landing.css` (plain CSS, class names are
   generic like `.btn` and `.pill`, so never import it outside the landing page).
   Burgundy is for meaning only: links, hover and focus, and nothing decorative.
-- **Fonts:** Nunito (Latin and digits, `landing-font.ts`) with Noto Sans Georgian
-  for Georgian. Only the landing page loads Nunito; the app keeps Inter.
+- **Fonts:** Google Sans (Latin, digits and Georgian, `landing-font.ts`, variable `--font-landing`)
+  with Noto Sans Georgian as the fallback. Only the landing page loads it; the app keeps Inter + Noto Sans Georgian.
 - **The wordmark** is the traced vector in `public/brand/gusto-wordmark.svg`,
   used everywhere through `components/logo.tsx` (size it with a height class;
   white in the dark theme). The favicon and app icon (`src/app/icon.svg`,

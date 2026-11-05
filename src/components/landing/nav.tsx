@@ -71,6 +71,10 @@ export function LandingNav() {
             <Link href="/start" onClick={() => setOpen(false)}>
               {t("signIn")}
             </Link>
+            {/* On phones the join button lives here instead of in the bar. */}
+            <a className="btn sheet-join" href="#join" onClick={() => setOpen(false)}>
+              {t("join")}
+            </a>
           </div>
         ) : null}
       </div>
