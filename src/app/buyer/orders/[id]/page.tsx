@@ -50,8 +50,10 @@ async function Order({ params, searchParams }: PageProps<"/buyer/orders/[id]">) 
           {t("placed")}. {t("placedBody", { supplier: detail.order.supplierName })}
         </FormAlert>
       ) : null}
+      {/* Just placed: the next step is right under the confirmation. */}
+      {query.placed && detail.order.status === "pending" ? <WhatsappShare detail={detail} kind="to_supplier" prominent /> : null}
       <OrderView detail={detail} viewer="buyer" />
-      {detail.order.status === "pending" ? <WhatsappShare detail={detail} kind="to_supplier" /> : null}
+      {!query.placed && detail.order.status === "pending" ? <WhatsappShare detail={detail} kind="to_supplier" /> : null}
       <div className="flex flex-wrap items-start gap-3 border-t border-border pt-6">
         <ReorderButton orderId={id} />
         {detail.order.status !== "rejected" && detail.order.status !== "cancelled" ? (

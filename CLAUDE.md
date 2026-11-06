@@ -757,6 +757,11 @@ and the delivery row is marked `skipped`, not `sent`.
   `RESEND_API_KEY` → `skipped` and `[DEV EMAIL]` log, never `sent`.
 - **WhatsApp** buttons (`components/orders/whatsapp-share.tsx`) use
   `lib/whatsapp.ts`; copy says "send", never "sent"; nothing is stored.
+  Right after a buyer places an order (`?placed=1`) the button is the main filled action under the
+  confirmation, and the prefilled message carries the whole order (up to 25 lines, then "and N
+  more", the total, the delivery address, the wanted day, the note and the `/o/<number>` link) so
+  the supplier can read it in WhatsApp as they do today. This one-press button is the intended
+  long-term channel; automatic Business API sending stays out of scope (`docs/whatsapp-business-api.md`).
 - **Bell:** `components/notifications/notification-bell.tsx`, rendered in
   Suspense by `AppShell` for buyers and suppliers. The list lives at
   `/buyer/notifications` and `/supplier/notifications` (shared view);
