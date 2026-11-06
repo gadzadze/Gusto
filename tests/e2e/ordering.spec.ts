@@ -55,6 +55,20 @@ test("order loop: cart → checkout → supplier confirms with a change → deli
   const number = heading!.match(/GST-(\d+)/)![1];
   const buyerOrderUrl = new URL(buyer.url()).pathname;
 
+  // Right under the confirmation: one press opens WhatsApp with the whole order written out.
+  const whatsapp = buyer.getByRole("link", { name: "შეკვეთის გაგზავნა WhatsApp-ით" });
+  await expect(whatsapp).toBeVisible();
+  const href = (await whatsapp.getAttribute("href")) ?? "";
+  expect(href).toMatch(/^https:\/\/wa\.me\/995599000000\?text=/);
+  const text = decodeURIComponent(href.slice(href.indexOf("?text=") + 6));
+  expect(text).toContain(`GST-${number}`);
+  expect(text).toContain("• ყველი სულგუნი - 1");
+  expect(text).toContain("• მაწონი - 3");
+  expect(text).toContain("• კარაქი - 1");
+  expect(text).toContain("შენიშვნა: მიწოდება 11:00-მდე");
+  expect(text).toContain("სასურველი მიწოდების დღე:");
+  expect(text).toMatch(new RegExp(`დეტალები და დადასტურება: https?://\\S+/o/${number}$`));
+
   // Supplier: confirm with 2 მაწონი instead of 3.
   await supplier.goto("/supplier/orders");
   await supplier.getByRole("link", { name: new RegExp(`GST-${number}`) }).click();

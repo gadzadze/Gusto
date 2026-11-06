@@ -44,7 +44,7 @@ test("buyer submits → supplier sees an unread notification and opens the order
   const buyerOrderUrl = new URL(buyer.url()).pathname;
 
   // WhatsApp is a link the buyer sends themselves, never a delivered state.
-  const whatsapp = buyer.getByRole("link", { name: "მომწოდებლისთვის WhatsApp-ით გაგზავნა" });
+  const whatsapp = buyer.getByRole("link", { name: "შეკვეთის გაგზავნა WhatsApp-ით" });
   await expect(whatsapp).toBeVisible();
   const href = (await whatsapp.getAttribute("href"))!;
   expect(href).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
