@@ -38,9 +38,10 @@
 .lp .nav-right a.plain { padding: 8px 14px; border-radius: 999px; text-decoration: none; color: var(--text); transition: color 0.3s var(--ease); }
 .lp .nav-right a.plain:hover { color: var(--brand); }
 .lp .locale-switch { display: inline-flex; margin: 0 4px; padding: 2px; border: 1px solid var(--line); border-radius: 999px; }
-.lp .locale-switch button { min-width: 36px; min-height: 30px; padding: 0 8px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 12px; font-weight: 700; color: var(--muted, #5b6472); cursor: pointer; transition: background-color 0.3s var(--ease), color 0.3s var(--ease); }
+.lp .locale-switch button { display: inline-flex; align-items: center; gap: 6px; min-width: 36px; min-height: 30px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; font: inherit; font-size: 12px; font-weight: 700; color: var(--muted, #5b6472); cursor: pointer; transition: background-color 0.3s var(--ease), color 0.3s var(--ease); }
 .lp .locale-switch button:hover { color: var(--text); }
 .lp .locale-switch button.on { background: var(--text); color: #fff; }
+.lp .locale-switch svg { width: 20px; height: 14px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(11, 18, 32, 0.18); }
 .lp .burger { display: none; width: 40px; height: 40px; align-items: center; justify-content: center; border-radius: 999px; border: 1px solid rgba(11, 18, 32, 0.12); background: transparent; color: var(--ink); cursor: pointer; transition: border-color 0.3s var(--ease), color 0.3s var(--ease); }
 .lp .burger:hover { border-color: var(--brand); color: var(--brand); }
 .lp .burger-lines { position: relative; display: block; width: 16px; height: 12px; }

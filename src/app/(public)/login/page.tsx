@@ -1,54 +1,21 @@
-import Link from "next/link";
-import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { DemoAccounts } from "@/components/demo-accounts";
-import { LocaleSwitch } from "@/components/locale-switch";
-import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { contactEmail } from "@/lib/legal";
 import { safeNextPath } from "@/lib/safe-next";
+import { LoginShell } from "./login-shell";
 import { LoginForm, type LoginError } from "./login-form";
 
-export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const t = await getTranslations("login");
+export default function LoginPage({ searchParams }: PageProps<"/login">) {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
-      <Link href="/" className="mb-8">
-        <Logo />
-      </Link>
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>{t("title")}</CardTitle>
-          <CardDescription>{t("subtitle")}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<FormSkeleton />}>
-            <LoginFormFromParams searchParams={searchParams} />
-          </Suspense>
-        </CardContent>
-      </Card>
-      <p className="mt-5 max-w-sm text-center text-xs leading-5 text-muted-foreground">
-        {t.rich("legalNote", {
-          terms: (chunks) => (
-            <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">
-              {chunks}
-            </Link>
-          ),
-          privacy: (chunks) => (
-            <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
-              {chunks}
-            </Link>
-          ),
-        })}
-      </p>
-      <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-        <LocaleSwitch />
-        <ThemeToggle />
-      </div>
-      <DemoAccounts />
-    </main>
+    <LoginShell
+      form={
+        <Suspense fallback={<FormSkeleton />}>
+          <LoginFormFromParams searchParams={searchParams} />
+        </Suspense>
+      }
+      demo={<DemoAccounts />}
+    />
   );
 }
 

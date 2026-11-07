@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Sans_Georgian } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
 import { Suspense } from "react";
 import { LOCALE_COOKIE } from "@/i18n/locales";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
+import { CLIENT_NAMESPACES, pickMessages } from "@/i18n/client-messages";
+import { ClientIntl } from "@/i18n/client-intl";
+import type { Locale } from "@/i18n/locales";
 import { DemoBanner } from "@/components/demo-banner";
 import { isDemoMode } from "@/lib/demo";
 import "./globals.css";
@@ -29,6 +31,16 @@ const LANG_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )${LOCA
 
 const THEME_SCRIPT = `(function(){var p=null;try{p=localStorage.getItem("gusto-theme")}catch(e){}var d=p==="dark"||(p!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.dataset.theme=d?"dark":"light"})()`;
 
+/** Passes the browser components the texts they use (see i18n/client-messages.ts), in the visitor's language. */
+async function IntlProvider({ children }: { children: React.ReactNode }) {
+  const [locale, messages] = await Promise.all([getLocale(), getMessages()]);
+  return (
+    <ClientIntl locale={locale as Locale} messages={pickMessages(messages, CLIENT_NAMESPACES)}>
+      {children}
+    </ClientIntl>
+  );
+}
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ka" suppressHydrationWarning className={`${inter.variable} ${notoGeorgian.variable} h-full antialiased`}>
@@ -39,10 +51,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full">
         {/* The language is a cookie, read at request time: everything below streams in. */}
         <Suspense fallback={null}>
-          <NextIntlClientProvider>
+          <IntlProvider>
             <DemoBanner />
             {children}
-          </NextIntlClientProvider>
+          </IntlProvider>
         </Suspense>
       </body>
     </html>

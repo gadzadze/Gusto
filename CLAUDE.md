@@ -353,6 +353,16 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
     invitation and welcome emails (`getTranslations({ locale: "ka", ... })`), order and reminder emails
     (`lib/notifications/templates.ts`), admin alerts, the Supabase auth email. A per-user language for
     emails would need a `profiles.locale` column: not built.
+  - **The switch is instant (no server round trip).** `ClientIntl` (`i18n/client-intl.tsx`, mounted in the root
+    layout) holds both catalogs in the browser (the other language loads when idle), writes the cookie itself
+    (`document.cookie`; there is no server action) and swaps the text at once; a background `router.refresh()`
+    then updates the server-rendered parts of in-app pages. So pages that are only text (landing, sign-in shell,
+    `/suppliers` join page, `/auth/continue`, legal) are **client components** using `useTranslations`
+    (`landing-content.tsx`, `login-shell.tsx`, `join-page.tsx`, `continue-card.tsx`, `legal-view.tsx`) and never
+    format with Intl in the browser (`formatMoneyPlain` for the landing mock-ups; the legal dates are made on the
+    server for both languages). The legal wording is not in the shared catalog: the legal page passes both
+    languages as props. Only `CLIENT_NAMESPACES` (`i18n/client-messages.ts`) reach the browser;
+    `tests/unit/client-messages.test.ts` fails if a component uses a namespace that is not listed.
   - The legal pages and the landing text follow the cookie too. `global-error.tsx` (the last-resort
     error screen) stays Georgian. `<html lang>` is set by a tiny script from the cookie (the server
     renders `ka` statically).

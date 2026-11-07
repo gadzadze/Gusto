@@ -24,7 +24,8 @@ export function ReviewPanel({
   status: OrgStatus;
   review: (input: { orgId: string; action: "approve" | "suspend" | "reactivate"; reason?: string }) => Promise<ReviewResult>;
 }) {
-  const t = useTranslations("admin");
+  const t = useTranslations("admin.actions");
+  const te = useTranslations("admin.reviewErrors");
   const tc = useTranslations("common");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -42,8 +43,8 @@ export function ReviewPanel({
       }
       setError(
         result.error === "stale_status" || result.error === "reason_required"
-          ? t(`reviewErrors.${result.error}`)
-          : t("reviewErrors.stale_status"),
+          ? te(result.error)
+          : te("stale_status"),
       );
     });
   };
@@ -54,14 +55,14 @@ export function ReviewPanel({
       {reasonFor ? (
         <div className="space-y-3">
           <div className="space-y-2">
-            <Label htmlFor="reason">{t("actions.reason")}</Label>
+            <Label htmlFor="reason">{t("reason")}</Label>
             <Textarea id="reason" rows={3} value={reason} onChange={(e) => setReason(e.target.value)} />
-            <p className="text-sm text-muted-foreground">{t("actions.reasonHint")}</p>
+            <p className="text-sm text-muted-foreground">{t("reasonHint")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button variant={reasonFor === "suspend" ? "outline" : "default"} disabled={pending} onClick={() => run(reasonFor)}>
               {reasonFor === "suspend" ? <PauseCircle /> : <RotateCcw />}
-              {reasonFor === "suspend" ? t("actions.confirmSuspend") : t("actions.confirmReactivate")}
+              {reasonFor === "suspend" ? t("confirmSuspend") : t("confirmReactivate")}
             </Button>
             <Button variant="ghost" disabled={pending} onClick={() => setReasonFor(null)}>
               {tc("cancel")}
@@ -73,18 +74,18 @@ export function ReviewPanel({
           {status === "pending_review" ? (
             <Button disabled={pending} onClick={() => run("approve")}>
               <CircleCheck />
-              {t("actions.approve")}
+              {t("approve")}
             </Button>
           ) : null}
           {status !== "suspended" ? (
             <Button variant="outline" disabled={pending} onClick={() => setReasonFor("suspend")}>
               <PauseCircle />
-              {t("actions.suspend")}
+              {t("suspend")}
             </Button>
           ) : (
             <Button disabled={pending} onClick={() => setReasonFor("reactivate")}>
               <RotateCcw />
-              {t("actions.reactivate")}
+              {t("reactivate")}
             </Button>
           )}
         </div>
