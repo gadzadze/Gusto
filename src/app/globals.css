@@ -127,3 +127,6 @@
     outline-offset: 2px;
   }
 }
+
+/* Changing language: dim the page while the new texts arrive, so the click feels answered. */
+html[data-switching] main { opacity: 0.55; transition: opacity 0.15s ease; }
