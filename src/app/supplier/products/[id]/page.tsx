@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { minorToInput } from "@/lib/money";
-import { formatQuantityNumber, milliToInput } from "@/lib/quantity";
 import type { ProductInput } from "@/lib/validation/product";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
@@ -20,6 +19,7 @@ import { getSupplierProduct } from "@/server/domain/catalog/products";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import { NotFoundError } from "@/server/domain/errors";
 import { notFound } from "next/navigation";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function EditProductPage(props: PageProps<"/supplier/products/[id]">) {
   const t = await getTranslations("products");
@@ -41,6 +41,7 @@ export default async function EditProductPage(props: PageProps<"/supplier/produc
 const IMAGE_ERRORS = new Set(["empty", "too_large", "unsupported", "upload_failed"]);
 
 async function EditProduct({ params, searchParams }: PageProps<"/supplier/products/[id]">) {
+  const fmt = await getFormats();
   const ctx = await requireSupplier();
   const t = await getTranslations("products");
   const tu = await getTranslations("units");
@@ -70,9 +71,9 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
     // Georgian writes decimals with a comma; the parsers accept both.
     basePrice: minorToInput(product.basePriceMinor, ","),
     vatRate: String(product.vatRateBp / 100).replace(".", ","),
-    minQty: milliToInput(product.minQtyMilli, ","),
-    qtyStep: milliToInput(product.qtyStepMilli, ","),
-    stock: product.stockMilli === null ? "" : milliToInput(product.stockMilli, ","),
+    minQty: fmt.input(product.minQtyMilli),
+    qtyStep: fmt.input(product.qtyStepMilli),
+    stock: product.stockMilli === null ? "" : fmt.input(product.stockMilli),
   };
   const imageError = typeof query.image === "string" && IMAGE_ERRORS.has(query.image) ? query.image : null;
 
@@ -96,7 +97,7 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
 
       <StockPanel
         productId={product.id}
-        currentLabel={product.stockMilli === null ? null : `${formatQuantityNumber(product.stockMilli)} ${tu(product.unit)}`}
+        currentLabel={product.stockMilli === null ? null : `${fmt.qty(product.stockMilli)} ${tu(product.unit)}`}
         disabled={readOnly}
       />
 

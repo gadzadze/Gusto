@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ export default function ContinuePage(props: PageProps<"/auth/continue">) {
       <Link href="/" className="mb-8">
         <Logo />
       </Link>
+      <LocaleSwitch className="mb-6" />
       <Suspense fallback={<Skeleton className="h-48 w-full max-w-sm" />}>
         <Continue {...props} />
       </Suspense>

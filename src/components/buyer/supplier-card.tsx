@@ -1,10 +1,11 @@
 import { ChevronRight, Store } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { formatMoney } from "@/lib/money";
 import type { ConnectedSupplier } from "@/server/domain/buyer/catalog";
+import { getFormats } from "@/server/i18n/formats";
 
 export async function SupplierCard({ supplier }: { supplier: ConnectedSupplier }) {
+  const fmt = await getFormats();
   const t = await getTranslations("buyer");
   return (
     <Link
@@ -19,7 +20,7 @@ export async function SupplierCard({ supplier }: { supplier: ConnectedSupplier }
         <span className="block text-sm text-muted-foreground">
           {t("productCount", { count: supplier.productCount })} ·{" "}
           {supplier.minOrderMinor > 0
-            ? t("minOrder", { amount: formatMoney(supplier.minOrderMinor, supplier.currency) })
+            ? t("minOrder", { amount: fmt.money(supplier.minOrderMinor, supplier.currency) })
             : t("noMinOrder")}
         </span>
       </span>

@@ -8,7 +8,6 @@ import { PageHeader } from "@/components/app-shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney } from "@/lib/money";
 import { requireAdmin } from "@/server/auth/guards";
 import { VerificationCard } from "@/components/admin/verification-card";
 import { getVerificationInfo } from "@/server/domain/admin/organizations";
@@ -16,6 +15,7 @@ import { getSupplierForAdmin } from "@/server/domain/admin/suppliers";
 import { NotFoundError } from "@/server/domain/errors";
 import { ReviewPanel } from "@/components/admin/review-panel";
 import { reviewSupplierAction } from "../actions";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function AdminSupplierPage(props: PageProps<"/admin/suppliers/[id]">) {
   const t = await getTranslations("admin");
@@ -44,6 +44,7 @@ const HISTORY_KEYS = {
 } as const;
 
 async function Supplier({ params }: PageProps<"/admin/suppliers/[id]">) {
+  const fmt = await getFormats();
   const ctx = await requireAdmin();
   const t = await getTranslations("admin");
   const ts = await getTranslations("settings");
@@ -90,7 +91,7 @@ async function Supplier({ params }: PageProps<"/admin/suppliers/[id]">) {
               {settings ? (
                 <div>
                   <dt className="text-muted-foreground">{ts("minOrder")}</dt>
-                  <dd className="tabular-nums">{formatMoney(settings.minOrderMinor, org.currency)}</dd>
+                  <dd className="tabular-nums">{fmt.money(settings.minOrderMinor, org.currency)}</dd>
                 </div>
               ) : null}
             </dl>

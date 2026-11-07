@@ -1,8 +1,7 @@
 import "server-only";
 import { getTranslations } from "next-intl/server";
-import { formatMoney } from "@/lib/money";
-import { formatQuantityNumber } from "@/lib/quantity";
 import type { BuyerProduct } from "@/server/domain/buyer/catalog";
+import { getFormats } from "@/server/i18n/formats";
 
 // Display strings for a buyer product card, built on the server. Money and
 // number formatting stays server-side so every browser shows the same
@@ -32,6 +31,7 @@ export async function toProductViews(
   supplier: { id: string; currency: string; pricesIncludeVat: boolean },
   cart: ReadonlyMap<string, number> = new Map(),
 ): Promise<ProductView[]> {
+  const fmt = await getFormats();
   const t = await getTranslations("buyer");
   const tu = await getTranslations("units");
   return products.map((p) => {
@@ -48,13 +48,13 @@ export async function toProductViews(
       sku: p.sku,
       packDescription: p.packDescription,
       imagePath: p.imagePath,
-      price: formatMoney(p.priceMinor, supplier.currency),
+      price: fmt.money(p.priceMinor, supplier.currency),
       unit,
       hints: [
-        p.minQtyMilli !== 1000 ? t("minQty", { qty: formatQuantityNumber(p.minQtyMilli), unit }) : null,
-        p.qtyStepMilli !== 1000 ? t("step", { qty: formatQuantityNumber(p.qtyStepMilli), unit }) : null,
+        p.minQtyMilli !== 1000 ? t("minQty", { qty: fmt.qty(p.minQtyMilli), unit }) : null,
+        p.qtyStepMilli !== 1000 ? t("step", { qty: fmt.qty(p.qtyStepMilli), unit }) : null,
       ].filter((h): h is string => h !== null),
-      vatNote: `${supplier.pricesIncludeVat ? t("vatIncluded") : t("vatExcluded")} · ${t("vatRate", { rate: formatQuantityNumber(p.vatRateBp * 10) })}`,
+      vatNote: `${supplier.pricesIncludeVat ? t("vatIncluded") : t("vatExcluded")} · ${t("vatRate", { rate: fmt.qty(p.vatRateBp * 10) })}`,
     };
   });
 }

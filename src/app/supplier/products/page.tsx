@@ -14,12 +14,11 @@ import { Notice } from "@/components/ui/notice";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
-import { formatMoney } from "@/lib/money";
-import { formatQuantityNumber } from "@/lib/quantity";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
 import { isUuid, listSupplierProducts } from "@/server/domain/catalog/products";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function ProductsPage({ searchParams }: PageProps<"/supplier/products">) {
   const t = await getTranslations("products");
@@ -38,6 +37,7 @@ function one(value: string | string[] | undefined): string {
 }
 
 async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products">, "searchParams">) {
+  const fmt = await getFormats();
   const ctx = await requireSupplier();
   const t = await getTranslations("products");
   const tc = await getTranslations("common");
@@ -146,7 +146,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                     </TD>
                     <TD className="text-muted-foreground">{p.categoryName}</TD>
                     <TD className="whitespace-nowrap text-right tabular-nums">
-                      {formatMoney(p.basePriceMinor, settings.currency)}{" "}
+                      {fmt.money(p.basePriceMinor, settings.currency)}{" "}
                       <span className="text-muted-foreground">{t("perUnit", { unit: tu(p.unit) })}</span>
                     </TD>
                     <TD className="whitespace-nowrap text-right tabular-nums">
@@ -154,7 +154,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                         <span className="text-muted-foreground">{t("stockNotTracked")}</span>
                       ) : (
                         <>
-                          {formatQuantityNumber(p.stockMilli)} <span className="text-muted-foreground">{tu(p.unit)}</span>
+                          {fmt.qty(p.stockMilli)} <span className="text-muted-foreground">{tu(p.unit)}</span>
                           {p.stockMilli <= 0 ? <Badge className="ml-2">{t("stockLowBadge")}</Badge> : null}
                         </>
                       )}
@@ -174,8 +174,8 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{p.name}</span>
                     <span className="block text-sm tabular-nums text-muted-foreground">
-                      {formatMoney(p.basePriceMinor, settings.currency)} {t("perUnit", { unit: tu(p.unit) })}
-                      {p.stockMilli === null ? "" : ` · ${t("columns.stock")}: ${formatQuantityNumber(p.stockMilli)} ${tu(p.unit)}`}
+                      {fmt.money(p.basePriceMinor, settings.currency)} {t("perUnit", { unit: tu(p.unit) })}
+                      {p.stockMilli === null ? "" : ` · ${t("columns.stock")}: ${fmt.qty(p.stockMilli)} ${tu(p.unit)}`}
                     </span>
                   </span>
                   <ProductStatusBadge isActive={p.isActive} />

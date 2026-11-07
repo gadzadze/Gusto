@@ -10,7 +10,6 @@ import { StatTile } from "@/components/ui/stat-tile";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney } from "@/lib/money";
 import { formatPhone } from "@/lib/phone";
 import { requireSupplier } from "@/server/auth/guards";
 import { getCustomer } from "@/server/domain/customers/customers";
@@ -19,6 +18,7 @@ import { NotFoundError } from "@/server/domain/errors";
 import { listPriceLists } from "@/server/domain/pricing/price-lists";
 import { CustomerControls } from "./customer-controls";
 import { CustomerNote } from "./customer-note";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function CustomerPage(props: PageProps<"/supplier/customers/[id]">) {
   const t = await getTranslations("customers");
@@ -38,6 +38,7 @@ export default async function CustomerPage(props: PageProps<"/supplier/customers
 }
 
 async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
+  const fmt = await getFormats();
   const ctx = await requireSupplier();
   const t = await getTranslations("customers");
   const format = await getFormatter();
@@ -98,7 +99,7 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
             <StatTile label={t("detail.orders")} value={insights.orderCount} note={insights.lastOrderAt ? t("detail.lastOrder", { date: format.dateTime(insights.lastOrderAt, { dateStyle: "medium" }) }) : undefined} />
             <StatTile
               label={t("detail.orderValue")}
-              value={formatMoney(insights.valueMinor, insights.currency ?? "GEL")}
+              value={fmt.money(insights.valueMinor, insights.currency ?? "GEL")}
               hint={t("detail.orderValueHint")}
             />
             <StatTile label={t("detail.firstOrder")} value={insights.firstOrderAt ? format.dateTime(insights.firstOrderAt, { dateStyle: "medium" }) : "-"} />
@@ -123,7 +124,7 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
                 <li key={o.id} className="flex items-center justify-between gap-3 border-b border-border py-1.5 last:border-0">
                   <Link href={`/supplier/orders/${o.id}`} className="font-medium tabular-nums hover:underline">GST-{o.number}</Link>
                   <span className="text-muted-foreground">{format.dateTime(o.createdAt, { dateStyle: "medium" })}</span>
-                  <span className="tabular-nums">{formatMoney(o.totalMinor, insights.currency ?? "GEL")}</span>
+                  <span className="tabular-nums">{fmt.money(o.totalMinor, insights.currency ?? "GEL")}</span>
                   <OrderStatusBadge status={o.status} />
                 </li>
               ))}

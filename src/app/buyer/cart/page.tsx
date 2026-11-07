@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney } from "@/lib/money";
 import { requireBuyer } from "@/server/auth/guards";
 import { getCart, listCarts } from "@/server/domain/orders/cart";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function CartPage({ searchParams }: PageProps<"/buyer/cart">) {
   const t = await getTranslations("cart");
@@ -27,6 +27,7 @@ export default async function CartPage({ searchParams }: PageProps<"/buyer/cart"
 }
 
 async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchParams">) {
+  const fmt = await getFormats();
   const ctx = await requireBuyer();
   const t = await getTranslations("cart");
   const tu = await getTranslations("units");
@@ -69,7 +70,7 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
                     <div className="min-w-0 flex-1">
                       <p className="font-medium leading-snug">{line.name}</p>
                       <p className="text-sm tabular-nums text-muted-foreground">
-                        {formatMoney(line.unitPriceMinor, cart.supplier.currency)} / {tu(line.unit)}
+                        {fmt.money(line.unitPriceMinor, cart.supplier.currency)} / {tu(line.unit)}
                       </p>
                       {line.problem ? (
                         <p className="flex items-center gap-1 text-sm text-destructive">
@@ -88,7 +89,7 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
                       productName={line.name}
                     />
                     <p className="w-24 text-right text-sm font-medium tabular-nums">
-                      {formatMoney(line.lineTotalMinor, cart.supplier.currency)}
+                      {fmt.money(line.lineTotalMinor, cart.supplier.currency)}
                     </p>
                   </li>
                 ))}
@@ -96,7 +97,7 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
               <TotalsBlock {...cart.totals} currency={cart.supplier.currency} />
               {cart.shortfallMinor > 0 ? (
                 <p className="text-right text-sm text-[var(--status-amber-fg)]">
-                  {t("shortfall", { amount: formatMoney(cart.shortfallMinor, cart.supplier.currency) })}
+                  {t("shortfall", { amount: fmt.money(cart.shortfallMinor, cart.supplier.currency) })}
                 </p>
               ) : null}
               <div className="flex flex-wrap justify-end gap-2">

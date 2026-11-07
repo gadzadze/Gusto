@@ -25,6 +25,8 @@ export default async function InviteSupplierPage() {
 async function Invite() {
   const ctx = await requireBuyer();
   const t = await getTranslations("supplierInvite");
+  // The text to paste goes to a supplier whose language we don't know: Georgian, as the preview shows.
+  const tText = await getTranslations({ locale: "ka", namespace: "supplierInvite" });
   const format = await getFormatter();
   const invites = await listSupplierInvites(ctx);
   const canInvite = ctx.orgStatus === "active";
@@ -34,7 +36,7 @@ async function Invite() {
     <div className="space-y-8">
       {canInvite ? (
         <>
-          <PersonalInviteLink initial={url ? { url, text: t("orderFooter", { link: url }) } : null} />
+          <PersonalInviteLink initial={url ? { url, text: tText("orderFooter", { link: url }) } : null} />
           <section className="space-y-3">
             <h2 className="font-semibold">{t("namedTitle")}</h2>
             <p className="max-w-xl text-sm text-muted-foreground">{t("namedIntro")}</p>

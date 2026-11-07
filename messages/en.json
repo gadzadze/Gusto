@@ -1,0 +1,1845 @@
+{
+  "brand": {
+    "name": "Gusto",
+    "tagline": "Your suppliers, in one place"
+  },
+  "metadata": {
+    "title": "Gusto - orders with your suppliers",
+    "description": "A B2B ordering platform for restaurants, cafés, hotels and their suppliers."
+  },
+  "landing": {
+    "nav": {
+      "aria": "Main navigation",
+      "product": "Product",
+      "suppliers": "For suppliers",
+      "buyers": "For buyers",
+      "trust": "Trust",
+      "signIn": "Sign in",
+      "join": "Join us",
+      "openMenu": "Open menu",
+      "closeMenu": "Close menu"
+    },
+    "hero": {
+      "title": "Orders without the calls and chats.",
+      "body": "Suppliers manage their catalogs, individual prices and orders. Their customers order easily and keep track of deliveries.",
+      "cta": "Request to join",
+      "how": "See how it works"
+    },
+    "facts": {
+      "freeTitle": "Free",
+      "freeBody": "for both sides",
+      "feeTitle": "No commission",
+      "feeBody": "You settle up the way you always have",
+      "webTitle": "In the browser",
+      "webBody": "Nothing to install",
+      "inviteTitle": "By invitation only",
+      "inviteBody": "Verified businesses only"
+    },
+    "tour": {
+      "kicker": "How it works",
+      "title": "From scattered chats to one place, in four steps.",
+      "aria": "Gusto tour",
+      "tab1": "Catalog",
+      "tab2": "Invitation",
+      "tab3": "Order",
+      "tab4": "Confirmation",
+      "v1Title": "Catalog and prices.",
+      "v1Cap": "Upload your catalog from Excel and set each customer's own prices.",
+      "v2Title": "Invite on WhatsApp.",
+      "v2Cap": "The buyer opens the link, signs in and sees their prices.",
+      "v3Title": "An order in a few taps.",
+      "v3Cap": "The buyer picks quantities and sends the order.",
+      "v4Title": "Incoming orders in one place.",
+      "v4Cap": "Confirm, change quantities or reject. Try it right here.",
+      "priceList": "Price list",
+      "product": "Product",
+      "base": "Base",
+      "clientPrice": "Customer price",
+      "inviteText": "Hello! I'm inviting you to Gusto, where you'll find my catalog with your prices.",
+      "inviteCard": "Food Distribution invites you to Gusto",
+      "inviteMeta": "One-time link · 14 days",
+      "confirm": "Confirm",
+      "undo": "Cancel"
+    },
+    "suppliers": {
+      "kicker": "For suppliers",
+      "title": "Your customers, your prices.",
+      "body": "Invite the businesses you already serve. Each one gets its own price list.",
+      "c1Title": "One-time invitation",
+      "c1Body": "Send the link on WhatsApp or by email.",
+      "c2Title": "A price per customer",
+      "c2Body": "Other buyers can't see them.",
+      "c3Title": "Overview",
+      "c3Body": "Order value and your most requested products.",
+      "cta": "Request to join",
+      "statPending": "Awaiting a decision",
+      "statWeek": "Orders, 7 days",
+      "statValue": "Order value, 30 days",
+      "customers": "Customers",
+      "invite": "Invite a customer",
+      "colBusiness": "Business",
+      "colStatus": "Status",
+      "colList": "Price list",
+      "listRestaurant": "Restaurant prices",
+      "listBase": "Base prices",
+      "listHotel": "Hotel prices"
+    },
+    "buyers": {
+      "kicker": "For buyers",
+      "title": "The weekly order, in one tap.",
+      "body": "Restaurants, cafés, hotels and shops send their orders to the suppliers they already work with.",
+      "c1Title": "Your prices",
+      "c1Body": "The catalog shows only the prices set for you.",
+      "c2Title": "Order again",
+      "c2Body": "Repeat a previous order in one tap.",
+      "c3Title": "Status",
+      "c3Body": "New, confirmed, delivered.",
+      "home": "Home",
+      "current": "Current orders",
+      "recent": "Recent orders"
+    },
+    "trust": {
+      "kicker": "Trust",
+      "title": "A closed network. Verified businesses.",
+      "body": "Gusto is not an open online marketplace. We check every business, and a buyer sees only their own suppliers and their own prices.",
+      "i1Title": "By invitation only",
+      "i1Body": "Only approved email addresses can sign in.",
+      "i2Title": "Prices stay private",
+      "i2Body": "A buyer sees only their own prices and their own suppliers.",
+      "i3Title": "Verified businesses",
+      "i3Body": "Every business is checked against its legal ID.",
+      "i4Title": "No payments",
+      "i4Body": "An order is a purchase request. You settle up the way you always have.",
+      "business": "Business",
+      "legalId": "Legal ID",
+      "invitedBy": "Invited by",
+      "status": "Status",
+      "verified": "Verified"
+    },
+    "close": {
+      "title": "Ready to start?",
+      "body": "Gusto is free for suppliers and for their customers. Start by sending a request.",
+      "cta": "Request to join",
+      "signIn": "Sign in",
+      "sTitle": "For suppliers",
+      "sBody": "Send us your business details and we'll get in touch.",
+      "sCta": "Send a request",
+      "bTitle": "For buyers",
+      "bBody": "Ask your supplier for an invitation, or contact us yourself.",
+      "bCta": "Sign in"
+    },
+    "dash": {
+      "main": "Home",
+      "orders": "Orders",
+      "products": "Products",
+      "customers": "Customers",
+      "prices": "Prices",
+      "all": "All",
+      "newCount": "New · 2",
+      "colNumber": "Number",
+      "colBuyer": "Buyer",
+      "colStatus": "Status",
+      "colTotal": "Total"
+    },
+    "demo": {
+      "tag": "demo",
+      "supplier": "Food Distribution",
+      "restaurant": "Restaurant \"Vake\"",
+      "cafe": "Café \"Rustaveli\"",
+      "hotel": "Hotel \"Mtatsminda\"",
+      "sulguni": "Sulguni",
+      "eggs": "Eggs",
+      "tomato": "Tomatoes",
+      "rice": "Rice",
+      "butter": "Butter",
+      "curd": "Curd cheese",
+      "kg": "kg",
+      "pack": "pack",
+      "statusNew": "New",
+      "statusConfirmed": "Confirmed",
+      "statusDelivered": "Delivered",
+      "statusActive": "Active",
+      "statusInvited": "Invited",
+      "yourPrices": "Your prices",
+      "cart": "Cart",
+      "send": "Send order",
+      "positions": "items",
+      "reorder": "Order again",
+      "total": "Total"
+    },
+    "footer": "© Gusto · Georgia",
+    "legalTerms": "Terms of service",
+    "legalPrivacy": "Privacy policy"
+  },
+  "demo": {
+    "banner": "Demo version: all data is made up and reloaded every night.",
+    "accountsTitle": "Demo accounts",
+    "accountsBody": "Try Gusto with made-up data. Sign in with an email and password.",
+    "role_supplier": "Supplier",
+    "role_restaurant": "Restaurant",
+    "password": "Password"
+  },
+  "theme": {
+    "label": "Color scheme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "Match device"
+  },
+  "welcomeEmail": {
+    "subject": "Gusto - your account is ready",
+    "body": "Hello,\n\nYour business has been approved on Gusto. To sign in and set your password, open this link:\n\n{link}\n\nThe link is single-use and valid for a limited time. If it has expired, open the sign-in page and choose \"Set or reset password\" to get a new one.\n\nIf you weren't expecting this email, just ignore it."
+  },
+  "login": {
+    "title": "Sign in to Gusto",
+    "subtitle": "Only verified businesses can sign in to Gusto. First time here? Use the link from your email, or choose \"Set or reset password\".",
+    "google": "Sign in with Google",
+    "or": "or",
+    "emailLabel": "Email",
+    "emailPlaceholder": "name@company.ge",
+    "sendLink": "Send a sign-in link",
+    "sending": "Sending…",
+    "notAllowedContact": "To get approved, write to us:",
+    "sentTitle": "Check your email",
+    "sentBody": "A sign-in link has been sent to {email}. Open the email and follow the link.",
+    "useAnotherEmail": "Use a different email",
+    "errors": {
+      "invalid_email": "Enter a valid email address.",
+      "rate_limited": "Too many attempts. Try again in a few minutes.",
+      "auth": "Sign-in failed. The link may have expired - try again.",
+      "unknown": "Sign-in failed. Try again.",
+      "not_allowed": "This email has not been approved yet. Only verified businesses can sign in to Gusto.",
+      "wrong_credentials": "The email or password is wrong."
+    },
+    "passwordLabel": "Password",
+    "signIn": "Sign in",
+    "signingIn": "Signing in…",
+    "forgot": "Set or reset password",
+    "supplierPrompt": "Are you a supplier and want to join Gusto?",
+    "supplierLink": "Send us a request",
+    "legalNote": "By continuing you agree to the <terms>Terms of Service</terms> and the <privacy>Privacy Policy</privacy>."
+  },
+  "onboarding": {
+    "title": "Welcome to Gusto",
+    "subtitle": "Tell us briefly about your business. A verified business is activated at once; otherwise, after our approval.",
+    "kindLegend": "How do you use Gusto?",
+    "kindBuyer": "I buy",
+    "kindBuyerHint": "A restaurant, café, hotel or shop",
+    "kindSupplier": "I supply",
+    "kindSupplierHint": "A distributor, importer or producer",
+    "businessName": "Business name",
+    "supplierBusinessName": "Trade name",
+    "businessType": "Business type",
+    "businessTypePlaceholder": "Choose",
+    "businessTypes": {
+      "restaurant": "Restaurant",
+      "cafe": "Café",
+      "hotel": "Hotel",
+      "retailer": "Shop",
+      "other": "Other"
+    },
+    "legalId": "Legal ID",
+    "legalIdHint": "9 digits (company) or 11 digits (sole trader). We check the ID in the registry.",
+    "contactName": "Contact person",
+    "phone": "Phone",
+    "phonePlaceholder": "5XX XX XX XX",
+    "city": "City",
+    "cityPlaceholder": "Tbilisi",
+    "addressLine": "Delivery address",
+    "deliveryInstructions": "Delivery instructions",
+    "deliveryInstructionsHint": "E.g.: entrance from the courtyard, receiving until 10:00.",
+    "deliveryArea": "Delivery area",
+    "deliveryAreaHint": "E.g.: Tbilisi and the surrounding area",
+    "submit": "Continue",
+    "submitting": "Saving…",
+    "optional": "optional",
+    "errors": {
+      "already_onboarded": "Your business is already registered.",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "Could not save. Try again.",
+      "wrong_role": "This email is registered for a different role. Please contact us.",
+      "legal_id_taken": "This legal ID is already registered. If it's your company, please contact us.",
+      "already_has_kind": "You already have this side.",
+      "not_onboarded": "Finish registering your business first."
+    },
+    "kindRequired": "Choose one of the options",
+    "kindBoth": "Both",
+    "kindBothHint": "I buy and I sell: for example, I supply shops and restaurants"
+  },
+  "validation": {
+    "required": "Required field",
+    "too_long": "The text is too long",
+    "invalid_phone": "Enter a valid phone number",
+    "invalid_legal_id": "The ID must have 9 or 11 digits",
+    "invalid_price": "Enter an amount, e.g. 12.50",
+    "invalid_quantity": "Enter a quantity greater than 0",
+    "invalid_vat": "Enter a percentage from 0 to 100",
+    "invalid_email": "Enter a valid email address",
+    "invalid_barcode": "A barcode must have 8 to 14 digits",
+    "contact_required": "Enter a phone or an email so you can send the link"
+  },
+  "nav": {
+    "dashboard": "Home",
+    "overview": "Overview",
+    "admin": "Administration",
+    "signOut": "Sign out",
+    "menu": "Navigation",
+    "bar": {
+      "suppliers": "Suppliers",
+      "products": "Products",
+      "orders": "Orders",
+      "customers": "Customers",
+      "organizations": "Businesses",
+      "requests": "Requests"
+    },
+    "more": "More",
+    "closeMore": "Close menu",
+    "products": "Products",
+    "settings": "Settings",
+    "suppliers": "Suppliers",
+    "categories": "Categories",
+    "customers": "Customers",
+    "pricing": "Prices",
+    "search": "Search",
+    "orders": "Orders",
+    "cart": "Cart",
+    "organizations": "Businesses",
+    "orderLookup": "Order lookup",
+    "audit": "Audit log",
+    "access": "Access",
+    "changePassword": "Change password",
+    "requests": "Requests",
+    "sideSwitch": "Choose a role",
+    "addSide": {
+      "buyer": "Join as a buyer too",
+      "supplier": "Join as a supplier too"
+    }
+  },
+  "roles": {
+    "buyer": "Buyer",
+    "supplier": "Supplier",
+    "admin": "Administrator"
+  },
+  "supplier": {
+    "dashboardTitle": "Home",
+    "pendingTitle": "Your account is under review",
+    "pendingBody": "The Gusto team is checking your business. Once approved, you can invite customers and receive orders.",
+    "suspendedTitle": "Account suspended",
+    "suspendedBody": "Contact Gusto support for details.",
+    "emptyTitle": "No orders yet",
+    "emptyBody": "When customers send you an order, it will appear here.",
+    "noCategoriesTitle": "No categories added yet",
+    "noCategoriesBody": "You can add products once the Gusto team adds categories.",
+    "newOrders": "New orders: {count}",
+    "openOrders": "View orders",
+    "dashboard": {
+      "pending": "Waiting for your decision",
+      "pendingHint": "Orders you have not yet confirmed or rejected.",
+      "pendingNone": "No new orders.",
+      "openPending": "View orders",
+      "week": "Orders in the last 7 days",
+      "weekHint": "Orders sent to you, whatever their status, compared with the previous 7 days.",
+      "weekPrevious": "Previous 7 days: {count}",
+      "value": "Order value, 30 days",
+      "valueHint": "Total of confirmed and delivered orders in the last 30 days. This is order value, not revenue: Gusto doesn't know whether they were paid.",
+      "top": "Top 5 products, 30 days",
+      "topHint": "By confirmed quantity, in confirmed and delivered orders of the last 30 days.",
+      "topEmpty": "No data yet.",
+      "repeat": "Repeat buyers",
+      "repeatHint": "Buyers who sent you 2 or more orders in the last 30 days."
+    }
+  },
+  "buyer": {
+    "dashboardTitle": "Home",
+    "emptyTitle": "You don't have any suppliers yet",
+    "emptyBody": "When a supplier invites you to Gusto, their catalog with your prices will appear here.",
+    "suppliersTitle": "Suppliers",
+    "searchPlaceholder": "Search for a product across all suppliers",
+    "searchTitle": "Search",
+    "searchEmpty": "Nothing found",
+    "searchHint": "You can type in Georgian or Latin letters, e.g. ყველი or kveli.",
+    "showMore": "All results ({count})",
+    "productCount": "{count, plural, one {# product} other {# products}}",
+    "minOrder": "Minimum order: {amount}",
+    "noMinOrder": "No minimum order",
+    "deliveryArea": "Delivery: {area}",
+    "cutoff": "Order cut-off: {note}",
+    "contact": "Contact",
+    "vatIncluded": "Price includes VAT",
+    "vatExcluded": "Excluding VAT",
+    "minQty": "Min. {qty} {unit}",
+    "step": "Step {qty} {unit}",
+    "allCategories": "All categories",
+    "catalogEmpty": "The supplier hasn't opened any products to you yet. When they do, they will appear here.",
+    "deliveryTerms": "Delivery terms",
+    "details": "Details",
+    "close": "Close",
+    "vatRate": "VAT {rate}%",
+    "brand": "Brand",
+    "pack": "Pack",
+    "sku": "Code",
+    "dashboard": {
+      "open": "Current orders",
+      "openEmpty": "You have no current orders.",
+      "topTitle": "Most often ordered products",
+      "topHint": "Sorted by how many of your orders contain them. Prices are current.",
+      "orderedTimes": "Ordered {count, plural, one {# time} other {# times}}",
+      "from": "Supplier: {supplier}"
+    },
+    "inviteSupplier": "Invite a supplier"
+  },
+  "admin": {
+    "overviewTitle": "Overview",
+    "suppliersTitle": "Suppliers",
+    "categoriesTitle": "Categories",
+    "statusFilter": {
+      "all": "All",
+      "pending_review": "Pending review",
+      "active": "Active",
+      "suspended": "Suspended"
+    },
+    "status": {
+      "pending_review": "Pending review",
+      "active": "Approved",
+      "suspended": "Suspended"
+    },
+    "suppliersEmpty": "No suppliers with this status.",
+    "columns": {
+      "name": "Name",
+      "city": "City",
+      "status": "Status",
+      "products": "Products",
+      "registered": "Registered",
+      "legalId": "ID"
+    },
+    "detail": {
+      "business": "Business",
+      "contact": "Contact",
+      "legalId": "Legal ID",
+      "city": "City",
+      "deliveryArea": "Delivery area",
+      "owners": "Account owners",
+      "products": "Products: {active} active, {inactive} disabled",
+      "history": "History",
+      "none": "-",
+      "registered": "Registered {date}"
+    },
+    "actions": {
+      "approve": "Approve",
+      "suspend": "Suspend",
+      "reactivate": "Reactivate",
+      "reason": "Reason",
+      "reasonHint": "Recorded in the audit log.",
+      "confirmSuspend": "Confirm suspension",
+      "confirmReactivate": "Confirm reactivation"
+    },
+    "historyActions": {
+      "organizationCreated": "Registered",
+      "supplierApprove": "Approved",
+      "supplierSuspend": "Suspended",
+      "supplierReactivate": "Reactivated"
+    },
+    "reviewErrors": {
+      "stale_status": "The status has already changed. Refresh the page.",
+      "reason_required": "Enter a reason (at least 3 characters)."
+    },
+    "pendingCount": "Suppliers pending review: {count}",
+    "categories": {
+      "intro": "Categories are shared by all suppliers. An archived category can't be chosen for new products; existing ones stay unchanged.",
+      "newPlaceholder": "New category",
+      "add": "Add",
+      "rename": "Rename",
+      "archive": "Archive",
+      "restore": "Restore",
+      "moveUp": "Up",
+      "moveDown": "Down",
+      "archived": "Archived",
+      "productCount": "{count, plural, one {# product} other {# products}}",
+      "empty": "No categories yet. Suppliers can't add products until at least one exists.",
+      "addStandard": "Add the standard categories",
+      "standardHint": "Adds the main HoReCa categories you don't have yet (wine, beer, cheese, meat, vegetables, sauces, packaging and so on). Existing ones are untouched. The import also recognizes these categories under other common names (for example in English).",
+      "standardDone": "Created: {created} · already there: {existing}",
+      "fromFile": {
+        "title": "Add categories from a product file",
+        "hint": "Upload a supplier's product file (CSV or Excel) and you'll see which categories Gusto is missing. The file is read in your browser; only the category names are sent to the server.",
+        "choose": "Choose a file",
+        "noColumn": "The category column could not be found automatically.",
+        "pickColumn": "Which column is the category?",
+        "nothingNew": "The file has {count} categories and they all exist already.",
+        "willCreate": "New categories to create: {count}",
+        "alreadyThere": "Already there: {count}",
+        "tooMany": "More than {max} new categories can't be created at once. Check the column.",
+        "create": "Create {count, plural, one {# category} other {# categories}}",
+        "done": "Created: {created} · already there: {existing}",
+        "failed": "Could not be completed. Try again.",
+        "fileErrors": {
+          "unsupported": "Only CSV and Excel (.xlsx) files are supported.",
+          "empty": "The file is empty.",
+          "too_many_rows": "The file has more than {max} rows.",
+          "unreadable": "The file could not be read.",
+          "too_large": "The file is too large (60 MB at most)."
+        }
+      },
+      "errors": {
+        "name_taken": "A category with this name already exists.",
+        "required": "Enter a name.",
+        "too_long": "The name is too long."
+      }
+    },
+    "overview": {
+      "pendingSuppliers": "Suppliers pending review",
+      "activeSuppliers": "Approved suppliers",
+      "categories": "Active categories",
+      "review": "Review",
+      "manage": "Manage"
+    },
+    "pilot": {
+      "title": "Pilot metrics",
+      "intro": "Every number is computed from real data. A \"week\" is a rolling 7 days.",
+      "suppliers": "Suppliers by status",
+      "suppliersHint": "Pending review / approved / suspended.",
+      "buyerOrgs": "Buyer organizations",
+      "activeProducts": "Active products",
+      "orders30": "Orders by status, 30 days",
+      "activeSuppliers": "Active suppliers",
+      "activeSuppliersHint": "Received at least 1 order in the last 30 days.",
+      "activeBuyers": "Active buyers",
+      "activeBuyersHint": "Sent at least 1 order in the last 14 days.",
+      "reorder": "Weekly reorder rate",
+      "reorderHint": "Buyers who ordered in both of the last two weeks, divided by buyers who ordered in the earlier week. Pilot goal: buyers come back once a week without a reminder.",
+      "reorderDetail": "{both} / {earlier}",
+      "reorderNone": "No orders in the earlier week.",
+      "perSupplier": "Orders per supplier per week",
+      "perSupplierHint": "Orders in the last 28 days ÷ 4 ÷ number of approved suppliers.",
+      "none": "-"
+    },
+    "orgs": {
+      "title": "Businesses",
+      "searchPlaceholder": "Name, city or phone",
+      "type": {
+        "all": "All",
+        "supplier": "Suppliers",
+        "buyer": "Buyers"
+      },
+      "typeLabel": {
+        "supplier": "Supplier",
+        "buyer": "Buyer"
+      },
+      "empty": "No business found.",
+      "buyerTitle": "Buyer",
+      "orders": "Orders: {count}",
+      "back": "Businesses"
+    },
+    "orders": {
+      "title": "Order lookup",
+      "intro": "Enter an order number. Every time you open one, it is recorded in the audit log.",
+      "label": "Order number",
+      "placeholder": "GST-1001",
+      "find": "Search",
+      "notFound": "No such order was found.",
+      "invalid": "The number is invalid. Example: GST-1001.",
+      "readOnly": "View only. This view is recorded in the audit log.",
+      "back": "Order lookup"
+    },
+    "audit": {
+      "title": "Audit log",
+      "actor": "Who",
+      "actorPlaceholder": "Email or label",
+      "action": "Action",
+      "allActions": "All actions",
+      "from": "From date",
+      "to": "To date",
+      "apply": "Filter",
+      "reset": "Clear",
+      "empty": "No entries found.",
+      "when": "Time",
+      "target": "Object",
+      "details": "Details",
+      "system": "System",
+      "total": "Total: {count}"
+    },
+    "access": {
+      "title": "Access",
+      "intro": "Only the emails added here can sign in to Gusto. Add the email of a business you have checked yourself (ID, phone): the person gets a link by email and creates their own password. A supplier's invitation doesn't open the door - an invited buyer must be on this list too.",
+      "email": "Email",
+      "note": "Note",
+      "notePlaceholder": "E.g.: Winiveria, manager",
+      "add": "Add",
+      "empty": "No emails added yet.",
+      "added": "Added",
+      "status": {
+        "active": "Has access",
+        "revoked": "Revoked"
+      },
+      "revoke": "Revoke",
+      "restore": "Restore",
+      "columns": {
+        "email": "Email",
+        "note": "Note",
+        "status": "Status",
+        "added": "Added"
+      },
+      "done": {
+        "allowed": "Email added.",
+        "restored": "Access restored.",
+        "already_allowed": "This email has already been added.",
+        "updated": "Role updated."
+      },
+      "errors": {
+        "invalid_email": "Enter a valid email address.",
+        "cannot_revoke_self": "You can't revoke access for your own email.",
+        "unknown": "Could not be completed. Try again.",
+        "invalid_legal_id": "The ID must have 9 or 11 digits, and give the business name too.",
+        "legal_id_taken": "This ID is already registered to another business."
+      },
+      "welcome": {
+        "sent": "Email added. The first sign-in link has been sent.",
+        "skipped": "Email added, but no message was sent: the email service isn't switched on yet.",
+        "failed": "Email added, but the message could not be sent. A new link is available from the sign-in page via \"Set or reset password\"."
+      },
+      "authUserWarning": "Email added, but the sign-in account could not be created yet. It will be created at first sign-in.",
+      "bulk": {
+        "title": "Add many at once",
+        "welcomeNote": "No message was sent to {count, plural, one {# address} other {# addresses}}. They can get the link from the sign-in page via \"Set or reset password\".",
+        "hint": "One business per line: email, business name, ID, role (buyer or supplier). Only the email is required; give the name and ID together. At most 100 lines.",
+        "placeholder": "info@firma.ge, Firma Ltd, 405123456, supplier",
+        "submit": "Add all",
+        "summary": "Added: {done} · with errors: {failed}",
+        "tooMany": "The first 100 lines were processed; the rest were skipped.",
+        "line": "Line {line}",
+        "parse": {
+          "columns": "Too many columns",
+          "role": "The role must be buyer or supplier",
+          "name_or_id": "The name and ID must be given together"
+        }
+      },
+      "role": "Role",
+      "roles": {
+        "any": "Any",
+        "supplier": "Supplier",
+        "buyer": "Buyer",
+        "both": "Both"
+      },
+      "roleHint": "If you set a role, the person sees only that option when registering. \"Both\" creates a buyer side and a supplier side at once: for a business that buys and also sells.",
+      "businessName": "Business name",
+      "legalId": "Legal ID",
+      "unverified": "Not verified",
+      "verifiedHint": "A name and ID mean you checked the business yourself: its account is active at once after registration. Without them, it waits for your approval.",
+      "link": {
+        "create": "Create link",
+        "ready": "The sign-in link for {email} is ready.",
+        "warning": "The link is single-use, and whoever opens it first gets in. Send it only to this person. We don't store the link anywhere, but creating it is visible in the log.",
+        "whatsapp": "Send on WhatsApp",
+        "copy": "Copy link",
+        "copied": "Copied",
+        "noPhone": "The phone is unknown: WhatsApp will open and you choose the recipient yourself.",
+        "rateLimited": "You created too many links. Try again in a while.",
+        "message": "Hello! Your business has been approved on Gusto. To sign in and set your password, open this link (single-use): {link}"
+      }
+    },
+    "pendingBadge": "Pending: {count}",
+    "verification": {
+      "title": "Verification",
+      "legalId": "Legal ID",
+      "email": "Sign-in email",
+      "source": "Source",
+      "preRegistered": "You registered it (verified)",
+      "invitedBy": "Invited by a supplier: {names}",
+      "selfRegistered": "Registered by themselves",
+      "freeMail": "This is a personal email (e.g. gmail.com), not a company one. Verify by phone.",
+      "howTo": "Check the ID in the registry (NAPR / RS.ge), call the number given, and approve only after that."
+    },
+    "requests": {
+      "title": "Requests to join",
+      "intro": "Suppliers who arrive through the public form. A request gives no access: check the ID in the registry, call them, and only then approve. On approval the email is added to the access list and the supplier is active.",
+      "filter": {
+        "open": "Open",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "status": {
+        "new": "New",
+        "contacted": "Contacted",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "empty": "No requests.",
+      "legalId": "Legal ID",
+      "city": "City",
+      "email": "Email",
+      "note": "Supplier's note",
+      "adminNote": "Your note",
+      "freeMail": "This is a personal email (e.g. gmail.com), not a company one. Verify by phone.",
+      "approve": "Approve",
+      "markContacted": "Contacted",
+      "reject": "Reject",
+      "reasonLabel": "Reason (saved)",
+      "confirmReject": "Confirm rejection",
+      "cancel": "Cancel",
+      "approved": "Approved.",
+      "approvedWelcome": {
+        "sent": "Approved. The first sign-in link has been emailed to the supplier.",
+        "skipped": "Approved, but no message was sent: the email service isn't switched on yet.",
+        "failed": "Approved, but the message could not be sent. A new link is available from the sign-in page via \"Set or reset password\"."
+      },
+      "approvedAuthWarning": "Approved, but the sign-in account could not be created yet. It will be created at first sign-in.",
+      "errors": {
+        "stale_status": "The status has already changed. Refresh the page.",
+        "note_required": "A reason is required when rejecting.",
+        "legal_id_taken": "This ID is already registered to another business.",
+        "invalid_legal_id": "The ID is invalid.",
+        "unknown": "Could not be completed. Try again.",
+        "invalid": "Check the details.",
+        "invalid_email": "The email is invalid."
+      },
+      "invitedBy": "Invited by a buyer: {name}"
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The link is wrong or you don't have access to this page.",
+    "home": "Go to the home page"
+  },
+  "common": {
+    "loading": "Loading…",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "cancel": "Cancel",
+    "back": "Back",
+    "search": "Search",
+    "searchPlaceholder": "Name, brand or code",
+    "apply": "Filter",
+    "reset": "Clear",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {page} / {pageCount}",
+    "total": "Total: {count}",
+    "all": "All",
+    "edit": "Edit",
+    "error": "The action could not be completed. Try again.",
+    "errorBoundary": {
+      "title": "The page could not be loaded",
+      "body": "Your data is safe. Try again.",
+      "retry": "Try again",
+      "reference": "Code: {digest}"
+    },
+    "language": "Language"
+  },
+  "units": {
+    "piece": "pc",
+    "kg": "kg",
+    "g": "g",
+    "l": "l",
+    "ml": "ml",
+    "box": "box",
+    "pack": "pack",
+    "case": "case",
+    "bottle": "bottle",
+    "jar": "jar",
+    "bag": "bag",
+    "sack": "sack",
+    "keg": "keg",
+    "pallet": "pallet",
+    "bunch": "bunch",
+    "roll": "roll",
+    "bucket": "bucket"
+  },
+  "unitNames": {
+    "piece": "Piece",
+    "kg": "Kilogram",
+    "g": "Gram",
+    "l": "Liter",
+    "ml": "Milliliter",
+    "box": "Box",
+    "pack": "Pack",
+    "case": "Case",
+    "bottle": "Bottle",
+    "jar": "Jar",
+    "bag": "Bag",
+    "sack": "Sack",
+    "keg": "Keg",
+    "pallet": "Pallet",
+    "bunch": "Bunch",
+    "roll": "Roll",
+    "bucket": "Bucket"
+  },
+  "products": {
+    "title": "Products",
+    "new": "New product",
+    "import": "Import",
+    "filters": {
+      "category": "Category",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Disabled",
+      "stock": "Stock",
+      "stockLow": "Stock: used up or negative"
+    },
+    "stockLowBadge": "Needs restocking",
+    "columns": {
+      "product": "Product",
+      "category": "Category",
+      "price": "Price",
+      "stock": "Stock",
+      "status": "Status"
+    },
+    "stockNotTracked": "Not tracked",
+    "perUnit": "/ {unit}",
+    "status": {
+      "active": "Active",
+      "inactive": "Disabled"
+    },
+    "emptyTitle": "You don't have any products yet",
+    "emptyBody": "Add a product by hand or upload your price list.",
+    "noResultsTitle": "Nothing found",
+    "noResultsBody": "Change the search or the filters.",
+    "suspendedReadOnly": "Your account is suspended - the catalog can't be edited.",
+    "form": {
+      "newTitle": "New product",
+      "editTitle": "Edit product",
+      "sectionBasics": "Basics",
+      "sectionPricing": "Price and ordering",
+      "sectionImage": "Photo",
+      "name": "Name",
+      "description": "Description",
+      "brand": "Brand",
+      "barcode": "Barcode",
+      "barcodeHint": "8-14 digits, optional.",
+      "sku": "Code (SKU)",
+      "skuHint": "Your own internal code. On import we use it to find an existing product.",
+      "category": "Category",
+      "categoryPlaceholder": "Choose a category",
+      "unit": "Unit",
+      "packDescription": "Packaging",
+      "packHint": "E.g.: 6 × 1 l or 12 bottles",
+      "basePrice": "Price per unit",
+      "vatRate": "VAT, %",
+      "minQty": "Minimum quantity",
+      "qtyStep": "Quantity step",
+      "qtyStepHint": "E.g.: 1 - whole units, 0.5 - half a kilogram",
+      "stock": "Stock you hold",
+      "stockHint": "For you only: buyers can't see this. Confirming an order lowers the stock, cancelling it from your side returns it, and it can go negative. Leave it empty if you don't track stock.",
+      "pricesIncludeVat": "Prices include VAT",
+      "pricesExcludeVat": "Prices exclude VAT",
+      "create": "Add product",
+      "save": "Save changes",
+      "image": "Photo",
+      "uploadChosen": "Upload: {name}",
+      "cancelChosen": "Cancel",
+      "imageHint": "JPEG, PNG or WebP, max. 4 MB.",
+      "chooseImage": "Choose a photo",
+      "replaceImage": "Replace photo",
+      "removeImage": "Remove photo",
+      "uploading": "Uploading…",
+      "deactivate": "Disable",
+      "activate": "Enable",
+      "deactivateHint": "A disabled product is hidden from buyers. Past orders stay unchanged.",
+      "created": "Product added",
+      "stockTitle": "Stock",
+      "stockUntracked": "Stock isn't tracked yet.",
+      "stockOnlyYou": "For you only: buyers can't see this. Confirming an order lowers the stock, cancelling it from your side returns it, and it can go negative.",
+      "stockAddLabel": "Quantity received",
+      "stockAddHint": "Added to the existing stock.",
+      "stockAdd": "Add",
+      "stockSetLabel": "Recounted quantity",
+      "stockSetHint": "Replaces the existing stock: enter the full new quantity.",
+      "stockSet": "Set the new quantity",
+      "stockSaved": "Stock saved",
+      "imageSaveFailed": "The product was saved, but the photo could not be uploaded: {reason}"
+    },
+    "errors": {
+      "suspended": "Your account is suspended - changes aren't possible.",
+      "category_unavailable": "This category is no longer available. Choose another.",
+      "sku_taken": "This code is already used by another product.",
+      "invalid_stock": "Enter a quantity (greater than 0 when receiving stock).",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "Could not save. Try again.",
+      "rate_limited": "Too many attempts. Try again in a while."
+    },
+    "background": {
+      "button": "Remove background",
+      "running": "Processing...",
+      "hint": "The photo is processed on your device and sent nowhere. The first time, a helper model is downloaded (about {size} MB); after that, it isn't.",
+      "unsupported": "Automatic background removal isn't available on this device. Try a newer computer or phone, with Chrome or Safari.",
+      "stage": {
+        "download": "Downloading the model: {percent}%",
+        "verify": "Checking...",
+        "load": "Preparing...",
+        "run": "Removing the background...",
+        "finish": "Finishing..."
+      },
+      "original": "Original",
+      "cleaned": "Cleaned",
+      "use": "Use the cleaned one",
+      "keep": "Keep the original",
+      "poor": "Removing the background didn't work well: either almost the whole photo stayed, or almost all of it was erased. Better to keep the original.",
+      "errors": {
+        "no_webgpu": "This browser doesn't support background removal.",
+        "download": "The model could not be downloaded. Check your internet connection and try again.",
+        "integrity": "The downloaded model didn't match what was expected, so we didn't use it. Try again.",
+        "failed": "Background removal failed. Use the original."
+      }
+    },
+    "imageErrors": {
+      "empty": "The file is empty.",
+      "too_large": "The file is larger than 4 MB.",
+      "unsupported": "This format isn't supported. Use JPEG, PNG or WebP.",
+      "upload_failed": "The photo could not be uploaded. Try again."
+    }
+  },
+  "import": {
+    "title": "Import products",
+    "intro": "Upload your price list as CSV or Excel (.xlsx). Existing products are updated by code (SKU); new ones are added.",
+    "template": "Download the template",
+    "stepFile": "File",
+    "stepMapping": "Columns",
+    "stepPreview": "Check",
+    "chooseFile": "Choose a file",
+    "parsing": "Reading…",
+    "validCategories": "Categories that exist in Gusto:",
+    "validCategoriesHint": "A category in the file must match one of these. Letter case, extra spaces and common synonyms don't get in the way. To add a new category, contact Gusto support.",
+    "fileErrors": {
+      "too_large": "The file is too large (60 MB at most). Reduce the size of the photos and try again.",
+      "unsupported": "Upload a .csv or .xlsx file.",
+      "empty": "No data was found in the file.",
+      "too_many_rows": "At most {max} rows per file.",
+      "unreadable": "We couldn't read the file."
+    },
+    "rowsFound": "{count, plural, one {# row found} other {# rows found}}",
+    "mappingIntro": "Say which column is which. * - required.",
+    "notMapped": "- none -",
+    "fields": {
+      "name": "Name",
+      "sku": "Code (SKU)",
+      "category": "Category",
+      "unit": "Unit",
+      "price": "Price",
+      "vatRate": "VAT, %",
+      "minQty": "Min. quantity",
+      "qtyStep": "Step",
+      "packDescription": "Packaging",
+      "brand": "Brand",
+      "barcode": "Barcode",
+      "description": "Description"
+    },
+    "defaultsNote": "If missing from the file: VAT - {vat}%, min. quantity and step - 1.",
+    "checkRows": "Check",
+    "checking": "Checking…",
+    "summary": "To add: {create} · to update: {update} · with errors: {error}",
+    "columns": {
+      "row": "Row",
+      "product": "Product",
+      "result": "Result"
+    },
+    "action": {
+      "create": "Will be added",
+      "update": "Will be updated",
+      "error": "Error"
+    },
+    "rowErrors": {
+      "invalid_unit": "Unknown unit",
+      "unknown_category": "Unknown category",
+      "category_not_guessed": "The category couldn't be worked out from the name",
+      "duplicate_sku_in_file": "The code appears twice in the file"
+    },
+    "preview": {
+      "guessed": "guessed from the name",
+      "chosen": "you chose",
+      "code": "code",
+      "photo": "photo"
+    },
+    "photos": {
+      "found": "Photos found in the file: {count}. Without a photo: {missing}.",
+      "skipped": "Photos we couldn't use: {count} (not PNG, JPEG or WebP, or several photos in one row and we use the first).",
+      "private": "Photos appear only in your own catalog. After adding, you can replace a photo on any product.",
+      "uploading": "Uploading photos: {done} / {total}",
+      "uploaded": "Photos added: {ok}. Not added: {failed}. Upload the ones that failed from the product page.",
+      "noCode": "A photo is tied to a product by its code, so rows without a code get no photo. Turn on \"Create the code\" or point to a code column."
+    },
+    "fallbacks": {
+      "title": "What to do if something is missing from the file",
+      "hint": "This applies only to empty cells. A category or unit that is written in is never changed: if it's wrong, the row shows as an error.",
+      "category": "Category, if it's not in the file",
+      "categoryError": "Treat as an error",
+      "categoryGuess": "Guess from the product name",
+      "categoryDefault": "One category for all",
+      "pickCategory": "Choose a category",
+      "guessHint": "Only guesses the standard categories; anything it can't guess shows as an error. During the check each row's category is visible - take a look.",
+      "unit": "Unit, if it's not in the file",
+      "unitError": "Treat as an error",
+      "autoSku": "Create the code (SKU) automatically if it's not in the file",
+      "autoSkuHint": "The code is derived from the product name, so uploading the same file again updates the products and doesn't duplicate them. If you rename a product, a new product is created."
+    },
+    "importAll": "Import all",
+    "importValid": "Import only the valid rows ({count})",
+    "hasErrorsNote": "The file has errors. Fix them and upload again, or import only the valid rows.",
+    "importing": "Importing…",
+    "doneTitle": "Import finished",
+    "doneBody": "Added: {created} · updated: {updated} · skipped: {skipped}",
+    "doneCheckTitle": "Check the products that were added",
+    "doneCheckBody": "In some places we filled in the category, unit and code automatically. Look through the product list: the name, price, category and unit. You can fix a mistake right away by opening the product.",
+    "toProducts": "Go to products",
+    "another": "Upload another file",
+    "startOver": "Start over",
+    "errors": {
+      "missing_columns": "Choose all the required columns.",
+      "has_errors": "The file has errors.",
+      "nothing_to_import": "There are no rows to import.",
+      "suspended": "Your account is suspended - importing isn't possible.",
+      "unknown": "The import failed. Try again."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "sectionContact": "Contact",
+    "sectionOrders": "Order terms",
+    "contactName": "Contact person",
+    "phone": "Phone",
+    "phoneHint": "Customers will message you on WhatsApp at this number.",
+    "minOrder": "Minimum order",
+    "minOrderHint": "Empty or 0 - no minimum.",
+    "pricesIncludeVat": "Prices include VAT",
+    "pricesIncludeVatHint": "Buyers see next to each price whether VAT is included or not.",
+    "deliveryArea": "Delivery area",
+    "deliveryTerms": "Delivery terms",
+    "deliveryTermsHint": "E.g.: delivery Monday to Saturday, the day after the order.",
+    "orderCutoffNote": "Order cut-off",
+    "orderCutoffHint": "E.g.: orders placed before 15:00 are delivered the next day.",
+    "saved": "Settings saved"
+  },
+  "customers": {
+    "title": "Customers",
+    "add": "Add a customer",
+    "newTitle": "New customer",
+    "intro": "Add the businesses you already serve. Each gets a personal link and sees only the products you mark for them, at their own prices. They can sign in only once Gusto has approved them.",
+    "notActive": "You can invite customers once your account is approved. Until then, you can prepare your catalog and prices.",
+    "emptyTitle": "You don't have any customers yet",
+    "emptyBody": "Add your first customer and send them the invitation link on WhatsApp.",
+    "columns": {
+      "customer": "Customer",
+      "status": "Status",
+      "priceList": "Price list",
+      "contact": "Contact"
+    },
+    "status": {
+      "invited": "Invited",
+      "active": "Connected",
+      "blocked": "Blocked"
+    },
+    "basePrices": "No list - no products visible",
+    "inviteExpires": "The link is valid until {date}",
+    "inviteNone": "No active link",
+    "form": {
+      "businessName": "Business name",
+      "contactName": "Contact person",
+      "phone": "Phone (WhatsApp)",
+      "email": "Email",
+      "priceList": "Price list",
+      "priceListHint": "Which products and prices this customer will see. Without a list, the customer can't see any products.",
+      "submit": "Add and create a link"
+    },
+    "invite": {
+      "title": "The invitation link is ready",
+      "once": "The link is shown only now. If you lose it, create a new one.",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "whatsapp": "Send on WhatsApp",
+      "whatsappNote": "WhatsApp opens with the text ready - you have to confirm sending.",
+      "emailNotSent": "Sending by email isn't switched on yet. Send the link on WhatsApp or copy it.",
+      "message": "Hello{name}! {supplier} invites you to Gusto. With this link you'll see our catalog with your prices and can send an order: {link}",
+      "expires": "Valid for 14 days.",
+      "toCustomer": "To the customer's page",
+      "another": "Add another customer"
+    },
+    "detail": {
+      "connectedAs": "Connected as: {name}",
+      "connectedAt": "Connected {date}",
+      "priceList": "Price list",
+      "savePriceList": "Save",
+      "newLink": "Create a new link",
+      "revoke": "Revoke the link",
+      "revoked": "The link was revoked",
+      "block": "Block",
+      "unblock": "Unblock",
+      "blockHint": "A blocked customer can no longer see your catalog. Active links are revoked too.",
+      "blockedNote": "The customer is blocked and can't see your catalog.",
+      "editAssortment": "This customer's products and prices: list \"{name}\"",
+      "noListTitle": "The customer has no products yet",
+      "noListBody": "Until you assign a list, the customer sees nothing in your catalog. Choose a list above.",
+      "history": "Order history",
+      "orders": "Orders",
+      "lastOrder": "Last: {date}",
+      "orderValue": "Order value",
+      "orderValueHint": "Total of confirmed and delivered orders. This is order value, not revenue.",
+      "firstOrder": "First order",
+      "topProducts": "Most often ordered",
+      "inOrders": "in {count, plural, one {# order} other {# orders}}",
+      "recentOrders": "Recent orders",
+      "noteTitle": "Private note",
+      "noteHint": "For you only: the customer can't see this.",
+      "noteSave": "Save",
+      "noteSaved": "Note saved",
+      "noteFailed": "Could not save. Try again."
+    },
+    "errors": {
+      "not_active": "You can invite customers once your account is approved.",
+      "suspended": "Your account is suspended - changes aren't possible.",
+      "price_list_unavailable": "The price list could not be found.",
+      "not_invited": "The customer is already connected or blocked.",
+      "stale_status": "The status has already changed. Refresh the page.",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "Could not be completed. Try again.",
+      "rate_limited": "Too many attempts. Try again in a while."
+    },
+    "awaitingVerification": "Awaiting Gusto's verification",
+    "invitingBuyers": {
+      "title": "Buyers who invited you to Gusto",
+      "hint": "These buyers already order from you and want to see your catalog. Once you add them as customers, they will see only what your default price list covers. If you don't have such a list, the buyer sees nothing until you assign one.",
+      "add": "Add as a customer",
+      "adding": "Adding…",
+      "added": "Added",
+      "errors": {
+        "already_connected": "This buyer is already your customer.",
+        "suspended": "Your account is suspended - changes aren't possible.",
+        "unknown": "Could not be completed. Try again."
+      }
+    }
+  },
+  "regular": {
+    "title": "Regular orders",
+    "intro": "Orders you repeat often. We'll remind you by email on the day you choose, and one button puts the products in your cart at current prices. You send the order yourself.",
+    "emptyTitle": "You don't have any regular orders yet",
+    "emptyBody": "Open a sent order and press \"Save as a regular order\".",
+    "save": "Save as a regular order",
+    "saveHint": "The order's products and quantities are saved. We'll remind you by email on the day you choose.",
+    "saveConfirm": "Save",
+    "cancel": "Cancel",
+    "saved": "Saved to regular orders",
+    "name": "Name",
+    "weekday": "Which day do you repeat it",
+    "every": "Every {day}",
+    "dueToday": "Today",
+    "putInCart": "Put in the cart",
+    "delete": "Delete",
+    "deleteConfirm": "Yes, delete",
+    "viewAll": "All regular orders",
+    "dueTitle": "Today is a regular order day",
+    "days": {
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday",
+      "7": "Sunday"
+    },
+    "errors": {
+      "limit_reached": "You can't have more than 10 regular orders. Delete one you don't need.",
+      "empty": "There's nothing to save in this order.",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "Could not be completed. Try again."
+    }
+  },
+  "pricing": {
+    "title": "Prices",
+    "intro": "A list decides which products a customer sees and at what price: only the products ticked in their list are visible. If you don't set a price, the base price applies.",
+    "newPlaceholder": "New list name, e.g.: Restaurants",
+    "create": "Create list",
+    "emptyTitle": "You don't have any price lists yet",
+    "emptyBody": "Until a customer is assigned a list, they can't see any products in your catalog. Create a list, tick the products and assign it to a customer.",
+    "default": "Default",
+    "customers": "{count, plural, one {# customer} other {# customers}}",
+    "overrides": "{count, plural, one {# product} other {# products}}",
+    "detail": {
+      "rename": "Rename",
+      "makeDefault": "Make default",
+      "defaultHint": "It will be chosen automatically for a new customer.",
+      "unsetDefault": "Remove default",
+      "delete": "Delete list",
+      "deleteConfirm": "Yes, delete",
+      "deleteHint": "{count, plural, one {# customer} other {# customers}} will no longer see any products until you assign another list.",
+      "copy": "Copy list",
+      "copyName": "New list name",
+      "category": "Category",
+      "tickAll": "Tick all",
+      "untickAll": "Untick all",
+      "columns": {
+        "product": "Product",
+        "base": "Base",
+        "price": "Price in this list",
+        "available": "Available"
+      },
+      "placeholder": "Base",
+      "saveChanges": "Save changes",
+      "saved": "Changes saved",
+      "noProducts": "You don't have any products yet.",
+      "bulkTitle": "Discount on the ticked products",
+      "bulkHint": "The price of the products ticked in the list becomes the base price minus the percentage you enter. Existing prices are replaced.",
+      "bulkPercent": "Discount, %",
+      "bulkPreview": "Preview",
+      "bulkApply": "Apply to {count, plural, one {# product} other {# products}}",
+      "bulkApplied": "Prices updated: {count}",
+      "bulkSample": "Examples",
+      "importTitle": "Import prices",
+      "importHint": "The file needs a code (SKU) column and a price column. The products listed in the file are ticked in the list at the price given.",
+      "inactive": "Disabled"
+    },
+    "import": {
+      "summary": "To update: {set} · with errors: {error}",
+      "done": "Updated: {updated} · skipped: {skipped}",
+      "rowErrors": {
+        "unknown_sku": "This code isn't in the catalog",
+        "duplicate_sku_in_file": "The code appears twice in the file"
+      }
+    },
+    "errors": {
+      "name_taken": "You already have a list with this name.",
+      "suspended": "Your account is suspended - changes aren't possible.",
+      "invalid_discount": "Enter a percentage from 0 to 100.",
+      "unknown_products": "Some products could not be found. Refresh the page.",
+      "required": "Enter a name.",
+      "too_long": "The name is too long.",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "Could not be completed. Try again."
+    }
+  },
+  "invite": {
+    "title": "Invitation to Gusto",
+    "heading": "{supplier} invites you",
+    "body": "Once connected, you'll see {supplier}'s catalog with the prices set for you and can send orders.",
+    "signIn": "Sign in and accept",
+    "signInHint": "Only a business approved by Gusto can sign in. If your business hasn't been approved yet, contact us.",
+    "acceptAs": "Accept on behalf of {business}",
+    "accept": "Accept the invitation",
+    "newBuyerTitle": "A few details about your business",
+    "newBuyerSubmit": "Connect",
+    "supplierAccount": "This invitation is for buyers. You're signed in with a supplier account - sign out and sign in with the account you buy with.",
+    "unavailableTitle": "The invitation is no longer valid",
+    "unavailableBody": "The link may have expired, been revoked or already been used. Ask the supplier for a new link.",
+    "alreadyConnected": "You are already connected to this supplier.",
+    "toSupplier": "To the supplier's catalog",
+    "home": "To the home page",
+    "errors": {
+      "unavailable": "The invitation is no longer valid. Ask the supplier for a new link.",
+      "already_connected": "You are already connected to this supplier.",
+      "not_a_buyer": "This invitation is for buyers.",
+      "already_onboarded": "Your business is already registered.",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "Could not be completed. Try again.",
+      "rate_limited": "Too many attempts. Try again in a while.",
+      "wrong_role": "This account is registered as a supplier and can't accept a buyer's invitation.",
+      "legal_id_taken": "This legal ID is already registered. Please contact us."
+    }
+  },
+  "orderStatus": {
+    "pending": "New",
+    "confirmed": "Confirmed",
+    "delivered": "Delivered",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
+  },
+  "cart": {
+    "title": "Cart",
+    "add": "Add",
+    "increase": "Increase quantity",
+    "decrease": "Decrease quantity",
+    "remove": "Remove",
+    "emptyTitle": "The cart is empty",
+    "emptyBody": "Add products from a supplier's catalog.",
+    "toSuppliers": "To suppliers",
+    "separateNote": "Each supplier's order is placed separately.",
+    "items": "{count, plural, one {# product} other {# products}}",
+    "checkout": "Check out",
+    "continue": "Back to the catalog",
+    "shortfall": "{amount} short of the minimum order",
+    "subtotal": "Total excluding VAT",
+    "vat": "VAT",
+    "total": "Total",
+    "problemUnavailable": "No longer available - remove it from the cart",
+    "problemQuantity": "The quantity no longer fits the minimum or step - correct it",
+    "bar": "{count, plural, one {# product} other {# products}} in the cart · {total}",
+    "reordered": "The products were added to the cart at current prices.",
+    "skipped": "Could not be added (no longer available): {names}",
+    "errors": {
+      "product_unavailable": "The product is no longer available.",
+      "invalid_quantity": "The quantity doesn't fit the minimum or step.",
+      "unknown": "Could not be changed. Try again.",
+      "rate_limited": "Too many attempts. Try again in a while."
+    }
+  },
+  "checkout": {
+    "title": "Check out",
+    "deliveryDate": "Wanted delivery day (optional)",
+    "deliveryDateHint": "The supplier will confirm or change the day when confirming.",
+    "review": "Order",
+    "editCart": "Edit cart",
+    "address": "Delivery address",
+    "newAddress": "New address",
+    "city": "City",
+    "addressLine": "Address",
+    "instructions": "Instructions",
+    "note": "Note for the supplier",
+    "noteHint": "Optional. E.g.: delivery before 11:00.",
+    "submit": "Send order",
+    "submitting": "Sending…",
+    "paymentNote": "Gusto doesn't process payment - you settle up as agreed with the supplier.",
+    "changedTitle": "There are changes in the cart",
+    "changedBody": "The order was not sent. Look through the changes and try again.",
+    "reviewAgain": "Refresh and review",
+    "change": {
+      "price_changed": "{name}: the price changed ({before} → {after})",
+      "unavailable": "{name}: no longer available",
+      "quantity_invalid": "{name}: the quantity no longer fits the minimum or step",
+      "quantity_changed": "{name}: the quantity changed",
+      "removed": "A product was removed from the cart",
+      "added": "{name}: added to the cart"
+    },
+    "errors": {
+      "empty_cart": "The cart is empty.",
+      "below_minimum": "The order is below the minimum amount.",
+      "address_required": "Choose or enter an address.",
+      "invalid_delivery_date": "The delivery date must be today or within the next 90 days.",
+      "supplier_unavailable": "Ordering from this supplier isn't possible right now.",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "The order could not be sent. Try again.",
+      "rate_limited": "Too many attempts. Try again in a while.",
+      "buyer_suspended": "Your account is suspended. Contact Gusto support.",
+      "buyer_not_verified": "Your business hasn't been approved yet. You can order once it is."
+    }
+  },
+  "orders": {
+    "title": "Orders",
+    "number": "GST-{number}",
+    "emptyTitle": "No orders yet",
+    "emptyBuyer": "An order will appear here once you send it to a supplier.",
+    "emptySupplier": "When customers send you an order, it will appear here.",
+    "emptyTab": "No orders in this tab.",
+    "tabs": {
+      "new": "New",
+      "confirmed": "Confirmed",
+      "done": "Completed"
+    },
+    "columns": {
+      "order": "Order",
+      "customer": "Customer",
+      "supplier": "Supplier",
+      "date": "Date",
+      "items": "Items",
+      "total": "Total",
+      "status": "Status"
+    },
+    "placed": "Order sent",
+    "placedBody": "{supplier} will receive the order in Gusto. The status will update here.",
+    "recent": "Recent orders",
+    "orderAgain": "Order again",
+    "viewAll": "All orders",
+    "detail": {
+      "buyer": "Customer",
+      "supplier": "Supplier",
+      "delivery": "Delivery",
+      "note": "Note",
+      "placedAt": "Sent {date}",
+      "deliveryDay": "Delivery day",
+      "deliveryAgreed": "Agreed: {date}",
+      "deliveryRequested": "Requested: {date}",
+      "lines": "Products",
+      "product": "Product",
+      "qty": "Quantity",
+      "price": "Price",
+      "lineTotal": "Total",
+      "ordered": "Ordered {qty}",
+      "confirmedQty": "Confirmed {qty}",
+      "unavailableLine": "Out of stock",
+      "history": "History",
+      "byBuyer": "Customer",
+      "bySupplier": "Supplier",
+      "print": "Print",
+      "pricesNote": "Prices are fixed at the moment of the order."
+    },
+    "pick": {
+      "link": "Pick list",
+      "back": "Orders",
+      "title": "Pick list",
+      "day": "Delivery day",
+      "show": "Show",
+      "noDayLink": "Confirmed without a day",
+      "noDay": "Confirmed orders without a delivery day",
+      "print": "Print",
+      "emptyTitle": "No confirmed orders for this day",
+      "emptyBody": "The list includes confirmed orders for which this delivery day was agreed.",
+      "summary": "Orders: {orders}",
+      "otherCategory": "Other",
+      "inOrders": "in {count, plural, one {# order} other {# orders}}",
+      "stops": "Addresses"
+    },
+    "actions": {
+      "confirm": "Confirm",
+      "confirmTitle": "Confirm",
+      "confirmHint": "Change the quantity if needed. 0 - out of stock.",
+      "confirmQty": "Confirmed quantity",
+      "noteOptional": "Note for the customer (optional)",
+      "deliveryDate": "Delivery day",
+      "deliveryDateRequested": "The day requested by the customer is filled in. Change it if needed.",
+      "deliveryDateNone": "The customer didn't request a day. You can set one.",
+      "reject": "Reject",
+      "rejectReason": "Reason for rejecting",
+      "deliver": "Mark as delivered",
+      "supplierCancel": "Cancel",
+      "cancelReason": "Reason for cancelling",
+      "buyerCancel": "Cancel the order",
+      "buyerCancelConfirm": "Yes, cancel it",
+      "back": "Back",
+      "submitConfirm": "Confirm"
+    },
+    "errors": {
+      "stale_status": "The order's status has already changed. Refresh the page.",
+      "reason_required": "Enter a reason (at least 3 characters).",
+      "nothing_confirmed": "Confirm at least one item, or reject the order.",
+      "invalid_lines": "Check the quantities.",
+      "invalid_delivery_date": "The delivery date must be today or within the next 90 days.",
+      "suspended": "Your account is suspended.",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "Could not be completed. Try again."
+    },
+    "whatsapp": {
+      "sendToSupplier": "Send to the supplier on WhatsApp",
+      "tellBuyer": "Message the buyer on WhatsApp",
+      "hint": "WhatsApp opens with a message ready. Sending is up to you - Gusto doesn't record whether it was sent.",
+      "sendNow": "Send the order on WhatsApp",
+      "sendNowHint": "WhatsApp opens with the order written out: items, total, address and link. All that's left is to press send. Gusto doesn't record whether it was sent."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "You have no notifications yet.",
+    "bell": "Notifications",
+    "bellUnread": "Notifications, unread: {count}",
+    "markAllRead": "Mark all as read",
+    "unread": "Unread",
+    "event": {
+      "order_submitted": "New order {number}",
+      "order_confirmed": "Order {number} was confirmed",
+      "order_rejected": "Order {number} was rejected",
+      "order_cancelled": "Order {number} was cancelled",
+      "order_delivered": "Order {number} was delivered"
+    },
+    "counterparty": {
+      "buyer": "Buyer: {name}",
+      "supplier": "Supplier: {name}"
+    },
+    "preferences": {
+      "title": "Email notifications",
+      "hint": "Notifications always show in Gusto. Choose what you also want by email.",
+      "newOrders": "New orders",
+      "orderUpdates": "Order status changes",
+      "save": "Save",
+      "saved": "Saved"
+    },
+    "email": {
+      "intro": {
+        "order_submitted": "You have a new order.",
+        "order_confirmed": "The supplier confirmed your order.",
+        "order_rejected": "The supplier rejected your order.",
+        "order_cancelled": "The order was cancelled.",
+        "order_delivered": "The order was marked as delivered."
+      },
+      "order": "Order: {number}",
+      "items": "Items: {count}",
+      "total": "Total: {total}",
+      "open": "View the order: {link}",
+      "footer": "This message was sent to you by Gusto. You can switch off email notifications on the notifications page.",
+      "openLabel": "View the order"
+    },
+    "regular": {
+      "subject": "Today is a regular order day ({count})",
+      "intro": "Today is the day for your regular orders:",
+      "open": "To put the products in your cart, open: {link}",
+      "openLabel": "Regular orders"
+    },
+    "whatsapp": {
+      "toBuyerConfirmed": "Hello! Your order {number} is confirmed. Total: {total}. {link}",
+      "toBuyerConfirmedWithDate": "Hello! Your order {number} is confirmed, delivery: {date}. Total: {total}. {link}",
+      "toBuyerDelivered": "Hello! Your order {number} has been delivered. Thank you! {link}",
+      "toBuyerRejected": "Hello! Unfortunately we can't fulfill order {number}. Details: {link}",
+      "order": {
+        "header": "Hello! I've sent you order {number} on Gusto.\nBuyer: {buyer}",
+        "line": "• {name} - {qty}",
+        "more": "... and {count} more items",
+        "total": "Total: {total}",
+        "address": "Delivery address: {address}",
+        "day": "Wanted delivery day: {date}",
+        "note": "Note: {note}",
+        "link": "Details and confirmation: {link}"
+      }
+    }
+  },
+  "adminAlerts": {
+    "supplierPendingSubject": "A new supplier is waiting for approval",
+    "supplierPendingBody": "A supplier has finished registering and is waiting for your approval: {name}.",
+    "supplierPendingLink": "Suppliers to review: {link}",
+    "buyerPendingSubject": "A new buyer is waiting for approval",
+    "buyerPendingBody": "A buyer has filled in the registration form and is waiting for your check: {name}.",
+    "buyerPendingLink": "Buyers to review: {link}",
+    "requestPendingSubject": "A supplier is asking to join",
+    "requestPendingBody": "A request to join arrived through the public form: {name}.",
+    "requestPendingLink": "Requests: {link}"
+  },
+  "password": {
+    "titleFirst": "Create your password",
+    "introFirst": "Only you will know this password. From now on you'll sign in with your email and this password.",
+    "titleChange": "Change password",
+    "introChange": "Choose a new password.",
+    "new": "New password",
+    "confirm": "Repeat the password",
+    "hint": "At least {min} characters.",
+    "submitFirst": "Save password",
+    "submitChange": "Change password",
+    "saving": "Saving…",
+    "errors": {
+      "too_short": "The password is too short.",
+      "too_long": "The password is too long.",
+      "mismatch": "The passwords don't match.",
+      "same_password": "The new password must be different from the old one.",
+      "weak": "This password is too easy to guess. Choose a stronger one.",
+      "unknown": "Could not save. Try again."
+    }
+  },
+  "pending": {
+    "title": "Your business is being checked",
+    "body": "Thank you, {name}! We are checking your legal ID and will contact you by phone.",
+    "next": "Once approved, you can view suppliers' catalogs and send orders. You can come back to this page at any time."
+  },
+  "supplierRequest": {
+    "signIn": "Sign in",
+    "title": "Sell more easily - to your own buyers",
+    "intro": "Gusto helps suppliers receive orders from restaurants, cafés and hotels in one place - instead of WhatsApp and phone calls.",
+    "point1": "Free: no commission, no payments.",
+    "point2": "Your customers repeat an order at your prices in a few taps.",
+    "point3": "Prices stay private: each customer sees only their own prices.",
+    "point4": "Import your catalog from Excel, with a separate price list for each customer.",
+    "formTitle": "Request to join",
+    "formIntro": "Fill in the short form. We'll check the company, contact you, and after approval you'll receive a sign-in link by email. Sending the form doesn't create an account yet.",
+    "businessName": "Company name",
+    "legalId": "Legal ID",
+    "legalIdHint": "9 digits (company) or 11 digits (sole trader).",
+    "city": "City",
+    "cityPlaceholder": "Tbilisi",
+    "contactName": "Contact person",
+    "phone": "Phone",
+    "phonePlaceholder": "5XX XX XX XX",
+    "email": "Company email",
+    "emailHint": "You'll sign in to Gusto with this address. A company's own email is best.",
+    "note": "What do you sell? (optional)",
+    "submit": "Send request",
+    "sending": "Sending…",
+    "sentTitle": "Request received",
+    "sentBody": "Thank you! We'll check the details and get in touch on the number you gave.",
+    "errors": {
+      "invalid": "Check the highlighted fields.",
+      "rate_limited": "Too many attempts. Try again later.",
+      "unknown": "Could not send. Try again."
+    },
+    "privacyNote": "By sending the request you agree to the <privacy>Privacy Policy</privacy>. We'll use the data only to contact you.",
+    "invitedTitle": "{buyer} invites you to Gusto",
+    "invitedBody": "{buyer} buys from you and invites you to Gusto. Fill in the short form: we'll check the business, and after approval you can add {buyer} as your customer.",
+    "invitedUnavailable": "This invitation link no longer works, but you can still send a request to join.",
+    "invitedIntro": "Gusto is a comfortable space for a supplier: it keeps your catalog and each customer's prices, and orders arrive neatly in one list.",
+    "invitedPoint1": "Catalog and prices in one place: each customer sees only their own prices.",
+    "invitedPoint2": "Orders arrive neatly organized, instead of forwarded WhatsApp messages.",
+    "invitedPoint3": "Free: no commission, no payments. You decide who sees what."
+  },
+  "legal": {
+    "common": {
+      "home": "Home",
+      "signIn": "Sign in",
+      "updated": "Last updated: {date}",
+      "toc": "Contents",
+      "navAria": "Legal information",
+      "termsLink": "Terms of service",
+      "privacyLink": "Privacy policy",
+      "operatorTitle": "Organization and contact",
+      "operatorName": "Name",
+      "operatorId": "Legal ID",
+      "operatorAddress": "Address",
+      "operatorEmail": "Email"
+    },
+    "terms": {
+      "metaTitle": "Terms of service - Gusto",
+      "metaDescription": "The terms of using Gusto for suppliers and buyers.",
+      "title": "Terms of service",
+      "intro": "These terms govern the use of Gusto. By using the service you agree to them. If you don't agree, please don't use the service.",
+      "sections": [
+        {
+          "title": "What Gusto is",
+          "paragraphs": [
+            "Gusto is an online platform where suppliers (distributors, importers, producers) put their catalog and their existing customers, and customers (restaurants, cafés, hotels) send orders to their suppliers.",
+            "An order sent on Gusto is a purchase request. The sale takes place only between the buyer and the supplier, the way they usually do it. Gusto is not a party to that transaction.",
+            "Gusto does not take payments, does not charge commission, does not carry out deliveries and does not control prices, availability or the quality of goods."
+          ]
+        },
+        {
+          "title": "The pilot stage",
+          "paragraphs": [
+            "Gusto is currently in a pilot stage and is free. Features may change, be paused or be discontinued.",
+            "We offer the service as it is, without a guarantee of uninterrupted operation."
+          ]
+        },
+        {
+          "title": "Who can use it",
+          "paragraphs": [
+            "Only a business that Gusto has approved can sign in to Gusto. The service is meant for businesses, not for personal use.",
+            "When you create an organization you must give the correct name and legal ID (9 digits for a company, 11 digits for a sole trader). An administrator may check this data.",
+            "Until an organization is approved, access may be limited. For example, a buyer won't be able to send an order."
+          ]
+        },
+        {
+          "title": "Account and security",
+          "paragraphs": [
+            "Your email and password are your organization's access, and protecting them is your responsibility. The password must be at least 10 characters long.",
+            "Don't pass your account on to anyone else. If you suspect a stranger is using it, contact us immediately."
+          ]
+        },
+        {
+          "title": "For suppliers",
+          "paragraphs": [
+            "If you are a supplier on Gusto:"
+          ],
+          "items": [
+            "You are responsible for the accuracy of your catalog, prices, VAT and availability.",
+            "Prices and price lists are seen only by the buyers you invited and whose connection is active.",
+            "You upload texts and photos only if you have the right to use them.",
+            "You can confirm an order (changing quantities if needed) or reject it, giving a reason when rejecting."
+          ]
+        },
+        {
+          "title": "For buyers",
+          "paragraphs": [
+            "If you are a buyer on Gusto:"
+          ],
+          "items": [
+            "An order is a request until the supplier confirms it. The supplier can change quantities or decline the order.",
+            "You can cancel an order until the supplier confirms it.",
+            "When you send an order we re-check the prices. If anything changed, we show you the new data and ask you to confirm again.",
+            "A supplier's prices and terms are confidential. Don't pass them to third parties or publish them without the supplier's consent."
+          ]
+        },
+        {
+          "title": "Notifications and WhatsApp",
+          "paragraphs": [
+            "Gusto sends you notifications about orders in the app and by email. You can switch off email notifications in the notification settings.",
+            "The \"Send on WhatsApp\" button only opens WhatsApp with a ready text. You send the text yourself. Gusto sends nothing on WhatsApp and does not keep any information about whether a message was sent."
+          ]
+        },
+        {
+          "title": "Prohibited use",
+          "paragraphs": [
+            "When using the service you may not:"
+          ],
+          "items": [
+            "try to access someone else's account or another organization's data;",
+            "scrape data from the service automatically or overload it;",
+            "post false or unlawful information;",
+            "get around security or rate limits."
+          ]
+        },
+        {
+          "title": "Suspension and closing",
+          "paragraphs": [
+            "An administrator may suspend an organization if these terms are breached or there is a security risk. A suspended buyer can't send new orders, and a suspended supplier works in view-only mode.",
+            "You can ask to close your account using the contact given below."
+          ]
+        },
+        {
+          "title": "Limitation of liability",
+          "paragraphs": [
+            "To the extent permitted by law, Gusto is not liable for the transaction between a buyer and a supplier, for prices, quality, delivery, payment, or disputes between them. Nor for losses caused by the service being temporarily unavailable.",
+            "This does not limit any liability that the law does not allow to be limited."
+          ]
+        },
+        {
+          "title": "Changes",
+          "paragraphs": [
+            "We may update these terms. We'll tell you about a significant change in the service or by email. Using the service after an update means you agree to the new terms."
+          ]
+        },
+        {
+          "title": "Governing law",
+          "paragraphs": [
+            "These terms are governed by the law of Georgia. We'll first try to settle any dispute by negotiation; otherwise it will be heard by the competent court of Georgia."
+          ]
+        }
+      ]
+    },
+    "privacy": {
+      "metaTitle": "Privacy policy - Gusto",
+      "metaDescription": "How we process and protect personal data in Gusto.",
+      "title": "Privacy policy",
+      "intro": "Here we explain what data we collect, why, who we share it with and what rights you have.",
+      "sections": [
+        {
+          "title": "Who processes your data",
+          "paragraphs": [
+            "Personal data is processed by the organization named at the end of this page (the controller). In this policy we call it \"we\".",
+            "The policy covers the use of Gusto: the site, sign-in and the ordering service."
+          ]
+        },
+        {
+          "title": "What data we collect",
+          "paragraphs": [
+            "We collect only what we need for the service to work:"
+          ],
+          "items": [
+            "Account: email, name, phone and your role in the organization.",
+            "Organization: name, legal ID, city, contact person, phone and delivery addresses.",
+            "Orders: contents, quantities, prices, statuses, comments and the history of changes.",
+            "Catalog (for suppliers): products, prices, price lists and images.",
+            "Notifications and your notification settings.",
+            "Invitations: when a buyer invites a supplier, we keep the supplier's name and the phone or email given, so the link can be sent and the invitation's status shown. This data is visible only to the buyer who sent the invitation. A supplier who writes to us through the link sees the name of the buyer who invited them.",
+            "When you sign in with Google, Google gives us your email and name. We don't receive your Google password.",
+            "Technical data: we use the IP address only to protect against abuse (limiting the number of requests) and keep it in encrypted (hashed) form, for a short time.",
+            "Error reports: when an error happens in the service, we send the error description, the page address and the type of browser or device to an error monitoring service. We remove emails, cookies, request parameters, identification tokens and entered data from the reports.",
+            "Administrators' security-related actions (for example, approving an organization) are kept in a log."
+          ]
+        },
+        {
+          "title": "What we use it for",
+          "items": [
+            "To create your account and provide the service: orders, catalog, notifications.",
+            "To verify organizations and prevent fraud.",
+            "For security and to protect against abuse.",
+            "To contact you and answer your questions.",
+            "To meet our legal obligations."
+          ],
+          "closing": [
+            "We don't sell data and don't use it for advertising."
+          ]
+        },
+        {
+          "title": "Who we share it with",
+          "items": [
+            "The buyer and the supplier you deal with: the organization's name, the contact person and the order data. One supplier can't see another's customers or prices.",
+            "Gusto administrators: contact and status information, and order lookup. Every order lookup is recorded in the log. Administrators' support tools don't show price lists or the catalog.",
+            "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry), and Google if you sign in that way.",
+            "When you remove the background from a product photo, your browser downloads a helper model file once from Hugging Face, which therefore sees your IP address. The photo itself is processed on your device and sent nowhere.",
+            "Public authorities, only in cases required by law."
+          ],
+          "closing": [
+            "Some providers may also process data outside Georgia. In that case we take the requirements of the law into account."
+          ]
+        },
+        {
+          "title": "How long we keep it",
+          "items": [
+            "We keep your account and organization while you use the service. We deactivate organizations and products rather than delete them, so that order history isn't lost.",
+            "Orders and their history are kept as a business record for both sides.",
+            "We keep encrypted backups for a limited time, about 14 days.",
+            "Technical records for protection against abuse are deleted after about a day."
+          ]
+        },
+        {
+          "title": "Your rights",
+          "paragraphs": [
+            "Under the law of Georgia you have the right to know what data we process, to receive a copy of it, to ask for it to be corrected, blocked or deleted, and to object to its processing.",
+            "To make a request, contact us at the address given at the end of this page. We'll reply within the time set by law.",
+            "Deletion may be limited if we need the data to meet a legal obligation or to protect another party's rights, for example the order history.",
+            "If you believe your rights have been violated, you can apply to the Personal Data Protection Service or to a court."
+          ]
+        },
+        {
+          "title": "Cookies",
+          "paragraphs": [
+            "We use only essential cookies: they keep your session after you sign in (they can't be read by browser scripts), remember which side of your business you are working as (buyer or supplier), and remember the language you chose.",
+            "We don't use advertising or analytics cookies."
+          ]
+        },
+        {
+          "title": "Security",
+          "paragraphs": [
+            "Data is transmitted over an encrypted connection. Organizations' data is kept apart: every request on the server is checked against your organization's rights. Backups are encrypted.",
+            "No system is completely secure. In case of an incident we'll meet the obligations the law sets."
+          ]
+        },
+        {
+          "title": "Changes",
+          "paragraphs": [
+            "We may update this policy. We'll publish the updated version on this same page and change the date of the last update. We'll tell you about a significant change in the service or by email."
+          ]
+        }
+      ]
+    }
+  },
+  "supplierInvite": {
+    "title": "Invite a supplier",
+    "intro": "If your supplier isn't on Gusto yet, invite them. They send us a request to join, we check the business, and once approved the supplier can add you as a customer. The supplier opens the catalog and prices to you themselves.",
+    "name": "Supplier's name",
+    "phone": "Phone (WhatsApp)",
+    "email": "Email",
+    "contactHint": "Give at least one, so you can send them the link.",
+    "submit": "Create link",
+    "submitting": "Creating…",
+    "panel": {
+      "title": "The invitation link is ready",
+      "once": "The link is shown only now. If you lose it, create a new one.",
+      "expires": "Valid for 30 days.",
+      "copy": "Copy link",
+      "copied": "Copied",
+      "whatsapp": "Send on WhatsApp",
+      "whatsappNote": "WhatsApp opens with the text ready - you have to confirm sending.",
+      "emailNotSent": "Sending by email isn't switched on yet. Send the link on WhatsApp or copy it."
+    },
+    "message": "Hello! {buyer} invites you to Gusto. Here suppliers receive orders from customers in one place, at prices they set themselves. Send us a request to join with this link: {link}",
+    "emailSubject": "{buyer} invites you to Gusto",
+    "list": {
+      "title": "Your invitations",
+      "empty": "You haven't sent any invitations yet.",
+      "revoke": "Revoke the link",
+      "state": {
+        "open": "Link sent",
+        "expired": "The link has expired",
+        "revoked": "Revoked",
+        "joinedNew": "The supplier sent us a request, it's under review",
+        "joinedApproved": "The supplier was approved and is waiting for you to be added",
+        "joinedRejected": "The supplier's request was rejected",
+        "connected": "Connected"
+      }
+    },
+    "errors": {
+      "not_active": "You can invite suppliers once your business is approved.",
+      "too_many_open": "You have too many open invitations. Revoke the extra ones.",
+      "stale_status": "The status has already changed. Refresh the page.",
+      "rate_limited": "Too many attempts. Try again in a while.",
+      "invalid": "Check the highlighted fields.",
+      "unknown": "Could not be completed. Try again."
+    },
+    "orderFooter": "Receive your next order on Gusto: your catalog and each customer's prices in one place, and orders neatly organized. It's free. Join: {link}",
+    "personal": {
+      "title": "Your invitation link",
+      "body": "Write your order on WhatsApp as you always do and add this text at the end. One link works for every supplier.",
+      "share": "Share",
+      "copyText": "Copy text",
+      "copyLink": "Copy link",
+      "copied": "Copied",
+      "regenerate": "Replace link",
+      "regenerateNote": "The old link stops working at once.",
+      "preparing": "Preparing the link…",
+      "error": "The link could not be prepared. Refresh the page."
+    },
+    "namedTitle": "Invite a specific supplier",
+    "namedIntro": "If you want to tie the link to one supplier and know when they join, enter their name and number."
+  },
+  "authContinue": {
+    "title": "Sign in to Gusto",
+    "body": "Press the button to continue. The link is single-use.",
+    "button": "Continue",
+    "invalid": "The link is incomplete. Open the sign-in page and choose \"Set or reset password\".",
+    "toLogin": "Sign-in page"
+  },
+  "addSide": {
+    "title": {
+      "buyer": "Join as a buyer too",
+      "supplier": "Join as a supplier too"
+    },
+    "intro": "Your business details are already filled in. If the ID is the same and your first side is approved, the new side is activated at once. Otherwise you'll wait for approval.",
+    "link": "Go to the page"
+  }
+}

@@ -1,14 +1,21 @@
+import { cookies } from "next/headers";
 import { getRequestConfig } from "next-intl/server";
+import en from "../../messages/en.json";
 import ka from "../../messages/ka.json";
+import { DEFAULT_LOCALE, isLocale, LOCALE_COOKIE, type Locale } from "./locales";
 
-// Georgian only for now. The locale is fixed rather than read from the
-// request, so pages that don't touch the session can still prerender.
-export const DEFAULT_LOCALE = "ka";
+const MESSAGES = { ka, en } satisfies Record<Locale, typeof ka>;
 
-export default getRequestConfig(async () => ({
-  locale: DEFAULT_LOCALE,
-  messages: ka,
-  // Fallback for formatting only. Org-specific dates pass the org's own
-  // timezone explicitly (see CLAUDE.md, "Conventions").
-  timeZone: "Asia/Tbilisi",
-}));
+// The language is the visitor's choice, stored in a cookie. Reading it is request-time work, so
+// everything that translates sits under the root layout's Suspense boundary.
+export default getRequestConfig(async () => {
+  const chosen = (await cookies()).get(LOCALE_COOKIE)?.value;
+  const locale: Locale = isLocale(chosen) ? chosen : DEFAULT_LOCALE;
+  return {
+    locale,
+    messages: MESSAGES[locale],
+    // Fallback for formatting only. Org-specific dates pass the org's own
+    // timezone explicitly (see CLAUDE.md, "Conventions").
+    timeZone: "Asia/Tbilisi",
+  };
+});

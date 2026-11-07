@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getAccessState } from "@/server/auth/guards";
@@ -9,7 +10,10 @@ import { PasswordForm } from "./password-form";
 export default async function PasswordPage() {
   return (
     <main className="mx-auto w-full max-w-md px-4 py-10 sm:py-16">
-      <Logo />
+      <div className="flex items-center justify-between gap-3">
+        <Logo />
+        <LocaleSwitch />
+      </div>
       <Suspense fallback={<Skeleton className="mt-8 h-72 w-full" />}>
         <PasswordGate />
       </Suspense>

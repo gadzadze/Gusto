@@ -1,12 +1,18 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import en from "../../messages/en.json";
 import ka from "../../messages/ka.json";
 import { PASSWORD_MIN } from "@/lib/validation/password";
 import { LEGAL_UPDATED, legalOperator } from "@/lib/legal";
 
 type Section = { title: string; paragraphs?: string[]; items?: string[]; closing?: string[] };
-const documents = { terms: ka.legal.terms, privacy: ka.legal.privacy } as const;
+const documents = {
+  terms: ka.legal.terms,
+  privacy: ka.legal.privacy,
+  "terms (English)": en.legal.terms,
+  "privacy (English)": en.legal.privacy,
+} as const;
 
 function allText(doc: { title: string; intro: string; sections: Section[] }): string {
   return [

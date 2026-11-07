@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { DemoAccounts } from "@/components/demo-accounts";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,7 +43,10 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           ),
         })}
       </p>
-      <ThemeToggle className="mt-5" />
+      <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+        <LocaleSwitch />
+        <ThemeToggle />
+      </div>
       <DemoAccounts />
     </main>
   );

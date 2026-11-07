@@ -1,7 +1,7 @@
 "use client";
 
 import { Minus, Plus, ShoppingCart } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { milliToInput, stepDown, stepUp } from "@/lib/quantity";
@@ -11,7 +11,7 @@ import { setCartQuantityAction } from "@/app/buyer/cart/actions";
 /**
  * Add-to-cart / quantity control. Steps respect the product's minimum and
  * step; going below the minimum removes it. The number shown is plain
- * digits with a decimal comma — no locale formatting on the client.
+ * digits with the language's decimal mark (comma in Georgian, point in English) - no Intl on the client.
  */
 export function QuantityStepper({
   supplierOrgId,
@@ -34,6 +34,7 @@ export function QuantityStepper({
   className?: string;
 }) {
   const t = useTranslations("cart");
+  const locale = useLocale();
   const [qty, setQty] = useState(qtyMilli);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -83,7 +84,7 @@ export function QuantityStepper({
             <Minus />
           </Button>
           <span className="min-w-16 px-1 text-center text-sm tabular-nums" aria-live="polite">
-            {milliToInput(qty, ",")} {unit}
+            {milliToInput(qty, locale === "en" ? "." : ",")} {unit}
           </span>
           <Button
             type="button"

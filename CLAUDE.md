@@ -15,7 +15,7 @@ milestone is a self-contained prompt. Do them in order, one per session.
 ## The MVP, and why it is this small
 
 Pilot: **Tbilisi, one product category, 3–5 distributors and their existing
-customers.** Georgian UI only. Web app, mobile-first. The pilot succeeds if,
+customers.** Georgian UI by default, with English as a second language (landing and app, 2026-11-07). Web app, mobile-first. The pilot succeeds if,
 after 6 weeks, at least one supplier receives ≥30% of their orders through
 Gusto and buyers reorder weekly without being reminded. Every scope decision
 serves that test.
@@ -52,7 +52,7 @@ prices openly, and an empty marketplace convinces nobody.
 - Automated WhatsApp Business API messages. They need Meta approval, paid
   templates and recipient opt-in; that comes after the pilot.
 - Order statuses beyond the five below, product substitutions, the
-  "changes requested" flow, analytics charts, multi-language UI, native apps.
+  "changes requested" flow, analytics charts, a third language, native apps.
   (Regular orders, decided 2026-11-04, are the one kind of saved list that
   exists: a reminder plus a one-tap cart fill. They never create an order by
   themselves.)
@@ -86,7 +86,7 @@ prices openly, and an empty marketplace convinces nobody.
 | Error monitoring | Sentry (`@sentry/nextjs`): errors only, scrubbed, off without a DSN |
 | Background work | Notification outbox table, drained by a cron-triggered route |
 | Validation | Zod at every server boundary |
-| i18n | `next-intl`, messages in `messages/ka.json` |
+| i18n | `next-intl`, messages in `messages/ka.json` (default) and `messages/en.json`; the language is the `gusto-locale` cookie |
 | Tests | Vitest (unit + integration), Playwright (e2e) |
 | Hosting | Vercel (region `dub1`, Dublin: next to the database), deployed from `main` by Vercel's Git integration |
 
@@ -336,9 +336,27 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
 
 ## Language, search and typography
 
-- **All user-facing text** goes through `next-intl`. Only `ka` ships, but no
-  Georgian string literals appear in components, so `en` can be added later.
-- **Georgian copy:** short and natural, like a well-made local app, not
+- **All user-facing text** goes through `next-intl`, in two languages (`ka` default, `en`; decided
+  2026-11-07). No string literals of either language appear in components. The language is a cookie
+  (`gusto-locale`, `i18n/locales.ts`), not a URL prefix, so every address is the same in both: the
+  `LocaleSwitch` (landing nav, sign-in, public pages, the app sidebar and the account/password page)
+  calls `setLocaleAction`; `i18n/request.ts` reads the cookie (anything but `en` is Georgian).
+  - **`messages/en.json` mirrors `messages/ka.json` exactly** (same keys, same `{placeholders}` and
+    rich-text tags; English may use ICU `plural` where Georgian has no plural). `tests/unit/messages-parity.test.ts`
+    fails on a missing key, a placeholder mismatch, an empty string, Georgian letters or a dash in English.
+    Add every new string to both files.
+  - **English copy:** plain, short, no jargon, sentence case ("Request to join", "Order again"); amounts
+    and quantities come from `getFormats()` (`server/i18n/formats.ts`: "₾12.50" and "2.5" in English,
+    "12,50 ₾" and "2,5" in Georgian), never formatted by hand.
+  - **Text that leaves for someone else is always Georgian**, whatever language the sender uses, because
+    we don't know the recipient's: WhatsApp messages (order text, invitations, sign-in link hand-over),
+    invitation and welcome emails (`getTranslations({ locale: "ka", ... })`), order and reminder emails
+    (`lib/notifications/templates.ts`), admin alerts, the Supabase auth email. A per-user language for
+    emails would need a `profiles.locale` column: not built.
+  - The legal pages and the landing text follow the cookie too. `global-error.tsx` (the last-resort
+    error screen) stays Georgian. `<html lang>` is set by a tiny script from the cookie (the server
+    renders `ka` statically).
+- **Georgian copy** (English follows the rules under "English copy" above): short and natural, like a well-made local app, not
   bureaucratic or machine-translated.
   - Address the user with the polite "თქვენ" form ("შეამოწმეთ ელფოსტა").
   - Buttons use short verbal nouns ("შეკვეთის გაგზავნა", "გაგრძელება"),
@@ -475,7 +493,10 @@ Scripts, drizzle-kit and tests read `.env.local` then `.env`
 Read `node_modules/next/dist/docs/` before using an API you haven't checked.
 What this codebase relies on:
 
-- **Cache Components is on** (`cacheComponents`, `partialPrefetching`).
+- **Cache Components is on** (`cacheComponents`, `partialPrefetching`). Because the language is a
+  cookie read at request time, the root layout wraps everything in one `<Suspense fallback={null}>`:
+  every route renders per request (no static shell); the page-level Suspense boundaries below still
+  stream in. Landing and legal pages are therefore not prerendered.
   - Reading cookies, headers or `searchParams` outside a `<Suspense>`
     boundary is a build error.
   - Pages render a static header and put the session-dependent part in an
@@ -933,7 +954,7 @@ supplier request form.
 - **The operator block is not in the repo.** `lib/legal.ts` reads
   `LEGAL_ENTITY_*` at build time and leaves the block out when
   `LEGAL_ENTITY_NAME` is unset. Never hardcode a company name or address.
-- **Claims must stay true.** The policy says: only essential cookies, no
+- **Claims must stay true.** The policy says: only essential cookies (session, the buyer/supplier side chosen with `gusto-org`, the language `gusto-locale`), no
   analytics or ads, IP addresses kept hashed and pruned within a day, backups
   kept about 14 days, admins never see catalogs or price lists, and lists the
   processors (Supabase, Vercel, Resend, Google, Sentry) and the one-off model download from Hugging Face. When you add analytics, error

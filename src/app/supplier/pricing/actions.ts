@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { priceImportMappingSchema, rawSheetSchema } from "@/lib/catalog/import";
-import { formatMoney, parseMoneyInput } from "@/lib/money";
+import { parseMoneyInput } from "@/lib/money";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireSupplier } from "@/server/auth/guards";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
@@ -29,6 +29,7 @@ import {
   type BulkPreview,
   type PriceListError,
 } from "@/server/domain/pricing/price-lists";
+import { getFormats } from "@/server/i18n/formats";
 
 type Code = PriceListError | PriceImportError | "required" | "too_long";
 type Err = ActionError<Code>;
@@ -159,6 +160,7 @@ export async function previewBulkAction(
   priceListId: string,
   percent: string,
 ): Promise<{ ok: true; preview: BulkPreviewView; discountBp: number } | Err> {
+  const fmt = await getFormats();
   const ctx = await requireSupplier();
   const discountBp = parseDiscountPercent(percent);
   if (discountBp === null) return { ok: false, error: "invalid_discount" };
@@ -175,8 +177,8 @@ export async function previewBulkAction(
         count: preview.count,
         sample: preview.sample.map((s) => ({
           name: s.name,
-          base: formatMoney(s.basePriceMinor, settings.currency),
-          next: formatMoney(s.newPriceMinor, settings.currency),
+          base: fmt.money(s.basePriceMinor, settings.currency),
+          next: fmt.money(s.newPriceMinor, settings.currency),
         })),
       },
     };

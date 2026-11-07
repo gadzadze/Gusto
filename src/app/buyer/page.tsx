@@ -16,8 +16,8 @@ import { listRegularOrders } from "@/server/domain/orders/regular";
 import { listBuyerOrders, listOpenBuyerOrders } from "@/server/domain/orders/queries";
 import { ReorderButton } from "@/components/orders/order-buttons";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
-import { formatMoney } from "@/lib/money";
 import Link from "next/link";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function BuyerDashboardPage() {
   const t = await getTranslations("buyer");
@@ -32,6 +32,7 @@ export default async function BuyerDashboardPage() {
 }
 
 async function Dashboard() {
+  const fmt = await getFormats();
   const ctx = await requireBuyer();
   const t = await getTranslations("buyer");
   const [suppliers, recent, open, top, regular] = await Promise.all([
@@ -86,7 +87,7 @@ async function Dashboard() {
                   <span className="min-w-0 flex-1">
                     <span className="font-medium tabular-nums">{to("number", { number: o.number })}</span>
                     <span className="block truncate text-sm text-muted-foreground">
-                      {o.supplierName} · {formatMoney(o.totalMinor, o.currency)}
+                      {o.supplierName} · {fmt.money(o.totalMinor, o.currency)}
                     </span>
                   </span>
                   <OrderStatusBadge status={o.status} />
@@ -108,7 +109,7 @@ async function Dashboard() {
                 <Link href={`/buyer/orders/${o.id}`} className="min-w-0 flex-1 hover:underline">
                   <span className="font-medium tabular-nums">{to("number", { number: o.number })}</span>
                   <span className="block truncate text-sm text-muted-foreground">
-                    {o.supplierName} · {formatMoney(o.totalMinor, o.currency)}
+                    {o.supplierName} · {fmt.money(o.totalMinor, o.currency)}
                   </span>
                 </Link>
                 <OrderStatusBadge status={o.status} />
