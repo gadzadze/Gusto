@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { LEGAL_UPDATED, legalOperator } from "@/lib/legal";
@@ -41,9 +42,12 @@ export async function LegalDocument({ doc }: { doc: "terms" | "privacy" }) {
         <Link href="/">
           <Logo />
         </Link>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/start">{t("common.signIn")}</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <LocaleSwitch />
+          <Button asChild variant="outline" size="sm">
+            <Link href="/start">{t("common.signIn")}</Link>
+          </Button>
+        </div>
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 sm:px-6">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import type * as React from "react";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { NotificationBellFallback } from "@/components/notifications/notification-bell";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -67,7 +68,8 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
               {t(`nav.addSide.${addSide}`)}
             </Link>
           ) : null}
-          <div className="px-3 pb-2">
+          <div className="flex flex-wrap items-center gap-2 px-3 pb-2">
+            <LocaleSwitch />
             <ThemeToggle />
           </div>
           <SignOutButton label={t("nav.signOut")} />

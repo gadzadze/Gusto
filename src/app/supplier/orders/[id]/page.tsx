@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { availableActions } from "@/lib/orders/transitions";
 import { addDays, MAX_DELIVERY_DAYS_AHEAD, todayIn } from "@/lib/dates";
-import { milliToInput } from "@/lib/quantity";
 import { requireSupplier } from "@/server/auth/guards";
 import { NotFoundError } from "@/server/domain/errors";
 import { getOrder } from "@/server/domain/orders/queries";
 import { SupplierOrderActions } from "./order-actions";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function SupplierOrderPage(props: PageProps<"/supplier/orders/[id]">) {
   const t = await getTranslations("orders");
@@ -33,6 +33,7 @@ export default async function SupplierOrderPage(props: PageProps<"/supplier/orde
 }
 
 async function Order({ params }: PageProps<"/supplier/orders/[id]">) {
+  const fmt = await getFormats();
   const ctx = await requireSupplier();
   const tu = await getTranslations("units");
   const { id } = await params;
@@ -57,7 +58,7 @@ async function Order({ params }: PageProps<"/supplier/orders/[id]">) {
           lines={detail.items.map((i) => ({
             itemId: i.id,
             name: i.name,
-            orderedQty: milliToInput(i.orderedQtyMilli, ","),
+            orderedQty: fmt.input(i.orderedQtyMilli),
             unit: tu(i.unit),
           }))}
         />

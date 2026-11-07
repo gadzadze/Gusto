@@ -2,18 +2,19 @@
 
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { formatMoney } from "@/lib/money";
 import { fieldErrorsFrom, type ValidationKey } from "@/lib/validation/form-errors";
 import { requireBuyer } from "@/server/auth/guards";
 import { getConnectedSupplier } from "@/server/domain/buyer/catalog";
 import { NotFoundError, StateError } from "@/server/domain/errors";
 import { submitInputSchema, submitOrder, type SubmitError } from "@/server/domain/orders/submit";
+import { getFormats } from "@/server/i18n/formats";
 
 export type SubmitActionResult =
   | { ok: false; error: SubmitError | "invalid" | "unknown"; fieldErrors?: Record<string, ValidationKey> }
   | { ok: false; error: "changed"; changes: string[] };
 
 export async function submitOrderAction(supplierOrgId: string, raw: unknown): Promise<SubmitActionResult> {
+  const fmt = await getFormats();
   const ctx = await requireBuyer();
   const parsed = submitInputSchema.safeParse(raw);
   if (!parsed.success) return { ok: false, error: "invalid", fieldErrors: fieldErrorsFrom(parsed.error) };
@@ -31,8 +32,8 @@ export async function submitOrderAction(supplierOrgId: string, raw: unknown): Pr
         changes: result.changes.map((c) =>
           t(c.kind, {
             name: c.name,
-            before: c.before !== undefined ? formatMoney(c.before, currency) : "",
-            after: c.after !== undefined ? formatMoney(c.after, currency) : "",
+            before: c.before !== undefined ? fmt.money(c.before, currency) : "",
+            after: c.after !== undefined ? fmt.money(c.after, currency) : "",
           }),
         ),
       };

@@ -118,7 +118,8 @@ export async function createAccessLinkAction(id: string): Promise<AccessLinkResu
   if (!z.uuid().safeParse(id).success) return { ok: false, error: "invalid" };
   return runAction<AccessLinkResult, AccessError | "rate_limited">("createAccessLink", async () => {
     const { email, link, phone } = await createAccessLink(ctx, id);
-    const t = await getTranslations("admin.access.link");
+    // Text that goes to someone else (their language is unknown): always Georgian, whatever the page language.
+    const t = await getTranslations({ locale: "ka", namespace: "admin.access.link" });
     const text = t("message", { link });
     const direct = phone ? whatsappLink(phone, text) : null;
     return { ok: true, email, link, whatsappUrl: direct ?? whatsappShareLink(text), hasPhone: direct !== null };

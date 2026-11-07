@@ -6,13 +6,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Notice } from "@/components/ui/notice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireSupplier } from "@/server/auth/guards";
-import { formatMoney } from "@/lib/money";
-import { milliToInput } from "@/lib/quantity";
 import { StatTile } from "@/components/ui/stat-tile";
 import { getSupplierMetrics } from "@/server/domain/metrics/supplier";
 import { countSupplierOrders } from "@/server/domain/orders/queries";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function SupplierDashboardPage() {
   const t = await getTranslations("supplier");
@@ -27,6 +26,7 @@ export default async function SupplierDashboardPage() {
 }
 
 async function Dashboard() {
+  const fmt = await getFormats();
   const ctx = await requireSupplier();
   const t = await getTranslations("supplier");
   const td = await getTranslations("supplier.dashboard");
@@ -62,7 +62,7 @@ async function Dashboard() {
           />
           <StatTile
             label={td("value")}
-            value={formatMoney(metrics.orderValue30dMinor, metrics.currency)}
+            value={fmt.money(metrics.orderValue30dMinor, metrics.currency)}
             hint={td("valueHint")}
           />
           <StatTile label={td("repeat")} value={metrics.repeatBuyers30d} hint={td("repeatHint")} />
@@ -79,7 +79,7 @@ async function Dashboard() {
                         {p.name}
                       </span>
                       <span className="whitespace-nowrap font-medium tabular-nums">
-                        {milliToInput(p.confirmedQtyMilli, ",")} {tu(p.unit)}
+                        {fmt.input(p.confirmedQtyMilli)} {tu(p.unit)}
                       </span>
                     </li>
                   ))}

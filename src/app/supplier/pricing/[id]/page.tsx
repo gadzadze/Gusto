@@ -15,12 +15,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney } from "@/lib/money";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import { NotFoundError } from "@/server/domain/errors";
 import { customersOnPriceList, getPriceList, listPriceListProducts } from "@/server/domain/pricing/price-lists";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function PriceListPage(props: PageProps<"/supplier/pricing/[id]">) {
   const t = await getTranslations("pricing");
@@ -44,6 +44,7 @@ function one(value: string | string[] | undefined): string {
 }
 
 async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/[id]">) {
+  const fmt = await getFormats();
   const ctx = await requireSupplier();
   const t = await getTranslations("pricing");
   const tc = await getTranslations("common");
@@ -111,7 +112,7 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
                 sku: p.sku,
                 unitLabel: tu(p.unit as "kg"),
                 isActive: p.isActive,
-                basePriceLabel: formatMoney(p.basePriceMinor, settings.currency),
+                basePriceLabel: fmt.money(p.basePriceMinor, settings.currency),
                 included: p.included,
                 listPriceMinor: p.listPriceMinor,
               }))}

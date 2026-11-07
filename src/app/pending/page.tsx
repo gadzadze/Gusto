@@ -2,6 +2,7 @@ import { Hourglass } from "lucide-react";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +13,10 @@ import { getAccessState } from "@/server/auth/guards";
 export default function PendingPage() {
   return (
     <main className="mx-auto w-full max-w-xl px-4 py-10 sm:py-16">
-      <Logo />
+      <div className="flex items-center justify-between gap-3">
+        <Logo />
+        <LocaleSwitch />
+      </div>
       <Suspense fallback={<Skeleton className="mt-8 h-56 w-full" />}>
         <Pending />
       </Suspense>

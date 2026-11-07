@@ -1,4 +1,5 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { intlLocaleFor, type Locale } from "@/i18n/locales";
 import { Fragment } from "react";
 import { formatMoney, lineTotalMinor } from "@/lib/money";
 import { ConfirmDemo } from "./product-tour";
@@ -6,8 +7,6 @@ import { ConfirmDemo } from "./product-tour";
 // Interface mock-ups for the landing page. Every business, product and amount
 // is fictional and the page says so; amounts go through the same formatter the
 // app uses.
-
-const money = (minor: number) => formatMoney(minor, "GEL");
 
 const CART = [
   { key: "sulguni", unit: "kg", base: 1850, price: 1665, qty: 2 },
@@ -24,16 +23,18 @@ const STATUS_CLASS: Record<Status, string> = { New: "amber", Confirmed: "blue", 
 
 async function demoStrings() {
   const t = await getTranslations("landing");
+  const intl = intlLocaleFor((await getLocale()) as Locale);
+  const money = (minor: number) => formatMoney(minor, "GEL", intl);
   const unit = (u: "kg" | "pack") => t(`demo.${u}`);
   const status = (s: Status) => (
     <span className={`pill ${STATUS_CLASS[s]}`}>{t(`demo.status${s}`)}</span>
   );
-  return { t, unit, status };
+  return { t, unit, status, money };
 }
 
 /** Hero: the supplier's order list with the buyer's phone in front of it. */
 export async function HeroComposite() {
-  const { t, unit, status } = await demoStrings();
+  const { t, unit, status, money } = await demoStrings();
   const orders: { no: string; who: "restaurant" | "cafe"; status: Status; minor: number; fresh?: boolean }[] = [
     { no: "GST-1044", who: "restaurant", status: "New", minor: 6658, fresh: true },
     { no: "GST-1043", who: "cafe", status: "New", minor: 2640 },
@@ -123,7 +124,7 @@ export async function HeroComposite() {
 
 /** The four tour tabs, as server-rendered panels (a plain function: the page passes the result to the client tour). */
 export async function buildTourViews() {
-  const { t, unit, status } = await demoStrings();
+  const { t, unit, status, money } = await demoStrings();
   const prices: { key: "sulguni" | "butter" | "curd"; base: number; price: number }[] = [
     { key: "sulguni", base: 1850, price: 1665 },
     { key: "butter", base: 790, price: 711 },
@@ -231,7 +232,7 @@ export async function buildTourViews() {
 
 /** Supplier side: summary figures and the customer list. */
 export async function SupplierMock() {
-  const { t } = await demoStrings();
+  const { t, money } = await demoStrings();
   const customers: { who: "restaurant" | "cafe" | "hotel"; invited?: boolean; list: "listRestaurant" | "listBase" | "listHotel" }[] = [
     { who: "restaurant", list: "listRestaurant" },
     { who: "cafe", list: "listBase" },
@@ -277,7 +278,7 @@ export async function SupplierMock() {
 
 /** Buyer side: the home screen on a phone. */
 export async function BuyerPhone() {
-  const { t, status } = await demoStrings();
+  const { t, status, money } = await demoStrings();
   const recent = [
     { no: "GST-1040", items: 3, minor: 13329 },
     { no: "GST-1038", items: 2, minor: 4860 },

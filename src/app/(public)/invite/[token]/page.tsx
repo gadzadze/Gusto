@@ -2,6 +2,7 @@ import { CircleAlert, Store } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +16,10 @@ export default async function InvitePage(props: PageProps<"/invite/[token]">) {
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-xl flex-col px-4 py-10">
       <Link href="/" className="mb-8">
+        <div className="flex items-center justify-between gap-3">
         <Logo />
+        <LocaleSwitch />
+      </div>
       </Link>
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         <Invite {...props} />

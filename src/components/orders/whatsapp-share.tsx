@@ -27,10 +27,12 @@ export async function WhatsappShare({
 }) {
   const { order, items, counterpartyPhone } = detail;
   if (!counterpartyPhone) return null;
-  const t = await getTranslations("notifications.whatsapp");
+  // The button's own words follow the page's language; the message goes to the other business,
+  // whose language we don't know, so it is always written in Georgian (like the order itself).
+  const t = await getTranslations({ locale: "ka", namespace: "notifications.whatsapp" });
   const to = await getTranslations("orders.whatsapp");
-  const tu = await getTranslations("units");
-  const format = await getFormatter();
+  const tu = await getTranslations({ locale: "ka", namespace: "units" });
+  const format = await getFormatter({ locale: "ka" });
   const values = {
     number: `GST-${order.number}`,
     buyer: order.buyerName,

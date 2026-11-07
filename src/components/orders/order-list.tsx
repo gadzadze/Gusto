@@ -2,10 +2,11 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
-import { formatMoney } from "@/lib/money";
 import type { OrderListItem } from "@/server/domain/orders/queries";
+import { getFormats } from "@/server/i18n/formats";
 
 export async function OrderList({ orders, viewer }: { orders: OrderListItem[]; viewer: "buyer" | "supplier" }) {
+  const fmt = await getFormats();
   const t = await getTranslations("orders");
   const format = await getFormatter();
   return (
@@ -23,7 +24,7 @@ export async function OrderList({ orders, viewer }: { orders: OrderListItem[]; v
                 {format.dateTime(o.createdAt, { dateStyle: "medium", timeStyle: "short" })}
               </span>
             </span>
-            <span className="whitespace-nowrap text-sm font-medium tabular-nums">{formatMoney(o.totalMinor, o.currency)}</span>
+            <span className="whitespace-nowrap text-sm font-medium tabular-nums">{fmt.money(o.totalMinor, o.currency)}</span>
             <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
           </Link>
         </li>

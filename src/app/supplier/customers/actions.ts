@@ -34,7 +34,8 @@ async function inviteLinks(
   customerId: string,
   token: string,
 ): Promise<InviteLinks> {
-  const t = await getTranslations("customers.invite");
+  // Text that goes to someone else (their language is unknown): always Georgian, whatever the page language.
+  const t = await getTranslations({ locale: "ka", namespace: "customers.invite" });
   const customer = await getCustomer(ctx, customerId);
   const inviteUrl = `${serverEnv().NEXT_PUBLIC_APP_URL}/invite/${token}`;
   const text = t("message", {

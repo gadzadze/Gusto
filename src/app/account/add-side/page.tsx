@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import { homePathFor } from "@/server/auth/access";
@@ -13,7 +14,10 @@ import { submitAddSide } from "./actions";
 export default function AddSidePage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-10 sm:py-16">
-      <Logo />
+      <div className="flex items-center justify-between gap-3">
+        <Logo />
+        <LocaleSwitch />
+      </div>
       <Suspense fallback={<Skeleton className="mt-8 h-96 w-full" />}>
         <AddSideGate />
       </Suspense>

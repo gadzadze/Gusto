@@ -9,12 +9,12 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { parseDateInput, todayIn } from "@/lib/dates";
-import { formatQuantityNumber } from "@/lib/quantity";
 import { requireSupplier } from "@/server/auth/guards";
 import { getPickList } from "@/server/domain/orders/pick-list";
 import { getDb } from "@/server/db/client";
 import { organizations } from "@/server/db/schema";
 import { eq } from "drizzle-orm";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function PickPage({ searchParams }: PageProps<"/supplier/orders/pick">) {
   const t = await getTranslations("orders.pick");
@@ -35,6 +35,7 @@ export default async function PickPage({ searchParams }: PageProps<"/supplier/or
 }
 
 async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "searchParams">) {
+  const fmt = await getFormats();
   const ctx = await requireSupplier();
   const t = await getTranslations("orders.pick");
   const tu = await getTranslations("units");
@@ -76,7 +77,7 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
                       {r.sku ? <span className="block text-xs text-muted-foreground">{r.sku}</span> : null}
                     </span>
                     <span className="whitespace-nowrap tabular-nums font-semibold">
-                      {formatQuantityNumber(r.qtyMilli)} {tu(r.unit as "kg")}
+                      {fmt.qty(r.qtyMilli)} {tu(r.unit as "kg")}
                     </span>
                     <span className="hidden w-24 text-right text-xs text-muted-foreground sm:block">{t("inOrders", { count: r.orderCount })}</span>
                   </li>

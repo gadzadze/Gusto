@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { RequestForm } from "./request-form";
@@ -24,9 +25,12 @@ export async function JoinPage({ invite }: { invite?: JoinInvite }) {
         <Link href="/">
           <Logo />
         </Link>
-        <Button asChild variant="outline" size="sm">
-          <Link href="/start">{t("signIn")}</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <LocaleSwitch />
+          <Button asChild variant="outline" size="sm">
+            <Link href="/start">{t("signIn")}</Link>
+          </Button>
+        </div>
       </header>
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 pb-16 sm:px-6">
         {invite === "unavailable" ? (

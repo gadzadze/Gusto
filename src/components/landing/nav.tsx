@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
+import { LocaleSwitch } from "@/components/locale-switch";
 
 /** Floating, rounded, blurred pill. Solidifies after a little scrolling; collapses into a sheet on small screens. */
 export function LandingNav() {
@@ -46,6 +47,7 @@ export function LandingNav() {
             <a className="btn sm" href="#join">
               {t("join")}
             </a>
+            <LocaleSwitch variant="landing" />
             <button
               type="button"
               className={`burger${open ? " open" : ""}`}

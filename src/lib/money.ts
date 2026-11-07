@@ -30,11 +30,13 @@ export function minorToInput(minor: number, decimalSeparator: "." | "," = "."): 
   return `${sign}${Math.floor(abs / 100)}${decimalSeparator}${String(abs % 100).padStart(2, "0")}`;
 }
 
-/** Formats minor units for display, e.g. 1250 GEL → "12,50 ₾" in ka-GE. */
+/** Formats minor units for display, e.g. 1250 GEL → "12,50 ₾" in ka-GE and "₾12.50" in English. */
 export function formatMoney(minor: number, currency: string, locale = "ka-GE"): string {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
+    // English would otherwise print "GEL 12.50".
+    currencyDisplay: "narrowSymbol",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(minor / 100);

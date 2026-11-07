@@ -9,14 +9,13 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
-import { formatMoney } from "@/lib/money";
-import { milliToInput } from "@/lib/quantity";
 import { requireBuyer } from "@/server/auth/guards";
 import { addDays, MAX_DELIVERY_DAYS_AHEAD, todayIn } from "@/lib/dates";
 import { listAddresses } from "@/server/domain/buyer/addresses";
 import { NotFoundError } from "@/server/domain/errors";
 import { getCart } from "@/server/domain/orders/cart";
 import { CheckoutForm } from "./checkout-form";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function CheckoutPage(props: PageProps<"/buyer/checkout/[supplierId]">) {
   const t = await getTranslations("checkout");
@@ -38,6 +37,7 @@ export default async function CheckoutPage(props: PageProps<"/buyer/checkout/[su
 }
 
 async function Checkout({ params }: PageProps<"/buyer/checkout/[supplierId]">) {
+  const fmt = await getFormats();
   const ctx = await requireBuyer();
   const t = await getTranslations("checkout");
   const tc = await getTranslations("cart");
@@ -81,16 +81,16 @@ async function Checkout({ params }: PageProps<"/buyer/checkout/[supplierId]">) {
                     </span>
                   ) : null}
                 </TD>
-                <TD className="whitespace-nowrap text-right tabular-nums">{milliToInput(l.qtyMilli, ",")} {tu(l.unit)}</TD>
-                <TD className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">{formatMoney(l.unitPriceMinor, currency)}</TD>
-                <TD className="whitespace-nowrap text-right tabular-nums">{formatMoney(l.lineTotalMinor, currency)}</TD>
+                <TD className="whitespace-nowrap text-right tabular-nums">{fmt.input(l.qtyMilli)} {tu(l.unit)}</TD>
+                <TD className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">{fmt.money(l.unitPriceMinor, currency)}</TD>
+                <TD className="whitespace-nowrap text-right tabular-nums">{fmt.money(l.lineTotalMinor, currency)}</TD>
               </TR>
             ))}
           </TBody>
         </Table>
         <TotalsBlock {...cart.totals} currency={currency} />
         {cart.shortfallMinor > 0 ? (
-          <FormAlert tone="error">{tc("shortfall", { amount: formatMoney(cart.shortfallMinor, currency) })}</FormAlert>
+          <FormAlert tone="error">{tc("shortfall", { amount: fmt.money(cart.shortfallMinor, currency) })}</FormAlert>
         ) : null}
       </section>
 

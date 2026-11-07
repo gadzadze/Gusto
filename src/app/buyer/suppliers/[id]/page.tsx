@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatMoney } from "@/lib/money";
 import { formatPhone } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { requireBuyer } from "@/server/auth/guards";
@@ -19,6 +18,7 @@ import { getConnectedSupplier, listBuyerCatalog } from "@/server/domain/buyer/ca
 import { getCart } from "@/server/domain/orders/cart";
 import { ShoppingCart } from "lucide-react";
 import { NotFoundError } from "@/server/domain/errors";
+import { getFormats } from "@/server/i18n/formats";
 
 export default async function SupplierCatalogPage(props: PageProps<"/buyer/suppliers/[id]">) {
   const t = await getTranslations("buyer");
@@ -42,6 +42,7 @@ function one(value: string | string[] | undefined): string {
 }
 
 async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id]">) {
+  const fmt = await getFormats();
   const ctx = await requireBuyer();
   const t = await getTranslations("buyer");
   const tc = await getTranslations("common");
@@ -76,7 +77,7 @@ async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id
         <div className="-mt-3 space-y-1 text-sm text-muted-foreground">
           <p>
             {supplier.minOrderMinor > 0
-              ? t("minOrder", { amount: formatMoney(supplier.minOrderMinor, supplier.currency) })
+              ? t("minOrder", { amount: fmt.money(supplier.minOrderMinor, supplier.currency) })
               : t("noMinOrder")}
             {" · "}
             {supplier.pricesIncludeVat ? t("vatIncluded") : t("vatExcluded")}
@@ -157,7 +158,7 @@ async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id
           >
             <span className="flex items-center gap-2">
               <ShoppingCart aria-hidden className="size-4" />
-              {tcart("bar", { count: cart.lines.length, total: formatMoney(cart.totals.totalMinor, supplier.currency) })}
+              {tcart("bar", { count: cart.lines.length, total: fmt.money(cart.totals.totalMinor, supplier.currency) })}
             </span>
             <span>{tcart("checkout")}</span>
           </Link>

@@ -28,7 +28,8 @@ export async function createSupplierInviteAction(raw: unknown): Promise<{ ok: tr
     const { token } = await createSupplierInvite(ctx, parsed.data);
     refresh();
     const inviteUrl = `${serverEnv().NEXT_PUBLIC_APP_URL}/suppliers/invite/${token}`;
-    const t = await getTranslations("supplierInvite");
+    // Text that goes to someone else (their language is unknown): always Georgian, whatever the page language.
+    const t = await getTranslations({ locale: "ka", namespace: "supplierInvite" });
     const text = t("message", { buyer: ctx.orgName, link: inviteUrl });
     let emailSent: boolean | null = null;
     if (parsed.data.email) {
@@ -58,7 +59,8 @@ export async function revokeSupplierInviteAction(inviteId: string): Promise<{ ok
 export type PersonalLink = { url: string; text: string };
 
 async function personalLink(token: string): Promise<PersonalLink> {
-  const t = await getTranslations("supplierInvite");
+  // Text that goes to someone else (their language is unknown): always Georgian, whatever the page language.
+  const t = await getTranslations({ locale: "ka", namespace: "supplierInvite" });
   const url = `${serverEnv().NEXT_PUBLIC_APP_URL}/suppliers/invite/${token}`;
   return { url, text: t("orderFooter", { link: url }) };
 }

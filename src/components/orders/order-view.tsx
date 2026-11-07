@@ -2,13 +2,13 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { TotalsBlock } from "@/components/orders/totals-block";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
-import { formatMoney } from "@/lib/money";
-import { milliToInput } from "@/lib/quantity";
 import { cn } from "@/lib/utils";
 import type { OrderDetail } from "@/server/domain/orders/queries";
+import { getFormats } from "@/server/i18n/formats";
 
 /** The read-only body of an order, shared by the buyer and supplier pages (and printing). */
 export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewer: "buyer" | "supplier" }) {
+  const fmt = await getFormats();
   const t = await getTranslations("orders");
   const tu = await getTranslations("units");
   const ts = await getTranslations("orderStatus");
@@ -16,7 +16,7 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
   // A calendar day has no time or zone: format it as UTC so it never shifts.
   const formatDay = (day: string) => format.dateTime(new Date(`${day}T00:00:00Z`), { dateStyle: "medium", timeZone: "UTC" });
   const { order, items, history } = detail;
-  const qty = (milli: number, unit: (typeof items)[number]["unit"]) => `${milliToInput(milli, ",")} ${tu(unit)}`;
+  const qty = (milli: number, unit: (typeof items)[number]["unit"]) => `${fmt.input(milli)} ${tu(unit)}`;
 
   return (
     <div className="space-y-6">
@@ -108,9 +108,9 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
                     )}
                   </TD>
                   <TD className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">
-                    {formatMoney(item.unitPriceMinor, order.currency)}
+                    {fmt.money(item.unitPriceMinor, order.currency)}
                   </TD>
-                  <TD className="whitespace-nowrap text-right tabular-nums">{formatMoney(item.lineTotalMinor, order.currency)}</TD>
+                  <TD className="whitespace-nowrap text-right tabular-nums">{fmt.money(item.lineTotalMinor, order.currency)}</TD>
                 </TR>
               );
             })}

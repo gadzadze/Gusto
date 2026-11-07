@@ -19,7 +19,7 @@ export async function sendWelcomeEmail(email: string): Promise<WelcomeResult> {
   try {
     await ensureAuthUser(email);
     const link = await signInLinkFor(email);
-    const t = await getTranslations("welcomeEmail");
+    const t = await getTranslations({ locale: "ka", namespace: "welcomeEmail" });
     const result = await sendEmail({ to: email, subject: t("subject"), text: t("body", { link }) });
     return result === "sent" ? "sent" : "skipped";
   } catch (error) {
