@@ -1,12 +1,13 @@
-import { getLocale, getTranslations } from "next-intl/server";
-import { intlLocaleFor, type Locale } from "@/i18n/locales";
+"use client";
+
+import { useLocale, useTranslations } from "next-intl";
 import { Fragment } from "react";
-import { formatMoney, lineTotalMinor } from "@/lib/money";
+import { formatMoneyPlain, lineTotalMinor } from "@/lib/money";
 import { ConfirmDemo } from "./product-tour";
 
 // Interface mock-ups for the landing page. Every business, product and amount
-// is fictional and the page says so; amounts go through the same formatter the
-// app uses.
+// is fictional and the page says so. Rendered in the browser (like the rest of the landing page)
+// so a language change swaps the text at once; amounts use formatMoneyPlain.
 
 const CART = [
   { key: "sulguni", unit: "kg", base: 1850, price: 1665, qty: 2 },
@@ -21,10 +22,10 @@ const CART_TOTAL = cartLines.reduce((sum, l) => sum + l.total, 0);
 type Status = "New" | "Confirmed" | "Delivered";
 const STATUS_CLASS: Record<Status, string> = { New: "amber", Confirmed: "blue", Delivered: "green" };
 
-async function demoStrings() {
-  const t = await getTranslations("landing");
-  const intl = intlLocaleFor((await getLocale()) as Locale);
-  const money = (minor: number) => formatMoney(minor, "GEL", intl);
+function useDemo() {
+  const t = useTranslations("landing");
+  const language = useLocale() === "en" ? "en" : "ka";
+  const money = (minor: number) => formatMoneyPlain(minor, "GEL", language);
   const unit = (u: "kg" | "pack") => t(`demo.${u}`);
   const status = (s: Status) => (
     <span className={`pill ${STATUS_CLASS[s]}`}>{t(`demo.status${s}`)}</span>
@@ -33,8 +34,8 @@ async function demoStrings() {
 }
 
 /** Hero: the supplier's order list with the buyer's phone in front of it. */
-export async function HeroComposite() {
-  const { t, unit, status, money } = await demoStrings();
+export function HeroComposite() {
+  const { t, unit, status, money } = useDemo();
   const orders: { no: string; who: "restaurant" | "cafe"; status: Status; minor: number; fresh?: boolean }[] = [
     { no: "GST-1044", who: "restaurant", status: "New", minor: 6658, fresh: true },
     { no: "GST-1043", who: "cafe", status: "New", minor: 2640 },
@@ -123,8 +124,8 @@ export async function HeroComposite() {
 }
 
 /** The four tour tabs, as server-rendered panels (a plain function: the page passes the result to the client tour). */
-export async function buildTourViews() {
-  const { t, unit, status, money } = await demoStrings();
+export function useTourViews() {
+  const { t, unit, status, money } = useDemo();
   const prices: { key: "sulguni" | "butter" | "curd"; base: number; price: number }[] = [
     { key: "sulguni", base: 1850, price: 1665 },
     { key: "butter", base: 790, price: 711 },
@@ -231,8 +232,8 @@ export async function buildTourViews() {
 }
 
 /** Supplier side: summary figures and the customer list. */
-export async function SupplierMock() {
-  const { t, money } = await demoStrings();
+export function SupplierMock() {
+  const { t, money } = useDemo();
   const customers: { who: "restaurant" | "cafe" | "hotel"; invited?: boolean; list: "listRestaurant" | "listBase" | "listHotel" }[] = [
     { who: "restaurant", list: "listRestaurant" },
     { who: "cafe", list: "listBase" },
@@ -277,8 +278,8 @@ export async function SupplierMock() {
 }
 
 /** Buyer side: the home screen on a phone. */
-export async function BuyerPhone() {
-  const { t, status, money } = await demoStrings();
+export function BuyerPhone() {
+  const { t, status, money } = useDemo();
   const recent = [
     { no: "GST-1040", items: 3, minor: 13329 },
     { no: "GST-1038", items: 2, minor: 4860 },
@@ -330,8 +331,8 @@ export async function BuyerPhone() {
 }
 
 /** Trust band: what verifying a business looks like. */
-export async function TrustCard() {
-  const t = await getTranslations("landing");
+export function TrustCard() {
+  const t = useTranslations("landing");
   return (
     <div aria-hidden="true">
       <div className="vcard">

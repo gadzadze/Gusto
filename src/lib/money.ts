@@ -42,6 +42,21 @@ export function formatMoney(minor: number, currency: string, locale = "ka-GE"): 
   }).format(minor / 100);
 }
 
+/**
+ * Money written by hand, without Intl, so a server render and any browser produce the same text.
+ * Used where text is rendered in the browser (the landing page's drawn mock-ups): "12,50 ₾" in
+ * Georgian, "₾12.50" in English. App screens use formatMoney on the server instead.
+ */
+export function formatMoneyPlain(minor: number, currency: string, language: "ka" | "en"): string {
+  const sign = minor < 0 ? "-" : "";
+  const abs = Math.abs(minor);
+  const whole = String(Math.floor(abs / 100));
+  const cents = String(abs % 100).padStart(2, "0");
+  const symbol = currency === "GEL" ? "₾" : currency;
+  const group = (sep: string) => (whole.length > 4 ? whole.replace(/\B(?=(\d{3})+(?!\d))/g, sep) : whole);
+  return language === "en" ? `${sign}${symbol}${group(",")}.${cents}` : `${sign}${group("\u00a0")},${cents}\u00a0${symbol}`;
+}
+
 /** Integer division rounding halves away from zero (all inputs ≥ 0 here). */
 export function roundHalfUp(numerator: bigint, denominator: bigint): bigint {
   if (denominator <= 0n) throw new Error("denominator must be positive");

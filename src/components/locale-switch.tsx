@@ -1,9 +1,8 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
-import { useOptimistic, useTransition } from "react";
-import { setLocaleAction } from "@/app/locale-actions";
+import { useTranslations } from "next-intl";
 import { FlagGB, FlagGE } from "@/components/flags";
+import { useLocaleSwitch } from "@/i18n/client-intl";
 import { LOCALES, type Locale } from "@/i18n/locales";
 import { cn } from "@/lib/utils";
 
@@ -13,49 +12,30 @@ const NAMES: Record<Locale, { short: string; name: string; Flag: typeof FlagGE }
   en: { short: "EN", name: "English", Flag: FlagGB },
 };
 
-/**
- * The language choice: two flags. It reacts at once (the chosen flag lights up and the page dims)
- * while the new language loads from the server, so the click never feels ignored.
- */
+/** The language choice: two flags. It switches in the browser at once (see i18n/client-intl.tsx). */
 export function LocaleSwitch({ className, variant = "app" }: { className?: string; variant?: "app" | "landing" }) {
   const t = useTranslations("common");
-  const current = useLocale() as Locale;
-  const [shown, setShown] = useOptimistic(current);
-  const [pending, startTransition] = useTransition();
-
-  const choose = (next: Locale) => {
-    if (next === shown || pending) return;
-    startTransition(async () => {
-      setShown(next);
-      document.documentElement.dataset.switching = "1";
-      try {
-        await setLocaleAction(next);
-        document.documentElement.lang = next;
-      } finally {
-        delete document.documentElement.dataset.switching;
-      }
-    });
-  };
+  const { locale, syncing, switchTo } = useLocaleSwitch();
 
   return (
     <div
       role="group"
       aria-label={t("language")}
-      aria-busy={pending}
+      aria-busy={syncing}
       className={cn(variant === "landing" ? "locale-switch" : "inline-flex rounded-lg border border-border p-0.5", className)}
     >
-      {LOCALES.map((locale) => {
-        const { Flag, short, name } = NAMES[locale];
-        const on = shown === locale;
+      {LOCALES.map((option) => {
+        const { Flag, short, name } = NAMES[option];
+        const on = locale === option;
         return (
           <button
-            key={locale}
+            key={option}
             type="button"
-            lang={locale}
+            lang={option}
             aria-pressed={on}
             aria-label={name}
             title={name}
-            onClick={() => choose(locale)}
+            onClick={() => switchTo(option)}
             className={
               variant === "landing"
                 ? on

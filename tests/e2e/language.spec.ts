@@ -91,3 +91,27 @@ test("English pages have no horizontal scroll at phone width", async ({ browser 
   await page.goto("/terms");
   await expect(page.getByRole("heading", { level: 1, name: "Terms of service" })).toBeVisible();
 });
+
+test("public pages switch language in the browser without asking the server", async ({ page }) => {
+  for (const path of ["/", "/login", "/terms", "/suppliers"]) {
+    await page.goto(path);
+    await page.waitForLoadState("networkidle");
+    // Let the other language finish loading in the background, then cut the network.
+    await page.waitForTimeout(1500);
+    const requests: string[] = [];
+    page.on("request", (request) => {
+      if (request.resourceType() === "document" || request.resourceType() === "fetch") requests.push(request.url());
+    });
+    const started = Date.now();
+    await page.getByRole("button", { name: "English" }).first().click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
+    await expect(page.getByRole("button", { name: "English" }).first()).toHaveAttribute("aria-pressed", "true");
+    expect(Date.now() - started, path).toBeLessThan(500);
+    // Georgian letters are gone from the visible text of the page's main content.
+    const text = await page.locator("main, body").first().innerText();
+    expect(text, path).not.toMatch(/[ა-ჰ]{4,}/);
+    await page.getByRole("button", { name: "ქართული" }).first().click();
+    await expect(page.locator("html")).toHaveAttribute("lang", "ka");
+    page.removeAllListeners("request");
+  }
+});

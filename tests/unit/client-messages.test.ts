@@ -34,8 +34,8 @@ describe("client messages", () => {
     const picked = pickMessages(ka, CLIENT_NAMESPACES) as Record<string, unknown>;
     expect(picked.buyer).toBeDefined();
     expect((picked.landing as Record<string, unknown>).nav).toBeDefined();
-    // Only the nav part of the landing page, and none of the long legal text.
-    expect(Object.keys(picked.landing as object)).toEqual(["nav"]);
+    // The landing page is drawn in the browser (instant language switch); the long legal text is not sent.
+    expect(Object.keys(picked.landing as object)).toContain("hero");
     expect(picked.legal).toBeUndefined();
     for (const path of CLIENT_NAMESPACES) {
       let node: unknown = ka;

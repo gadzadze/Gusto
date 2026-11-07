@@ -1,6 +1,8 @@
+"use client";
+
 import { Check } from "lucide-react";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { useTranslations } from "next-intl";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -13,8 +15,8 @@ import { RequestForm } from "./request-form";
  */
 export type JoinInvite = { token: string; buyerName: string; supplierName: string } | "unavailable" | undefined;
 
-export async function JoinPage({ invite }: { invite?: JoinInvite }) {
-  const t = await getTranslations("supplierRequest");
+export function JoinPage({ invite }: { invite?: JoinInvite }) {
+  const t = useTranslations("supplierRequest");
   const valid = invite && invite !== "unavailable" ? invite : null;
   const points = valid
     ? [t("invitedPoint1"), t("invitedPoint2"), t("invitedPoint3")]
