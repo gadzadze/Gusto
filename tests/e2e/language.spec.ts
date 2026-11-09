@@ -105,7 +105,7 @@ test("public pages switch language in the browser without asking the server", as
     const started = Date.now();
     await page.getByRole("button", { name: "English" }).first().click();
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page.getByRole("button", { name: "English" }).first()).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: "ქართული" }).first()).toBeVisible();
     expect(Date.now() - started, path).toBeLessThan(500);
     // Georgian letters are gone from the visible text of the page's main content.
     const text = await page.locator("main, body").first().innerText();

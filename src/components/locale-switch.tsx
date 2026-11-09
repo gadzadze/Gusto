@@ -12,46 +12,33 @@ const NAMES: Record<Locale, { short: string; name: string; Flag: typeof FlagGE }
   en: { short: "EN", name: "English", Flag: FlagGB },
 };
 
-/** The language choice: two flags. It switches in the browser at once (see i18n/client-intl.tsx). */
+/**
+ * The language choice: one flag, the language in use. Tapping it switches to the other language (and
+ * its flag) in the browser at once (see i18n/client-intl.tsx). The accessible name says where it goes.
+ */
 export function LocaleSwitch({ className, variant = "app" }: { className?: string; variant?: "app" | "landing" }) {
   const t = useTranslations("common");
   const { locale, syncing, switchTo } = useLocaleSwitch();
+  const next = LOCALES.find((option) => option !== locale) ?? locale;
+  const { Flag } = NAMES[locale];
+  const target = NAMES[next].name;
 
   return (
-    <div
-      role="group"
-      aria-label={t("language")}
+    <button
+      type="button"
+      lang={next}
+      aria-label={target}
+      title={`${t("language")}: ${target}`}
       aria-busy={syncing}
-      className={cn(variant === "landing" ? "locale-switch" : "inline-flex rounded-lg border border-border p-0.5", className)}
+      onClick={() => switchTo(next)}
+      className={cn(
+        variant === "landing"
+          ? "locale-switch"
+          : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-border px-2 transition-colors hover:bg-accent md:min-h-9 md:min-w-9",
+        className,
+      )}
     >
-      {LOCALES.map((option) => {
-        const { Flag, short, name } = NAMES[option];
-        const on = locale === option;
-        return (
-          <button
-            key={option}
-            type="button"
-            lang={option}
-            aria-pressed={on}
-            aria-label={name}
-            title={name}
-            onClick={() => switchTo(option)}
-            className={
-              variant === "landing"
-                ? on
-                  ? "on"
-                  : undefined
-                : cn(
-                    "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md px-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground md:min-h-8",
-                    on && "bg-accent text-accent-foreground",
-                  )
-            }
-          >
-            <Flag className="h-3.5 w-5 shrink-0 rounded-[2px] shadow-[0_0_0_1px_rgba(0,0,0,0.15)]" />
-            <span>{short}</span>
-          </button>
-        );
-      })}
-    </div>
+      <Flag className="h-3.5 w-5 shrink-0 rounded-[2px] shadow-[0_0_0_1px_rgba(0,0,0,0.15)]" />
+    </button>
   );
 }
