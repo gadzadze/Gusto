@@ -41,13 +41,13 @@ export function LandingNav() {
             ))}
           </nav>
           <div className="nav-right">
+            <LocaleSwitch variant="landing" />
             <Link className="plain" href="/start">
               {t("signIn")}
             </Link>
             <a className="btn sm" href="#join">
               {t("join")}
             </a>
-            <LocaleSwitch variant="landing" />
             <button
               type="button"
               className={`burger${open ? " open" : ""}`}
