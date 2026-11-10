@@ -34,7 +34,18 @@ function writeCookie(locale: Locale) {
   document.cookie = `${LOCALE_COOKIE}=${locale}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax${secure}`;
 }
 
-export function ClientIntl({ locale: serverLocale, messages: serverMessages, children }: { locale: Locale; messages: object; children: ReactNode }) {
+export function ClientIntl({
+  locale: serverLocale,
+  messages: serverMessages,
+  timeZone,
+  children,
+}: {
+  locale: Locale;
+  messages: object;
+  /** The same time zone the server formats with; without it next-intl reports ENVIRONMENT_FALLBACK on every render. */
+  timeZone: string;
+  children: ReactNode;
+}) {
   const router = useRouter();
   const initial = serverMessages as Bundle;
   const [state, setState] = useState<{ locale: Locale; messages: Bundle }>({ locale: serverLocale, messages: initial });
@@ -75,7 +86,7 @@ export function ClientIntl({ locale: serverLocale, messages: serverMessages, chi
 
   return (
     <SwitchContext.Provider value={{ locale: state.locale, syncing, switchTo }}>
-      <NextIntlClientProvider locale={state.locale} messages={state.messages}>
+      <NextIntlClientProvider locale={state.locale} messages={state.messages} timeZone={timeZone}>
         {children}
       </NextIntlClientProvider>
     </SwitchContext.Provider>

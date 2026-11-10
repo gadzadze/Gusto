@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { connection } from "next/server";
 import { serverEnv } from "@/server/env";
+import { timedFetch } from "./timed-fetch";
 
 /** Supabase client bound to this request's auth cookies. Auth only — no data access. */
 export async function createSupabaseServerClient() {
@@ -14,6 +15,7 @@ export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
   const env = serverEnv();
   return createServerClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    global: { fetch: timedFetch },
     cookies: {
       getAll() {
         return cookieStore.getAll();

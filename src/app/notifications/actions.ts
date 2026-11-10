@@ -15,7 +15,7 @@ export async function openNotificationAction(notificationId: string): Promise<vo
   const result = await runAction<{ ok: true; target: string }, never>("openNotification", async () => {
     const { orderNumber, link } = await markRead(ctx.userId, notificationId);
     // An order event opens the order; anything else opens the path it carries (built by the server, internal only).
-    const target = orderNumber !== null ? `/o/${orderNumber}` : link && link.startsWith("/") && !link.startsWith("//") ? link : "/start";
+    const target = orderNumber !== null ? `/o/${orderNumber}` : link && /^\/[a-z]/.test(link) ? link : "/start";
     return { ok: true, target };
   });
   if (!("target" in result)) return;

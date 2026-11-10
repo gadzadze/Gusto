@@ -908,7 +908,8 @@ one; only the chosen file is uploaded, through the normal image action.
 - **Rate limits** (`server/security/rate-limit.ts`, rules in `RATE_LIMITS`):
   order submit 10/min/org (a repeated idempotency key doesn't count), invite
   create or regenerate 30/h/supplier, invite accept 10/min/IP (hashed, in the
-  action: it knows the headers), image upload 300/h/supplier (an import attaches a photo per product). Over the limit
+  action: it knows the headers), image upload 300/h/supplier (an import attaches a photo per product), payment
+  terms requests 10/h/buyer (each emails the supplier). Over the limit
   throws `StateError("rate_limited")`; every UI maps that code. The cron route
   prunes old windows.
 - **Suspended buyers can't submit** (`buyer_suspended`, read from the database,
@@ -979,6 +980,13 @@ Details and the restore drill are in [`docs/backups.md`](docs/backups.md).
     Sentry ships a patched plugin, and re-run `npm audit --omit=dev`.
   - Version 10.78.0 is pinned: 11.x pulled in the advisory-affected packages
     with no override-free fix at the time.
+- **Nothing may hang a request** (audit 2026-11-10: admin pages hit Vercel's 300-second timeout 19 times
+  in a week). The database pool (`server/db/client.ts`) closes idle connections after 5 s, replaces each
+  connection after 5 minutes and gives up connecting after 10 s, because a socket left in a frozen
+  serverless instance can be dead when it wakes. Calls to Supabase Auth (`server/supabase/timed-fetch.ts`,
+  also in `proxy.ts`) and to Resend have a fetch deadline. A new outbound call needs one too.
+- The browser-side `NextIntlClientProvider` (`ClientIntl`) gets the server's `timeZone`; without it next-intl
+  logs `ENVIRONMENT_FALLBACK` on every render (63 times in production before the fix).
 - `scripts/ops/*.sh` are Linux shell scripts for CI and restore drills. They
   are deliberately not npm scripts, which must stay cross-platform.
 - Not in the backup: Storage images, the cron job and Vault secrets, passwords.

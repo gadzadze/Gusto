@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient } from "@supabase/supabase-js";
 import { serverEnv, serviceRoleKey } from "@/server/env";
+import { timedFetch } from "./timed-fetch";
 
 // Service-role client for Supabase Auth admin calls. Server only: it can do
 // anything to any user. Request-bound sign-in uses supabase/server.ts instead.
@@ -8,6 +9,7 @@ import { serverEnv, serviceRoleKey } from "@/server/env";
 function adminClient() {
   return createClient(serverEnv().NEXT_PUBLIC_SUPABASE_URL, serviceRoleKey(), {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: { fetch: timedFetch },
   });
 }
 

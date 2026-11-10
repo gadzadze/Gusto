@@ -23,12 +23,14 @@ export const RATE_LIMITS = {
   passwordSignIn: { name: "password_sign_in", limit: 10, windowSeconds: 60 },
   /** Public "onboard me" supplier requests: 5 per hour per client IP (stored hashed). */
   supplierRequest: { name: "supplier_request", limit: 5, windowSeconds: 3600 },
-  /** Product image upload: 300 per hour per supplier (a catalog import attaches a photo per product). */
   /** A buyer inviting suppliers: 20 per hour per buyer organization. */
   supplierInviteCreate: { name: "supplier_invite_create", limit: 20, windowSeconds: 3600 },
   /** An admin creating a sign-in link to hand over: 30 per hour per admin. */
   adminSignInLink: { name: "admin_sign_in_link", limit: 30, windowSeconds: 3600 },
+  /** Product image upload: 300 per hour per supplier (a catalog import attaches a photo per product). */
   imageUpload: { name: "image_upload", limit: 300, windowSeconds: 3600 },
+  /** A buyer asking a supplier for payment terms: 10 per hour per buyer organization (each one emails the supplier). */
+  termsRequest: { name: "terms_request", limit: 10, windowSeconds: 3600 },
 } as const;
 
 export type RateRule = (typeof RATE_LIMITS)[keyof typeof RATE_LIMITS];

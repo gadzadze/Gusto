@@ -406,7 +406,8 @@
       "tierRow": "from {qty}: {change}",
       "errors": {
         "not_offered": "That option is not offered any more. Reload the page.",
-        "unknown": "Could not send the request. Try again."
+        "unknown": "Could not send the request. Try again.",
+        "rate_limited": "Too many requests. Try again in an hour."
       }
     }
   },
