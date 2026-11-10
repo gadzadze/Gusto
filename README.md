@@ -178,13 +178,7 @@ Do this for each Supabase project (local is pre-configured in
      - host `smtp.resend.com`, port `465`;
      - user `resend`, password = a Resend API key;
      - sender on a domain verified in Resend.
-4. **Google** (Authentication → Sign In / Providers → Google):
-   - Create an OAuth client in Google Cloud Console (type "Web application")
-     with the redirect URI that the Supabase Google provider page shows
-     (`https://<project-ref>.supabase.co/auth/v1/callback`).
-   - Paste the client ID and secret into Supabase and enable the provider.
-   - The app sends users back to `/auth/callback`, which the redirect URL
-     pattern above allows.
+4. **Google** is not used: sign-in is email + password and the emailed one-time link only.
 5. **Data API:** RLS is enabled with no policies on every 202 table, so
    the Data API exposes nothing. The app never uses it.
 6. **Storage:**
@@ -243,7 +237,7 @@ order.
 ## Access: sign-in is closed until the business is accepted
 
 Nobody can register themselves, which keeps spam and junk accounts out. An
-email address can request a sign-in link (or sign in with Google) only if the
+email address can request a sign-in link only if the
 admin has put it on the **allow-list**: admin page `/admin/access`, or
 `npm run user:allow -- someone@example.com --note "Winiveria, owner" --role supplier`.
 

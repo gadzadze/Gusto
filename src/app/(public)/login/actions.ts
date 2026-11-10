@@ -1,7 +1,6 @@
 "use server";
 
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { completeSignIn } from "@/server/auth/complete-sign-in";
 import { isEmailAllowed } from "@/server/auth/allow-list";
@@ -99,18 +98,4 @@ export async function sendMagicLink(_prev: MagicLinkState, formData: FormData): 
     return { status: "error", error: "unknown" };
   }
   return { status: "sent", email: parsed.data };
-}
-
-export async function signInWithGoogle(formData: FormData): Promise<void> {
-  await rememberNextPath(formData.get("next"));
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: `${serverEnv().NEXT_PUBLIC_APP_URL}/auth/callback` },
-  });
-  if (error || !data.url) {
-    console.error("[auth] signInWithOAuth failed", { code: error?.code, status: error?.status });
-    redirect("/login?error=auth");
-  }
-  redirect(data.url);
 }

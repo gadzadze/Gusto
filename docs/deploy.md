@@ -18,7 +18,6 @@ Nothing here needs a code change. `vercel.json` already pins the region.
 - [ ] A Vercel account with access to this GitHub repository.
 - [ ] A Resend account.
 - [ ] The production domain (called `gusto.example` below) and access to its DNS.
-- [ ] A Google Cloud project for the OAuth client (only if you want Google sign-in).
 - [ ] A machine with Node.js 22+ and a clone of the repo, for running
       migrations and the admin grant. Do **not** run these from CI.
 
@@ -62,9 +61,6 @@ Follow README → "Supabase Auth setup" with the production domain:
 - [ ] Authentication → Emails → **SMTP settings** (needs the Resend domain from
       step 5 to be verified first): host `smtp.resend.com`, port `465`, user
       `resend`, password = a Resend API key, sender on the verified domain.
-- [ ] Authentication → Providers → **Google** (optional): enable, paste the
-      client ID and secret; the Google OAuth client's redirect URI is
-      `https://<ref>.supabase.co/auth/v1/callback`.
 - [ ] Authentication → Sign In / Providers: turn **off** "Allow new users to sign up".
       202 is invite-only: the app creates the users it allows (README, "Access").
       With this off, nobody can create an account behind the app's back.

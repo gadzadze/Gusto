@@ -5,7 +5,6 @@ import { randomLegalId, signInAsNewUser } from "./auth-helpers";
 test("a signed-out visitor is sent to login with a return path", async ({ page }) => {
   await page.goto("/supplier");
   await expect(page).toHaveURL(/\/login\?next=%2Fsupplier$/);
-  await expect(page.getByRole("button", { name: "Google-ით შესვლა" })).toBeVisible();
 });
 
 test("a new supplier signs in, onboards and sees the awaiting-review banner", async ({ page }) => {
