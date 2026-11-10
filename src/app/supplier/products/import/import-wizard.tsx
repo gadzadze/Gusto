@@ -166,7 +166,7 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
               />
             </label>
             <Button asChild variant="outline">
-              <a href="/templates/gusto-products.csv" download>
+              <a href="/templates/202-products.csv" download>
                 <Download />
                 {t("template")}
               </a>
