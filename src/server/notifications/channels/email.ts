@@ -1,7 +1,7 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { counterpartyRoleFor, renderOrderEmail } from "@/lib/notifications/templates";
-import { dedupeKey } from "@/lib/notifications/plan";
+import { counterpartyRoleFor, renderLinkEmail, renderOrderEmail } from "@/lib/notifications/templates";
+import { dedupeKey, subjectDedupeKey } from "@/lib/notifications/plan";
 import { getDb } from "@/server/db/client";
 import {
   notificationDeliveries,
@@ -31,8 +31,10 @@ export const emailChannel: Channel = {
         notificationId: draft.notificationId,
         channel: "email",
         recipientUserId: draft.userId,
-        payload: { event: draft.event, orderId: draft.orderId },
-        dedupeKey: dedupeKey(draft.orderId, draft.status, "email", draft.userId),
+        payload: draft.orderId ? { event: draft.event, orderId: draft.orderId } : { event: draft.event },
+        dedupeKey: draft.orderId
+          ? dedupeKey(draft.orderId, draft.status, "email", draft.userId)
+          : subjectDedupeKey(draft.subjectId ?? "", draft.event, "email", draft.userId),
       })
       .onConflictDoNothing({ target: notificationDeliveries.dedupeKey })
       .returning({ id: notificationDeliveries.id });
@@ -46,10 +48,27 @@ export const emailChannel: Channel = {
         event: notifications.event,
         orderNumber: notifications.orderNumber,
         counterpartyName: notifications.counterpartyName,
+        link: notifications.link,
       })
       .from(notifications)
       .where(eq(notifications.id, delivery.notificationId));
     if (!notification) return { status: "skipped", note: "notification no longer exists" };
+
+    // Not about an order (payment terms, a new customer): a short message with a link, no order lookup.
+    if (!delivery.payload.orderId) {
+      if (!notification.link) return { status: "skipped", note: "notification has no link" };
+      const [recipient] = await db
+        .select({ email: authUsers.email })
+        .from(authUsers)
+        .where(eq(authUsers.id, delivery.recipientUserId));
+      if (!recipient?.email) return { status: "skipped", note: "recipient has no email address" };
+      const message = renderLinkEmail({
+        event: notification.event,
+        counterpartyName: notification.counterpartyName,
+        link: `${appUrl()}${notification.link}`,
+      });
+      return { status: await sendEmail({ to: recipient.email, ...message }) };
+    }
 
     const [order] = await db
       .select({

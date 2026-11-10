@@ -793,6 +793,14 @@ and the delivery row is marked `skipped`, not `sent`.
   more", the total, the delivery address, the wanted day, the note and the `/o/<number>` link) so
   the supplier can read it in WhatsApp as they do today. This one-press button is the intended
   long-term channel; automatic Business API sending stays out of scope (`docs/whatsapp-business-api.md`).
+- **Events that are not about an order** (`recordSubjectEvent`, same transaction rule, same channels, dedupe key
+  `subject:<id>:<event>:...`): `terms_requested` (supplier members), `terms_approved` / `terms_declined` (buyer
+  members) and `customer_connected` (supplier members, when an invited buyer joins). Such a notification has no
+  order (`notifications.order_id` / `order_number` are null) and carries `link`, an internal path built by the
+  server; opening it goes there (`/supplier/customers/<id>`, `/buyer/suppliers/<id>`). Their email is a short
+  message with a button (`renderLinkEmail`, payload without `orderId`). The email preferences cover them:
+  requests and new customers follow "new orders", answers follow "order status changes". Anything new that
+  someone must act on or learn about gets an event here, in the same transaction as the change.
 - **Bell:** `components/notifications/notification-bell.tsx`, rendered in
   Suspense by `AppShell` for buyers and suppliers. The list lives at
   `/buyer/notifications` and `/supplier/notifications` (shared view);

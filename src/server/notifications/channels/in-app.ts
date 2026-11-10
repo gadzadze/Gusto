@@ -1,5 +1,5 @@
 import "server-only";
-import { dedupeKey } from "@/lib/notifications/plan";
+import { dedupeKey, subjectDedupeKey } from "@/lib/notifications/plan";
 import { notifications } from "@/server/db/schema";
 import type { Channel } from "./types";
 
@@ -14,8 +14,11 @@ export const inAppChannel: Channel = {
         event: draft.event,
         orderId: draft.orderId,
         orderNumber: draft.orderNumber,
+        link: draft.link ?? null,
         counterpartyName: draft.counterpartyName,
-        dedupeKey: dedupeKey(draft.orderId, draft.status, "in_app", draft.userId),
+        dedupeKey: draft.orderId
+          ? dedupeKey(draft.orderId, draft.status, "in_app", draft.userId)
+          : subjectDedupeKey(draft.subjectId ?? "", draft.event, "in_app", draft.userId),
       })
       .onConflictDoNothing({ target: notifications.dedupeKey })
       .returning({ id: notifications.id });

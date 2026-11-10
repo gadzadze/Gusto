@@ -347,17 +347,18 @@ describe("in-app notifications", () => {
     const first = await placeOrder(supplier, buyer);
     const second = await placeOrder(supplier, buyer);
 
-    expect(await countUnread(supplier.userId)).toBe(2);
+    expect(await countUnread(supplier.userId)).toBe(3);
     const list = await listNotifications(supplier.userId);
-    expect(list.items.map((n) => n.orderNumber)).toEqual([second.number, first.number]);
+    // (The supplier also has a "customer joined" notification from connecting the buyer.)
+    expect(list.items.map((n) => n.orderNumber).filter((n) => n !== null)).toEqual([second.number, first.number]);
 
     // Someone else's notification is a 404, and stays unread.
     await expect(markRead(buyer.userId, list.items[0].id)).rejects.toBeInstanceOf(NotFoundError);
     await expect(markRead(supplier.userId, "not-an-id")).rejects.toBeInstanceOf(NotFoundError);
-    expect(await countUnread(supplier.userId)).toBe(2);
+    expect(await countUnread(supplier.userId)).toBe(3);
 
-    expect(await markRead(supplier.userId, list.items[0].id)).toBe(second.number);
-    expect(await countUnread(supplier.userId)).toBe(1);
+    expect(await markRead(supplier.userId, list.items[0].id)).toMatchObject({ orderNumber: second.number });
+    expect(await countUnread(supplier.userId)).toBe(2);
     await markAllRead(supplier.userId);
     expect(await countUnread(supplier.userId)).toBe(0);
     expect(await countUnread(buyer.userId)).toBe(0);

@@ -14,6 +14,8 @@ import {
 } from "@/lib/pricing/conditions";
 import { getDb, type Db, type Tx } from "@/server/db/client";
 import { organizations, paymentTermRequests, priceListItems, priceRules, products, supplierCustomers } from "@/server/db/schema";
+import { recordSubjectEvent } from "@/server/notifications/events";
+import { deliverAfterResponse } from "@/server/notifications/process";
 import { assertCatalogWritable, isUuid } from "@/server/domain/catalog/products";
 import { assertSupplier, type OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
@@ -197,9 +199,30 @@ export async function requestTerms(ctx: OrgCtx, supplierOrgId: string, wanted: {
       .update(paymentTermRequests)
       .set({ status: "declined", decidedAt: new Date() })
       .where(and(eq(paymentTermRequests.buyerOrgId, ctx.orgId), eq(paymentTermRequests.supplierOrgId, supplierOrgId), eq(paymentTermRequests.status, "pending")));
-    if (same) return; // asking for what is already agreed just withdraws the open request
-    await tx.insert(paymentTermRequests).values({ buyerOrgId: ctx.orgId, supplierOrgId, method, intervalDays: days });
+    if (same) return false; // asking for what is already agreed just withdraws the open request
+    const [created] = await tx
+      .insert(paymentTermRequests)
+      .values({ buyerOrgId: ctx.orgId, supplierOrgId, method, intervalDays: days })
+      .returning({ id: paymentTermRequests.id });
+    // The supplier hears about it (in the app, and by email when their preference is on).
+    const [customer] = await tx
+      .select({ id: supplierCustomers.id, name: organizations.name })
+      .from(supplierCustomers)
+      .innerJoin(organizations, eq(organizations.id, supplierCustomers.buyerOrgId))
+      .where(and(eq(supplierCustomers.supplierOrgId, supplierOrgId), eq(supplierCustomers.buyerOrgId, ctx.orgId)));
+    if (customer) {
+      await recordSubjectEvent(tx, {
+        event: "terms_requested",
+        subjectId: created.id,
+        recipientOrgId: supplierOrgId,
+        counterpartyName: customer.name,
+        link: `/supplier/customers/${customer.id}`,
+        actor: { userId: ctx.userId },
+      });
+    }
+    return true;
   });
+  deliverAfterResponse();
 }
 
 export type TermsRequestView = {
@@ -312,7 +335,18 @@ export async function decideTermsRequest(ctx: OrgCtx, requestId: string, approve
         .set({ termsMethod: request.method, termsIntervalDays: request.intervalDays })
         .where(and(eq(supplierCustomers.supplierOrgId, ctx.orgId), eq(supplierCustomers.buyerOrgId, request.buyerOrgId)));
     }
+    // The buyer hears the answer.
+    const [supplier] = await tx.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, ctx.orgId));
+    await recordSubjectEvent(tx, {
+      event: approve ? "terms_approved" : "terms_declined",
+      subjectId: requestId,
+      recipientOrgId: request.buyerOrgId,
+      counterpartyName: supplier?.name ?? "",
+      link: `/buyer/suppliers/${ctx.orgId}`,
+      actor: { userId: ctx.userId },
+    });
   });
+  deliverAfterResponse();
 }
 
 /** Resets one customer to the standard price (the supplier can always take agreed terms back). */

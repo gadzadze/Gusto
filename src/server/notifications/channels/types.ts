@@ -6,12 +6,16 @@ import type { NotificationEvent } from "@/server/db/schema";
 export type NotificationDraft = {
   userId: string;
   event: NotificationEvent;
-  orderId: string;
-  orderNumber: number;
+  /** Null for events that are not about an order. */
+  orderId: string | null;
+  orderNumber: number | null;
   /** The other organization's name, from the recipient's side. */
   counterpartyName: string;
-  /** Order status the event moved to; part of every dedupe key. */
+  /** Order status the event moved to; part of every dedupe key of an order event. */
   status: string;
+  /** Events without an order: the request or customer they are about (dedupe) and where opening them goes. */
+  subjectId?: string;
+  link?: string;
   /** Set by the in-app channel; outbox channels reference it. */
   notificationId?: string;
 };
@@ -20,7 +24,7 @@ export type ClaimedDelivery = {
   id: string;
   notificationId: string;
   recipientUserId: string;
-  payload: { event: string; orderId: string };
+  payload: { event: string; orderId?: string };
   attempts: number;
 };
 

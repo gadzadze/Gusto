@@ -105,7 +105,7 @@ export async function processDeliveries(
  * deliveries right away, after the response is sent. Outside a request
  * (scripts, tests) there is no `after()`; the cron route picks them up.
  */
-export function deliverAfterResponse(orderId: string): void {
+export function deliverAfterResponse(orderId?: string): void {
   try {
     after(async () => {
       try {

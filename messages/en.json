@@ -1524,7 +1524,11 @@
       "order_confirmed": "Order {number} was confirmed",
       "order_rejected": "Order {number} was rejected",
       "order_cancelled": "Order {number} was cancelled",
-      "order_delivered": "Order {number} was delivered"
+      "order_delivered": "Order {number} was delivered",
+      "terms_requested": "Payment terms request",
+      "terms_approved": "Payment terms approved",
+      "terms_declined": "Payment terms request declined",
+      "customer_connected": "A new customer joined"
     },
     "counterparty": {
       "buyer": "Buyer: {name}",
@@ -1533,8 +1537,8 @@
     "preferences": {
       "title": "Email notifications",
       "hint": "Notifications always show in 202. Choose what you also want by email.",
-      "newOrders": "New orders",
-      "orderUpdates": "Order status changes",
+      "newOrders": "New orders, requests and new customers",
+      "orderUpdates": "Order status changes and answers to your requests",
       "save": "Save",
       "saved": "Saved"
     },
@@ -1544,7 +1548,11 @@
         "order_confirmed": "The supplier confirmed your order.",
         "order_rejected": "The supplier rejected your order.",
         "order_cancelled": "The order was cancelled.",
-        "order_delivered": "The order was marked as delivered."
+        "order_delivered": "The order was marked as delivered.",
+        "terms_requested": "A customer asks to pay another way. Open it to see what changes in the prices, then approve or decline.",
+        "terms_approved": "Your supplier approved your payment terms. New orders use them.",
+        "terms_declined": "Your supplier declined your payment terms request. The standard price still applies.",
+        "customer_connected": "A customer accepted your invitation and can now order."
       },
       "order": "Order: {number}",
       "items": "Items: {count}",
