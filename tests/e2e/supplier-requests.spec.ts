@@ -14,7 +14,7 @@ test("a prospective supplier asks to be onboarded and the admin approves", async
   const legalId = randomLegalId();
   const name = `[E2E] Winery ${suffix}`;
 
-  // 1. The public page: explains Gusto, and a bad legal ID is refused.
+  // 1. The public page: explains 202, and a bad legal ID is refused.
   const visitor = await (await browser.newContext()).newPage();
   await visitor.goto("/suppliers");
   await visitor.waitForLoadState("networkidle");

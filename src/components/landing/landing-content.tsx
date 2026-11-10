@@ -215,7 +215,7 @@ export function LandingContent() {
 
       <footer className="foot">
         <div className="wrap foot-in">
-          <Image src="/brand/gusto-wordmark.svg" alt="Gusto" width={78} height={22} unoptimized />
+          <Image src="/brand/202-wordmark.svg" alt="202" width={50} height={22} unoptimized />
           <nav className="foot-links" aria-label={t("nav.aria")}>
             {footerLinks.map((l) => (
               <a key={l.href} href={l.href}>

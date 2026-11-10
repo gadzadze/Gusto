@@ -1,4 +1,4 @@
-# Deploying Gusto to production
+# Deploying 202 to production
 
 An exact checklist. Do it top to bottom and tick as you go. Every step names
 what to click or run and how to confirm it worked.
@@ -36,7 +36,7 @@ openssl rand -hex 32
 - [ ] Project Settings → **API**: copy the **Project URL**, the **anon** key and the
       **service_role** key from the **Legacy API keys** tab (JWT-style, starting
       with `eyJ`). The newer `sb_secret_...` key is not a JWT and the Auth admin
-      API, which Gusto uses to create allowed users, rejected it when tested
+      API, which 202 uses to create allowed users, rejected it when tested
       against local Supabase. Not yet checked against a hosted project, so if
       Supabase retires the legacy keys, re-test before switching.
 - [ ] Project Settings → **Database → Connection string**. Copy two strings
@@ -66,7 +66,7 @@ Follow README → "Supabase Auth setup" with the production domain:
       client ID and secret; the Google OAuth client's redirect URI is
       `https://<ref>.supabase.co/auth/v1/callback`.
 - [ ] Authentication → Sign In / Providers: turn **off** "Allow new users to sign up".
-      Gusto is invite-only: the app creates the users it allows (README, "Access").
+      202 is invite-only: the app creates the users it allows (README, "Access").
       With this off, nobody can create an account behind the app's back.
 - [ ] Authentication → Rate Limits: leave the defaults unless you have a reason.
 
@@ -77,7 +77,7 @@ Follow README → "Supabase Auth setup" with the production domain:
       **Verified**.
 - [ ] API Keys → create one key for the app (`RESEND_API_KEY`, "Sending access")
       and, if you like, a second one for Supabase SMTP in step 2.
-- [ ] Decide `EMAIL_FROM`, for example `Gusto <orders@mail.gusto.example>`.
+- [ ] Decide `EMAIL_FROM`, for example `202 <orders@mail.gusto.example>`.
 
 ## 4. Run the migrations
 
@@ -145,12 +145,12 @@ select vault.create_secret('<the CRON_SECRET value>', 'gusto_cron_secret');
 | `SUPABASE_SERVICE_ROLE_KEY` | service_role / secret key | **Sensitive.** Server only. |
 | `DATABASE_URL` | Transaction pooler string (port 6543) | **Sensitive.** |
 | `RESEND_API_KEY` | Resend key | **Sensitive.** |
-| `EMAIL_FROM` | `Gusto <orders@mail.gusto.example>` | |
+| `EMAIL_FROM` | `202 <orders@mail.gusto.example>` | |
 | `CRON_SECRET` | the value from step 0 | **Sensitive.** Must equal the Vault secret. |
 | `NEXT_PUBLIC_SENTRY_DSN` | Project DSN (section 6a) | Public by design; inlined at build, so redeploy after changing. Leave unset on the demo. |
 | `SENTRY_ORG`, `SENTRY_PROJECT` | Sentry slugs | Build-time only, for source maps. |
 | `SENTRY_AUTH_TOKEN` | Sentry organization token | **Sensitive.** Build-time only; without it errors still arrive, just with minified stack traces. |
-| `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL` | The legal entity behind Gusto | Printed on `/terms` and `/privacy`. Inlined at build, so redeploy after changing. Public, not sensitive. Until `LEGAL_ENTITY_NAME` is set the operator block is left out. |
+| `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL` | The legal entity behind 202 | Printed on `/terms` and `/privacy`. Inlined at build, so redeploy after changing. Public, not sensitive. Until `LEGAL_ENTITY_NAME` is set the operator block is left out. |
 
   Do **not** set `DATABASE_URL_DIRECT`, `DATABASE_URL_TEST` or `SEED_ALLOWED_HOSTS` on Vercel.
 - [ ] Deploy (push to `main`, or **Deploy** in the dashboard).

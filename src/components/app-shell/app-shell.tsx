@@ -80,9 +80,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
         <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden print:hidden">
           <div className="flex min-w-0 items-center gap-3">
             <Logo className="h-6" />
-            {sides && sides.length > 1 ? (
-              <SideSwitch sides={sides} compact />
-            ) : title ? (
+            {sides && sides.length > 1 ? null : title ? (
               <span className="truncate text-sm text-muted-foreground">{title}</span>
             ) : null}
           </div>
@@ -95,6 +93,12 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
             <SignOutButton label={t("nav.signOut")} compact />
           </div>
         </header>
+        {sides && sides.length > 1 ? (
+          // Both sides: a full-width two-part switch under the header, easy to hit with a thumb.
+          <div className="border-b border-border bg-surface-2 px-4 py-2 md:hidden print:hidden">
+            <SideSwitch sides={sides} compact />
+          </div>
+        ) : null}
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
           {children}
         </main>

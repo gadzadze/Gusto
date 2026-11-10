@@ -19,7 +19,7 @@ test("the landing page switches to English and back, and the choice sticks", asy
 
   // Remembered across pages and reloads, on the same addresses.
   await page.goto("/login");
-  await expect(page.getByText("Sign in to Gusto").first()).toBeVisible();
+  await expect(page.getByText("Sign in to 202").first()).toBeVisible();
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("Orders without the calls and chats.");
 
@@ -31,7 +31,7 @@ test("the landing page switches to English and back, and the choice sticks", asy
 test("an unknown language value in the cookie falls back to Georgian", async ({ context, page }) => {
   await context.addCookies([{ name: "gusto-locale", value: "xx", url: "http://localhost:3100" }]);
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: "შესვლა Gusto-ში" }).or(page.getByText("შესვლა Gusto-ში").first())).toBeVisible();
+  await expect(page.getByRole("heading", { name: "შესვლა 202-ში" }).or(page.getByText("შესვლა 202-ში").first())).toBeVisible();
 });
 
 async function english(context: BrowserContext) {
@@ -46,7 +46,7 @@ test("a buyer onboards and works in English, on a phone too", async ({ browser }
   await signInAsNewUser(page, "english");
   await expect(page).toHaveURL(/\/onboarding$/);
   await page.waitForLoadState("networkidle");
-  await expect(page.getByRole("heading", { name: "Welcome to Gusto" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Welcome to 202" })).toBeVisible();
   await page.getByText("I buy", { exact: true }).click();
   await page.getByLabel("Business name").fill("[E2E] English Cafe");
   await page.getByRole("combobox", { name: "Business type" }).selectOption("cafe");

@@ -1,5 +1,5 @@
 // The standard set of HoReCa product categories, and how a spreadsheet's category
-// text is matched to the categories Gusto has. Suppliers cannot create categories
+// text is matched to the categories 202 has. Suppliers cannot create categories
 // (the admin does), so the import has to recognise the ways people actually write
 // them: other capitals, extra spaces, "&" or "," instead of "და", the English
 // name, a shorter or longer form.
@@ -73,9 +73,9 @@ export function standardCategoryFor(text: string): string | null {
 }
 
 /**
- * Lookup from a spreadsheet's category text to a Gusto category id: the
+ * Lookup from a spreadsheet's category text to a 202 category id: the
  * category's own name first (normalised), then, for the standard categories
- * Gusto has, their known aliases. Keys are normalised; query with
+ * 202 has, their known aliases. Keys are normalised; query with
  * `lookup.get(normalizeCategoryKey(text))`.
  */
 export function buildCategoryLookup(categories: readonly { id: string; name: string }[]): Map<string, string> {

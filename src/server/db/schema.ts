@@ -297,6 +297,83 @@ export const priceListItems = pgTable(
   ],
 );
 
+// Conditions on a price list: how the price changes with the payment method, the payment interval
+// and the ordered quantity. product_id null = the whole list; a product's own rows replace the list's
+// for that product. adjust_bp is added up (method + interval + quantity tier) and applied to the price.
+export const priceRules = pgTable(
+  "price_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    supplierOrgId: uuid("supplier_org_id").notNull(),
+    priceListId: uuid("price_list_id").notNull(),
+    productId: uuid("product_id"),
+    kind: text("kind").notNull(),
+    method: text("method"),
+    intervalDays: integer("interval_days"),
+    minQtyMilli: integer("min_qty_milli"),
+    adjustBp: integer("adjust_bp").notNull(),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    foreignKey({
+      name: "price_rules_list_fk",
+      columns: [t.priceListId, t.supplierOrgId],
+      foreignColumns: [priceLists.id, priceLists.supplierOrgId],
+    }).onDelete("cascade"),
+    foreignKey({
+      name: "price_rules_product_fk",
+      columns: [t.productId, t.supplierOrgId],
+      foreignColumns: [products.id, products.supplierOrgId],
+    }).onDelete("cascade"),
+    uniqueIndex("price_rules_key").on(
+      t.priceListId,
+      sql`coalesce(${t.productId}, '00000000-0000-0000-0000-000000000000'::uuid)`,
+      t.kind,
+      sql`coalesce(${t.method}, '')`,
+      sql`coalesce(${t.intervalDays}, -1)`,
+      sql`coalesce(${t.minQtyMilli}, -1)`,
+    ),
+    index("price_rules_list_idx").on(t.priceListId),
+    check("price_rules_kind", sql`${t.kind} in ('method', 'interval', 'qty')`),
+    check(
+      "price_rules_shape",
+      sql`(${t.kind} = 'method' and ${t.method} in ('cash', 'transfer') and ${t.intervalDays} is null and ${t.minQtyMilli} is null)
+        or (${t.kind} = 'interval' and ${t.method} is null and ${t.intervalDays} between 0 and 365 and ${t.minQtyMilli} is null)
+        or (${t.kind} = 'qty' and ${t.method} is null and ${t.intervalDays} is null and ${t.minQtyMilli} > 0)`,
+    ),
+    check("price_rules_adjust_range", sql`${t.adjustBp} between -9000 and 5000`),
+  ],
+);
+
+// A buyer's request to pay a supplier in a certain way (and so get that way's price change). The supplier
+// sees the effect and approves or declines; only an approved request changes the customer's terms.
+export const paymentTermRequests = pgTable(
+  "payment_term_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    supplierOrgId: uuid("supplier_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    buyerOrgId: uuid("buyer_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    method: text("method"),
+    intervalDays: integer("interval_days"),
+    status: text("status").notNull().default("pending"),
+    decidedByUserId: uuid("decided_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    uniqueIndex("payment_term_requests_one_pending")
+      .on(t.supplierOrgId, t.buyerOrgId)
+      .where(sql`${t.status} = 'pending'`),
+    index("payment_term_requests_supplier_idx").on(t.supplierOrgId, t.status),
+    check("payment_term_requests_status", sql`${t.status} in ('pending', 'approved', 'declined')`),
+    check("payment_term_requests_method", sql`${t.method} is null or ${t.method} in ('cash', 'transfer')`),
+  ],
+);
+
 export const supplierCustomers = pgTable(
   "supplier_customers",
   {
@@ -318,6 +395,10 @@ export const supplierCustomers = pgTable(
     connectedAt: timestamp("connected_at", { withTimezone: true }),
     // The supplier's private remark about this customer; never shown to the buyer.
     privateNote: text("private_note"),
+    // Payment terms the supplier approved for this customer (null = the standard price, no payment
+    // adjustment). A change is requested by the buyer in payment_term_requests and approved by the supplier.
+    termsMethod: text("terms_method"),
+    termsIntervalDays: integer("terms_interval_days"),
     ...timestamps,
   },
   (t) => [
@@ -428,6 +509,9 @@ export const orders = pgTable(
     vatMinor: bigint("vat_minor", { mode: "number" }).notNull(),
     totalMinor: bigint("total_minor", { mode: "number" }).notNull(),
     idempotencyKey: uuid("idempotency_key").notNull(),
+    // The agreed payment terms at submission (null = standard): how the buyer pays and when.
+    paymentMethod: text("payment_method"),
+    paymentIntervalDays: integer("payment_interval_days"),
     createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
     ...timestamps,
   },
@@ -455,6 +539,10 @@ export const orderItems = pgTable(
     unit: productUnit("unit").notNull(),
     packDescription: text("pack_description"),
     unitPriceMinor: bigint("unit_price_minor", { mode: "number" }).notNull(),
+    // The list price before conditions (payment terms, quantity tier) and the change they made, in
+    // basis points (negative = discount). unit_price_minor is the price after.
+    listPriceMinor: bigint("list_price_minor", { mode: "number" }),
+    adjustBp: integer("adjust_bp").notNull().default(0),
     vatRateBp: integer("vat_rate_bp").notNull(),
     orderedQtyMilli: integer("ordered_qty_milli").notNull(),
     // Null until the supplier confirms; 0 means "unavailable".

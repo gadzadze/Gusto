@@ -1,3 +1,4 @@
+import { UnitPrice } from "@/components/orders/unit-price";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { TotalsBlock } from "@/components/orders/totals-block";
@@ -40,6 +41,19 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
             {order.deliveryInstructions ? <span className="block text-muted-foreground">{order.deliveryInstructions}</span> : null}
           </dd>
         </div>
+        {order.paymentMethod || order.paymentIntervalDays !== null ? (
+          <div className="sm:col-span-2">
+            <dt className="text-muted-foreground">{t("terms.paymentLabel")}</dt>
+            <dd className="font-medium">
+              {[
+                order.paymentMethod ? t(`terms.method.${order.paymentMethod as "cash"}`) : null,
+                order.paymentIntervalDays === null ? null : order.paymentIntervalDays === 0 ? t("terms.onDelivery") : t("terms.days", { count: order.paymentIntervalDays }),
+              ]
+                .filter(Boolean)
+                .join(", ")}
+            </dd>
+          </div>
+        ) : null}
         {order.requestedDeliveryDate || order.deliveryDate ? (
           <div className="sm:col-span-2">
             <dt className="text-muted-foreground">{t("detail.deliveryDay")}</dt>
@@ -108,7 +122,7 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
                     )}
                   </TD>
                   <TD className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">
-                    {fmt.money(item.unitPriceMinor, order.currency)}
+                    <UnitPrice price={fmt.money(item.unitPriceMinor, order.currency)} listPrice={item.listPriceMinor === null ? null : fmt.money(item.listPriceMinor, order.currency)} adjustBp={item.adjustBp} />
                   </TD>
                   <TD className="whitespace-nowrap text-right tabular-nums">{fmt.money(item.lineTotalMinor, order.currency)}</TD>
                 </TR>

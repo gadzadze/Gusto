@@ -116,9 +116,9 @@ test("a buyer who arrives from a supplier's link waits on a pending page until t
   await expect(buyer).toHaveURL(/\/pending$/);
   await expect(buyer.getByRole("heading", { name: "თქვენი ბიზნესი მოწმდება" })).toBeVisible();
 
-  // The supplier sees the connection is waiting for Gusto's check.
+  // The supplier sees the connection is waiting for 202's check.
   await supplier.goto("/supplier/customers");
-  await expect(supplier.getByRole("row", { name: new RegExp(`Waiting ${suffix}`) })).toContainText("ელოდება Gusto-ს გადამოწმებას");
+  await expect(supplier.getByRole("row", { name: new RegExp(`Waiting ${suffix}`) })).toContainText("ელოდება 202-ს გადამოწმებას");
 
   // The admin finds them in the queue, sees the ID and the invite source, approves.
   await admin.goto("/admin/organizations?type=buyer&status=pending_review");

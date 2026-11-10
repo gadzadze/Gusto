@@ -12,6 +12,7 @@ import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatPhone } from "@/lib/phone";
 import { requireSupplier } from "@/server/auth/guards";
 import { listInvitingBuyers } from "@/server/domain/buyer/supplier-invites";
+import { listTermsRequests } from "@/server/domain/pricing/conditions";
 import { listCustomers } from "@/server/domain/customers/customers";
 import { InvitingBuyers } from "@/components/customers/inviting-buyers";
 
@@ -31,7 +32,7 @@ async function Customers() {
   const ctx = await requireSupplier();
   const t = await getTranslations("customers");
   const format = await getFormatter();
-  const [customers, invitingBuyers] = await Promise.all([listCustomers(ctx), listInvitingBuyers(ctx)]);
+  const [customers, invitingBuyers, termsRequests] = await Promise.all([listCustomers(ctx), listInvitingBuyers(ctx), listTermsRequests(ctx)]);
   const canInvite = ctx.orgStatus === "active";
 
   return (
@@ -41,6 +42,18 @@ async function Customers() {
         <InvitingBuyers
           rows={invitingBuyers.map((b) => ({ inviteId: b.inviteId, buyerName: b.buyerName, invitedAt: format.dateTime(b.invitedAt, { dateStyle: "medium" }) }))}
         />
+      ) : null}
+      {termsRequests.length > 0 ? (
+        <section className="space-y-2 rounded-xl border border-brand/30 bg-brand-soft/40 p-4" aria-labelledby="terms-requests">
+          <h2 id="terms-requests" className="font-semibold">{t("terms.bannerTitle", { count: termsRequests.length })}</h2>
+          <ul className="space-y-1 text-sm">
+            {termsRequests.map((r) => (
+              <li key={r.id}>
+                <Link href={`/supplier/customers/${r.customerId}`} className="font-medium text-brand underline-offset-2 hover:underline">{r.buyerName}</Link>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
       {ctx.orgStatus === "pending_review" ? <Notice icon={Users} tone="amber" title={t("notActive")} /> : null}
       {canInvite ? (

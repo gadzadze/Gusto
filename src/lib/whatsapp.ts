@@ -1,5 +1,5 @@
 // Builds a wa.me link that opens WhatsApp with a prefilled message. The user
-// sends it themselves — Gusto never records this as a delivered notification
+// sends it themselves — 202 never records this as a delivered notification
 // (CLAUDE.md, "Product honesty rules").
 
 /** `phone` in any format with a country code (E.164 preferred). Returns null if unusable. */

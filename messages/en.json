@@ -1,10 +1,10 @@
 {
   "brand": {
-    "name": "Gusto",
+    "name": "202",
     "tagline": "Your suppliers, in one place"
   },
   "metadata": {
-    "title": "Gusto - orders with your suppliers",
+    "title": "202 - orders with your suppliers",
     "description": "A B2B ordering platform for restaurants, cafés, hotels and their suppliers."
   },
   "landing": {
@@ -38,7 +38,7 @@
     "tour": {
       "kicker": "How it works",
       "title": "From scattered chats to one place, in four steps.",
-      "aria": "Gusto tour",
+      "aria": "202 tour",
       "tab1": "Catalog",
       "tab2": "Invitation",
       "tab3": "Order",
@@ -55,8 +55,8 @@
       "product": "Product",
       "base": "Base",
       "clientPrice": "Customer price",
-      "inviteText": "Hello! I'm inviting you to Gusto, where you'll find my catalog with your prices.",
-      "inviteCard": "Food Distribution invites you to Gusto",
+      "inviteText": "Hello! I'm inviting you to 202, where you'll find my catalog with your prices.",
+      "inviteCard": "Food Distribution invites you to 202",
       "inviteMeta": "One-time link · 14 days",
       "confirm": "Confirm",
       "undo": "Cancel"
@@ -101,7 +101,7 @@
     "trust": {
       "kicker": "Trust",
       "title": "A closed network. Verified businesses.",
-      "body": "Gusto is not an open online marketplace. We check every business, and a buyer sees only their own suppliers and their own prices.",
+      "body": "202 is not an open online marketplace. We check every business, and a buyer sees only their own suppliers and their own prices.",
       "i1Title": "By invitation only",
       "i1Body": "Only approved email addresses can sign in.",
       "i2Title": "Prices stay private",
@@ -118,7 +118,7 @@
     },
     "close": {
       "title": "Ready to start?",
-      "body": "Gusto is free for suppliers and for their customers. Start by sending a request.",
+      "body": "202 is free for suppliers and for their customers. Start by sending a request.",
       "cta": "Request to join",
       "signIn": "Sign in",
       "sTitle": "For suppliers",
@@ -167,14 +167,14 @@
       "reorder": "Order again",
       "total": "Total"
     },
-    "footer": "© Gusto · Georgia",
+    "footer": "© 202 · Georgia",
     "legalTerms": "Terms of service",
     "legalPrivacy": "Privacy policy"
   },
   "demo": {
     "banner": "Demo version: all data is made up and reloaded every night.",
     "accountsTitle": "Demo accounts",
-    "accountsBody": "Try Gusto with made-up data. Sign in with an email and password.",
+    "accountsBody": "Try 202 with made-up data. Sign in with an email and password.",
     "role_supplier": "Supplier",
     "role_restaurant": "Restaurant",
     "password": "Password"
@@ -186,12 +186,12 @@
     "system": "Match device"
   },
   "welcomeEmail": {
-    "subject": "Gusto - your account is ready",
-    "body": "Hello,\n\nYour business has been approved on Gusto. To sign in and set your password, open this link:\n\n{link}\n\nThe link is single-use and valid for a limited time. If it has expired, open the sign-in page and choose \"Set or reset password\" to get a new one.\n\nIf you weren't expecting this email, just ignore it."
+    "subject": "202 - your account is ready",
+    "body": "Hello,\n\nYour business has been approved on 202. To sign in and set your password, open this link:\n\n{link}\n\nThe link is single-use and valid for a limited time. If it has expired, open the sign-in page and choose \"Set or reset password\" to get a new one.\n\nIf you weren't expecting this email, just ignore it."
   },
   "login": {
-    "title": "Sign in to Gusto",
-    "subtitle": "Only verified businesses can sign in to Gusto. First time here? Use the link from your email, or choose \"Set or reset password\".",
+    "title": "Sign in to 202",
+    "subtitle": "Only verified businesses can sign in to 202. First time here? Use the link from your email, or choose \"Set or reset password\".",
     "google": "Sign in with Google",
     "or": "or",
     "emailLabel": "Email",
@@ -207,21 +207,21 @@
       "rate_limited": "Too many attempts. Try again in a few minutes.",
       "auth": "Sign-in failed. The link may have expired - try again.",
       "unknown": "Sign-in failed. Try again.",
-      "not_allowed": "This email has not been approved yet. Only verified businesses can sign in to Gusto.",
+      "not_allowed": "This email has not been approved yet. Only verified businesses can sign in to 202.",
       "wrong_credentials": "The email or password is wrong."
     },
     "passwordLabel": "Password",
     "signIn": "Sign in",
     "signingIn": "Signing in…",
     "forgot": "Set or reset password",
-    "supplierPrompt": "Are you a supplier and want to join Gusto?",
+    "supplierPrompt": "Are you a supplier and want to join 202?",
     "supplierLink": "Send us a request",
     "legalNote": "By continuing you agree to the <terms>Terms of Service</terms> and the <privacy>Privacy Policy</privacy>."
   },
   "onboarding": {
-    "title": "Welcome to Gusto",
+    "title": "Welcome to 202",
     "subtitle": "Tell us briefly about your business. A verified business is activated at once; otherwise, after our approval.",
-    "kindLegend": "How do you use Gusto?",
+    "kindLegend": "How do you use 202?",
     "kindBuyer": "I buy",
     "kindBuyerHint": "A restaurant, café, hotel or shop",
     "kindSupplier": "I supply",
@@ -322,13 +322,13 @@
   "supplier": {
     "dashboardTitle": "Home",
     "pendingTitle": "Your account is under review",
-    "pendingBody": "The Gusto team is checking your business. Once approved, you can invite customers and receive orders.",
+    "pendingBody": "The 202 team is checking your business. Once approved, you can invite customers and receive orders.",
     "suspendedTitle": "Account suspended",
-    "suspendedBody": "Contact Gusto support for details.",
+    "suspendedBody": "Contact 202 support for details.",
     "emptyTitle": "No orders yet",
     "emptyBody": "When customers send you an order, it will appear here.",
     "noCategoriesTitle": "No categories added yet",
-    "noCategoriesBody": "You can add products once the Gusto team adds categories.",
+    "noCategoriesBody": "You can add products once the 202 team adds categories.",
     "newOrders": "New orders: {count}",
     "openOrders": "View orders",
     "dashboard": {
@@ -340,7 +340,7 @@
       "weekHint": "Orders sent to you, whatever their status, compared with the previous 7 days.",
       "weekPrevious": "Previous 7 days: {count}",
       "value": "Order value, 30 days",
-      "valueHint": "Total of confirmed and delivered orders in the last 30 days. This is order value, not revenue: Gusto doesn't know whether they were paid.",
+      "valueHint": "Total of confirmed and delivered orders in the last 30 days. This is order value, not revenue: 202 doesn't know whether they were paid.",
       "top": "Top 5 products, 30 days",
       "topHint": "By confirmed quantity, in confirmed and delivered orders of the last 30 days.",
       "topEmpty": "No data yet.",
@@ -351,7 +351,7 @@
   "buyer": {
     "dashboardTitle": "Home",
     "emptyTitle": "You don't have any suppliers yet",
-    "emptyBody": "When a supplier invites you to Gusto, their catalog with your prices will appear here.",
+    "emptyBody": "When a supplier invites you to 202, their catalog with your prices will appear here.",
     "suppliersTitle": "Suppliers",
     "searchPlaceholder": "Search for a product across all suppliers",
     "searchTitle": "Search",
@@ -385,7 +385,32 @@
       "orderedTimes": "Ordered {count, plural, one {# time} other {# times}}",
       "from": "Supplier: {supplier}"
     },
-    "inviteSupplier": "Invite a supplier"
+    "inviteSupplier": "Invite a supplier",
+    "terms": {
+      "title": "Payment terms and discounts",
+      "intro": "Choose how you want to pay {supplier}. The price changes by the percentage shown. {supplier} has to approve it first; until then the standard price applies.",
+      "methodLabel": "How do you pay?",
+      "intervalLabel": "When do you pay?",
+      "standard": "Standard price",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "onDelivery": "On delivery",
+      "days": "{count, plural, one {# day} other {# days}} after delivery",
+      "current": "Agreed now: {terms}",
+      "currentStandard": "Agreed now: standard price",
+      "pending": "Waiting for {supplier} to approve: {terms}",
+      "declined": "Your last request was declined. The standard price still applies.",
+      "send": "Send request",
+      "sent": "Request sent. {supplier} will see what it changes and approve it.",
+      "tiersTitle": "Quantity discounts",
+      "tierRow": "from {qty}: {change}",
+      "errors": {
+        "not_offered": "That option is not offered any more. Reload the page.",
+        "unknown": "Could not send the request. Try again."
+      }
+    }
   },
   "admin": {
     "overviewTitle": "Overview",
@@ -460,7 +485,7 @@
       "standardDone": "Created: {created} · already there: {existing}",
       "fromFile": {
         "title": "Add categories from a product file",
-        "hint": "Upload a supplier's product file (CSV or Excel) and you'll see which categories Gusto is missing. The file is read in your browser; only the category names are sent to the server.",
+        "hint": "Upload a supplier's product file (CSV or Excel) and you'll see which categories 202 is missing. The file is read in your browser; only the category names are sent to the server.",
         "choose": "Choose a file",
         "noColumn": "The category column could not be found automatically.",
         "pickColumn": "Which column is the category?",
@@ -559,7 +584,7 @@
     },
     "access": {
       "title": "Access",
-      "intro": "Only the emails added here can sign in to Gusto. Add the email of a business you have checked yourself (ID, phone): the person gets a link by email and creates their own password. A supplier's invitation doesn't open the door - an invited buyer must be on this list too.",
+      "intro": "Only the emails added here can sign in to 202. Add the email of a business you have checked yourself (ID, phone): the person gets a link by email and creates their own password. A supplier's invitation doesn't open the door - an invited buyer must be on this list too.",
       "email": "Email",
       "note": "Note",
       "notePlaceholder": "E.g.: Winiveria, manager",
@@ -633,7 +658,7 @@
         "copied": "Copied",
         "noPhone": "The phone is unknown: WhatsApp will open and you choose the recipient yourself.",
         "rateLimited": "You created too many links. Try again in a while.",
-        "message": "Hello! Your business has been approved on Gusto. To sign in and set your password, open this link (single-use): {link}"
+        "message": "Hello! Your business has been approved on 202. To sign in and set your password, open this link (single-use): {link}"
       }
     },
     "pendingBadge": "Pending: {count}",
@@ -896,8 +921,8 @@
     "stepPreview": "Check",
     "chooseFile": "Choose a file",
     "parsing": "Reading…",
-    "validCategories": "Categories that exist in Gusto:",
-    "validCategoriesHint": "A category in the file must match one of these. Letter case, extra spaces and common synonyms don't get in the way. To add a new category, contact Gusto support.",
+    "validCategories": "Categories that exist in 202:",
+    "validCategoriesHint": "A category in the file must match one of these. Letter case, extra spaces and common synonyms don't get in the way. To add a new category, contact 202 support.",
     "fileErrors": {
       "too_large": "The file is too large (60 MB at most). Reduce the size of the photos and try again.",
       "unsupported": "Upload a .csv or .xlsx file.",
@@ -1011,7 +1036,7 @@
     "title": "Customers",
     "add": "Add a customer",
     "newTitle": "New customer",
-    "intro": "Add the businesses you already serve. Each gets a personal link and sees only the products you mark for them, at their own prices. They can sign in only once Gusto has approved them.",
+    "intro": "Add the businesses you already serve. Each gets a personal link and sees only the products you mark for them, at their own prices. They can sign in only once 202 has approved them.",
     "notActive": "You can invite customers once your account is approved. Until then, you can prepare your catalog and prices.",
     "emptyTitle": "You don't have any customers yet",
     "emptyBody": "Add your first customer and send them the invitation link on WhatsApp.",
@@ -1046,7 +1071,7 @@
       "whatsapp": "Send on WhatsApp",
       "whatsappNote": "WhatsApp opens with the text ready - you have to confirm sending.",
       "emailNotSent": "Sending by email isn't switched on yet. Send the link on WhatsApp or copy it.",
-      "message": "Hello{name}! {supplier} invites you to Gusto. With this link you'll see our catalog with your prices and can send an order: {link}",
+      "message": "Hello{name}! {supplier} invites you to 202. With this link you'll see our catalog with your prices and can send an order: {link}",
       "expires": "Valid for 14 days.",
       "toCustomer": "To the customer's page",
       "another": "Add another customer"
@@ -1091,9 +1116,9 @@
       "unknown": "Could not be completed. Try again.",
       "rate_limited": "Too many attempts. Try again in a while."
     },
-    "awaitingVerification": "Awaiting Gusto's verification",
+    "awaitingVerification": "Awaiting 202's verification",
     "invitingBuyers": {
-      "title": "Buyers who invited you to Gusto",
+      "title": "Buyers who invited you to 202",
       "hint": "These buyers already order from you and want to see your catalog. Once you add them as customers, they will see only what your default price list covers. If you don't have such a list, the buyer sees nothing until you assign one.",
       "add": "Add as a customer",
       "adding": "Adding…",
@@ -1103,6 +1128,30 @@
         "suspended": "Your account is suspended - changes aren't possible.",
         "unknown": "Could not be completed. Try again."
       }
+    },
+    "terms": {
+      "title": "Payment terms",
+      "current": "Agreed now: {terms}",
+      "standard": "Standard price",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "onDelivery": "On delivery",
+      "days": "{count, plural, one {# day} other {# days}} after delivery",
+      "requestTitle": "Request to change payment terms",
+      "requestBody": "{buyer} asks to pay: {terms}.",
+      "changeLine": "Change on every price: {from} → {to}",
+      "sampleTitle": "Example prices (before → after, quantity discounts not counted)",
+      "approve": "Approve",
+      "decline": "Decline",
+      "reset": "Back to the standard price",
+      "editConditions": "Edit the conditions of the price list",
+      "errors": {
+        "request_not_pending": "This request was already decided.",
+        "unknown": "Could not save. Try again."
+      },
+      "bannerTitle": "{count, plural, one {# customer asks} other {# customers ask}} to change payment terms"
     }
   },
   "regular": {
@@ -1201,14 +1250,52 @@
       "too_long": "The name is too long.",
       "invalid": "Check the highlighted fields.",
       "unknown": "Could not be completed. Try again."
+    },
+    "conditions": {
+      "title": "Conditions",
+      "intro": "Set how the price changes with the way a customer pays and how much they order. Customers on this list see these conditions next to your prices and choose how they pay; you approve before prices change.",
+      "scope": "Applies to",
+      "scopeList": "All products on this list",
+      "hasOwn": "own values",
+      "scopeListHint": "These values apply to every product on the list, unless a product has its own.",
+      "scopeProductHint": "Own values for this product. A field left empty follows the whole list; quantity rows added here replace the list's.",
+      "howToType": "Type the change in percent: -3 makes the price 3% lower, 2 makes it 2% higher, 0 means no change. Leave a row empty if you don't offer it.",
+      "methodTitle": "Payment method",
+      "methodHint": "How the customer can pay. A method left empty is not offered.",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "intervalTitle": "Payment interval",
+      "intervalHint": "When the customer pays after delivery. A row left empty is not offered.",
+      "onDelivery": "On delivery",
+      "days": "{count, plural, one {# day} other {# days}} after delivery",
+      "otherInterval": "Other number of days",
+      "add": "Add",
+      "qtyTitle": "Quantity discounts",
+      "qtyHint": "Order more of a product, pay less (or more) per unit. The highest row a line reaches applies to that line.",
+      "qtyInherited": "This product follows the list's {count, plural, one {# quantity row} other {# quantity rows}}. Adding a row here replaces them for this product.",
+      "from": "From",
+      "qtyLabel": "Quantity",
+      "qtyPctLabel": "Price change",
+      "addTier": "Add a quantity row",
+      "remove": "Remove",
+      "pctPlaceholder": "0",
+      "save": "Save conditions",
+      "saved": "Conditions saved",
+      "useList": "Use the list's values",
+      "errors": {
+        "invalid_rule": "Check the rows: percentages from -90 to 50, quantities above 0, no repeated rows.",
+        "unknown": "Could not save. Try again."
+      }
     }
   },
   "invite": {
-    "title": "Invitation to Gusto",
+    "title": "Invitation to 202",
     "heading": "{supplier} invites you",
     "body": "Once connected, you'll see {supplier}'s catalog with the prices set for you and can send orders.",
     "signIn": "Sign in and accept",
-    "signInHint": "Only a business approved by Gusto can sign in. If your business hasn't been approved yet, contact us.",
+    "signInHint": "Only a business approved by 202 can sign in. If your business hasn't been approved yet, contact us.",
     "acceptAs": "Accept on behalf of {business}",
     "accept": "Accept the invitation",
     "newBuyerTitle": "A few details about your business",
@@ -1282,7 +1369,7 @@
     "noteHint": "Optional. E.g.: delivery before 11:00.",
     "submit": "Send order",
     "submitting": "Sending…",
-    "paymentNote": "Gusto doesn't process payment - you settle up as agreed with the supplier.",
+    "paymentNote": "202 doesn't process payment - you settle up as agreed with the supplier.",
     "changedTitle": "There are changes in the cart",
     "changedBody": "The order was not sent. Look through the changes and try again.",
     "reviewAgain": "Refresh and review",
@@ -1303,7 +1390,7 @@
       "invalid": "Check the highlighted fields.",
       "unknown": "The order could not be sent. Try again.",
       "rate_limited": "Too many attempts. Try again in a while.",
-      "buyer_suspended": "Your account is suspended. Contact Gusto support.",
+      "buyer_suspended": "Your account is suspended. Contact 202 support.",
       "buyer_not_verified": "Your business hasn't been approved yet. You can order once it is."
     }
   },
@@ -1329,7 +1416,7 @@
       "status": "Status"
     },
     "placed": "Order sent",
-    "placedBody": "{supplier} will receive the order in Gusto. The status will update here.",
+    "placedBody": "{supplier} will receive the order in 202. The status will update here.",
     "recent": "Recent orders",
     "orderAgain": "Order again",
     "viewAll": "All orders",
@@ -1370,7 +1457,12 @@
       "summary": "Orders: {orders}",
       "otherCategory": "Other",
       "inOrders": "in {count, plural, one {# order} other {# orders}}",
-      "stops": "Addresses"
+      "stops": "Addresses",
+      "viewLabel": "View",
+      "viewProducts": "Loading: by product",
+      "viewStops": "Delivery: by address",
+      "hintProducts": "All orders in one place: take each product once, and the split below shows who gets how much. Tick items as they go on the truck.",
+      "hintStops": "What goes to each address. Load the last stop's goods first."
     },
     "actions": {
       "confirm": "Confirm",
@@ -1404,9 +1496,20 @@
     "whatsapp": {
       "sendToSupplier": "Send to the supplier on WhatsApp",
       "tellBuyer": "Message the buyer on WhatsApp",
-      "hint": "WhatsApp opens with a message ready. Sending is up to you - Gusto doesn't record whether it was sent.",
+      "hint": "WhatsApp opens with a message ready. Sending is up to you - 202 doesn't record whether it was sent.",
       "sendNow": "Send the order on WhatsApp",
-      "sendNowHint": "WhatsApp opens with the order written out: items, total, address and link. All that's left is to press send. Gusto doesn't record whether it was sent."
+      "sendNowHint": "WhatsApp opens with the order written out: items, total, address and link. All that's left is to press send. 202 doesn't record whether it was sent."
+    },
+    "terms": {
+      "standard": "Standard price",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "onDelivery": "on delivery",
+      "days": "{count, plural, one {# day} other {# days}} after delivery",
+      "listPrice": "List price {price}",
+      "paymentLabel": "Payment"
     }
   },
   "notifications": {
@@ -1429,7 +1532,7 @@
     },
     "preferences": {
       "title": "Email notifications",
-      "hint": "Notifications always show in Gusto. Choose what you also want by email.",
+      "hint": "Notifications always show in 202. Choose what you also want by email.",
       "newOrders": "New orders",
       "orderUpdates": "Order status changes",
       "save": "Save",
@@ -1447,7 +1550,7 @@
       "items": "Items: {count}",
       "total": "Total: {total}",
       "open": "View the order: {link}",
-      "footer": "This message was sent to you by Gusto. You can switch off email notifications on the notifications page.",
+      "footer": "This message was sent to you by 202. You can switch off email notifications on the notifications page.",
       "openLabel": "View the order"
     },
     "regular": {
@@ -1462,7 +1565,7 @@
       "toBuyerDelivered": "Hello! Your order {number} has been delivered. Thank you! {link}",
       "toBuyerRejected": "Hello! Unfortunately we can't fulfill order {number}. Details: {link}",
       "order": {
-        "header": "Hello! I've sent you order {number} on Gusto.\nBuyer: {buyer}",
+        "header": "Hello! I've sent you order {number} on 202.\nBuyer: {buyer}",
         "line": "• {name} - {qty}",
         "more": "... and {count} more items",
         "total": "Total: {total}",
@@ -1512,7 +1615,7 @@
   "supplierRequest": {
     "signIn": "Sign in",
     "title": "Sell more easily - to your own buyers",
-    "intro": "Gusto helps suppliers receive orders from restaurants, cafés and hotels in one place - instead of WhatsApp and phone calls.",
+    "intro": "202 helps suppliers receive orders from restaurants, cafés and hotels in one place - instead of WhatsApp and phone calls.",
     "point1": "Free: no commission, no payments.",
     "point2": "Your customers repeat an order at your prices in a few taps.",
     "point3": "Prices stay private: each customer sees only their own prices.",
@@ -1528,7 +1631,7 @@
     "phone": "Phone",
     "phonePlaceholder": "5XX XX XX XX",
     "email": "Company email",
-    "emailHint": "You'll sign in to Gusto with this address. A company's own email is best.",
+    "emailHint": "You'll sign in to 202 with this address. A company's own email is best.",
     "note": "What do you sell? (optional)",
     "submit": "Send request",
     "sending": "Sending…",
@@ -1540,10 +1643,10 @@
       "unknown": "Could not send. Try again."
     },
     "privacyNote": "By sending the request you agree to the <privacy>Privacy Policy</privacy>. We'll use the data only to contact you.",
-    "invitedTitle": "{buyer} invites you to Gusto",
-    "invitedBody": "{buyer} buys from you and invites you to Gusto. Fill in the short form: we'll check the business, and after approval you can add {buyer} as your customer.",
+    "invitedTitle": "{buyer} invites you to 202",
+    "invitedBody": "{buyer} buys from you and invites you to 202. Fill in the short form: we'll check the business, and after approval you can add {buyer} as your customer.",
     "invitedUnavailable": "This invitation link no longer works, but you can still send a request to join.",
-    "invitedIntro": "Gusto is a comfortable space for a supplier: it keeps your catalog and each customer's prices, and orders arrive neatly in one list.",
+    "invitedIntro": "202 is a comfortable space for a supplier: it keeps your catalog and each customer's prices, and orders arrive neatly in one list.",
     "invitedPoint1": "Catalog and prices in one place: each customer sees only their own prices.",
     "invitedPoint2": "Orders arrive neatly organized, instead of forwarded WhatsApp messages.",
     "invitedPoint3": "Free: no commission, no payments. You decide who sees what."
@@ -1564,30 +1667,30 @@
       "operatorEmail": "Email"
     },
     "terms": {
-      "metaTitle": "Terms of service - Gusto",
-      "metaDescription": "The terms of using Gusto for suppliers and buyers.",
+      "metaTitle": "Terms of service - 202",
+      "metaDescription": "The terms of using 202 for suppliers and buyers.",
       "title": "Terms of service",
-      "intro": "These terms govern the use of Gusto. By using the service you agree to them. If you don't agree, please don't use the service.",
+      "intro": "These terms govern the use of 202. By using the service you agree to them. If you don't agree, please don't use the service.",
       "sections": [
         {
-          "title": "What Gusto is",
+          "title": "What 202 is",
           "paragraphs": [
-            "Gusto is an online platform where suppliers (distributors, importers, producers) put their catalog and their existing customers, and customers (restaurants, cafés, hotels) send orders to their suppliers.",
-            "An order sent on Gusto is a purchase request. The sale takes place only between the buyer and the supplier, the way they usually do it. Gusto is not a party to that transaction.",
-            "Gusto does not take payments, does not charge commission, does not carry out deliveries and does not control prices, availability or the quality of goods."
+            "202 is an online platform where suppliers (distributors, importers, producers) put their catalog and their existing customers, and customers (restaurants, cafés, hotels) send orders to their suppliers.",
+            "An order sent on 202 is a purchase request. The sale takes place only between the buyer and the supplier, the way they usually do it. 202 is not a party to that transaction.",
+            "202 does not take payments, does not charge commission, does not carry out deliveries and does not control prices, availability or the quality of goods."
           ]
         },
         {
           "title": "The pilot stage",
           "paragraphs": [
-            "Gusto is currently in a pilot stage and is free. Features may change, be paused or be discontinued.",
+            "202 is currently in a pilot stage and is free. Features may change, be paused or be discontinued.",
             "We offer the service as it is, without a guarantee of uninterrupted operation."
           ]
         },
         {
           "title": "Who can use it",
           "paragraphs": [
-            "Only a business that Gusto has approved can sign in to Gusto. The service is meant for businesses, not for personal use.",
+            "Only a business that 202 has approved can sign in to 202. The service is meant for businesses, not for personal use.",
             "When you create an organization you must give the correct name and legal ID (9 digits for a company, 11 digits for a sole trader). An administrator may check this data.",
             "Until an organization is approved, access may be limited. For example, a buyer won't be able to send an order."
           ]
@@ -1602,7 +1705,7 @@
         {
           "title": "For suppliers",
           "paragraphs": [
-            "If you are a supplier on Gusto:"
+            "If you are a supplier on 202:"
           ],
           "items": [
             "You are responsible for the accuracy of your catalog, prices, VAT and availability.",
@@ -1614,7 +1717,7 @@
         {
           "title": "For buyers",
           "paragraphs": [
-            "If you are a buyer on Gusto:"
+            "If you are a buyer on 202:"
           ],
           "items": [
             "An order is a request until the supplier confirms it. The supplier can change quantities or decline the order.",
@@ -1626,8 +1729,8 @@
         {
           "title": "Notifications and WhatsApp",
           "paragraphs": [
-            "Gusto sends you notifications about orders in the app and by email. You can switch off email notifications in the notification settings.",
-            "The \"Send on WhatsApp\" button only opens WhatsApp with a ready text. You send the text yourself. Gusto sends nothing on WhatsApp and does not keep any information about whether a message was sent."
+            "202 sends you notifications about orders in the app and by email. You can switch off email notifications in the notification settings.",
+            "The \"Send on WhatsApp\" button only opens WhatsApp with a ready text. You send the text yourself. 202 sends nothing on WhatsApp and does not keep any information about whether a message was sent."
           ]
         },
         {
@@ -1652,7 +1755,7 @@
         {
           "title": "Limitation of liability",
           "paragraphs": [
-            "To the extent permitted by law, Gusto is not liable for the transaction between a buyer and a supplier, for prices, quality, delivery, payment, or disputes between them. Nor for losses caused by the service being temporarily unavailable.",
+            "To the extent permitted by law, 202 is not liable for the transaction between a buyer and a supplier, for prices, quality, delivery, payment, or disputes between them. Nor for losses caused by the service being temporarily unavailable.",
             "This does not limit any liability that the law does not allow to be limited."
           ]
         },
@@ -1671,8 +1774,8 @@
       ]
     },
     "privacy": {
-      "metaTitle": "Privacy policy - Gusto",
-      "metaDescription": "How we process and protect personal data in Gusto.",
+      "metaTitle": "Privacy policy - 202",
+      "metaDescription": "How we process and protect personal data in 202.",
       "title": "Privacy policy",
       "intro": "Here we explain what data we collect, why, who we share it with and what rights you have.",
       "sections": [
@@ -1680,7 +1783,7 @@
           "title": "Who processes your data",
           "paragraphs": [
             "Personal data is processed by the organization named at the end of this page (the controller). In this policy we call it \"we\".",
-            "The policy covers the use of Gusto: the site, sign-in and the ordering service."
+            "The policy covers the use of 202: the site, sign-in and the ordering service."
           ]
         },
         {
@@ -1718,7 +1821,7 @@
           "title": "Who we share it with",
           "items": [
             "The buyer and the supplier you deal with: the organization's name, the contact person and the order data. One supplier can't see another's customers or prices.",
-            "Gusto administrators: contact and status information, and order lookup. Every order lookup is recorded in the log. Administrators' support tools don't show price lists or the catalog.",
+            "202 administrators: contact and status information, and order lookup. Every order lookup is recorded in the log. Administrators' support tools don't show price lists or the catalog.",
             "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry), and Google if you sign in that way.",
             "When you remove the background from a product photo, your browser downloads a helper model file once from Hugging Face, which therefore sees your IP address. The photo itself is processed on your device and sent nowhere.",
             "Public authorities, only in cases required by law."
@@ -1770,7 +1873,7 @@
   },
   "supplierInvite": {
     "title": "Invite a supplier",
-    "intro": "If your supplier isn't on Gusto yet, invite them. They send us a request to join, we check the business, and once approved the supplier can add you as a customer. The supplier opens the catalog and prices to you themselves.",
+    "intro": "If your supplier isn't on 202 yet, invite them. They send us a request to join, we check the business, and once approved the supplier can add you as a customer. The supplier opens the catalog and prices to you themselves.",
     "name": "Supplier's name",
     "phone": "Phone (WhatsApp)",
     "email": "Email",
@@ -1787,8 +1890,8 @@
       "whatsappNote": "WhatsApp opens with the text ready - you have to confirm sending.",
       "emailNotSent": "Sending by email isn't switched on yet. Send the link on WhatsApp or copy it."
     },
-    "message": "Hello! {buyer} invites you to Gusto. Here suppliers receive orders from customers in one place, at prices they set themselves. Send us a request to join with this link: {link}",
-    "emailSubject": "{buyer} invites you to Gusto",
+    "message": "Hello! {buyer} invites you to 202. Here suppliers receive orders from customers in one place, at prices they set themselves. Send us a request to join with this link: {link}",
+    "emailSubject": "{buyer} invites you to 202",
     "list": {
       "title": "Your invitations",
       "empty": "You haven't sent any invitations yet.",
@@ -1811,7 +1914,7 @@
       "invalid": "Check the highlighted fields.",
       "unknown": "Could not be completed. Try again."
     },
-    "orderFooter": "Receive your next order on Gusto: your catalog and each customer's prices in one place, and orders neatly organized. It's free. Join: {link}",
+    "orderFooter": "Receive your next order on 202: your catalog and each customer's prices in one place, and orders neatly organized. It's free. Join: {link}",
     "personal": {
       "title": "Your invitation link",
       "body": "Write your order on WhatsApp as you always do and add this text at the end. One link works for every supplier.",
@@ -1828,7 +1931,7 @@
     "namedIntro": "If you want to tie the link to one supplier and know when they join, enter their name and number."
   },
   "authContinue": {
-    "title": "Sign in to Gusto",
+    "title": "Sign in to 202",
     "body": "Press the button to continue. The link is single-use.",
     "button": "Continue",
     "invalid": "The link is incomplete. Open the sign-in page and choose \"Set or reset password\".",

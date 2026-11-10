@@ -10,7 +10,7 @@ import { NotFoundError, StateError } from "@/server/domain/errors";
 import { claimSupplierInvite } from "@/server/domain/buyer/supplier-invites";
 import { allowEmail, type AccessError } from "./access";
 
-// Prospective suppliers who found Gusto through a partner's WhatsApp message
+// Prospective suppliers who found 202 through a partner's WhatsApp message
 // and asked to be onboarded. A request grants nothing: only the admin's approval
 // puts the address on the allow-list (with the business name and legal ID,
 // so the supplier then starts active).

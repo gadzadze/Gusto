@@ -1,3 +1,4 @@
+import { UnitPrice } from "@/components/orders/unit-price";
 import { AlertTriangle, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -70,7 +71,7 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
                     <div className="min-w-0 flex-1">
                       <p className="font-medium leading-snug">{line.name}</p>
                       <p className="text-sm tabular-nums text-muted-foreground">
-                        {fmt.money(line.unitPriceMinor, cart.supplier.currency)} / {tu(line.unit)}
+                        <UnitPrice price={fmt.money(line.unitPriceMinor, cart.supplier.currency)} listPrice={fmt.money(line.listPriceMinor, cart.supplier.currency)} adjustBp={line.adjustBp} /> / {tu(line.unit)}
                       </p>
                       {line.problem ? (
                         <p className="flex items-center gap-1 text-sm text-destructive">

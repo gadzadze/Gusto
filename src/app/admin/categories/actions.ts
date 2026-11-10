@@ -69,7 +69,7 @@ export async function setCategoryArchivedAction(id: string, archived: boolean): 
   });
 }
 
-/** Creates the categories from a product file that Gusto does not have yet. */
+/** Creates the categories from a product file that 202 does not have yet. */
 export async function createCategoriesFromFileAction(names: unknown): Promise<({ ok: true } & CreateMissingResult) | ActionError<CategoryError>> {
   const ctx = await requireAdmin();
   const parsed = z.array(z.string().max(200)).min(1).max(100).safeParse(names);

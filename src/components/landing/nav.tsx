@@ -30,8 +30,8 @@ export function LandingNav() {
     <header className="nav">
       <div className="nav-outer">
         <div className={`nav-pill${scrolled || open ? " scrolled" : ""}`}>
-          <a href="#top" aria-label="Gusto" onClick={() => setOpen(false)}>
-            <Image src="/brand/gusto-wordmark.svg" alt="Gusto" width={85} height={24} priority unoptimized className="nav-logo" />
+          <a href="#top" aria-label="202" onClick={() => setOpen(false)}>
+            <Image src="/brand/202-wordmark.svg" alt="202" width={54} height={24} priority unoptimized className="nav-logo" />
           </a>
           <nav className="nav-links" aria-label={t("aria")}>
             {links.map((l) => (

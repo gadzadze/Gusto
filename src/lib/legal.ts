@@ -1,4 +1,4 @@
-// Facts the Terms and Privacy pages print. The company behind Gusto is not
+// Facts the Terms and Privacy pages print. The company behind 202 is not
 // written into the repository: the operator block comes from the environment
 // (read at build time, like NEXT_PUBLIC_* values), and the block is left out
 // until LEGAL_ENTITY_NAME is set. Nothing here is a placeholder shown to users.

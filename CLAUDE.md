@@ -1,7 +1,7 @@
-# Gusto
+# 202 (formerly Gusto)
 
 B2B ordering for HoReCa in Georgia. Suppliers (distributors, importers,
-producers) put their catalog and their **existing** customers on Gusto; those
+producers) put their catalog and their **existing** customers on 202; those
 customers (restaurants, cafés, hotels) reorder in a few taps instead of over
 WhatsApp and phone calls.
 
@@ -17,7 +17,7 @@ milestone is a self-contained prompt. Do them in order, one per session.
 Pilot: **Tbilisi, one product category, 3–5 distributors and their existing
 customers.** Georgian UI by default, with English as a second language (landing and app, 2026-11-07). Web app, mobile-first. The pilot succeeds if,
 after 6 weeks, at least one supplier receives ≥30% of their orders through
-Gusto and buyers reorder weekly without being reminded. Every scope decision
+202 and buyers reorder weekly without being reminded. Every scope decision
 serves that test.
 
 Go-to-market is **supplier-led**: a supplier invites the buyers it already
@@ -68,7 +68,7 @@ prices openly, and an empty marketplace convinces nobody.
   delivered.
 - **No verification badges** except `supplier.status = active`, which means an
   admin approved it. Label it as exactly that.
-- **Order value is not revenue.** Gusto never knows whether an order was paid.
+- **Order value is not revenue.** 202 never knows whether an order was paid.
   Analytics say "order value", never "revenue" or "sales".
 
 ## Stack
@@ -90,7 +90,7 @@ prices openly, and an empty marketplace convinces nobody.
 | Tests | Vitest (unit + integration), Playwright (e2e) |
 | Hosting | Vercel (region `dub1`, Dublin: next to the database), deployed from `main` by Vercel's Git integration |
 
-There is **no separate backend service**. Gusto has no long-lived sockets or
+There is **no separate backend service**. 202 has no long-lived sockets or
 heavy jobs, so Server Components, Server Actions and a few Route Handlers
 cover everything.
 
@@ -169,7 +169,7 @@ real need appears).
     otherwise WhatsApp asks who to send to) and a copy button. It is never stored or logged;
     `access.link_created` is audited. Whoever opens it first gets in, so it is admin-only and
     for the right person only. This is the one place a person's sign-in link is shown to anyone.
-    **Links Gusto makes point at `/auth/continue`, not `/auth/confirm`**: that page only shows a
+    **Links 202 makes point at `/auth/continue`, not `/auth/confirm`**: that page only shows a
     "continue" button which POSTs the token to `/auth/confirm`. A plain GET to `/auth/confirm`
     verifies at once, so a WhatsApp or mail link preview that merely fetches the URL used up the
     one-time token before the person opened it (seen in production, 2026-11-05). GET stays for
@@ -195,7 +195,7 @@ real need appears).
       Admins get an email (`notifyAdminsOrgPending`) and a nav badge, review at
       `/admin/suppliers` or `/admin/organizations?status=pending_review`, where the
       `VerificationCard` shows ID, sign-in address (free-mail warning), who invited.
-      Suppliers see "awaiting Gusto verification" on such customers.
+      Suppliers see "awaiting 202 verification" on such customers.
 14. **Suppliers can also ask to be onboarded.** The public page `/suppliers`
     (explainer + short form) is for a supplier who got a partner's WhatsApp
     message. It only inserts a `supplier_requests` row: no account, no sign-in
@@ -589,7 +589,7 @@ What this codebase relies on:
   compared after `normalizeCategoryKey` (case, spaces, quotes, "და"/"&"/","
   ignored), and for the **standard HoReCa categories** (`STANDARD_CATEGORIES`, 29
   Georgian names with Georgian and English aliases) any alias reaches the
-  category Gusto has. `createMissingCategories` turns an alias into the standard
+  category 202 has. `createMissingCategories` turns an alias into the standard
   Georgian name, and Admin > Categories has an "add the standard categories"
   button. Production was seeded with the standard set on 2026-11-04.
 - **Import fallbacks** (`ImportOptions` in `lib/catalog/import.ts`, chosen on the
@@ -614,7 +614,7 @@ What this codebase relies on:
   one by one. They are the supplier's own uploads (private); a photo in the file replaces an existing one.
   Files over 60 MB are refused. Fixture: `tests/unit/fixtures/gusto-products-with-photos.xlsx`.
 - **Barcode** (`products.barcode`, optional, 8-14 digits; import field with its own aliases; it also stands
-  in for a missing product code, so a barcode column gives stable codes). It is plain supplier data: Gusto does
+  in for a missing product code, so a barcode column gives stable codes). It is plain supplier data: 202 does
   not look photos up anywhere. **Photos come from the supplier**: pictures placed in the .xlsx, or uploaded on
   the product page. Fetching photos from Open Food Facts or the open web was built and removed on 2026-11-05
   (free sources cover few Georgian wholesale goods; web search APIs are paid and the photos are copyrighted).
@@ -707,7 +707,7 @@ and the delivery row is marked `skipped`, not `sent`.
   has one; otherwise the buyer sees nothing until a list is assigned, as always). The buyer sees nothing of
   the supplier until the supplier does that: a supplier decides who sees its catalog and prices. The
   supplier's contact details the buyer typed are visible only to that buyer (privacy text mentions it).
-- **Personal link** (`buyer_invite_links`, one row per buyer, `/buyer/suppliers/invite`): a reusable invitation link made on the buyer's first visit, shown with the ready text `supplierInvite.orderFooter` (one benefit sentence + link) and a Share button (`navigator.share`, falling back to copy) to paste or send under an order written in WhatsApp. Unlike named invitations it is not single use, so the raw token is stored to show it again (it grants nothing: a request the admin vets, rate limited per IP); "replace" swaps the token and the old link stops working. `claimSupplierInvite` turns each request that arrives through it into its own used `buyer_supplier_invites` row (supplier name from the request), so tracking, linking and "buyers who invited you" work as for named invitations. The named form stays below it for tracking one specific supplier. For a valid link `/suppliers/invite/<token>` leads with a short Gusto pitch (`supplierRequest.invited*`) before the form.
+- **Personal link** (`buyer_invite_links`, one row per buyer, `/buyer/suppliers/invite`): a reusable invitation link made on the buyer's first visit, shown with the ready text `supplierInvite.orderFooter` (one benefit sentence + link) and a Share button (`navigator.share`, falling back to copy) to paste or send under an order written in WhatsApp. Unlike named invitations it is not single use, so the raw token is stored to show it again (it grants nothing: a request the admin vets, rate limited per IP); "replace" swaps the token and the old link stops working. `claimSupplierInvite` turns each request that arrives through it into its own used `buyer_supplier_invites` row (supplier name from the request), so tracking, linking and "buyers who invited you" work as for named invitations. The named form stays below it for tracking one specific supplier. For a valid link `/suppliers/invite/<token>` leads with a short 202 pitch (`supplierRequest.invited*`) before the form.
 - **Both sides** (decided 2026-11-05): a business that buys from some suppliers and
   resells to others has one login with a **buyer organization and a supplier
   organization**, not one mixed organization (org type stays immutable and every query
@@ -818,8 +818,33 @@ and the delivery row is marked `skipped`, not `sent`.
   mailto link when `LEGAL_CONTACT_EMAIL` is set (`contactEmail()` in
   `lib/legal.ts`).
 - **Needs-restocking filter** on the supplier product list (stock 0 or below).
-- **Uptime**: a Sentry uptime monitor ("Gusto health", every 5 minutes) checks
+- **Uptime**: a Sentry uptime monitor ("202 health", every 5 minutes) checks
   `/api/health` of the production URL. Update its URL when a domain is attached.
+
+## Price conditions, loading sheet and side switch (2026-11-10)
+
+- **Price conditions** (`price_rules`, `lib/pricing/conditions.ts` pure, `server/domain/pricing/conditions.ts`,
+  editor `components/pricing/price-conditions.tsx` on `/supplier/pricing/[id]`). On a price list the supplier sets
+  how the price changes with the **payment method** (cash / bank transfer), the **payment interval** (days after
+  delivery, 0 = on delivery) and the **ordered quantity** (tiers: from N units, X%). Whole list or per product
+  (a product's own rows replace the list's for that product; its own tiers replace the list's tiers). A change is
+  in basis points (negative = cheaper); method + interval + tier are **added**, applied once to the list price
+  (`applyBp`, half up). A method or interval with no row is **not offered**.
+- **The buyer asks, the supplier approves.** On the supplier page in the buyer catalog (`PaymentTerms`) the buyer
+  sees the offered conditions and asks for a method and interval (`payment_term_requests`, one open request per
+  buyer and supplier). The supplier sees the effect (percentage and example prices) on the customer page
+  (`CustomerTerms`, also a banner on the Customers list) and approves or declines. Only an approved request
+  writes `supplier_customers.terms_method / terms_interval_days`; until then the standard price applies, so a
+  buyer can always order. Quantity tiers apply automatically per line.
+- Prices are decided in `loadBuyerPricing` + `priceLine`, used by the cart and by `submitOrder` (re-resolved at
+  submit like every price). The order stores `payment_method`, `payment_interval_days` and, per line,
+  `list_price_minor` + `adjust_bp`, so both sides see the list price struck through with the change. 202 still
+  collects nothing and tracks no debt: the interval is an agreed term, not a receivable.
+- **Loading sheet** (`/supplier/orders/pick`, `domain/orders/pick-list.ts`): per delivery day, totals per product
+  with the split per customer, and a second view per address with each stop's lines; every line has a tick box
+  kept in the browser only (`components/orders/pick-check.tsx`, localStorage per day). Prints cleanly.
+- **Side switch** (`SideSwitch`): on phones a full-width two-part control with icons under the header, not
+  squeezed in it; on desktop in the sidebar.
 
 ## Photo background remover
 
@@ -977,7 +1002,7 @@ supplier request form.
 ## Public demo
 
 A separate Vercel project (`gusto-demo`) and Supabase project (`gusto-demo`)
-hold fictional data for showing Gusto to partners. Nothing in the real
+hold fictional data for showing 202 to partners. Nothing in the real
 deployment depends on it.
 
 - **`DEMO_MODE=1`** (server env) turns on the banner, the demo accounts on
@@ -1010,18 +1035,19 @@ interface, a dark trust band and a closing call to action.
   Burgundy is for meaning only: links, hover and focus, and nothing decorative.
 - **Fonts:** Google Sans (Latin, digits and Georgian, `landing-font.ts`, variable `--font-landing`)
   with Noto Sans Georgian as the fallback. Only the landing page loads it; the app keeps Inter + Noto Sans Georgian.
-- **The wordmark** is the traced vector in `public/brand/gusto-wordmark.svg`,
-  used everywhere through `components/logo.tsx` (size it with a height class;
-  white in the dark theme). The favicon and app icon (`src/app/icon.svg`,
-  `apple-icon.png`, `favicon.ico`) are generated by `npm run brand:icons`
-  (`scripts/gen-icons.mjs`) from the wordmark: white "Gusto" on the logo's own
-  burgundy `#6E0018`, flat (no gradient). The favicon is the letter "G" alone, because
-  the whole word is unreadable at tab size. Don't hand-edit them; re-run the script
-  if the brand changes. The auth email header is not an image: white "Gusto" text on a
-  burgundy block (`supabase/templates/magic-link.html`, pasted into Supabase by hand,
-  currently `#7a1f2b`, the app's `--brand` token), so nothing has to load.
-  `public/brand/gusto-wordmark.png` stays because the demo project's older template
-  still points at it.
+- **The brand is "202"** (renamed from Gusto on 2026-11-10; domain 202.ge). The wordmark is the number "202" in
+  Nunito ExtraBold (800), tight letter-spacing, burgundy `#7A1F2E`, as outlines in
+  `public/brand/202-wordmark.svg`, used everywhere through `components/logo.tsx` (size it with a height
+  class; white in the dark theme). Designs: cream `#F8F2EC` on burgundy for the dark/inverse version, tagline
+  "orders, accepted." (not used in the product yet). The favicon and app icon (`src/app/icon.svg`,
+  `apple-icon.png`, `favicon.ico`) are generated by `npm run brand:icons` (`scripts/gen-icons.mjs`): cream "202"
+  on burgundy, rounded square (22.5%), flat. Don't hand-edit them; re-run the script if the brand changes. The
+  auth email header is not an image: white "202" text on a burgundy block (`supabase/templates/magic-link.html`,
+  pasted into Supabase by hand, currently `#7a1f2b`, the app's `--brand` token), so nothing has to load.
+  `public/brand/gusto-wordmark.png` stays because the demo project's older template still points at it.
+  **Only the visible name changed.** Identifiers keep the old name on purpose: the repo, npm package, the
+  cookies `gusto-locale`/`gusto-theme`/`gusto-org`, Vercel/Supabase project names, `@test.gusto.ge` test
+  emails and the `GST-` order prefix (renaming cookies would reset everyone's language and side).
 - **Scroll motion** is deliberately plain (`components/landing/reveal.tsx`,
   `scroll-depth.tsx`, no animation library): blocks below the fold fade and
   settle once when clearly on screen, grouped items follow one after another

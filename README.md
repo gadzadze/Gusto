@@ -1,7 +1,7 @@
-# Gusto
+# 202
 
 B2B ordering for HoReCa businesses in Georgia: suppliers put their catalog and
-existing customers on Gusto, and those customers reorder in a few taps.
+existing customers on 202, and those customers reorder in a few taps.
 
 - Product scope, conventions and the security model: [`CLAUDE.md`](CLAUDE.md)
 - Build plan: [`docs/milestones/`](docs/milestones/README.md)
@@ -22,7 +22,7 @@ existing customers on Gusto, and those customers reorder in a few taps.
 - Buyers save regular orders and get a weekday reminder email with a one-tap fill of the cart.
 - In-app notifications (bell with unread count) and email for order events,
   with per-user email preferences. WhatsApp is a "send" button that opens a
-  prefilled message; Gusto never records it as delivered.
+  prefilled message; 202 never records it as delivered.
 - Without `RESEND_API_KEY`, emails (including invitations) are not sent: they
   are logged as `[DEV EMAIL]` and the UI says so.
 
@@ -73,7 +73,7 @@ Magic-link emails are caught by the local mail viewer (Mailpit/Inbucket), at the
 `supabase start` prints. Google sign-in is off locally unless you configure it
 in `supabase/config.toml`.
 
-`supabase/config.toml` was written by hand with only the settings Gusto needs
+`supabase/config.toml` was written by hand with only the settings 202 needs
 (ports, redirect URLs, email templates). If your CLI version rejects a key,
 run `npx supabase init` in a scratch folder and copy those settings over.
 
@@ -185,7 +185,7 @@ Do this for each Supabase project (local is pre-configured in
    - Paste the client ID and secret into Supabase and enable the provider.
    - The app sends users back to `/auth/callback`, which the redirect URL
      pattern above allows.
-5. **Data API:** RLS is enabled with no policies on every Gusto table, so
+5. **Data API:** RLS is enabled with no policies on every 202 table, so
    the Data API exposes nothing. The app never uses it.
 6. **Storage:**
    - `npm run db:migrate` creates the public `product-images` bucket (1 MB
@@ -235,7 +235,7 @@ order.
     in `net._http_response`); in-app notifications and `after()` delivery
     still work.
 - **Invitation emails** are sent directly when the invitation is created, not
-  through the outbox: the text contains the raw invite link, which Gusto never
+  through the outbox: the text contains the raw invite link, which 202 never
   stores.
 - **WhatsApp** is user-sent only. A future Business API channel is sketched in
   [`docs/whatsapp-business-api.md`](docs/whatsapp-business-api.md).
@@ -262,8 +262,8 @@ Revoking an address (admin page) blocks it.
   a link on the login page, open it, and are asked to choose a password; after
   that they sign in with email and password. "Forgot password" sends the link
   again. A business you registered with its legal ID starts **active**.
-- **Suppliers who found Gusto through a partner's WhatsApp message** open the
-  public page `/suppliers` (what Gusto is, plus a short form with business name,
+- **Suppliers who found 202 through a partner's WhatsApp message** open the
+  public page `/suppliers` (what 202 is, plus a short form with business name,
   legal ID, contact, phone, email, city). That creates **no account**, only a
   request. You see it under Admin → Requests (email alert and sidebar count),
   check the ID, call them, then **Approve**: their email goes on the allow-list as
@@ -378,7 +378,7 @@ exercised. Read the last column before relying on a row.
 | In-app notifications, preferences | Yes | Nothing | Integration + e2e |
 | **Email** (orders, invitations) | Yes, via Resend | `RESEND_API_KEY`, `EMAIL_FROM`, a verified sending domain | Request shape tested with a stubbed `fetch`; **no real email has been sent**. Without a key, email is logged and marked `skipped` |
 | Notification cron | Yes (route + migration `0010`) | Supabase Vault secrets `gusto_cron_url`, `gusto_cron_secret` | Route tested (401 / drain). The `pg_cron`/`pg_net` job has **never run**: it only ran as a no-op on plain Postgres |
-| **WhatsApp** | "Send on WhatsApp" links only | Nothing | The user sends the message; Gusto records nothing as delivered. **Automated WhatsApp sending does not exist** |
+| **WhatsApp** | "Send on WhatsApp" links only | Nothing | The user sends the message; 202 records nothing as delivered. **Automated WhatsApp sending does not exist** |
 | Dashboards, pilot metrics, admin tools | Yes | `admin:grant` for the first admin | Integration (hand-computed fixtures) + e2e |
 | Rate limits, headers, bundle scan | Yes | Nothing | Integration tests; headers and scan run on a production build |
 | Mobile (360px), contrast, focus ring | Yes | Nothing | e2e overflow and tap-size checks; WCAG AA contrast unit test on the design tokens |
@@ -391,7 +391,7 @@ Software is not the only thing between a pilot and real users. Do these first;
 none is done in this repository.
 
 - [ ] **Privacy policy and terms of use, in Georgian**, linked from the sign-in
-      page and the footer. Gusto stores names, phone numbers, email addresses,
+      page and the footer. 202 stores names, phone numbers, email addresses,
       delivery addresses and each business's price lists and orders.
 - [ ] **A lawful basis for processing personal data** under the Law of Georgia on
       Personal Data Protection, written down (contract performance for
@@ -406,7 +406,7 @@ none is done in this repository.
       down the retention, and do one test restore into a scratch project.
 - [ ] **Supplier terms**: suppliers' price lists are confidential to each
       customer; say so, and say that an order is a purchase request settled
-      outside Gusto.
+      outside 202.
 - [ ] **Clean production data**: no `[TEST]`, `[E2E]` or `[DEMO]` rows (the seed
       never runs there), and only the people who should be admins are admins
       (`select email from auth.users u join profiles p on p.id = u.id where p.is_platform_admin;`).

@@ -55,7 +55,7 @@ as a user-sent message, not an automated one.
      name, item count, total, link).
    - On the supplier's order page, after confirm or reject: "Tell the buyer on
      WhatsApp".
-   - The button opens WhatsApp. Gusto records nothing as delivered, and the
+   - The button opens WhatsApp. 202 records nothing as delivered, and the
      UI copy says "send", not "sent".
 7. **Notification preferences** (minimal).
    - Per user: email on or off, per event group (new orders / order updates).

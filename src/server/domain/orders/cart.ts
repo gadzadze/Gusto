@@ -9,6 +9,8 @@ import { getConnectedSupplier, type ConnectedSupplier } from "@/server/domain/bu
 import { isUuid } from "@/server/domain/catalog/products";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
+import type { Terms } from "@/lib/pricing/conditions";
+import { loadBuyerPricing, priceLine } from "@/server/domain/pricing/conditions";
 import { availableToBuyerSql, effectivePriceSql } from "@/server/domain/pricing/resolve";
 
 // Carts are persisted, one per (buyer, supplier), and never merged. Prices
@@ -30,7 +32,11 @@ export type CartLine = {
   qtyMilli: number;
   minQtyMilli: number;
   qtyStepMilli: number;
+  /** The price this buyer pays per unit: the list price after payment terms and the quantity tier. */
   unitPriceMinor: number;
+  /** The list price before them, and the change in basis points (negative = cheaper); 0 = no change. */
+  listPriceMinor: number;
+  adjustBp: number;
   vatRateBp: number;
   lineTotalMinor: number;
   /** Product deactivated or quantity no longer valid since it was added. */
@@ -42,6 +48,8 @@ export type Cart = {
   lines: CartLine[];
   totals: Totals;
   shortfallMinor: number;
+  /** Payment terms agreed with this supplier (both null = the standard price). */
+  terms: Terms;
 };
 
 /** The buyer's cart with one supplier, priced for this buyer. Empty if none. */
@@ -70,7 +78,11 @@ export async function getCart(ctx: OrgCtx, supplierOrgId: string): Promise<Cart>
     .where(and(eq(carts.buyerOrgId, ctx.orgId), eq(carts.supplierOrgId, supplierOrgId)))
     .orderBy(asc(cartItems.createdAt), asc(products.name));
 
-  const lines = rows.map((r) => ({
+  const pricing = await loadBuyerPricing(ctx.orgId, supplierOrgId);
+  const lines = rows.map((r) => {
+    const p = priceLine(pricing, r.productId, r.unitPriceMinor, r.qtyMilli);
+    return { ...r, listPriceMinor: p.listPriceMinor, adjustBp: p.adjustBp, unitPriceMinor: p.unitPriceMinor };
+  }).map((r) => ({
     ...r,
     problem: !r.isActive || !r.available
       ? ("unavailable" as const)
@@ -98,12 +110,15 @@ export async function getCart(ctx: OrgCtx, supplierOrgId: string): Promise<Cart>
       minQtyMilli: l.minQtyMilli,
       qtyStepMilli: l.qtyStepMilli,
       unitPriceMinor: l.unitPriceMinor,
+      listPriceMinor: l.listPriceMinor,
+      adjustBp: l.adjustBp,
       vatRateBp: l.vatRateBp,
       lineTotalMinor: lineTotals.get(l.productId) ?? 0,
       problem: l.problem,
     })),
     totals,
     shortfallMinor: minimumOrderShortfall(totals.goodsMinor, supplier.minOrderMinor),
+    terms: pricing.terms,
   };
 }
 

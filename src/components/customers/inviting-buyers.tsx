@@ -9,7 +9,7 @@ import { connectInvitingBuyerAction } from "@/app/supplier/customers/actions";
 
 export type InvitingBuyerRow = { inviteId: string; buyerName: string; invitedAt: string };
 
-/** Buyers who invited this supplier to Gusto: one tap makes them a customer. */
+/** Buyers who invited this supplier to 202: one tap makes them a customer. */
 export function InvitingBuyers({ rows, disabled }: { rows: InvitingBuyerRow[]; disabled?: boolean }) {
   const t = useTranslations("customers.invitingBuyers");
   const [pending, startTransition] = useTransition();

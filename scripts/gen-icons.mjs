@@ -1,86 +1,55 @@
-// Regenerates the app icons from the logo artwork: the word "Gusto" in white on
-// the brand burgundy. Run `npm run brand:icons`; never hand-edit the outputs.
+// Regenerates the app icons from the logo artwork: the number "202" (Nunito ExtraBold,
+// outlines in public/brand/202-wordmark.svg) in cream on the brand burgundy. Run
+// `npm run brand:icons`; never hand-edit the outputs.
 //
 //   src/app/icon.svg        1024 square, rounded corners (browser tabs, Android)
 //   src/app/apple-icon.png  180 square, full bleed (iOS rounds it itself)
-//   src/app/favicon.ico     16 / 32 / 48, the letter "G" only: the whole word is
-//                           unreadable at tab size
+//   src/app/favicon.ico     16 / 32 / 48, the same "202" a little larger
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const BURGUNDY = "#6E0018"; // the colour of the wordmark artwork itself
-const WORD_W = 1160;
-const WORD_H = 329;
+const BURGUNDY = "#7A1F2E";
+const CREAM = "#F8F2EC";
 
-const source = await readFile(path.join(root, "public/brand/gusto-wordmark.svg"), "utf8");
-if (!source.includes(BURGUNDY)) throw new Error(`Wordmark no longer uses ${BURGUNDY}; update gen-icons.mjs.`);
-const whiteWordmark = source.split(BURGUNDY).join("#FFFFFF");
-const inner = whiteWordmark.replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+const source = await readFile(path.join(root, "public/brand/202-wordmark.svg"), "utf8");
+const viewBox = source.match(/viewBox="([^"]+)"/)?.[1];
+const pathData = source.match(/ d="([^"]+)"/)?.[1];
+if (!viewBox || !pathData) throw new Error("Cannot read public/brand/202-wordmark.svg");
+const [vx, vy, vw, vh] = viewBox.split(/\s+/).map(Number);
 
-/** The white word, centred in a square of `size`, `wordWidth` wide, on burgundy. */
+/** The cream number, centred in a square of `size`, `wordWidth` wide, on burgundy (rounded by `radius`). */
 function square(size, wordWidth, radius) {
-  const wordHeight = (wordWidth * WORD_H) / WORD_W;
-  const x = (size - wordWidth) / 2;
-  const y = (size - wordHeight) / 2;
+  const scale = wordWidth / vw;
+  const x = (size - wordWidth) / 2 - vx * scale;
+  const y = (size - vh * scale) / 2 - vy * scale;
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">` +
     `<rect width="${size}" height="${size}" rx="${radius}" fill="${BURGUNDY}"/>` +
-    `<svg x="${x}" y="${y}" width="${wordWidth}" height="${wordHeight}" viewBox="0 0 ${WORD_W} ${WORD_H}">${inner}</svg>` +
+    `<path transform="translate(${x} ${y}) scale(${scale})" fill="${CREAM}" d="${pathData}"/>` +
     `</svg>`
   );
 }
 
-// 1. icon.svg: ~15% margin each side.
-const iconSvg = square(1024, 760, 228);
-await writeFile(path.join(root, "src/app/icon.svg"), iconSvg);
+// 1. icon.svg: the design's proportions (corner radius 22.5%, number 64% of the width).
+await writeFile(path.join(root, "src/app/icon.svg"), square(1024, 655, 230));
 
 // 2. apple-icon.png: no rounding (iOS masks it), no transparency.
-await sharp(Buffer.from(square(1024, 760, 0)), { density: 300 })
+await sharp(Buffer.from(square(1024, 655, 0)), { density: 300 })
   .resize(180, 180)
   .flatten({ background: BURGUNDY })
   .png()
   .toFile(path.join(root, "src/app/apple-icon.png"));
 
-// 3. favicon.ico: crop the "G" out of a raster of the white word.
-const raster = await sharp(Buffer.from(whiteWordmark), { density: 300 })
-  .resize({ width: 2320 })
-  .ensureAlpha()
-  .raw()
-  .toBuffer({ resolveWithObject: true });
-const { data, info } = raster;
-const columnHasInk = (cx) => {
-  for (let cy = 0; cy < info.height; cy++) if (data[(cy * info.width + cx) * 4 + 3] > 40) return true;
-  return false;
-};
-let left = 0;
-while (left < info.width && !columnHasInk(left)) left++;
-let right = left;
-while (right < info.width && columnHasInk(right)) right++; // first gap = end of the "G"
-const letter = await sharp(Buffer.from(whiteWordmark), { density: 300 })
-  .resize({ width: 2320 })
-  .extract({ left, top: 0, width: right - left, height: info.height })
-  .trim()
-  .png()
-  .toBuffer();
-
-async function faviconPng(size) {
-  const inset = Math.round(size * 0.2);
-  const glyph = await sharp(letter)
-    .resize({ width: size - 2 * inset, height: size - 2 * inset, fit: "inside" })
-    .png()
-    .toBuffer();
-  return sharp({ create: { width: size, height: size, channels: 4, background: BURGUNDY } })
-    .composite([{ input: glyph, gravity: "centre" }])
-    .png()
-    .toBuffer();
-}
-
+// 3. favicon.ico: PNG images in an ICO container (supported by every current browser).
 const sizes = [16, 32, 48];
-const images = await Promise.all(sizes.map(faviconPng));
-// ICO container holding PNG images (supported by every current browser).
+const images = await Promise.all(
+  sizes.map((size) =>
+    sharp(Buffer.from(square(256, 196, 0)), { density: 300 }).resize(size, size).png().toBuffer(),
+  ),
+);
 const header = Buffer.alloc(6);
 header.writeUInt16LE(1, 2); // type: icon
 header.writeUInt16LE(images.length, 4);

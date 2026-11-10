@@ -68,7 +68,7 @@ that role. Everything later builds on this.
      profile and writes an `audit_logs` row.
    - There is no admin sign-up route; `/admin` is guarded by `requireAdmin`.
 10. **Landing page** at `/`.
-    - One screen: what Gusto is, for suppliers and for buyers, and a sign-in
+    - One screen: what 202 is, for suppliers and for buyers, and a sign-in
       button.
     - Georgian, honest, no fake logos or numbers.
 11. **Tooling.**

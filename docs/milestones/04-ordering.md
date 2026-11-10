@@ -6,7 +6,7 @@ Read `CLAUDE.md` fully before starting. Milestones 1–3 are merged.
 
 The whole order loop, done correctly: cart → submit → supplier confirms
 (possibly adjusting quantities) or rejects → delivered, and **one-tap
-reorder**. After this milestone Gusto is usable end to end.
+reorder**. After this milestone 202 is usable end to end.
 
 ## Build
 

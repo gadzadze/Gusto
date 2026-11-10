@@ -10,7 +10,7 @@ import { createSupabaseServerClient } from "@/server/supabase/server";
 // even when the link is opened in a different browser than the one that
 // requested it.
 //
-// Links Gusto makes itself (welcome email, "set or reset password", the admin's
+// Links 202 makes itself (welcome email, "set or reset password", the admin's
 // hand-over) point at /auth/continue instead, a page with one button that POSTs
 // here: GET verifies at once, so anything that merely fetches the URL (a WhatsApp
 // or mail link preview) would use up the one-time token before the person opens it.

@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 // The public landing page: short copy, a product tour you can use, both doors,
 // and it works on a phone without sideways scrolling.
 
-test("the landing page explains Gusto, lets you try the tour and links to both doors", async ({ page }) => {
+test("the landing page explains 202, lets you try the tour and links to both doors", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText("ზარებისა და ჩატების გარეშე");
   // Primary doors: supplier request and sign in.
