@@ -41,6 +41,11 @@ export const notificationEvent = pgEnum("notification_event", [
   "order_rejected",
   "order_cancelled",
   "order_delivered",
+  // Not about an order: a customer asks for payment terms, the supplier decides, a customer joins.
+  "terms_requested",
+  "terms_approved",
+  "terms_declined",
+  "customer_connected",
 ]);
 export const deliveryChannel = pgEnum("delivery_channel", ["email"]);
 export const deliveryStatus = pgEnum("delivery_status", ["pending", "sent", "skipped", "failed"]);
@@ -583,11 +588,12 @@ export const notifications = pgTable(
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
     event: notificationEvent("event").notNull(),
-    orderId: uuid("order_id")
-      .notNull()
-      .references(() => orders.id, { onDelete: "cascade" }),
+    // Null for events that are not about an order (they carry `link` instead).
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "cascade" }),
     // Snapshots for display, so the list needs no join.
-    orderNumber: integer("order_number").notNull(),
+    orderNumber: integer("order_number"),
+    // Where opening the notification goes when there is no order: an internal path built by the server.
+    link: text("link"),
     // The other organization's name, from the viewer's side.
     counterpartyName: text("counterparty_name").notNull(),
     dedupeKey: text("dedupe_key").notNull(),
@@ -617,7 +623,7 @@ export const notificationDeliveries = pgTable(
       .notNull()
       .references(() => profiles.id, { onDelete: "cascade" }),
     // Ids only. The message is rendered from the persisted order at send time.
-    payload: jsonb("payload").$type<{ event: string; orderId: string }>().notNull(),
+    payload: jsonb("payload").$type<{ event: string; orderId?: string }>().notNull(),
     status: deliveryStatus("status").notNull().default("pending"),
     attempts: integer("attempts").notNull().default(0),
     nextAttemptAt: timestamp("next_attempt_at", { withTimezone: true }).notNull().defaultNow(),

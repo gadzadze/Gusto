@@ -2,6 +2,9 @@ import { randomUUID } from "node:crypto";
 import { and, eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 import { addDays, todayIn } from "@/lib/dates";
+import { notificationDeliveries, notifications } from "@/server/db/schema";
+import { listNotifications, markRead } from "@/server/notifications/queries";
+import { emailChannel } from "@/server/notifications/channels/email";
 import { getDb } from "@/server/db/client";
 import { addresses, orderItems, orders, supplierCustomers } from "@/server/db/schema";
 import type { AdminCtx, OrgCtx, SupplierCtx } from "@/server/domain/context";
@@ -123,6 +126,55 @@ describe("price conditions", () => {
     // Another supplier's list is not reachable.
     const other = await createSupplier();
     await expect(saveScopeRules(other, listId, null, [])).rejects.toThrow();
+  });
+});
+
+describe("notifications beyond orders", () => {
+  it("tells the supplier about a terms request and the buyer about the answer, in the app and by email", async () => {
+    const { supplier, buyer, listId } = await setup();
+    await saveScopeRules(supplier, listId, null, [{ kind: "method", method: "cash", adjustBp: -300 }]);
+    await requestTerms(buyer, supplier.orgId, { method: "cash", intervalDays: null });
+
+    const supplierList = await listNotifications(supplier.userId);
+    const asked = supplierList.items.find((n) => n.event === "terms_requested");
+    expect(asked).toBeDefined();
+    expect(asked!.orderNumber).toBeNull();
+    expect(asked!.link).toMatch(/^\/supplier\/customers\/[0-9a-f-]{36}$/);
+    // The one who asked is not notified of their own action.
+    expect((await listNotifications(buyer.userId)).items.some((n) => n.event === "terms_requested")).toBe(false);
+    expect(await markRead(supplier.userId, asked!.id)).toMatchObject({ orderNumber: null, link: asked!.link });
+
+    // An email is queued for the supplier (no order in it), and it renders and sends without one.
+    const deliveries = await getDb().select().from(notificationDeliveries).where(eq(notificationDeliveries.recipientUserId, supplier.userId));
+    const queued = deliveries.find((d) => d.payload.event === "terms_requested");
+    expect(queued).toBeDefined();
+    expect(queued!.payload.orderId).toBeUndefined();
+    const sent = await emailChannel.send!({ id: queued!.id, notificationId: queued!.notificationId, recipientUserId: supplier.userId, payload: queued!.payload, attempts: 1 });
+    expect(sent.status).toBe("skipped"); // no email provider configured in tests
+
+    const [request] = await listTermsRequests(supplier);
+    await decideTermsRequest(supplier, request.id, true);
+    const buyerList = await listNotifications(buyer.userId);
+    const answer = buyerList.items.find((n) => n.event === "terms_approved");
+    expect(answer?.link).toBe(`/buyer/suppliers/${supplier.orgId}`);
+
+    // A decline reaches the buyer too; the supplier is not told about their own decision.
+    await requestTerms(buyer, supplier.orgId, { method: null, intervalDays: null });
+    const [second] = await listTermsRequests(supplier);
+    await decideTermsRequest(supplier, second.id, false);
+    expect((await listNotifications(buyer.userId)).items.some((n) => n.event === "terms_declined")).toBe(true);
+    expect((await listNotifications(supplier.userId)).items.some((n) => n.event === "terms_declined")).toBe(false);
+  });
+
+  it("tells the supplier when an invited customer joins", async () => {
+    const supplier = await createSupplier();
+    const buyer = await createBuyer();
+    await connectBuyer(supplier, buyer);
+    const joined = (await listNotifications(supplier.userId)).items.find((n) => n.event === "customer_connected");
+    expect(joined).toBeDefined();
+    expect(joined!.link).toMatch(/^\/supplier\/customers\//);
+    const rows = await getDb().select().from(notifications).where(eq(notifications.userId, supplier.userId));
+    expect(rows.filter((r) => r.event === "customer_connected")).toHaveLength(1);
   });
 });
 

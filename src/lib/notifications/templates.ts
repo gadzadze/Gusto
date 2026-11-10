@@ -18,8 +18,8 @@ export function counterpartyRoleFor(recipientOrgType: "buyer" | "supplier"): Cou
   return recipientOrgType === "supplier" ? "buyer" : "supplier";
 }
 
-export function notificationTitle(event: NotificationEvent, orderNumber: number): string {
-  return t(`event.${event}`, { number: orderRef(orderNumber) });
+export function notificationTitle(event: NotificationEvent, orderNumber: number | null): string {
+  return t(`event.${event}`, { number: orderNumber === null ? "" : orderRef(orderNumber) });
 }
 
 export function counterpartyLine(role: CounterpartyRole, name: string): string {
@@ -91,6 +91,24 @@ export function renderRegularOrderReminder(names: string[], link: string): Rende
 <p style="margin:0 0 16px">${escapeHtml(intro)}</p>
 <p style="margin:0 0 20px">${list.map(escapeHtml).join("<br>")}</p>
 <p style="margin:0 0 24px"><a href="${escapeHtml(link)}" style="display:inline-block;padding:10px 18px;background:#0b0b0c;color:#ffffff;text-decoration:none;border-radius:6px">${escapeHtml(t("regular.openLabel"))}</a></p>
+<p style="margin:0;color:#57534e;font-size:13px">${escapeHtml(footer)}</p>
+</body></html>`;
+  return { subject, text, html };
+}
+
+/** A short email for an event that is not about an order: who, what, and a button to open it. */
+export function renderLinkEmail(data: { event: NotificationEvent; counterpartyName: string; link: string }): RenderedEmail {
+  const subject = t(`event.${data.event}`, { number: "" });
+  const intro = t(`email.intro.${data.event}`);
+  const who = data.counterpartyName;
+  const footer = t("email.footer");
+  const text = [intro, "", who, "", t("email.open", { link: data.link }), "", "-", footer].join("\n");
+  const html = `<!doctype html>
+<html lang="ka"><body style="margin:0;padding:24px;background:#ffffff;color:#0b0b0c;font-family:Arial,sans-serif;font-size:15px;line-height:1.5">
+<p style="margin:0 0 16px;font-size:17px;font-weight:600">${escapeHtml(subject)}</p>
+<p style="margin:0 0 16px">${escapeHtml(intro)}</p>
+<p style="margin:0 0 20px;font-weight:600">${escapeHtml(who)}</p>
+<p style="margin:0 0 24px"><a href="${escapeHtml(data.link)}" style="display:inline-block;padding:10px 18px;background:#0b0b0c;color:#ffffff;text-decoration:none;border-radius:6px">${escapeHtml(t("email.openLabel"))}</a></p>
 <p style="margin:0;color:#57534e;font-size:13px">${escapeHtml(footer)}</p>
 </body></html>`;
   return { subject, text, html };

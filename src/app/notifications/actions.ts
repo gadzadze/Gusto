@@ -12,12 +12,14 @@ import { markAllRead, markRead, setPreferences } from "@/server/notifications/qu
 
 export async function openNotificationAction(notificationId: string): Promise<void> {
   const ctx = await requireOrg();
-  const result = await runAction<{ ok: true; number: number }, never>("openNotification", async () => ({
-    ok: true,
-    number: await markRead(ctx.userId, notificationId),
-  }));
-  if (!("number" in result)) return;
-  redirect(`/o/${result.number}`);
+  const result = await runAction<{ ok: true; target: string }, never>("openNotification", async () => {
+    const { orderNumber, link } = await markRead(ctx.userId, notificationId);
+    // An order event opens the order; anything else opens the path it carries (built by the server, internal only).
+    const target = orderNumber !== null ? `/o/${orderNumber}` : link && link.startsWith("/") && !link.startsWith("//") ? link : "/start";
+    return { ok: true, target };
+  });
+  if (!("target" in result)) return;
+  redirect(result.target);
 }
 
 export async function markAllReadAction(): Promise<void> {

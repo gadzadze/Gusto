@@ -7,6 +7,8 @@ import type { OrgCtx } from "@/server/domain/context";
 import { StateError } from "@/server/domain/errors";
 import { createOrganizationInTx, type CreateOptions } from "@/server/domain/onboarding/create-organization";
 import { hashInviteToken, isInvitationUsable, looksLikeInviteToken } from "./invite-token";
+import { recordSubjectEvent } from "@/server/notifications/events";
+import { deliverAfterResponse } from "@/server/notifications/process";
 
 // Every way an invitation can't be used — never existed, forged, expired,
 // revoked, already accepted, customer blocked, supplier not active — is the
@@ -85,6 +87,16 @@ async function connect(tx: Tx, row: Loaded, buyerOrgId: string, userId: string) 
     .update(invitations)
     .set({ acceptedAt: now, acceptedByUserId: userId })
     .where(and(eq(invitations.id, row.invitationId), isNull(invitations.acceptedAt)));
+  // The supplier hears that the customer joined.
+  const [buyer] = await tx.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, buyerOrgId));
+  await recordSubjectEvent(tx, {
+    event: "customer_connected",
+    subjectId: row.customerId,
+    recipientOrgId: row.supplierOrgId,
+    counterpartyName: buyer?.name ?? "",
+    link: `/supplier/customers/${row.customerId}`,
+    actor: { userId },
+  });
 }
 
 /** An existing buyer organization accepts. */
@@ -100,6 +112,9 @@ export async function acceptInvitationAsBuyer(ctx: OrgCtx, token: string): Promi
     if (existing) throw new StateError<InvitationError>("already_connected");
     await connect(tx, row, ctx.orgId, ctx.userId);
     return { supplierOrgId: row.supplierOrgId };
+  }).then((result) => {
+    deliverAfterResponse();
+    return result;
   });
 }
 
@@ -120,5 +135,8 @@ export async function acceptInvitationWithNewBuyer(
     const { orgId } = await createOrganizationInTx(tx, userId, onboarding, options);
     await connect(tx, row, orgId, userId);
     return { orgId, supplierOrgId: row.supplierOrgId };
+  }).then((result) => {
+    deliverAfterResponse();
+    return result;
   });
 }

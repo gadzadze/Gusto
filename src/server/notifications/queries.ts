@@ -28,6 +28,7 @@ export async function listNotifications(userId: string, page = 1) {
       id: notifications.id,
       event: notifications.event,
       orderNumber: notifications.orderNumber,
+      link: notifications.link,
       counterpartyName: notifications.counterpartyName,
       readAt: notifications.readAt,
       createdAt: notifications.createdAt,
@@ -40,8 +41,11 @@ export async function listNotifications(userId: string, page = 1) {
   return { items, total, page: current, pageCount };
 }
 
-/** Marks one of the user's own notifications read; returns its order number. Others' ids are "not found". */
-export async function markRead(userId: string, notificationId: string): Promise<number> {
+/**
+ * Marks one of the user's own notifications read and returns where it leads: the order's link for an order
+ * event, or the path the event carries. Others' ids are "not found".
+ */
+export async function markRead(userId: string, notificationId: string): Promise<{ orderNumber: number | null; link: string | null }> {
   if (!/^[0-9a-f-]{36}$/i.test(notificationId)) throw new NotFoundError("notification");
   const db = getDb();
   await db
@@ -49,11 +53,11 @@ export async function markRead(userId: string, notificationId: string): Promise<
     .set({ readAt: new Date() })
     .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId), isNull(notifications.readAt)));
   const [row] = await db
-    .select({ orderNumber: notifications.orderNumber })
+    .select({ orderNumber: notifications.orderNumber, link: notifications.link })
     .from(notifications)
     .where(and(eq(notifications.id, notificationId), eq(notifications.userId, userId)));
   if (!row) throw new NotFoundError("notification");
-  return row.orderNumber;
+  return row;
 }
 
 export async function markAllRead(userId: string): Promise<void> {

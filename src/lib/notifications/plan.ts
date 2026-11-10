@@ -22,8 +22,14 @@ export type PlanInput = {
 
 export type PlannedRecipient = { userId: string; orgId: string; channels: ChannelName[] };
 
+/** New orders and new requests (something to act on) vs. updates about things already going. */
 export function eventGroup(event: NotificationEvent): EventGroup {
-  return event === "order_submitted" ? "new_orders" : "order_updates";
+  return event === "order_submitted" || event === "terms_requested" || event === "customer_connected" ? "new_orders" : "order_updates";
+}
+
+/** Events that are not about an order: they carry their own link and subject id instead. */
+export function isOrderEvent(event: NotificationEvent): boolean {
+  return event.startsWith("order_");
 }
 
 /** The organization an event is addressed to: always the other side from the actor. */
@@ -58,4 +64,9 @@ export function planRecipients(input: PlanInput): PlannedRecipient[] {
 
 export function dedupeKey(orderId: string, status: string, channel: ChannelName, userId: string): string {
   return `order:${orderId}:status:${status}:${channel === "in_app" ? "inapp" : channel}:${userId}`;
+}
+
+/** Dedupe key of an event that is not about an order: the subject is the request or customer it is about. */
+export function subjectDedupeKey(subjectId: string, event: NotificationEvent, channel: ChannelName, userId: string): string {
+  return `subject:${subjectId}:${event}:${channel === "in_app" ? "inapp" : channel}:${userId}`;
 }

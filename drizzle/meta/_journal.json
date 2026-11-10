@@ -218,6 +218,13 @@
       "when": 1794302850254,
       "tag": "0030_price_conditions",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794304482732,
+      "tag": "0031_notifications_beyond_orders",
+      "breakpoints": true
     }
   ]
 }
