@@ -16,6 +16,7 @@ import { getDb, type Db, type Tx } from "@/server/db/client";
 import { organizations, paymentTermRequests, priceListItems, priceRules, products, supplierCustomers } from "@/server/db/schema";
 import { recordSubjectEvent } from "@/server/notifications/events";
 import { deliverAfterResponse } from "@/server/notifications/process";
+import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 import { assertCatalogWritable, isUuid } from "@/server/domain/catalog/products";
 import { assertSupplier, type OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
@@ -25,7 +26,7 @@ import { getPriceList } from "@/server/domain/pricing/price-lists";
 // The supplier sets the rules; a buyer asks for a payment method and interval; the supplier sees what that
 // changes and approves or declines; only approved terms change the price (CLAUDE.md, "Price conditions").
 
-export type ConditionsError = "invalid_rule" | "product_not_on_list" | "suspended" | "request_not_pending" | "no_connection" | "not_offered";
+export type ConditionsError = "invalid_rule" | "product_not_on_list" | "suspended" | "request_not_pending" | "no_connection" | "not_offered" | "rate_limited";
 
 /** What the supplier types: one row. The server checks every field. */
 export type RuleInput = {
@@ -193,6 +194,7 @@ export async function requestTerms(ctx: OrgCtx, supplierOrgId: string, wanted: {
   const method = wanted.method === null ? null : isPaymentMethod(wanted.method) && offered.methods.has(wanted.method) ? wanted.method : "bad";
   const days = wanted.intervalDays === null ? null : offered.intervals.has(wanted.intervalDays) ? wanted.intervalDays : -1;
   if (method === "bad" || days === -1) throw new StateError<ConditionsError>("not_offered");
+  await consumeRateLimit(RATE_LIMITS.termsRequest, ctx.orgId);
   await db.transaction(async (tx) => {
     const same = pricing.terms.method === method && pricing.terms.intervalDays === days;
     await tx

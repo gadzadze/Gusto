@@ -96,7 +96,7 @@ export function PaymentTerms({ view }: { view: TermsView }) {
                 setMessage(
                   result.ok
                     ? { tone: "success", text: t("sent", { supplier: view.supplierName }) }
-                    : { tone: "error", text: t(`errors.${result.error === "not_offered" ? "not_offered" : "unknown"}`) },
+                    : { tone: "error", text: t(`errors.${result.error === "not_offered" || result.error === "rate_limited" ? result.error : "unknown"}`) },
                 );
               });
             }}
