@@ -192,8 +192,6 @@
   "login": {
     "title": "Sign in to 202",
     "subtitle": "Only verified businesses can sign in to 202. First time here? Use the link from your email, or choose \"Set or reset password\".",
-    "google": "Sign in with Google",
-    "or": "or",
     "emailLabel": "Email",
     "emailPlaceholder": "name@company.ge",
     "sendLink": "Send a sign-in link",
@@ -1806,7 +1804,6 @@
             "Catalog (for suppliers): products, prices, price lists and images.",
             "Notifications and your notification settings.",
             "Invitations: when a buyer invites a supplier, we keep the supplier's name and the phone or email given, so the link can be sent and the invitation's status shown. This data is visible only to the buyer who sent the invitation. A supplier who writes to us through the link sees the name of the buyer who invited them.",
-            "When you sign in with Google, Google gives us your email and name. We don't receive your Google password.",
             "Technical data: we use the IP address only to protect against abuse (limiting the number of requests) and keep it in encrypted (hashed) form, for a short time.",
             "Error reports: when an error happens in the service, we send the error description, the page address and the type of browser or device to an error monitoring service. We remove emails, cookies, request parameters, identification tokens and entered data from the reports.",
             "Administrators' security-related actions (for example, approving an organization) are kept in a log."
@@ -1830,7 +1827,7 @@
           "items": [
             "The buyer and the supplier you deal with: the organization's name, the contact person and the order data. One supplier can't see another's customers or prices.",
             "202 administrators: contact and status information, and order lookup. Every order lookup is recorded in the log. Administrators' support tools don't show price lists or the catalog.",
-            "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry), and Google if you sign in that way.",
+            "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry).",
             "When you remove the background from a product photo, your browser downloads a helper model file once from Hugging Face, which therefore sees your IP address. The photo itself is processed on your device and sent nowhere.",
             "Public authorities, only in cases required by law."
           ],

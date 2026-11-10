@@ -77,7 +77,7 @@ prices openly, and an empty marketplace convinces nobody.
 |---|---|
 | App | One Next.js 16 app (App Router, TypeScript strict), npm |
 | UI | Tailwind CSS v4, shadcn/ui, lucide-react |
-| Auth | Supabase Auth via `@supabase/ssr`: Google + email magic link |
+| Auth | Supabase Auth via `@supabase/ssr`: email + password, emailed one-time link (no Google sign-in; removed 2026-11-10) |
 | Database | Supabase Postgres (region `eu-west-1`, Ireland) |
 | Data access | Drizzle ORM + `postgres` driver, **server-only** |
 | Migrations | Drizzle Kit, SQL files committed under `drizzle/` |
@@ -141,7 +141,7 @@ real need appears).
     accounts). Supabase sign-ups are switched off, so the
     app creates auth users itself (`server/supabase/admin.ts`) for allowed
     addresses only. `completeSignIn` re-checks and signs out anyone not
-    allowed, which is the only gate for Google. A revoked row stays blocked.
+    allowed. A revoked row stays blocked.
     The admin adds every business, buyers included, at `/admin/access` (ideally
     with business name + legal ID, which also makes the organization start
     `active`); scripts use
@@ -177,8 +177,8 @@ real need appears).
     expiry (Auth settings). Until `profiles.password_set_at` is set,
     every guard sends them to `/account/password` (`decideAccess` →
     `set_password`). After that: email + password (`submitLogin`), "forgot" =
-    the same link landing on `/account/password`, change in the shell. Magic
-    link and Google stay as fallbacks. Passwords go straight to Supabase Auth
+    the same link landing on `/account/password`, change in the shell. The
+    emailed link stays as the fallback. Passwords go straight to Supabase Auth
     (`auth.updateUser`), min 10 characters (`lib/validation/password.ts`,
     `supabase/config.toml`), and are never stored, logged or audited.
 13. **The admin vets who is real.** The legal ID (9 digits company / 11 sole
@@ -448,7 +448,6 @@ src/
     admin/                    platform admin: overview + pilot metrics, suppliers, organizations, order lookup, audit log, categories
     o/[number]/               order link → redirects to the viewer's own order page, or 404
     api/cron/notifications/   outbox drain (CRON_SECRET)
-    auth/callback/            Google OAuth code exchange
     auth/confirm/             magic-link token-hash verification
     auth/sign-out/            POST only
     start/                    sends a signed-in user to their area
@@ -1000,7 +999,7 @@ supplier request form.
 - **Claims must stay true.** The policy says: only essential cookies (session, the buyer/supplier side chosen with `gusto-org`, the language `gusto-locale`), no
   analytics or ads, IP addresses kept hashed and pruned within a day, backups
   kept about 14 days, admins never see catalogs or price lists, and lists the
-  processors (Supabase, Vercel, Resend, Google, Sentry) and the one-off model download from Hugging Face. When you add analytics, error
+  processors (Supabase, Vercel, Resend, Sentry) and the one-off model download from Hugging Face. When you add analytics, error
   monitoring (Sentry), a new processor, a new kind of personal data or change
   retention, update `legal` **and** `LEGAL_UPDATED` in `lib/legal.ts`.
   `tests/unit/legal.test.ts` ties the 14-day claim to the backup workflow.
