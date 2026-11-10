@@ -7,6 +7,7 @@ import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { BulkDiscount } from "@/components/pricing/bulk-discount";
 import { AssortmentEditor } from "@/components/pricing/assortment-editor";
+import { PriceConditions } from "@/components/pricing/price-conditions";
 import { PriceImport } from "@/components/pricing/price-import";
 import { PriceListSettings } from "@/components/pricing/price-list-settings";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +20,8 @@ import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import { NotFoundError } from "@/server/domain/errors";
-import { customersOnPriceList, getPriceList, listPriceListProducts } from "@/server/domain/pricing/price-lists";
+import { getListRules } from "@/server/domain/pricing/conditions";
+import { customersOnPriceList, getPriceList, listIncludedProducts, listPriceListProducts } from "@/server/domain/pricing/price-lists";
 import { getFormats } from "@/server/i18n/formats";
 
 export default async function PriceListPage(props: PageProps<"/supplier/pricing/[id]">) {
@@ -59,11 +61,13 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
     if (error instanceof NotFoundError) notFound();
     throw error;
   });
-  const [products, settings, customerCount, categories] = await Promise.all([
+  const [products, settings, customerCount, categories, rules, included] = await Promise.all([
     listPriceListProducts(ctx, id, { q, categoryId, page }),
     getSupplierSettings(ctx),
     customersOnPriceList(ctx, id),
     listActiveCategories(),
+    getListRules(ctx, id),
+    listIncludedProducts(ctx, id),
   ]);
   const disabled = ctx.orgStatus === "suspended";
 
@@ -120,6 +124,11 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
             <Pagination basePath={`/supplier/pricing/${list.id}`} params={{ q, category: categoryId }} page={products.page} pageCount={products.pageCount} />
           </>
         )}
+      </section>
+
+      <section className="space-y-3 border-t border-border pt-6" id="conditions">
+        <h2 className="font-semibold">{t("conditions.title")}</h2>
+        <PriceConditions priceListId={list.id} rules={rules} products={included} disabled={disabled} />
       </section>
 
       <section className="space-y-3 border-t border-border pt-6">

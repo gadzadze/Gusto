@@ -5,6 +5,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
+import { PaymentTerms } from "@/components/buyer/payment-terms";
 import { ProductCard } from "@/components/buyer/product-card";
 import { toProductViews } from "@/components/buyer/product-view";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,9 @@ import { cn } from "@/lib/utils";
 import { requireBuyer } from "@/server/auth/guards";
 import { getConnectedSupplier, listBuyerCatalog } from "@/server/domain/buyer/catalog";
 import { getCart } from "@/server/domain/orders/cart";
+import { conditionsFor } from "@/lib/pricing/conditions";
+import { formatBp } from "@/lib/pricing/conditions";
+import { getTermsState, loadBuyerPricing } from "@/server/domain/pricing/conditions";
 import { ShoppingCart } from "lucide-react";
 import { NotFoundError } from "@/server/domain/errors";
 import { getFormats } from "@/server/i18n/formats";
@@ -59,7 +63,16 @@ async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id
   const supplier = await getConnectedSupplier(ctx, id).catch(notFoundOn404);
   const catalog = await listBuyerCatalog(ctx, id, { q, categoryId, page }).catch(notFoundOn404);
   const cart = await getCart(ctx, id);
-  const views = await toProductViews(catalog.items, supplier, new Map(cart.lines.map((l) => [l.productId, l.qtyMilli])));
+  const tu = await getTranslations("units");
+  const pricing = await loadBuyerPricing(ctx.orgId, id);
+  const terms = await getTermsState(ctx, id).catch(() => null);
+  // Per product: the quantity discounts that apply to it, as text ("from 10 kg: -5%").
+  const tierHints = new Map<string, string[]>();
+  for (const p of catalog.items) {
+    const tiers = conditionsFor(pricing.rules, p.id).tiers;
+    if (tiers.length) tierHints.set(p.id, tiers.map((tier) => t("terms.tierRow", { qty: `${fmt.qty(tier.minQtyMilli)} ${tu(p.unit)}`, change: formatBp(tier.adjustBp) })));
+  }
+  const views = await toProductViews(catalog.items, supplier, new Map(cart.lines.map((l) => [l.productId, l.qtyMilli])), tierHints);
   const tcart = await getTranslations("cart");
 
   const filterHref = (category: string) => {
@@ -96,6 +109,21 @@ async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id
           </details>
         ) : null}
       </div>
+
+      {terms ? (
+        <PaymentTerms
+          view={{
+            supplierOrgId: id,
+            supplierName: supplier.name,
+            current: terms.current,
+            pending: terms.pending ? { method: terms.pending.method, intervalDays: terms.pending.intervalDays } : null,
+            lastDeclined: terms.lastDeclined,
+            methods: terms.methods,
+            intervals: terms.intervals,
+            tiers: terms.tiers.map((tier) => t("terms.tierRow", { qty: fmt.qty(tier.minQtyMilli), change: formatBp(tier.adjustBp) })),
+          }}
+        />
+      ) : null}
 
       <form method="get" className="flex max-w-xl gap-2">
         {categoryId ? <input type="hidden" name="category" value={categoryId} /> : null}

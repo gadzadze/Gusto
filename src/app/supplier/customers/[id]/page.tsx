@@ -16,7 +16,10 @@ import { getCustomer } from "@/server/domain/customers/customers";
 import { getCustomerInsights } from "@/server/domain/customers/insights";
 import { NotFoundError } from "@/server/domain/errors";
 import { listPriceLists } from "@/server/domain/pricing/price-lists";
+import { listTermsRequests } from "@/server/domain/pricing/conditions";
+import { isPaymentMethod } from "@/lib/pricing/conditions";
 import { CustomerControls } from "./customer-controls";
+import { CustomerTerms } from "./customer-terms";
 import { CustomerNote } from "./customer-note";
 import { getFormats } from "@/server/i18n/formats";
 
@@ -43,14 +46,16 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
   const t = await getTranslations("customers");
   const format = await getFormatter();
   const { id } = await params;
-  const [customer, lists, insights] = await Promise.all([
+  const [customer, lists, insights, requests] = await Promise.all([
     getCustomer(ctx, id).catch((error: unknown) => {
       if (error instanceof NotFoundError) notFound();
       throw error;
     }),
     listPriceLists(ctx),
     getCustomerInsights(ctx, id),
+    listTermsRequests(ctx),
   ]);
+  const request = requests.find((r) => r.buyerOrgId === customer.buyerOrgId) ?? null;
 
 
   return (
@@ -90,6 +95,27 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
         ) : (
           <Notice icon={PackageSearch} title={t("detail.noListTitle")} tone="amber">{t("detail.noListBody")}</Notice>
         )
+      ) : null}
+
+      {customer.status === "active" && customer.buyerOrgId && customer.priceListId ? (
+        <CustomerTerms
+          buyerOrgId={customer.buyerOrgId}
+          buyerName={customer.businessName}
+          current={{ method: isPaymentMethod(customer.termsMethod) ? customer.termsMethod : null, intervalDays: customer.termsIntervalDays }}
+          readOnly={ctx.orgStatus === "suspended"}
+          request={
+            request
+              ? {
+                  id: request.id,
+                  method: request.method,
+                  intervalDays: request.intervalDays,
+                  fromBp: request.fromBp,
+                  toBp: request.toBp,
+                  samples: request.samples.map((s) => ({ name: s.name, now: fmt.money(s.nowMinor, request.currency), after: fmt.money(s.afterMinor, request.currency) })),
+                }
+              : null
+          }
+        />
       ) : null}
 
       {insights.orderCount > 0 ? (

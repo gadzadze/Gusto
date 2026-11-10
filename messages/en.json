@@ -385,7 +385,32 @@
       "orderedTimes": "Ordered {count, plural, one {# time} other {# times}}",
       "from": "Supplier: {supplier}"
     },
-    "inviteSupplier": "Invite a supplier"
+    "inviteSupplier": "Invite a supplier",
+    "terms": {
+      "title": "Payment terms and discounts",
+      "intro": "Choose how you want to pay {supplier}. The price changes by the percentage shown. {supplier} has to approve it first; until then the standard price applies.",
+      "methodLabel": "How do you pay?",
+      "intervalLabel": "When do you pay?",
+      "standard": "Standard price",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "onDelivery": "On delivery",
+      "days": "{count, plural, one {# day} other {# days}} after delivery",
+      "current": "Agreed now: {terms}",
+      "currentStandard": "Agreed now: standard price",
+      "pending": "Waiting for {supplier} to approve: {terms}",
+      "declined": "Your last request was declined. The standard price still applies.",
+      "send": "Send request",
+      "sent": "Request sent. {supplier} will see what it changes and approve it.",
+      "tiersTitle": "Quantity discounts",
+      "tierRow": "from {qty}: {change}",
+      "errors": {
+        "not_offered": "That option is not offered any more. Reload the page.",
+        "unknown": "Could not send the request. Try again."
+      }
+    }
   },
   "admin": {
     "overviewTitle": "Overview",
@@ -1103,6 +1128,30 @@
         "suspended": "Your account is suspended - changes aren't possible.",
         "unknown": "Could not be completed. Try again."
       }
+    },
+    "terms": {
+      "title": "Payment terms",
+      "current": "Agreed now: {terms}",
+      "standard": "Standard price",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "onDelivery": "On delivery",
+      "days": "{count, plural, one {# day} other {# days}} after delivery",
+      "requestTitle": "Request to change payment terms",
+      "requestBody": "{buyer} asks to pay: {terms}.",
+      "changeLine": "Change on every price: {from} → {to}",
+      "sampleTitle": "Example prices (before → after, quantity discounts not counted)",
+      "approve": "Approve",
+      "decline": "Decline",
+      "reset": "Back to the standard price",
+      "editConditions": "Edit the conditions of the price list",
+      "errors": {
+        "request_not_pending": "This request was already decided.",
+        "unknown": "Could not save. Try again."
+      },
+      "bannerTitle": "{count, plural, one {# customer asks} other {# customers ask}} to change payment terms"
     }
   },
   "regular": {
@@ -1201,6 +1250,44 @@
       "too_long": "The name is too long.",
       "invalid": "Check the highlighted fields.",
       "unknown": "Could not be completed. Try again."
+    },
+    "conditions": {
+      "title": "Conditions",
+      "intro": "Set how the price changes with the way a customer pays and how much they order. Customers on this list see these conditions next to your prices and choose how they pay; you approve before prices change.",
+      "scope": "Applies to",
+      "scopeList": "All products on this list",
+      "hasOwn": "own values",
+      "scopeListHint": "These values apply to every product on the list, unless a product has its own.",
+      "scopeProductHint": "Own values for this product. A field left empty follows the whole list; quantity rows added here replace the list's.",
+      "howToType": "Type the change in percent: -3 makes the price 3% lower, 2 makes it 2% higher, 0 means no change. Leave a row empty if you don't offer it.",
+      "methodTitle": "Payment method",
+      "methodHint": "How the customer can pay. A method left empty is not offered.",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "intervalTitle": "Payment interval",
+      "intervalHint": "When the customer pays after delivery. A row left empty is not offered.",
+      "onDelivery": "On delivery",
+      "days": "{count, plural, one {# day} other {# days}} after delivery",
+      "otherInterval": "Other number of days",
+      "add": "Add",
+      "qtyTitle": "Quantity discounts",
+      "qtyHint": "Order more of a product, pay less (or more) per unit. The highest row a line reaches applies to that line.",
+      "qtyInherited": "This product follows the list's {count, plural, one {# quantity row} other {# quantity rows}}. Adding a row here replaces them for this product.",
+      "from": "From",
+      "qtyLabel": "Quantity",
+      "qtyPctLabel": "Price change",
+      "addTier": "Add a quantity row",
+      "remove": "Remove",
+      "pctPlaceholder": "0",
+      "save": "Save conditions",
+      "saved": "Conditions saved",
+      "useList": "Use the list's values",
+      "errors": {
+        "invalid_rule": "Check the rows: percentages from -90 to 50, quantities above 0, no repeated rows.",
+        "unknown": "Could not save. Try again."
+      }
     }
   },
   "invite": {
@@ -1370,7 +1457,12 @@
       "summary": "Orders: {orders}",
       "otherCategory": "Other",
       "inOrders": "in {count, plural, one {# order} other {# orders}}",
-      "stops": "Addresses"
+      "stops": "Addresses",
+      "viewLabel": "View",
+      "viewProducts": "Loading: by product",
+      "viewStops": "Delivery: by address",
+      "hintProducts": "All orders in one place: take each product once, and the split below shows who gets how much. Tick items as they go on the truck.",
+      "hintStops": "What goes to each address. Load the last stop's goods first."
     },
     "actions": {
       "confirm": "Confirm",
@@ -1407,6 +1499,17 @@
       "hint": "WhatsApp opens with a message ready. Sending is up to you - 202 doesn't record whether it was sent.",
       "sendNow": "Send the order on WhatsApp",
       "sendNowHint": "WhatsApp opens with the order written out: items, total, address and link. All that's left is to press send. 202 doesn't record whether it was sent."
+    },
+    "terms": {
+      "standard": "Standard price",
+      "method": {
+        "cash": "Cash",
+        "transfer": "Bank transfer"
+      },
+      "onDelivery": "on delivery",
+      "days": "{count, plural, one {# day} other {# days}} after delivery",
+      "listPrice": "List price {price}",
+      "paymentLabel": "Payment"
     }
   },
   "notifications": {

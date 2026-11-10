@@ -356,3 +356,16 @@ export async function customersOnPriceList(ctx: OrgCtx, priceListId: string): Pr
     .where(and(eq(supplierCustomers.priceListId, priceListId), isNotNull(supplierCustomers.priceListId)));
   return n;
 }
+
+/** Every product on the list (for choosing one to give its own conditions), most 500, by name. */
+export async function listIncludedProducts(ctx: OrgCtx, priceListId: string): Promise<{ id: string; name: string }[]> {
+  assertSupplier(ctx);
+  await getPriceList(ctx, priceListId);
+  return getDb()
+    .select({ id: products.id, name: products.name })
+    .from(priceListItems)
+    .innerJoin(products, eq(products.id, priceListItems.productId))
+    .where(and(eq(priceListItems.priceListId, priceListId), eq(priceListItems.supplierOrgId, ctx.orgId), eq(products.isActive, true)))
+    .orderBy(asc(products.name))
+    .limit(500);
+}

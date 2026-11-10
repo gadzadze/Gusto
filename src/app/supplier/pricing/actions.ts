@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { priceImportMappingSchema, rawSheetSchema } from "@/lib/catalog/import";
 import { parseMoneyInput } from "@/lib/money";
+import { parsePercentInput } from "@/lib/pricing/conditions";
+import { parseQuantityInput } from "@/lib/quantity";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireSupplier } from "@/server/auth/guards";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
@@ -29,6 +31,8 @@ import {
   type BulkPreview,
   type PriceListError,
 } from "@/server/domain/pricing/price-lists";
+import { saveScopeRules, type ConditionsError, type RuleInput } from "@/server/domain/pricing/conditions";
+import { decideTermsRequest, clearCustomerTerms } from "@/server/domain/pricing/conditions";
 import { getFormats } from "@/server/i18n/formats";
 
 type Code = PriceListError | PriceImportError | "required" | "too_long";
@@ -218,5 +222,71 @@ export async function commitPriceImportAction(
     const result = await commitPriceImport(ctx, priceListId, parsed.data.sheet, parsed.data.mapping, parsed.data.mode);
     refresh();
     return { ok: true, result };
+  });
+}
+
+const conditionRowsSchema = z
+  .array(
+    z.object({
+      kind: z.enum(["method", "interval", "qty"]),
+      method: z.string().max(16).nullable().optional(),
+      intervalDays: z.number().int().nullable().optional(),
+      qty: z.string().max(16).nullable().optional(),
+      pct: z.string().max(12),
+    }),
+  )
+  .max(40);
+
+/** Saves the conditions of one scope: the whole list (productId null) or one product on it. */
+export async function saveConditionsAction(
+  priceListId: string,
+  productId: string | null,
+  raw: unknown,
+): Promise<{ ok: true } | ActionError<ConditionsError | "invalid">> {
+  const ctx = await requireSupplier();
+  const parsed = conditionRowsSchema.safeParse(raw);
+  if (!parsed.success || !id.safeParse(priceListId).success || (productId !== null && !id.safeParse(productId).success)) {
+    return { ok: false, error: "invalid" };
+  }
+  const rows: RuleInput[] = [];
+  for (const r of parsed.data) {
+    const adjustBp = parsePercentInput(r.pct);
+    if (adjustBp === null) return { ok: false, error: "invalid_rule" };
+    if (r.kind === "qty") {
+      const minQtyMilli = r.qty ? parseQuantityInput(r.qty) : null;
+      if (!minQtyMilli) return { ok: false, error: "invalid_rule" };
+      rows.push({ kind: "qty", minQtyMilli, adjustBp });
+    } else if (r.kind === "method") {
+      rows.push({ kind: "method", method: r.method ?? null, adjustBp });
+    } else {
+      rows.push({ kind: "interval", intervalDays: r.intervalDays ?? null, adjustBp });
+    }
+  }
+  return runAction<{ ok: true }, ConditionsError | "invalid">("saveConditions", async () => {
+    await saveScopeRules(ctx, priceListId, productId, rows);
+    refresh();
+    return { ok: true };
+  });
+}
+
+/** The supplier approves or declines a customer's request to pay another way. */
+export async function decideTermsAction(requestId: string, approve: boolean): Promise<{ ok: true } | ActionError<ConditionsError | "invalid">> {
+  const ctx = await requireSupplier();
+  if (!id.safeParse(requestId).success) return { ok: false, error: "invalid" };
+  return runAction<{ ok: true }, ConditionsError | "invalid">("decideTerms", async () => {
+    await decideTermsRequest(ctx, requestId, approve);
+    refresh();
+    return { ok: true };
+  });
+}
+
+/** Back to the standard price for one customer. */
+export async function clearTermsAction(buyerOrgId: string): Promise<{ ok: true } | ActionError<ConditionsError | "invalid">> {
+  const ctx = await requireSupplier();
+  if (!id.safeParse(buyerOrgId).success) return { ok: false, error: "invalid" };
+  return runAction<{ ok: true }, ConditionsError | "invalid">("clearTerms", async () => {
+    await clearCustomerTerms(ctx, buyerOrgId);
+    refresh();
+    return { ok: true };
   });
 }

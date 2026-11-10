@@ -1,3 +1,4 @@
+import { UnitPrice } from "@/components/orders/unit-price";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
@@ -43,6 +44,7 @@ async function Checkout({ params }: PageProps<"/buyer/checkout/[supplierId]">) {
   const tc = await getTranslations("cart");
   const to = await getTranslations("orders.detail");
   const tu = await getTranslations("units");
+  const tb = await getTranslations("buyer");
   const { supplierId } = await params;
   const cart = await getCart(ctx, supplierId).catch((error: unknown) => {
     if (error instanceof NotFoundError) notFound();
@@ -82,12 +84,25 @@ async function Checkout({ params }: PageProps<"/buyer/checkout/[supplierId]">) {
                   ) : null}
                 </TD>
                 <TD className="whitespace-nowrap text-right tabular-nums">{fmt.input(l.qtyMilli)} {tu(l.unit)}</TD>
-                <TD className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">{fmt.money(l.unitPriceMinor, currency)}</TD>
+                <TD className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell"><UnitPrice price={fmt.money(l.unitPriceMinor, currency)} listPrice={fmt.money(l.listPriceMinor, currency)} adjustBp={l.adjustBp} /></TD>
                 <TD className="whitespace-nowrap text-right tabular-nums">{fmt.money(l.lineTotalMinor, currency)}</TD>
               </TR>
             ))}
           </TBody>
         </Table>
+        <p className="text-sm text-muted-foreground">
+          {cart.terms.method || cart.terms.intervalDays !== null
+            ? tb("terms.current", {
+                terms: [
+                  cart.terms.method ? tb(`terms.method.${cart.terms.method}`) : null,
+                  cart.terms.intervalDays === null ? null : cart.terms.intervalDays === 0 ? tb("terms.onDelivery") : tb("terms.days", { count: cart.terms.intervalDays }),
+                ]
+                  .filter(Boolean)
+                  .join(", "),
+              })
+            : tb("terms.currentStandard")}{" "}
+          <Link href={`/buyer/suppliers/${cart.supplier.id}`} className="font-medium text-brand underline-offset-2 hover:underline">{tb("terms.title")}</Link>
+        </p>
         <TotalsBlock {...cart.totals} currency={currency} />
         {cart.shortfallMinor > 0 ? (
           <FormAlert tone="error">{tc("shortfall", { amount: fmt.money(cart.shortfallMinor, currency) })}</FormAlert>

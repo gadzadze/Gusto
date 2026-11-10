@@ -80,6 +80,10 @@ export type CustomerDetail = CustomerListItem & {
   contactEmail: string | null;
   connectedAt: Date | null;
   privateNote: string | null;
+  buyerOrgId: string | null;
+  /** Payment terms agreed with this customer (null = the standard price). */
+  termsMethod: string | null;
+  termsIntervalDays: number | null;
 };
 
 export async function getCustomer(ctx: OrgCtx, customerId: string): Promise<CustomerDetail> {
@@ -100,6 +104,9 @@ export async function getCustomer(ctx: OrgCtx, customerId: string): Promise<Cust
       inviteExpiresAt: openInviteExpiry,
       connectedAt: supplierCustomers.connectedAt,
       privateNote: supplierCustomers.privateNote,
+      buyerOrgId: supplierCustomers.buyerOrgId,
+      termsMethod: supplierCustomers.termsMethod,
+      termsIntervalDays: supplierCustomers.termsIntervalDays,
       createdAt: supplierCustomers.createdAt,
     })
     .from(supplierCustomers)

@@ -19,6 +19,7 @@ import {
 } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError, StateError, isUniqueViolation } from "@/server/domain/errors";
+import { loadBuyerPricing, priceLine } from "@/server/domain/pricing/conditions";
 import { availableToBuyerSql, effectivePriceSql } from "@/server/domain/pricing/resolve";
 import { recordOrderEvent } from "@/server/notifications/events";
 import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
@@ -148,7 +149,7 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
       }
 
       // 3. Current products and this buyer's current prices.
-      const lines = await tx
+      const rawLines = await tx
         .select({
           productId: products.id,
           name: products.name,
@@ -167,7 +168,14 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
         .innerJoin(products, eq(products.id, cartItems.productId))
         .where(and(eq(cartItems.cartId, cart.id), eq(products.supplierOrgId, supplierOrgId)))
         .orderBy(asc(cartItems.createdAt), asc(products.name));
-      if (lines.length === 0) throw new StateError<SubmitError>("empty_cart");
+      if (rawLines.length === 0) throw new StateError<SubmitError>("empty_cart");
+      // The price each line gets: the list price changed by the payment terms agreed with this supplier and
+      // by the quantity tier. Decided here, so what is stored is what the supplier will see.
+      const pricing = await loadBuyerPricing(ctx.orgId, supplierOrgId, tx);
+      const lines = rawLines.map((l) => {
+        const p = priceLine(pricing, l.productId, l.unitPriceMinor, l.qtyMilli);
+        return { ...l, listPriceMinor: p.listPriceMinor, adjustBp: p.adjustBp, unitPriceMinor: p.unitPriceMinor };
+      });
 
       // 4–5. Compare with what the buyer reviewed; any difference aborts.
       const expected = new Map(input.expected.map((e) => [e.productId, e]));
@@ -241,6 +249,8 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
           vatMinor: totals.vatMinor,
           totalMinor: totals.totalMinor,
           idempotencyKey: input.idempotencyKey,
+          paymentMethod: pricing.terms.method,
+          paymentIntervalDays: pricing.terms.intervalDays,
           createdByUserId: ctx.userId,
         })
         .returning({ id: orders.id, number: orders.number });
@@ -254,6 +264,8 @@ export async function submitOrder(ctx: OrgCtx, supplierOrgId: string, input: Sub
           unit: l.unit,
           packDescription: l.packDescription,
           unitPriceMinor: l.unitPriceMinor,
+          listPriceMinor: l.listPriceMinor,
+          adjustBp: l.adjustBp,
           vatRateBp: l.vatRateBp,
           orderedQtyMilli: l.qtyMilli,
           lineTotalMinor: totals.lines[i].lineTotalMinor,

@@ -30,6 +30,8 @@ export async function toProductViews(
   products: BuyerProduct[],
   supplier: { id: string; currency: string; pricesIncludeVat: boolean },
   cart: ReadonlyMap<string, number> = new Map(),
+  /** Quantity discounts per product, already formatted ("from 10 kg: -5%"). */
+  extraHints: ReadonlyMap<string, string[]> = new Map(),
 ): Promise<ProductView[]> {
   const fmt = await getFormats();
   const t = await getTranslations("buyer");
@@ -53,7 +55,9 @@ export async function toProductViews(
       hints: [
         p.minQtyMilli !== 1000 ? t("minQty", { qty: fmt.qty(p.minQtyMilli), unit }) : null,
         p.qtyStepMilli !== 1000 ? t("step", { qty: fmt.qty(p.qtyStepMilli), unit }) : null,
-      ].filter((h): h is string => h !== null),
+      ]
+        .filter((h): h is string => h !== null)
+        .concat(extraHints.get(p.id) ?? []),
       vatNote: `${supplier.pricesIncludeVat ? t("vatIncluded") : t("vatExcluded")} · ${t("vatRate", { rate: fmt.qty(p.vatRateBp * 10) })}`,
     };
   });

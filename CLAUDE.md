@@ -821,6 +821,31 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Uptime**: a Sentry uptime monitor ("202 health", every 5 minutes) checks
   `/api/health` of the production URL. Update its URL when a domain is attached.
 
+## Price conditions, loading sheet and side switch (2026-11-10)
+
+- **Price conditions** (`price_rules`, `lib/pricing/conditions.ts` pure, `server/domain/pricing/conditions.ts`,
+  editor `components/pricing/price-conditions.tsx` on `/supplier/pricing/[id]`). On a price list the supplier sets
+  how the price changes with the **payment method** (cash / bank transfer), the **payment interval** (days after
+  delivery, 0 = on delivery) and the **ordered quantity** (tiers: from N units, X%). Whole list or per product
+  (a product's own rows replace the list's for that product; its own tiers replace the list's tiers). A change is
+  in basis points (negative = cheaper); method + interval + tier are **added**, applied once to the list price
+  (`applyBp`, half up). A method or interval with no row is **not offered**.
+- **The buyer asks, the supplier approves.** On the supplier page in the buyer catalog (`PaymentTerms`) the buyer
+  sees the offered conditions and asks for a method and interval (`payment_term_requests`, one open request per
+  buyer and supplier). The supplier sees the effect (percentage and example prices) on the customer page
+  (`CustomerTerms`, also a banner on the Customers list) and approves or declines. Only an approved request
+  writes `supplier_customers.terms_method / terms_interval_days`; until then the standard price applies, so a
+  buyer can always order. Quantity tiers apply automatically per line.
+- Prices are decided in `loadBuyerPricing` + `priceLine`, used by the cart and by `submitOrder` (re-resolved at
+  submit like every price). The order stores `payment_method`, `payment_interval_days` and, per line,
+  `list_price_minor` + `adjust_bp`, so both sides see the list price struck through with the change. 202 still
+  collects nothing and tracks no debt: the interval is an agreed term, not a receivable.
+- **Loading sheet** (`/supplier/orders/pick`, `domain/orders/pick-list.ts`): per delivery day, totals per product
+  with the split per customer, and a second view per address with each stop's lines; every line has a tick box
+  kept in the browser only (`components/orders/pick-check.tsx`, localStorage per day). Prints cleanly.
+- **Side switch** (`SideSwitch`): on phones a full-width two-part control with icons under the header, not
+  squeezed in it; on desktop in the sidebar.
+
 ## Photo background remover
 
 `components/catalog/background-remover.tsx`, `lib/image/background-removal/*`.

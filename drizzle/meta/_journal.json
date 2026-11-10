@@ -211,6 +211,13 @@
       "when": 1793887240584,
       "tag": "0029_allowed_emails_both_role",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794302850254,
+      "tag": "0030_price_conditions",
+      "breakpoints": true
     }
   ]
 }
