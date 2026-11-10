@@ -1,10 +1,11 @@
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Truck } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { OrderList } from "@/components/orders/order-list";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -34,8 +35,14 @@ async function Inbox({ searchParams }: Pick<PageProps<"/supplier/orders">, "sear
 
   return (
     <div className="space-y-5">
-      <div className="flex justify-end">
-        <Link href="/supplier/orders/pick" className="text-sm font-medium text-brand hover:underline">{t("pick.link")}</Link>
+      <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">{counts.confirmed > 0 ? t("pick.cardHint", { count: counts.confirmed }) : t("pick.cardEmpty")}</p>
+        <Button asChild className="shrink-0">
+          <Link href="/supplier/orders/pick">
+            <Truck />
+            {t("pick.button")}
+          </Link>
+        </Button>
       </div>
       <nav className="flex flex-wrap gap-2" aria-label={t("title")}>
         {(Object.keys(SUPPLIER_TABS) as SupplierTab[]).map((key) => (

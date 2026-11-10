@@ -1460,7 +1460,10 @@
       "viewProducts": "Loading: by product",
       "viewStops": "Delivery: by address",
       "hintProducts": "All orders in one place: take each product once, and the split below shows who gets how much. Tick items as they go on the truck.",
-      "hintStops": "What goes to each address. Load the last stop's goods first."
+      "hintStops": "What goes to each address. Load the last stop's goods first.",
+      "button": "Loading sheet",
+      "cardHint": "Confirmed orders to load: {count}. All products in one place, with each customer's share.",
+      "cardEmpty": "Confirm orders and agree a delivery day, then load them from one sheet."
     },
     "actions": {
       "confirm": "Confirm",
