@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Encrypted logical backup of the Gusto database. Run by
+# Encrypted logical backup of the 202 database. Run by
 # .github/workflows/db-backup.yml; Linux/macOS only (it is not an npm script).
 #
 #   BACKUP_DATABASE_URL  session-mode or direct connection (NOT the :6543

@@ -308,7 +308,7 @@ describe("delivery", () => {
 
   it("with a key, Resend gets the persisted order's real values", async () => {
     process.env.RESEND_API_KEY = "re_test_key";
-    process.env.EMAIL_FROM = "Gusto <orders@test.gusto.ge>";
+    process.env.EMAIL_FROM = "202 <orders@test.gusto.ge>";
     const fetchMock = vi.fn(async () => new Response("{}", { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -323,7 +323,7 @@ describe("delivery", () => {
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://api.resend.com/emails");
     const body = JSON.parse(String(init.body));
-    expect(body.from).toBe("Gusto <orders@test.gusto.ge>");
+    expect(body.from).toBe("202 <orders@test.gusto.ge>");
     expect(body.subject).toBe(`ახალი შეკვეთა GST-${number}`);
     expect(body.text).toContain(`${process.env.NEXT_PUBLIC_APP_URL}/o/${number}`);
     expect(body.text).toContain("20,00");
@@ -333,7 +333,7 @@ describe("delivery", () => {
 
   it("a provider error is thrown by sendEmail so callers can retry", async () => {
     process.env.RESEND_API_KEY = "re_test_key";
-    process.env.EMAIL_FROM = "Gusto <orders@test.gusto.ge>";
+    process.env.EMAIL_FROM = "202 <orders@test.gusto.ge>";
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ name: "validation_error" }), { status: 422 })));
     await expect(sendEmail({ to: "x@test.gusto.ge", subject: "s", text: "t" })).rejects.toThrow("Resend responded 422 (validation_error)");
   });

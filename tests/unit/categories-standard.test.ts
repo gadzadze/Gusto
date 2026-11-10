@@ -29,7 +29,7 @@ describe("category matching", () => {
     }
   });
 
-  it("lets a file's spelling reach the category Gusto has: own name first, then aliases of the standard ones it has", () => {
+  it("lets a file's spelling reach the category 202 has: own name first, then aliases of the standard ones it has", () => {
     const lookup = buildCategoryLookup([
       { id: "A", name: "რძის პროდუქტები" },
       { id: "B", name: "My own group" },
@@ -37,7 +37,7 @@ describe("category matching", () => {
     expect(lookup.get(normalizeCategoryKey("dairy"))).toBe("A");
     expect(lookup.get(normalizeCategoryKey("რძე"))).toBe("A");
     expect(lookup.get(normalizeCategoryKey("my  OWN group"))).toBe("B");
-    // Aliases of standard categories Gusto does not have do not match anything.
+    // Aliases of standard categories 202 does not have do not match anything.
     expect(lookup.get(normalizeCategoryKey("wine"))).toBeUndefined();
   });
 });

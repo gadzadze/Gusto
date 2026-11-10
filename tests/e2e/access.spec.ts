@@ -143,8 +143,8 @@ test("a registered role skips the choice, and a waiting supplier shows up on the
   await supplier.getByRole("button", { name: "პაროლის შენახვა" }).click();
   await expect(supplier).toHaveURL(/\/onboarding$/);
 
-  // No "how do you use Gusto?" choice: straight to the supplier form.
-  await expect(supplier.getByText("როგორ იყენებთ Gusto-ს?")).toBeHidden();
+  // No "how do you use 202?" choice: straight to the supplier form.
+  await expect(supplier.getByText("როგორ იყენებთ 202-ს?")).toBeHidden();
   await expect(supplier.getByLabel("სავაჭრო სახელი")).toBeVisible();
   await supplier.getByLabel("სავაჭრო სახელი").fill(`[E2E] Pinned Supplier ${Date.now().toString(36)}`);
   await supplier.getByLabel("საიდენტიფიკაციო კოდი").fill(randomLegalId());

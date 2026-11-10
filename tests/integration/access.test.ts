@@ -178,7 +178,7 @@ describe("admin alert for a supplier waiting for approval", () => {
 
   it("never throws when the email provider fails", async () => {
     process.env.RESEND_API_KEY = "re_test";
-    process.env.EMAIL_FROM = "Gusto <a@test.gusto.ge>";
+    process.env.EMAIL_FROM = "202 <a@test.gusto.ge>";
     vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 500 })));
     vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(notifyAdminsSupplierPending("[TEST] X")).resolves.toMatchObject({ attempted: expect.any(Number) });

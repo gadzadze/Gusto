@@ -8,7 +8,7 @@ import { assertSupplier, type OrgCtx } from "@/server/domain/context";
 // The supplier dashboard's numbers. Every figure comes from `orders` and
 // `order_items`; the definitions below are the ones the dashboard shows next to
 // each number (messages: supplier.dashboard.*.hint). "Order value" is what was
-// ordered, never revenue: Gusto does not know whether anything was paid.
+// ordered, never revenue: 202 does not know whether anything was paid.
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 

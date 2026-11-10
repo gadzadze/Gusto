@@ -45,7 +45,7 @@ test("a buyer invites a supplier and the request arrives with the buyer's name",
   const visitor = await (await browser.newContext()).newPage();
   await visitor.goto(new URL(link).pathname);
   await visitor.waitForLoadState("networkidle");
-  await expect(visitor.getByRole("heading", { name: `${buyerName} გიწვევთ Gusto-ზე` })).toBeVisible();
+  await expect(visitor.getByRole("heading", { name: `${buyerName} გიწვევთ 202-ზე` })).toBeVisible();
   await expect(visitor.getByLabel("კომპანიის დასახელება")).toHaveValue(supplierName);
   if (process.env.SHOTS) await visitor.screenshot({ path: `${process.env.SHOTS}/invite-join.png` });
   await visitor.getByLabel("საიდენტიფიკაციო კოდი").fill(randomLegalId());

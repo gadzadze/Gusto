@@ -97,8 +97,8 @@ test("an address the admin registered as both creates both sides without a choic
   await expect(person).toHaveURL(/\/onboarding$/);
   await person.waitForLoadState("networkidle");
 
-  // No "how do you use Gusto?" choice: both sides' fields in one form, the vetted ID read-only.
-  await expect(person.getByText("როგორ იყენებთ Gusto-ს?")).toBeHidden();
+  // No "how do you use 202?" choice: both sides' fields in one form, the vetted ID read-only.
+  await expect(person.getByText("როგორ იყენებთ 202-ს?")).toBeHidden();
   await expect(person.getByLabel("საიდენტიფიკაციო კოდი")).toHaveValue(legalId);
   await person.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("retailer");
   await person.getByLabel("საკონტაქტო პირი").fill("Gela");

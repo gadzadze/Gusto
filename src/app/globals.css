@@ -5,9 +5,9 @@
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /*
- * Gusto design tokens — see CLAUDE.md, "Design system".
+ * 202 design tokens — see CLAUDE.md, "Design system".
  * Black is the primary action color; burgundy is the accent. The shadcn/ui
- * variable names (--primary, --ring, …) map onto the Gusto tokens so
+ * variable names (--primary, --ring, …) map onto the 202 tokens so
  * components copied from shadcn pick them up unchanged.
  */
 

@@ -12,7 +12,7 @@ export type WelcomeResult = "sent" | "skipped" | "failed";
  * address, never from anything a stranger can trigger.
  *
  * Sent directly, not through the outbox: the text holds a one-time sign-in link,
- * which Gusto never stores or logs. A failure never undoes the acceptance; the
+ * which 202 never stores or logs. A failure never undoes the acceptance; the
  * person can always ask for a new link with "set or reset password" on the sign-in page.
  */
 export async function sendWelcomeEmail(email: string): Promise<WelcomeResult> {

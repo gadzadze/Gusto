@@ -15,7 +15,7 @@ import { channels as defaultChannels, type Channel } from "./channels";
 // caused them. Delivery happens later (see process.ts).
 //
 // Not covered here, on purpose: `invitation.created`. An invitation email
-// carries the raw token, which Gusto never stores (only its hash), and the
+// carries the raw token, which 202 never stores (only its hash), and the
 // outbox persists its payload. That email is sent directly from the action
 // that creates the invitation instead (supplier/customers/actions.ts).
 

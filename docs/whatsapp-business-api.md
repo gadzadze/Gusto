@@ -1,8 +1,8 @@
 # WhatsApp Business API (not implemented)
 
-Gusto does **not** send WhatsApp messages. Today WhatsApp is a "send on
+202 does **not** send WhatsApp messages. Today WhatsApp is a "send on
 WhatsApp" button that opens `wa.me` with a prefilled Georgian message; the
-person presses send, and Gusto records nothing as delivered (see
+person presses send, and 202 records nothing as delivered (see
 `CLAUDE.md`, "Product honesty rules").
 
 This note lists what an automated channel would need, so the decision after
@@ -43,7 +43,7 @@ the `delivery_channel` enum (a migration), and be added to the list in
 4. **Per-message cost.** Meta charges per delivered template message, priced by
    category and by the recipient's country. Georgia's rate and the current
    free allowances should be checked on Meta's pricing page before committing.
-   Gusto's core is free for both sides, so decide who pays (Gusto, or an
+   202's core is free for both sides, so decide who pays (202, or an
    opt-in paid tier) before turning it on.
 5. **Webhook delivery statuses.** Meta posts `sent` / `delivered` / `read` /
    `failed` events to a webhook. A route handler (signature-verified with the

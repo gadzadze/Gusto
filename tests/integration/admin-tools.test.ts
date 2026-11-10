@@ -65,7 +65,7 @@ describe("organizations (admin)", () => {
     await expect(reviewBuyer(admin, buyer.orgId, "suspend", "ab")).rejects.toEqual(new StateError("reason_required"));
     await expect(reviewBuyer(admin, buyer.orgId, "reactivate", "Back to normal")).rejects.toEqual(new StateError("stale_status"));
 
-    await reviewBuyer(admin, buyer.orgId, "suspend", "Unpaid invoices outside Gusto");
+    await reviewBuyer(admin, buyer.orgId, "suspend", "Unpaid invoices outside 202");
     expect((await getBuyerForAdmin(admin, buyer.orgId)).org.status).toBe("suspended");
     await expect(reviewBuyer(admin, buyer.orgId, "suspend", "Twice")).rejects.toEqual(new StateError("stale_status"));
     await reviewBuyer(admin, buyer.orgId, "reactivate", "Resolved");
@@ -76,7 +76,7 @@ describe("organizations (admin)", () => {
     expect(log.map((l) => l.action).sort()).toEqual(["buyer.reactivate", "buyer.suspend", "organization.created"]);
     expect(log.find((l) => l.action === "buyer.suspend")).toMatchObject({
       actorUserId: admin.userId,
-      data: { before: "active", after: "suspended", reason: "Unpaid invoices outside Gusto" },
+      data: { before: "active", after: "suspended", reason: "Unpaid invoices outside 202" },
     });
   });
 

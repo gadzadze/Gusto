@@ -9,7 +9,7 @@ import { appUrl } from "@/server/notifications/links";
 
 /**
  * "Send on WhatsApp": opens WhatsApp with a prefilled message. The person
- * sends it; Gusto records nothing as delivered (CLAUDE.md, product honesty
+ * sends it; 202 records nothing as delivered (CLAUDE.md, product honesty
  * rules), and the copy says "send", never "sent".
  */
 /** Order lines shown in the message to the supplier; the rest is "and N more" (a link has a length limit). */

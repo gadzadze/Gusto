@@ -25,7 +25,7 @@ export type CustomerListItem = {
   contactPhone: string | null;
   status: CustomerStatus;
   buyerOrgName: string | null;
-  /** The connected buyer is still waiting for Gusto's verification. */
+  /** The connected buyer is still waiting for 202's verification. */
   buyerUnverified: boolean;
   priceListId: string | null;
   priceListName: string | null;

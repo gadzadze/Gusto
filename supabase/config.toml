@@ -1,5 +1,5 @@
 # Local Supabase for development and e2e tests: `npx supabase start`.
-# Only the settings Gusto depends on are listed; everything else uses the
+# Only the settings 202 depends on are listed; everything else uses the
 # CLI defaults. Production is configured in the Supabase dashboard
 # (README, "Supabase Auth setup") — keep the two in step.
 #
@@ -33,11 +33,11 @@ enable_signup = false
 enable_confirmations = false
 
 [auth.email.template.magic_link]
-subject = "Gusto — შესვლის ბმული"
+subject = "202 — შესვლის ბმული"
 content_path = "./supabase/templates/magic-link.html"
 
 [auth.email.template.confirmation]
-subject = "Gusto — შესვლის ბმული"
+subject = "202 — შესვლის ბმული"
 content_path = "./supabase/templates/magic-link.html"
 
 [auth.external.google]

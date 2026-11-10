@@ -13,7 +13,7 @@ import { readSpreadsheet } from "@/lib/catalog/read-sheet";
 import { createCategoriesFromFileAction } from "./actions";
 
 /**
- * Reads a supplier's product file and creates the categories it uses that Gusto
+ * Reads a supplier's product file and creates the categories it uses that 202
  * does not have yet, so the import that follows has nothing to reject. The file
  * is read in the browser; only the category names are sent.
  */
@@ -25,7 +25,7 @@ export function CategoriesFromFile({ existingNames }: { existingNames: string[] 
   const [pending, startTransition] = useTransition();
 
   const found = sheet ? categoryNamesInSheet(sheet, column) : null;
-  // A name Gusto already recognises (its own, or a standard alias of a category it has) is not missing.
+  // A name 202 already recognises (its own, or a standard alias of a category it has) is not missing.
   const lookup = buildCategoryLookup(existingNames.map((name) => ({ id: name, name })));
   const unknown = found ? found.names.filter((n) => !lookup.has(normalizeCategoryKey(n))) : [];
   // What would be created: the standard Georgian name where the file's spelling is a known alias.

@@ -44,7 +44,7 @@ SQL
 
 # Left out of the restore list:
 #  - the `public` schema itself, which every database already has;
-#  - Supabase-only extensions, which a plain Postgres cannot create and Gusto
+#  - Supabase-only extensions, which a plain Postgres cannot create and 202
 #    does not need to read its data.
 "$PG_RESTORE" -l "$work/public.dump" \
   | grep -vE ' SCHEMA - public | SCHEMA public( |$)| EXTENSION - (pg_net|pg_cron|supabase_vault|pg_graphql|pgsodium|pgjwt)| EXTENSION (pg_net|pg_cron|supabase_vault|pg_graphql|pgsodium|pgjwt)( |$)' \

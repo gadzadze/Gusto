@@ -108,7 +108,7 @@ export type RowErrorKey =
 export type RowError = { field: ImportField; key: RowErrorKey };
 
 /**
- * What to do when a file lacks something Gusto needs. Each option only fills a
+ * What to do when a file lacks something 202 needs. Each option only fills a
  * gap: a cell that has text is never replaced (a misspelt category stays an
  * error rather than being silently moved to another).
  */

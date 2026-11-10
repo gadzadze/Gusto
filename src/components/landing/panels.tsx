@@ -47,7 +47,7 @@ export function HeroComposite() {
     <div className="composite arrive a2" aria-hidden="true">
       <div className="dash">
         <div className="dash-top">
-          <b>Gusto</b>
+          <b>202</b>
           <span>{t("demo.supplier")}</span>
         </div>
         <div className="dash-nav">
@@ -88,7 +88,7 @@ export function HeroComposite() {
         <div className="screen">
           <span className="island" />
           <div className="p-top">
-            <b>Gusto</b>
+            <b>202</b>
             <span>{t("demo.restaurant")}</span>
           </div>
           <div className="p-body">
@@ -291,7 +291,7 @@ export function BuyerPhone() {
         <div className="screen">
           <span className="island" />
           <div className="p-top">
-            <b>Gusto</b>
+            <b>202</b>
             <span>{t("demo.restaurant")}</span>
           </div>
           <div className="p-body">
