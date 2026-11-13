@@ -257,7 +257,8 @@
       "wrong_role": "This email is registered for a different role. Please contact us.",
       "legal_id_taken": "This legal ID is already registered. If it's your company, please contact us.",
       "already_has_kind": "You already have this side.",
-      "not_onboarded": "Finish registering your business first."
+      "not_onboarded": "Finish registering your business first.",
+      "too_many_companies": "You have reached the maximum number of companies."
     },
     "kindRequired": "Choose one of the options",
     "kindBoth": "Both",
@@ -310,6 +311,10 @@
     "addSide": {
       "buyer": "Join as a buyer too",
       "supplier": "Join as a supplier too"
+    },
+    "addCompany": {
+      "supplier": "Add another company (brand)",
+      "buyer": "Add another company"
     }
   },
   "roles": {
@@ -1964,7 +1969,14 @@
       "supplier": "Join as a supplier too"
     },
     "intro": "Your business details are already filled in. If the ID is the same and your first side is approved, the new side is activated at once. Otherwise you'll wait for approval.",
-    "link": "Go to the page"
+    "link": "Go to the page",
+    "another": {
+      "title": {
+        "supplier": "Another supplier company",
+        "buyer": "Another buyer company"
+      },
+      "intro": "Each legal entity has its own identification code, and the admin checks it separately. Once approved, you manage both from one account and see their orders together."
+    }
   },
   "connections": {
     "title": "Find a business",
@@ -2004,7 +2016,9 @@
       "listNone": "Decide later",
       "button": "Send request",
       "sent": "Request sent. {name} will see it in their requests.",
-      "connected": "Connected with {name}."
+      "connected": "Connected with {name}.",
+      "alsoFrom": "Also send a request from my other companies",
+      "alsoHint": "Each company sends its own request and offers its default price list. The customer approves each one separately."
     },
     "incoming": {
       "title": "Requests to connect",
@@ -2051,5 +2065,11 @@
       "link": "Invite by link anyway",
       "back": "Back"
     }
+  },
+  "brands": {
+    "scope": "View",
+    "thisCompany": "This company",
+    "allBrands": "All brands",
+    "allHint": "Orders of all your companies together. Each company keeps its own orders, prices and waybills."
   }
 }

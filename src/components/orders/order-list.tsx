@@ -5,7 +5,11 @@ import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import type { OrderListItem } from "@/server/domain/orders/queries";
 import { getFormats } from "@/server/i18n/formats";
 
-export async function OrderList({ orders, viewer }: { orders: OrderListItem[]; viewer: "buyer" | "supplier" }) {
+/**
+ * `allBrands`: the list spans several of the person's supplier companies, so each row names its brand and
+ * opens through /o/<number>, which switches to that company first.
+ */
+export async function OrderList({ orders, viewer, allBrands = false }: { orders: OrderListItem[]; viewer: "buyer" | "supplier"; allBrands?: boolean }) {
   const fmt = await getFormats();
   const t = await getTranslations("orders");
   const format = await getFormatter();
@@ -13,12 +17,13 @@ export async function OrderList({ orders, viewer }: { orders: OrderListItem[]; v
     <ul className="divide-y divide-border rounded-xl border border-border">
       {orders.map((o) => (
         <li key={o.id}>
-          <Link href={`/${viewer}/orders/${o.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
+          <Link href={allBrands ? `/o/${o.number}` : `/${viewer}/orders/${o.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
                 <span className="font-medium tabular-nums">{t("number", { number: o.number })}</span>
                 <OrderStatusBadge status={o.status} />
               </span>
+              {allBrands ? <span className="block truncate text-sm font-medium text-brand">{o.supplierName}</span> : null}
               <span className="block truncate text-sm text-muted-foreground">
                 {viewer === "supplier" ? o.buyerName : o.supplierName} ·{" "}
                 {format.dateTime(o.createdAt, { dateStyle: "medium", timeStyle: "short" })}

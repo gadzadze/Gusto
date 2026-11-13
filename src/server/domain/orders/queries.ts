@@ -4,6 +4,7 @@ import { getDb } from "@/server/db/client";
 import { orderItems, orders, orderStatusHistory, organizations, type Order, type OrderItem, type OrderStatus } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError } from "@/server/domain/errors";
+import { scopeOrgIds } from "@/server/domain/suppliers/brands";
 import { putItemsInCart } from "./cart";
 
 export const ORDERS_PAGE_SIZE = 20;
@@ -60,17 +61,20 @@ async function paged(where: SQL | undefined, page: number) {
   };
 }
 
-export async function listSupplierOrders(ctx: OrgCtx, tab: SupplierTab, page = 1) {
+/** `all`: every approved supplier company of the same person (the brands of a group), not just the acting one. */
+export async function listSupplierOrders(ctx: OrgCtx, tab: SupplierTab, page = 1, all = false) {
   if (ctx.orgType !== "supplier") throw new NotFoundError();
-  return paged(and(eq(orders.supplierOrgId, ctx.orgId), inArray(orders.status, [...SUPPLIER_TABS[tab]])), page);
+  const ids = await scopeOrgIds(ctx, all);
+  return paged(and(inArray(orders.supplierOrgId, ids), inArray(orders.status, [...SUPPLIER_TABS[tab]])), page);
 }
 
-export async function countSupplierOrders(ctx: OrgCtx): Promise<Record<SupplierTab, number>> {
+export async function countSupplierOrders(ctx: OrgCtx, all = false): Promise<Record<SupplierTab, number>> {
   if (ctx.orgType !== "supplier") throw new NotFoundError();
+  const ids = await scopeOrgIds(ctx, all);
   const rows = await getDb()
     .select({ status: orders.status, n: count() })
     .from(orders)
-    .where(eq(orders.supplierOrgId, ctx.orgId))
+    .where(inArray(orders.supplierOrgId, ids))
     .groupBy(orders.status);
   const out: Record<SupplierTab, number> = { new: 0, confirmed: 0, done: 0 };
   for (const r of rows) {

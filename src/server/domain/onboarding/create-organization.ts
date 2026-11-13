@@ -15,8 +15,11 @@ import {
 } from "@/server/db/schema";
 import { writeAudit } from "@/server/domain/audit";
 
+/** A person can run at most this many companies of one kind (brands of one group). */
+export const MAX_COMPANIES_PER_KIND = 10;
+
 export class OnboardingError extends Error {
-  constructor(public readonly code: "already_onboarded" | "legal_id_taken" | "already_has_kind" | "not_onboarded") {
+  constructor(public readonly code: "already_onboarded" | "legal_id_taken" | "already_has_kind" | "not_onboarded" | "too_many_companies") {
     super(code);
     this.name = "OnboardingError";
   }
@@ -40,6 +43,11 @@ export type CreateOptions = {
    * same (the admin already vetted that business); otherwise it waits for review.
    */
   addSide?: boolean;
+  /**
+   * Adds a further company of a kind the person already has (a supplier with several brands, each its
+   * own legal entity). Always waits for the admin: the sign-in address vouches for one business only.
+   */
+  additional?: boolean;
   /** The address the person signed in with: a supplier's buyer invitations are matched by it. */
   signInEmail?: string | null;
 };
@@ -84,14 +92,19 @@ export async function createOrganizationInTx(
     .where(eq(organizationMemberships.userId, userId));
   if (options.addSide) {
     if (existing.length === 0) throw new OnboardingError("not_onboarded");
-    if (existing.some((m) => m.type === input.kind)) throw new OnboardingError("already_has_kind");
+    if (options.additional) {
+      if (existing.filter((m) => m.type === input.kind).length >= MAX_COMPANIES_PER_KIND) throw new OnboardingError("too_many_companies");
+    } else if (existing.some((m) => m.type === input.kind)) {
+      throw new OnboardingError("already_has_kind");
+    }
   } else if (existing.length > 0) {
     throw new OnboardingError("already_onboarded");
   }
 
   const legalId = options.preapprovedLegalId ?? input.legalId;
   const sameBusinessActive = existing.some((m) => m.status === "active" && m.legalId === legalId);
-  const status: OrgStatus = options.preapprovedLegalId || (options.addSide && sameBusinessActive) ? "active" : "pending_review";
+  const status: OrgStatus =
+    !options.additional && (options.preapprovedLegalId || (options.addSide && sameBusinessActive)) ? "active" : "pending_review";
   // One organization per legal ID and kind (the unique index is the backstop).
   const [taken] = await tx
     .select({ id: organizations.id })
@@ -138,7 +151,7 @@ export async function createOrganizationInTx(
     action: "organization.created",
     targetType: "organization",
     targetId: org.id,
-    data: { type: org.type, status: org.status, preapproved: !!options.preapprovedLegalId, addedSide: !!options.addSide },
+    data: { type: org.type, status: org.status, preapproved: !!options.preapprovedLegalId, addedSide: !!options.addSide, additional: !!options.additional },
   });
 
   return { orgId: org.id, orgType: org.type, status: org.status };

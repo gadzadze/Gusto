@@ -17,7 +17,7 @@ async function BuyerShell({ children }: { children: React.ReactNode }) {
   const ctx = await requireBuyer();
   const state = await getAccessState();
   const memberships = state.signedIn ? state.memberships : [];
-  const sides = memberships.map((m) => ({ orgId: m.orgId, type: m.orgType, current: m.orgId === ctx.orgId }));
+  const sides = memberships.map((m) => ({ orgId: m.orgId, type: m.orgType, name: m.orgName, current: m.orgId === ctx.orgId }));
   const missing = memberships.length === 1 ? (memberships[0].orgType === "buyer" ? "supplier" : "buyer") : null;
   return (
     <AppShell
@@ -28,6 +28,7 @@ async function BuyerShell({ children }: { children: React.ReactNode }) {
       showAdminLink={ctx.isPlatformAdmin}
       sides={sides}
       addSide={missing}
+      addCompany={ctx.orgStatus === "active" ? "buyer" : null}
       bell={<NotificationBell userId={ctx.userId} area="buyer" />}
     >
       {children}

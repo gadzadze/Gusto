@@ -2,8 +2,10 @@
 
 import { refresh } from "next/cache";
 import { z } from "zod";
+import { StateError } from "@/server/domain/errors";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireOrg } from "@/server/auth/guards";
+import { listMyBrands } from "@/server/domain/suppliers/brands";
 import {
   decideConnectionRequest,
   findBusinessByCode,
@@ -80,5 +82,34 @@ export async function setFindableAction(findable: boolean): Promise<{ ok: true }
     await setFindable(ctx, findable);
     refresh();
     return { ok: true };
+  });
+}
+
+const alsoSchema = z.object({ targetOrgId: id, brandIds: z.array(id).max(10) });
+
+/**
+ * A person with several supplier companies asks the same customer to connect with more of them at
+ * once. Each request is sent as that company (its own price list default), and only companies the
+ * person really belongs to and that are approved are accepted: anything else is skipped silently.
+ */
+export async function sendConnectionRequestsForBrandsAction(raw: unknown): Promise<{ ok: true; sent: number } | Err> {
+  const ctx = await requireOrg();
+  const parsed = alsoSchema.safeParse(raw);
+  if (!parsed.success || ctx.orgType !== "supplier") return { ok: false, error: "invalid" };
+  return runAction<{ ok: true; sent: number }, ConnectionError | "invalid">("sendConnectionRequestsForBrands", async () => {
+    const mine = new Set((await listMyBrands(ctx)).map((b) => b.id));
+    let sent = 0;
+    for (const brandId of new Set(parsed.data.brandIds)) {
+      if (brandId === ctx.orgId || !mine.has(brandId)) continue;
+      try {
+        await sendConnectionRequest({ ...ctx, orgId: brandId, orgType: "supplier", orgStatus: "active" }, parsed.data.targetOrgId, {});
+        sent += 1;
+      } catch (error) {
+        // One brand already connected, waiting or rate limited must not undo the others.
+        if (!(error instanceof StateError)) throw error;
+      }
+    }
+    refresh();
+    return { ok: true, sent };
   });
 }
