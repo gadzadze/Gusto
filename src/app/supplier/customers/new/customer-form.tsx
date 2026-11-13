@@ -12,9 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { zodFormResolver } from "@/lib/validation/form-resolver";
 import { customerSchema } from "@/lib/validation/customer";
+import { ConnectInstead, type FoundBusiness } from "@/components/connections/connect-instead";
+import { findBusinessAction } from "@/app/connections/actions";
 import { createCustomerAction, type InviteLinks } from "../actions";
 
-type Fields = { businessName: string; contactName: string; phone: string; email: string; priceListId: string };
+type Fields = { businessName: string; contactName: string; phone: string; email: string; legalId: string; priceListId: string };
 const resolver = zodFormResolver<Fields>(customerSchema);
 
 export function CustomerForm({
@@ -28,12 +30,14 @@ export function CustomerForm({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [links, setLinks] = useState<InviteLinks | null>(null);
-  const defaultValues: Fields = { businessName: "", contactName: "", phone: "", email: "", priceListId: defaultPriceListId };
+  const [match, setMatch] = useState<FoundBusiness | null>(null);
+  const defaultValues: Fields = { businessName: "", contactName: "", phone: "", email: "", legalId: "", priceListId: defaultPriceListId };
   const {
     register,
     handleSubmit,
     setError: setFieldError,
     reset,
+    getValues,
     formState: { errors },
   } = useForm<Fields>({ resolver, defaultValues });
 
@@ -59,7 +63,7 @@ export function CustomerForm({
     );
   }
 
-  const onSubmit = handleSubmit((values) => {
+  const create = (values: Fields) => {
     setError(null);
     startTransition(async () => {
       const result = await createCustomerAction(values);
@@ -68,6 +72,19 @@ export function CustomerForm({
       for (const [field, key] of Object.entries(result.fieldErrors ?? {}) as [string, string][]) {
         setFieldError(field as keyof Fields, { type: "server", message: key });
       }
+    });
+  };
+
+  const onSubmit = handleSubmit((values) => {
+    setMatch(null);
+    const code = values.legalId.trim();
+    if (!code) return create(values);
+    // A code that belongs to a business already on 202: offer a request instead of a link.
+    startTransition(async () => {
+      const lookup = await findBusinessAction(code);
+      if (lookup.ok && lookup.result.state === "found") return setMatch(lookup.result);
+      if (!lookup.ok && lookup.error === "invalid_code") return setFieldError("legalId", { type: "server", message: "invalid_legal_id" });
+      create(values);
     });
   });
 
@@ -95,6 +112,9 @@ export function CustomerForm({
         <Field id="email" label={t("form.email")} error={err("email")} optional>
           <Input type="email" autoComplete="email" {...input("email")} />
         </Field>
+        <Field id="legalId" label={t("form.legalId")} hint={t("form.legalIdHint")} error={err("legalId")} optional>
+          <Input inputMode="numeric" autoComplete="off" {...input("legalId", t("form.legalIdHint"))} />
+        </Field>
         <Field id="priceListId" label={t("form.priceList")} hint={t("form.priceListHint")} error={err("priceListId")}>
           <Select {...input("priceListId", t("form.priceListHint"))}>
             <option value="">{t("basePrices")}</option>
@@ -106,6 +126,17 @@ export function CustomerForm({
           </Select>
         </Field>
       </div>
+      {match ? (
+        <ConnectInstead
+          match={match}
+          priceListId={getValues("priceListId") || null}
+          onBack={() => setMatch(null)}
+          onLink={() => {
+            setMatch(null);
+            create(getValues());
+          }}
+        />
+      ) : null}
       <Button type="submit" disabled={pending}>
         {t("form.submit")}
       </Button>

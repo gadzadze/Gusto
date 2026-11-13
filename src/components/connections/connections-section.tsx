@@ -1,6 +1,7 @@
 import { getFormatter } from "next-intl/server";
 import { ConnectionsPanel, type RequestView } from "@/components/connections/connections-panel";
 import type { OrgCtx } from "@/server/domain/context";
+import { convertOpenInvitationsQuietly } from "@/server/domain/connections/convert";
 import { getFindable, listConnectionRequests, type RequestRow } from "@/server/domain/connections/connections";
 import { listPriceLists } from "@/server/domain/pricing/price-lists";
 
@@ -8,6 +9,8 @@ import { listPriceLists } from "@/server/domain/pricing/price-lists";
 export async function ConnectionsSection({ ctx, inviteHref }: { ctx: OrgCtx; inviteHref: string }) {
   if (ctx.orgStatus !== "active") return null;
   const format = await getFormatter();
+  // Invitations sent to this business by its code (before it was here, or while it was not findable).
+  await convertOpenInvitationsQuietly(ctx.orgId);
   const [requests, findable, lists] = await Promise.all([
     listConnectionRequests(ctx),
     getFindable(ctx),

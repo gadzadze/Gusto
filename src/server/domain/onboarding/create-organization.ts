@@ -1,3 +1,4 @@
+import { convertOpenInvitationsQuietly } from "@/server/domain/connections/convert";
 import { linkInvitesToSupplier } from "@/server/domain/buyer/supplier-invites";
 import "server-only";
 import { and, eq, sql } from "drizzle-orm";
@@ -48,7 +49,10 @@ export async function createOrganizationForUser(
   input: OnboardingValues,
   options: CreateOptions = {},
 ): Promise<{ orgId: string; orgType: OrgType; status: OrgStatus }> {
-  return getDb().transaction((tx) => createOrganizationInTx(tx, userId, input, options));
+  const created = await getDb().transaction((tx) => createOrganizationInTx(tx, userId, input, options));
+  // A business that starts active may already have been invited by its code.
+  if (created.status === "active") await convertOpenInvitationsQuietly(created.orgId);
+  return created;
 }
 
 /** Same as createOrganizationForUser, inside a caller's transaction (e.g. accepting an invitation). */
@@ -151,11 +155,15 @@ export async function createBothForUser(
   supplier: Extract<OnboardingValues, { kind: "supplier" }>,
   options: CreateOptions = {},
 ): Promise<{ buyer: { orgId: string; status: OrgStatus }; supplier: { orgId: string; status: OrgStatus } }> {
-  return getDb().transaction(async (tx) => {
+  const result = await getDb().transaction(async (tx) => {
     const b = await createOrganizationInTx(tx, userId, buyer, options);
     const s = await createOrganizationInTx(tx, userId, supplier, { ...options, addSide: true });
     return { buyer: { orgId: b.orgId, status: b.status }, supplier: { orgId: s.orgId, status: s.status } };
   });
+  for (const side of [result.buyer, result.supplier]) {
+    if (side.status === "active") await convertOpenInvitationsQuietly(side.orgId);
+  }
+  return result;
 }
 
 /** What a second side starts from: the person's own organization's details. */

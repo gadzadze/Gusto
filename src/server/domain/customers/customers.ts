@@ -173,6 +173,7 @@ export async function createCustomer(
         contactName: values.contactName,
         contactPhone: values.phone,
         contactEmail: values.email,
+        legalId: values.legalId,
         priceListId: values.priceListId,
         status: "invited",
       })

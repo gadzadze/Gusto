@@ -1060,7 +1060,9 @@
       "email": "Email",
       "priceList": "Price list",
       "priceListHint": "Which products and prices this customer will see. Without a list, the customer can't see any products.",
-      "submit": "Add and create a link"
+      "submit": "Add and create a link",
+      "legalId": "Identification code",
+      "legalIdHint": "If the business is already on 202 you can send a request instead of a link. If not, this invitation connects to them when they join."
     },
     "invite": {
       "title": "The invitation link is ready",
@@ -1813,7 +1815,7 @@
             "Orders: contents, quantities, prices, statuses, comments and the history of changes.",
             "Catalog (for suppliers): products, prices, price lists and images.",
             "Notifications and your notification settings.",
-            "Invitations: when a buyer invites a supplier, we keep the supplier's name and the phone or email given, so the link can be sent and the invitation's status shown. This data is visible only to the buyer who sent the invitation. A supplier who writes to us through the link sees the name of the buyer who invited them.",
+            "Invitations: when a buyer invites a supplier, we keep the supplier's name and the phone or email given, so the link can be sent and the invitation's status shown. This data is visible only to the buyer who sent the invitation. A supplier who writes to us through the link sees the name of the buyer who invited them. If an identification code was given (by a buyer for a supplier, or by a supplier for a customer), we keep it with the invitation. When a business with that code is on 202 and findable, the invitation is shown to it as a connection request from the inviter (the inviter's name only).",
             "Technical data: we use the IP address only to protect against abuse (limiting the number of requests) and keep it in encrypted (hashed) form, for a short time.",
             "Error reports: when an error happens in the service, we send the error description, the page address and the type of browser or device to an error monitoring service. We remove emails, cookies, request parameters, identification tokens and entered data from the reports.",
             "Administrators' security-related actions (for example, approving an organization) are kept in a log.",
@@ -1945,7 +1947,9 @@
       "error": "The link could not be prepared. Refresh the page."
     },
     "namedTitle": "Invite a specific supplier",
-    "namedIntro": "If you want to tie the link to one supplier and know when they join, enter their name and number."
+    "namedIntro": "If you want to tie the link to one supplier and know when they join, enter their name and number.",
+    "legalId": "Identification code",
+    "legalIdHint": "If the supplier is already on 202 you can send a request instead of a link. If not, this invitation connects to them when they join."
   },
   "authContinue": {
     "title": "Sign in to 202",
@@ -2039,6 +2043,13 @@
       "invalid_list": "Choose one of your own price lists.",
       "rate_limited": "Too many attempts. Try again in an hour.",
       "unknown": "Something went wrong. Try again."
+    },
+    "instead": {
+      "title": "{name} ({city}) is already on 202",
+      "body": "Instead of a link you can send a connection request. They approve it in their requests.",
+      "send": "Send request",
+      "link": "Invite by link anyway",
+      "back": "Back"
     }
   }
 }

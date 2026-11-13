@@ -1,3 +1,4 @@
+import { convertOpenInvitationsQuietly } from "@/server/domain/connections/convert";
 import "server-only";
 import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -158,4 +159,6 @@ export async function reviewSupplier(
       data: { before: before.status, after: rule.to, reason: cleanReason },
     });
   });
+  // Newly approved: invitations addressed to this business's code become requests in its inbox.
+  if (rule.to === "active") await convertOpenInvitationsQuietly(orgId);
 }

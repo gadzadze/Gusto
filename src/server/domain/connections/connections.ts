@@ -1,9 +1,10 @@
 import "server-only";
-import { and, asc, desc, eq, gt, inArray, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 import { isValidLegalId, normalizeLegalId } from "@/lib/legal-id";
 import { getDb, type Tx } from "@/server/db/client";
 import {
   connectionRequests,
+  invitations,
   organizationMemberships,
   organizations,
   priceLists,
@@ -128,18 +129,46 @@ export async function findBusinessByCode(ctx: OrgCtx, rawCode: string): Promise<
   return { state: "found", orgId: org.id, name: org.name, city: org.city, relation: rel.relation, requestId: rel.requestId, customerId: rel.customerId };
 }
 
-type OrgRow = { id: string; type: "buyer" | "supplier"; status: string; name: string; contactName: string; phone: string };
+type OrgRow = { id: string; type: "buyer" | "supplier"; status: string; name: string; contactName: string; phone: string; legalId: string | null };
 
-/** Creates the connection (an active supplier_customers row) for an approved request. Returns its id. */
-async function connect(tx: Tx, request: { id: string; fromOrgId: string; toOrgId: string; priceListId: string | null }, from: OrgRow, to: OrgRow, decidedBy: string, chosenListId: string | null | undefined) {
+/**
+ * Creates the connection (an active supplier_customers row) for an approved request. Returns its id.
+ * When the supplier had already invited this business with its code (an invited row with no buyer yet),
+ * that row is the one connected, so the supplier keeps one customer with its own name, contact and note,
+ * and the invitation links of that row stop working.
+ */
+async function connect(tx: Tx, request: { id: string; fromOrgId: string; toOrgId: string; priceListId: string | null; customerId: string | null }, from: OrgRow, to: OrgRow, decidedBy: string, chosenListId: string | null | undefined) {
   const supplier = from.type === "supplier" ? from : to;
   const buyer = from.type === "buyer" ? from : to;
-  let priceListId: string | null = null;
-  if (chosenListId !== undefined && chosenListId !== null) {
-    priceListId = chosenListId;
-  } else if (request.priceListId) {
-    priceListId = request.priceListId;
+  const [existing] = await tx
+    .select({ id: supplierCustomers.id, status: supplierCustomers.status })
+    .from(supplierCustomers)
+    .where(and(eq(supplierCustomers.supplierOrgId, supplier.id), eq(supplierCustomers.buyerOrgId, buyer.id)));
+  if (existing?.status === "blocked") throw new StateError<ConnectionError>("blocked");
+
+  // The invited row this business replaces, if any.
+  let invited: { id: string; priceListId: string | null } | undefined;
+  if (!existing) {
+    const candidates = await tx
+      .select({ id: supplierCustomers.id, priceListId: supplierCustomers.priceListId })
+      .from(supplierCustomers)
+      .where(
+        and(
+          eq(supplierCustomers.supplierOrgId, supplier.id),
+          eq(supplierCustomers.status, "invited"),
+          isNull(supplierCustomers.buyerOrgId),
+          request.customerId
+            ? eq(supplierCustomers.id, request.customerId)
+            : buyer.legalId
+              ? eq(supplierCustomers.legalId, buyer.legalId)
+              : sql`false`,
+        ),
+      )
+      .limit(1);
+    invited = candidates[0];
   }
+
+  let priceListId: string | null = chosenListId ?? request.priceListId ?? invited?.priceListId ?? null;
   if (priceListId) {
     const [list] = await tx.select({ id: priceLists.id }).from(priceLists).where(and(eq(priceLists.id, priceListId), eq(priceLists.supplierOrgId, supplier.id)));
     if (!list) throw new StateError<ConnectionError>("invalid_list");
@@ -147,14 +176,20 @@ async function connect(tx: Tx, request: { id: string; fromOrgId: string; toOrgId
     const [def] = await tx.select({ id: priceLists.id }).from(priceLists).where(and(eq(priceLists.supplierOrgId, supplier.id), eq(priceLists.isDefault, true)));
     priceListId = def?.id ?? null;
   }
-  const [existing] = await tx
-    .select({ id: supplierCustomers.id, status: supplierCustomers.status })
-    .from(supplierCustomers)
-    .where(and(eq(supplierCustomers.supplierOrgId, supplier.id), eq(supplierCustomers.buyerOrgId, buyer.id)));
+
   let customerId: string;
-  if (existing?.status === "blocked") throw new StateError<ConnectionError>("blocked");
   if (existing) {
     customerId = existing.id;
+  } else if (invited) {
+    customerId = invited.id;
+    await tx
+      .update(supplierCustomers)
+      .set({ buyerOrgId: buyer.id, status: "active", connectedAt: new Date(), priceListId, convertedAt: new Date() })
+      .where(eq(supplierCustomers.id, invited.id));
+    await tx
+      .update(invitations)
+      .set({ revokedAt: new Date() })
+      .where(and(eq(invitations.supplierCustomerId, invited.id), isNull(invitations.revokedAt), isNull(invitations.acceptedAt)));
   } else {
     const [created] = await tx
       .insert(supplierCustomers)
@@ -180,7 +215,7 @@ async function connect(tx: Tx, request: { id: string; fromOrgId: string; toOrgId
 
 async function loadOrgs(tx: Tx, ids: string[]): Promise<Map<string, OrgRow>> {
   const rows = await tx
-    .select({ id: organizations.id, type: organizations.type, status: organizations.status, name: organizations.name, contactName: organizations.contactName, phone: organizations.phone })
+    .select({ id: organizations.id, type: organizations.type, status: organizations.status, name: organizations.name, contactName: organizations.contactName, phone: organizations.phone, legalId: organizations.legalId })
     .from(organizations)
     .where(inArray(organizations.id, ids));
   return new Map(rows.map((r) => [r.id, r]));

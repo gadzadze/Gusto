@@ -410,6 +410,10 @@ export const supplierCustomers = pgTable(
     // adjustment). A change is requested by the buyer in payment_term_requests and approved by the supplier.
     termsMethod: text("terms_method"),
     termsIntervalDays: integer("terms_interval_days"),
+    // The identification code the supplier entered when inviting a business that was not on 202 yet. When
+    // that business joins, the invitation becomes a connection request (converted_at says it did).
+    legalId: text("legal_id"),
+    convertedAt: timestamp("converted_at", { withTimezone: true }),
     ...timestamps,
   },
   (t) => [
@@ -418,6 +422,9 @@ export const supplierCustomers = pgTable(
       .where(sql`${t.buyerOrgId} is not null`),
     index("supplier_customers_buyer_idx").on(t.buyerOrgId, t.status),
     index("supplier_customers_supplier_idx").on(t.supplierOrgId, t.status),
+    index("supplier_customers_open_invite_code_idx")
+      .on(t.legalId)
+      .where(sql`${t.status} = 'invited' and ${t.buyerOrgId} is null and ${t.legalId} is not null`),
     foreignKey({
       name: "supplier_customers_price_list_fk",
       columns: [t.priceListId, t.supplierOrgId],
@@ -729,11 +736,16 @@ export const buyerSupplierInvites = pgTable(
     // under "buyers who invited you" until they connect or ignore it.
     supplierOrgId: uuid("supplier_org_id").references(() => organizations.id, { onDelete: "set null" }),
     connectedAt: timestamp("connected_at", { withTimezone: true }),
+    // The supplier's identification code, when the buyer entered it, and when this invitation was turned
+    // into a connection request because that supplier is on 202.
+    legalId: text("legal_id"),
+    convertedAt: timestamp("converted_at", { withTimezone: true }),
     createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
     createdAt: timestamps.createdAt,
   },
   (t) => [
     uniqueIndex("buyer_supplier_invites_token_hash_key").on(t.tokenHash),
+    index("buyer_supplier_invites_code_idx").on(t.legalId),
     index("buyer_supplier_invites_buyer_idx").on(t.buyerOrgId, t.createdAt),
     index("buyer_supplier_invites_supplier_idx").on(t.supplierOrgId),
   ],
@@ -890,6 +902,9 @@ export const connectionRequests = pgTable(
     status: text("status").notNull().default("pending"),
     message: text("message"),
     priceListId: uuid("price_list_id").references(() => priceLists.id, { onDelete: "set null" }),
+    // The supplier's invited customer row this request replaces (set when an invitation was converted), so
+    // approving it connects that row instead of making a second one.
+    customerId: uuid("customer_id").references(() => supplierCustomers.id, { onDelete: "set null" }),
     requestedByUserId: uuid("requested_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
     decidedByUserId: uuid("decided_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
     decidedAt: timestamp("decided_at", { withTimezone: true }),
