@@ -281,6 +281,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `supplier_requests`: public "onboard me" submissions (business name, legal ID, contact, phone, email, city, note; `status` new/contacted/approved/rejected, admin note, reviewer). At most one open request per legal ID and per email.
 - `buyer_supplier_invites`: a buyer's invitation to a supplier (buyer org, supplier name, phone/email, `token_hash`, `expires_at`, `revoked_at`, `used_at` when a join request used it, `supplier_org_id` once that supplier has an organization, `connected_at`); `supplier_requests.invite_id` points back to it.
 - `buyer_invite_links`: a buyer's reusable invitation link (buyer org as primary key, `token`; replaced on request). Each supplier that joins through it gets its own used `buyer_supplier_invites` row.
+- `connection_requests`: one business asks another to connect (from/to organization, status pending/approved/declined/withdrawn/expired, optional message and offered price list, expiry). `organizations.findable` lets a business be looked up by its code.
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
@@ -852,6 +853,26 @@ and the delivery row is marked `skipped`, not `sent`.
   kept in the browser only (`components/orders/pick-check.tsx`, localStorage per day). Prints cleanly.
 - **Side switch** (`SideSwitch`): on phones a full-width two-part control with icons under the header, not
   squeezed in it; on desktop in the sidebar.
+
+## Finding and connecting with businesses (2026-11-13)
+
+- **Lookup by identification code** (`domain/connections/connections.ts`, `components/connections/*`, shown at the top of the
+  supplier's Customers page and the buyer's Suppliers page). An active business types the **full** code (9 or 11 digits,
+  never a name, never a browse list) and gets the name and city of the one business of the *other* kind that has it.
+  Nothing else is revealed: no contact, catalog or prices. A business that is not approved (`active`), has switched
+  **findable** off (`organizations.findable`, default on, a switch in the same panel), or has blocked the asker answers
+  exactly like one that does not exist (`not_found`), so a lookup cannot tell them apart. 30 lookups per hour per
+  organization; misses count. 11-digit codes are personal ID numbers of sole traders: the answer is still only the
+  business name and city.
+- **Requests work like friend requests** (`connection_requests`, either side can ask). Only an approval creates the
+  `supplier_customers` row (active, buyer name and contact copied, price list = the one chosen when a supplier asks or
+  approves, else the supplier's default list, else none: the buyer then sees nothing until one is assigned, as always).
+  One open request per pair; a request lasts 30 days; asking someone who already asked you approves theirs; a decline
+  blocks asking again for 14 days; the asker can withdraw. 20 requests per hour per organization. Decisions and
+  withdrawals are scoped to the acting organization (someone else's request is "not found").
+- Notifications: `connection_requested` (recipient, link `/supplier/customers#requests` or `/buyer/suppliers#requests`),
+  `connection_approved` / `connection_declined` (the asker). Invitation links stay for businesses not yet on 202.
+- Not built yet: matching every open invitation of a business by its code when it joins through one link, and name search.
 
 ## Photo background remover
 

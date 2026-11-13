@@ -1530,7 +1530,10 @@
       "terms_requested": "Payment terms request",
       "terms_approved": "Payment terms approved",
       "terms_declined": "Payment terms request declined",
-      "customer_connected": "A new customer joined"
+      "customer_connected": "A new customer joined",
+      "connection_requested": "A business asks to connect",
+      "connection_approved": "Connection approved",
+      "connection_declined": "Connection request declined"
     },
     "counterparty": {
       "buyer": "Buyer: {name}",
@@ -1554,7 +1557,10 @@
         "terms_requested": "A customer asks to pay another way. Open it to see what changes in the prices, then approve or decline.",
         "terms_approved": "Your supplier approved your payment terms. New orders use them.",
         "terms_declined": "Your supplier declined your payment terms request. The standard price still applies.",
-        "customer_connected": "A customer accepted your invitation and can now order."
+        "customer_connected": "A customer accepted your invitation and can now order.",
+        "connection_requested": "A business asked to connect with you on 202. Open it to see who, then approve or decline.",
+        "connection_approved": "Your request was approved. You are now connected.",
+        "connection_declined": "Your connection request was declined."
       },
       "order": "Order: {number}",
       "items": "Items: {count}",
@@ -1810,7 +1816,8 @@
             "Invitations: when a buyer invites a supplier, we keep the supplier's name and the phone or email given, so the link can be sent and the invitation's status shown. This data is visible only to the buyer who sent the invitation. A supplier who writes to us through the link sees the name of the buyer who invited them.",
             "Technical data: we use the IP address only to protect against abuse (limiting the number of requests) and keep it in encrypted (hashed) form, for a short time.",
             "Error reports: when an error happens in the service, we send the error description, the page address and the type of browser or device to an error monitoring service. We remove emails, cookies, request parameters, identification tokens and entered data from the reports.",
-            "Administrators' security-related actions (for example, approving an organization) are kept in a log."
+            "Administrators' security-related actions (for example, approving an organization) are kept in a log.",
+            "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202."
           ]
         },
         {
@@ -1830,6 +1837,7 @@
           "title": "Who we share it with",
           "items": [
             "The buyer and the supplier you deal with: the organization's name, the contact person and the order data. One supplier can't see another's customers or prices.",
+            "Other businesses on 202 can look your business up by its identification code. They see only its name and city, and can send a connection request; nothing else is shown until you approve one. You can turn this off at any time (Customers or Suppliers page, \"Visibility\").",
             "202 administrators: contact and status information, and order lookup. Every order lookup is recorded in the log. Administrators' support tools don't show price lists or the catalog.",
             "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry).",
             "When you remove the background from a product photo, your browser downloads a helper model file once from Hugging Face, which therefore sees your IP address. The photo itself is processed on your device and sent nowhere.",
@@ -1953,5 +1961,84 @@
     },
     "intro": "Your business details are already filled in. If the ID is the same and your first side is approved, the new side is activated at once. Otherwise you'll wait for approval.",
     "link": "Go to the page"
+  },
+  "connections": {
+    "title": "Find a business",
+    "hint": {
+      "supplier": "Enter a customer's identification code. If it is on 202, you can send a connection request: when they approve, they see your catalog with the price list you choose.",
+      "buyer": "Enter a supplier's identification code. If it is on 202, you can send a connection request: when they approve and give you a price list, you see their catalog."
+    },
+    "codeLabel": "Identification code",
+    "codePlaceholder": "9 or 11 digits",
+    "search": "Search",
+    "searching": "Searching",
+    "notFound": {
+      "title": "No business found with this code",
+      "body": "It may not be on 202 yet, or it is not taking requests. You can invite it with a link instead.",
+      "inviteSupplier": "Invite a customer",
+      "inviteBuyer": "Invite a supplier"
+    },
+    "self": "This is your own business.",
+    "found": {
+      "city": "{city}",
+      "approved": "Approved by 202"
+    },
+    "relation": {
+      "connected": "Already connected.",
+      "pending_outgoing": "Request sent. Waiting for an answer.",
+      "pending_incoming": "This business has already asked to connect with you. Answer it in the requests above.",
+      "cooldown": "This business declined your request recently. You can ask again later.",
+      "blocked_by_you": "You blocked this business."
+    },
+    "openCustomer": "Open customer",
+    "openSupplier": "Open supplier",
+    "send": {
+      "messageLabel": "Message (optional)",
+      "messagePlaceholder": "For example, who you are and what you supply",
+      "listLabel": "Price list to offer",
+      "listDefault": "Default list",
+      "listNone": "Decide later",
+      "button": "Send request",
+      "sent": "Request sent. {name} will see it in their requests.",
+      "connected": "Connected with {name}."
+    },
+    "incoming": {
+      "title": "Requests to connect",
+      "from": "{name}, {city}",
+      "expires": "Open until {date}",
+      "offered": "Offered price list: {list}",
+      "approve": "Approve",
+      "decline": "Decline",
+      "listLabel": "Price list for this customer",
+      "listDefault": "Default list",
+      "listNone": "No list yet (they see nothing until you assign one)",
+      "approved": "Connected.",
+      "declined": "Declined."
+    },
+    "outgoing": {
+      "title": "Requests you sent",
+      "waiting": "{name}, {city}",
+      "withdraw": "Withdraw",
+      "expires": "Open until {date}"
+    },
+    "findable": {
+      "title": "Visibility",
+      "label": "Other businesses can find us by our identification code",
+      "hint": "They see only our name and city, and can send a connection request. Turn it off to be reached only through invitation links.",
+      "saved": "Saved."
+    },
+    "errors": {
+      "invalid_code": "Enter the full code: 9 digits for a company, 11 for an individual entrepreneur.",
+      "not_active": "Your business must be approved by 202 before it can connect with others.",
+      "not_found": "No business found.",
+      "already_connected": "You are already connected.",
+      "already_pending": "A request between you is already waiting for an answer.",
+      "declined_recently": "This business declined your request recently. You can ask again later.",
+      "blocked": "This customer is blocked. Unblock it on its page first.",
+      "request_not_pending": "This request was already answered or has expired.",
+      "invalid_list": "Choose one of your own price lists.",
+      "rate_limited": "Too many attempts. Try again in an hour.",
+      "unknown": "Something went wrong. Try again."
+    }
   }
 }

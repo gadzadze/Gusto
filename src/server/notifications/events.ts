@@ -91,7 +91,16 @@ export async function recordOrderEvent(
 }
 
 export type SubjectEventInput = {
-  event: Extract<NotificationEvent, "terms_requested" | "terms_approved" | "terms_declined" | "customer_connected">;
+  event: Extract<
+    NotificationEvent,
+    | "terms_requested"
+    | "terms_approved"
+    | "terms_declined"
+    | "customer_connected"
+    | "connection_requested"
+    | "connection_approved"
+    | "connection_declined"
+  >;
   /** The request or customer the event is about: part of the dedupe key, so a replay adds nothing. */
   subjectId: string;
   /** The organization that hears about it, and the other side's name shown to them. */
