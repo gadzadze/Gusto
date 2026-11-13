@@ -1,3 +1,4 @@
+import { convertOpenInvitationsQuietly } from "@/server/domain/connections/convert";
 import "server-only";
 import { and, asc, count, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { authUsers } from "drizzle-orm/supabase";
@@ -189,5 +190,6 @@ export async function reviewBuyer(
       data: { before: before.status, after: to, reason: cleanReason },
     });
   });
+  if (to === "active") await convertOpenInvitationsQuietly(orgId);
 }
 

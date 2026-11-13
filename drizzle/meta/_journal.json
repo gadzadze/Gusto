@@ -232,6 +232,13 @@
       "when": 1794567168392,
       "tag": "0032_connection_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794569762441,
+      "tag": "0033_invitation_codes",
+      "breakpoints": true
     }
   ]
 }

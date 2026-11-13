@@ -872,7 +872,20 @@ and the delivery row is marked `skipped`, not `sent`.
   withdrawals are scoped to the acting organization (someone else's request is "not found").
 - Notifications: `connection_requested` (recipient, link `/supplier/customers#requests` or `/buyer/suppliers#requests`),
   `connection_approved` / `connection_declined` (the asker). Invitation links stay for businesses not yet on 202.
-- Not built yet: matching every open invitation of a business by its code when it joins through one link, and name search.
+- **Invitations carry an optional code** (`supplier_customers.legal_id`, `buyer_supplier_invites.legal_id`; field on both
+  invite forms). On submit with a code the form first runs the lookup: a business **already on 202** gets a card
+  (`components/connections/connect-instead.tsx`) offering "send request" or "invite by link anyway"; a connected or waiting
+  pair only shows its state. A code that matches nobody just creates the invitation with the code stored.
+- **Conversion** (`domain/connections/convert.ts`, `convertOpenInvitations(orgId)`): when a business that is `active`,
+  `findable` and has that code exists, every unconverted open invitation addressed to its code becomes a connection
+  request in its inbox (supplier invitation: request supplier to buyer carrying `customer_id` and the price list; buyer
+  invitation: request buyer to supplier), once (`converted_at`). Skipped: revoked/expired/used invitations, pairs already
+  connected, blocked, waiting or recently declined. It runs after organization creation and add-side, after a link
+  sign-up, after admin approval, and lazily on each load of the connections panel (so switching findable on lets pending
+  invitations through). Failures are logged, never thrown. Approving such a request connects the **invited row**
+  (`connection_requests.customer_id`, else a row with the buyer's code) instead of creating a second customer, and revokes
+  its links; using the link instead marks a waiting request approved.
+- Not built yet: name search.
 
 ## Photo background remover
 

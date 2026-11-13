@@ -2,11 +2,13 @@
 
 import { Check, Copy, MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Field } from "@/components/forms/field";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
+import { ConnectInstead, type FoundBusiness } from "@/components/connections/connect-instead";
+import { findBusinessAction } from "@/app/connections/actions";
 import { createSupplierInviteAction, type SupplierInviteLinks } from "@/app/buyer/suppliers/invite/actions";
 import type { ValidationKey } from "@/lib/validation/form-errors";
 
@@ -17,35 +19,51 @@ export function InviteSupplierForm() {
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, ValidationKey>>({});
   const [copied, setCopied] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+  const [match, setMatch] = useState<FoundBusiness | null>(null);
+
+  async function create(values: { supplierName: string; phone: string; email: string; legalId: string }, form: HTMLFormElement | null) {
+    const result = await createSupplierInviteAction(values);
+    if (result.ok) {
+      setLinks(result.links);
+      form?.reset();
+    } else if (result.error === "invalid" && result.fieldErrors) {
+      setFieldErrors(result.fieldErrors as Record<string, ValidationKey>);
+    } else {
+      setError(known.includes(result.error) ? t(`errors.${result.error as "invalid"}`) : t("errors.unknown"));
+    }
+  }
 
   const known = ["not_active", "too_many_open", "stale_status", "rate_limited", "invalid"];
 
   return (
     <div className="space-y-5">
       <form
+        ref={formRef}
         className="grid max-w-xl gap-4"
         onSubmit={(event) => {
           event.preventDefault();
           const form = event.currentTarget;
           const data = new FormData(form);
+          const values = {
+            supplierName: String(data.get("supplierName") ?? ""),
+            phone: String(data.get("phone") ?? ""),
+            email: String(data.get("email") ?? ""),
+            legalId: String(data.get("legalId") ?? ""),
+          };
           setError(null);
           setFieldErrors({});
           setLinks(null);
           setCopied(false);
+          setMatch(null);
           startTransition(async () => {
-            const result = await createSupplierInviteAction({
-              supplierName: String(data.get("supplierName") ?? ""),
-              phone: String(data.get("phone") ?? ""),
-              email: String(data.get("email") ?? ""),
-            });
-            if (result.ok) {
-              setLinks(result.links);
-              form.reset();
-            } else if (result.error === "invalid" && result.fieldErrors) {
-              setFieldErrors(result.fieldErrors as Record<string, ValidationKey>);
-            } else {
-              setError(known.includes(result.error) ? t(`errors.${result.error as "invalid"}`) : t("errors.unknown"));
+            // A code that belongs to a supplier already on 202: offer a request instead of a link.
+            if (values.legalId.trim()) {
+              const lookup = await findBusinessAction(values.legalId);
+              if (lookup.ok && lookup.result.state === "found") return setMatch(lookup.result);
+              if (!lookup.ok && lookup.error === "invalid_code") return setFieldErrors({ legalId: "invalid_legal_id" as ValidationKey });
             }
+            await create(values, form);
           });
         }}
       >
@@ -59,6 +77,32 @@ export function InviteSupplierForm() {
         <Field id="email" label={t("email")} error={fieldErrors.email} optional>
           <Input id="email" name="email" type="email" autoComplete="off" />
         </Field>
+        <Field id="legalId" label={t("legalId")} hint={t("legalIdHint")} error={fieldErrors.legalId} optional>
+          <Input id="legalId" name="legalId" inputMode="numeric" autoComplete="off" />
+        </Field>
+        {match ? (
+          <ConnectInstead
+            match={match}
+            onBack={() => setMatch(null)}
+            onLink={() => {
+              const form = formRef.current;
+              if (!form) return;
+              const data = new FormData(form);
+              setMatch(null);
+              startTransition(async () => {
+                await create(
+                  {
+                    supplierName: String(data.get("supplierName") ?? ""),
+                    phone: String(data.get("phone") ?? ""),
+                    email: String(data.get("email") ?? ""),
+                    legalId: String(data.get("legalId") ?? ""),
+                  },
+                  form,
+                );
+              });
+            }}
+          />
+        ) : null}
         <div>
           <Button type="submit" disabled={pending}>
             {pending ? t("submitting") : t("submit")}

@@ -59,6 +59,7 @@ export async function createSupplierInvite(ctx: OrgCtx, values: SupplierInviteVa
       supplierName: values.supplierName,
       contactPhone: values.phone,
       contactEmail: values.email,
+      legalId: values.legalId,
       tokenHash: hash,
       expiresAt: new Date(Date.now() + SUPPLIER_INVITE_TTL_MS),
       createdByUserId: ctx.userId,

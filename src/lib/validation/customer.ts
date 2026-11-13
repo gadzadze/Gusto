@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidLegalId, normalizeLegalId } from "@/lib/legal-id";
 import { normalizePhone } from "@/lib/phone";
 
 export const customerSchema = z.object({
@@ -28,6 +29,21 @@ export const customerSchema = z.object({
     .optional()
     .transform((v) => (v ? v : null))
     .refine((v) => v === null || z.email().safeParse(v).success, { message: "invalid_email" }),
+  // Optional identification code (9 or 11 digits). Lets 202 offer a connection request when the
+  // business is already here, and match this invitation when it joins later.
+  legalId: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value, ctx) => {
+      if (!value) return null;
+      const normalized = normalizeLegalId(value);
+      if (!isValidLegalId(normalized)) {
+        ctx.addIssue({ code: "custom", message: "invalid_legal_id" });
+        return z.NEVER;
+      }
+      return normalized;
+    }),
   // "" = base prices.
   priceListId: z
     .string()

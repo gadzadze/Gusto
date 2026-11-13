@@ -1,10 +1,11 @@
 import "server-only";
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import type { OnboardingValues } from "@/lib/validation/onboarding";
 import { getDb, type Tx } from "@/server/db/client";
-import { invitations, organizations, supplierCustomers } from "@/server/db/schema";
+import { connectionRequests, invitations, organizations, supplierCustomers } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { StateError } from "@/server/domain/errors";
+import { convertOpenInvitationsQuietly } from "@/server/domain/connections/convert";
 import { createOrganizationInTx, type CreateOptions } from "@/server/domain/onboarding/create-organization";
 import { hashInviteToken, isInvitationUsable, looksLikeInviteToken } from "./invite-token";
 import { recordSubjectEvent } from "@/server/notifications/events";
@@ -87,6 +88,20 @@ async function connect(tx: Tx, row: Loaded, buyerOrgId: string, userId: string) 
     .update(invitations)
     .set({ acceptedAt: now, acceptedByUserId: userId })
     .where(and(eq(invitations.id, row.invitationId), isNull(invitations.acceptedAt)));
+  // A connection request waiting between the same two businesses (an invitation that was turned into one)
+  // is settled by this connection.
+  await tx
+    .update(connectionRequests)
+    .set({ status: "approved", decidedAt: now, decidedByUserId: userId })
+    .where(
+      and(
+        eq(connectionRequests.status, "pending"),
+        or(
+          and(eq(connectionRequests.fromOrgId, row.supplierOrgId), eq(connectionRequests.toOrgId, buyerOrgId)),
+          and(eq(connectionRequests.fromOrgId, buyerOrgId), eq(connectionRequests.toOrgId, row.supplierOrgId)),
+        ),
+      ),
+    );
   // The supplier hears that the customer joined.
   const [buyer] = await tx.select({ name: organizations.name }).from(organizations).where(eq(organizations.id, buyerOrgId));
   await recordSubjectEvent(tx, {
@@ -135,8 +150,10 @@ export async function acceptInvitationWithNewBuyer(
     const { orgId } = await createOrganizationInTx(tx, userId, onboarding, options);
     await connect(tx, row, orgId, userId);
     return { orgId, supplierOrgId: row.supplierOrgId };
-  }).then((result) => {
+  }).then(async (result) => {
     deliverAfterResponse();
+    // Other suppliers may have invited this business by its code.
+    await convertOpenInvitationsQuietly(result.orgId);
     return result;
   });
 }
