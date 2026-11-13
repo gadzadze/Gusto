@@ -315,7 +315,8 @@
     "addCompany": {
       "supplier": "Add another company (brand)",
       "buyer": "Add another company"
-    }
+    },
+    "team": "Team"
   },
   "roles": {
     "buyer": "Buyer",
@@ -1824,7 +1825,8 @@
             "Technical data: we use the IP address only to protect against abuse (limiting the number of requests) and keep it in encrypted (hashed) form, for a short time.",
             "Error reports: when an error happens in the service, we send the error description, the page address and the type of browser or device to an error monitoring service. We remove emails, cookies, request parameters, identification tokens and entered data from the reports.",
             "Administrators' security-related actions (for example, approving an organization) are kept in a log.",
-            "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202."
+            "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202.",
+            "Team members: when a company owner adds a colleague, we keep the colleague's email address and the role given (owner or member) so they can sign in and join that company. Everyone in the same company can see the names, email addresses and roles of its team members, and the company's owners can also see open invitations. Removing a person from a company ends their access to it; the audit log keeps a record of who added and removed whom."
           ]
         },
         {
@@ -2071,5 +2073,50 @@
     "thisCompany": "This company",
     "allBrands": "All brands",
     "allHint": "Orders of all your companies together. Each company keeps its own orders, prices and waybills."
+  },
+  "team": {
+    "title": "Team",
+    "members": "Team members",
+    "you": "(you)",
+    "role": {
+      "owner": "Owner",
+      "member": "Member"
+    },
+    "remove": "Remove",
+    "leave": "Leave",
+    "removeConfirm": "This person will lose access to the company. Continue?",
+    "leaveConfirm": "You will leave this company and lose access. Continue?",
+    "pending": "Invited",
+    "pendingHint": "An invited person joins the company the first time they sign in.",
+    "revoke": "Cancel",
+    "add": "Add a colleague",
+    "addHint": "Everyone has their own email and password, so you can see who did what. No approval from the 202 team is needed.",
+    "email": "Colleague's email",
+    "roleLabel": "Role",
+    "roleHint": "An owner also manages the team. A member works with orders and the catalog.",
+    "alsoIn": "Also add them to these companies",
+    "send": "Add and send sign-in link",
+    "ownersOnly": "Only an owner can manage the team.",
+    "invited": {
+      "sent": "Added. A sign-in link was emailed.",
+      "skipped": "Added. The email could not be sent (no email service connected): your colleague should choose \"Set or reset password\" on the sign-in page.",
+      "failed": "Added, but the email could not be sent. Your colleague should choose \"Set or reset password\" on the sign-in page."
+    },
+    "errors": {
+      "invalid_email": "Enter a valid email address.",
+      "not_owner": "Only an owner can do this.",
+      "not_active": "Your account is not approved yet.",
+      "already_member": "This person is already on the team.",
+      "already_invited": "An invitation for this address is already open.",
+      "blocked": "This address is blocked. Please contact us.",
+      "too_many": "You have reached the maximum team size.",
+      "last_owner": "A company needs at least one owner.",
+      "rate_limited": "Too many attempts. Try again later.",
+      "unknown": "Could not complete this. Try again."
+    }
+  },
+  "teamInviteEmail": {
+    "subject": "202 - you were added to a team",
+    "body": "Hello,\n\nYou were added on 202: {companies}.\n\nTo sign in and set your own password, open this link:\n\n{link}\n\nThe link is single-use and valid for a limited time. If it has expired, open the sign-in page and choose \"Set or reset password\" to get a new one.\n\nIf you weren't expecting this email, just ignore it."
   }
 }

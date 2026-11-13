@@ -14,6 +14,7 @@ export const CLIENT_NAMESPACES = [
   "checkout",
   "common",
   "connections",
+  "team",
   "customers",
   "import",
   "invite",

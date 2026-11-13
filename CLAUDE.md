@@ -282,6 +282,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `buyer_supplier_invites`: a buyer's invitation to a supplier (buyer org, supplier name, phone/email, `token_hash`, `expires_at`, `revoked_at`, `used_at` when a join request used it, `supplier_org_id` once that supplier has an organization, `connected_at`); `supplier_requests.invite_id` points back to it.
 - `buyer_invite_links`: a buyer's reusable invitation link (buyer org as primary key, `token`; replaced on request). Each supplier that joins through it gets its own used `buyer_supplier_invites` row.
 - `connection_requests`: one business asks another to connect (from/to organization, status pending/approved/declined/withdrawn/expired, optional message and offered price list, expiry). `organizations.findable` lets a business be looked up by its code.
+- `team_invites`: a company owner's invitation of a colleague (organization, lowercase email, role `owner`/`member`, `accepted_at`, `revoked_at`; one open row per organization and address).
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
@@ -910,6 +911,32 @@ belongs to all of them. Companies are never merged: prices, customers, orders an
   and `sendConnectionRequestsForBrandsAction` sends one request from each (as that company, its default price list);
   the customer approves each separately. Invitation links are not multi-brand.
 - No combined buyer cart: a buyer orders from each company separately.
+
+## Team access (2026-11-13)
+
+Several people work in one company, **each with their own email and password** (never a shared login: no audit trail,
+one inbox for alerts, password changes when someone leaves). `domain/team/team.ts`, `/supplier/team` and `/buyer/team`
+(`components/team/*`, sidebar link and phone-header icon), shared actions in `app/team/actions.ts`.
+
+- **An owner adds a colleague by email, no 202 approval** (decided 2026-11-13: the company itself was already vetted).
+  `inviteColleague` writes a `team_invites` row and lets the address sign in (`allowed_emails` row with note
+  `team:<organization id>`, `intended_role` = the company's kind; an address the admin already registered keeps its own
+  row; one the admin **blocked** stays blocked: `blocked`). The colleague gets a one-time sign-in link directly
+  (`server/auth/team-invite-email.ts`, never stored or logged, Georgian) and **joins at their first sign-in**
+  (`claimTeamInvites`, called by `completeSignIn` and by `/start`, so an already signed-in person joins on their next
+  visit). 20 invitations per hour per company; at most 20 people (members + open invitations); only `active` companies.
+- **Roles:** `owner` (manages the team) and `member`. In this version the **only** thing restricted to owners is the team
+  itself; every member can work with orders, the catalog, prices and customers. Restricting prices/customers per role
+  would need role plumbing through every supplier domain function: not built.
+- A company always keeps at least one owner (`last_owner`); anyone may leave; an owner removes anyone. Removing a person
+  (or cancelling an invitation) revokes the allow-list row **only** when it was created by a team invitation and nothing
+  else needs it (no other company, no open invitation); an admin-registered address is never revoked here. Guards read
+  memberships from the database on every request, so removal is immediate. Every invite, join, revoke, removal and leave
+  is audited (`team.*`).
+- A person who owns several companies can add a colleague to several at once (checkboxes limited to companies of the
+  same kind the caller **owns** and that are approved; anything else in the input is ignored).
+- Members see the team list (names, emails, roles); only owners see open invitations and the add form. The privacy text
+  mentions it.
 
 ## Photo background remover
 

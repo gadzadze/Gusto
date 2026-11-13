@@ -824,6 +824,34 @@ export type Profile = typeof profiles.$inferSelect;
 export type OrgType = (typeof orgType.enumValues)[number];
 export type SupplierRequestStatus = (typeof supplierRequestStatus.enumValues)[number];
 export type OrgStatus = (typeof orgStatus.enumValues)[number];
+// A company owner adds a colleague by email. The address is let into sign-in (allowed_emails, note
+// "team:<org>") and joins this organization at its first sign-in; nobody at 202 has to approve it,
+// because the organization itself was already vetted. Rows are kept: revoked/accepted are timestamps.
+export const teamInvites = pgTable(
+  "team_invites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    // Lowercase, trimmed.
+    email: text("email").notNull(),
+    role: membershipRole("role").notNull().default("member"),
+    invitedByUserId: uuid("invited_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    // One open invitation per organization and address.
+    uniqueIndex("team_invites_open_key")
+      .on(t.organizationId, t.email)
+      .where(sql`${t.acceptedAt} is null and ${t.revokedAt} is null`),
+    index("team_invites_email_idx").on(t.email),
+    check("team_invites_lowercase", sql`${t.email} = lower(btrim(${t.email}))`),
+  ],
+);
+
 export type MembershipRole = (typeof membershipRole.enumValues)[number];
 export type Category = typeof categories.$inferSelect;
 export type Product = typeof products.$inferSelect;

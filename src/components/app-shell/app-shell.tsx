@@ -1,4 +1,4 @@
-import { KeyRound, LogOut } from "lucide-react";
+import { KeyRound, LogOut, UserCog } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -65,6 +65,11 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           <Link href="/account/password" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
             {t("nav.changePassword")}
           </Link>
+          {area !== "admin" ? (
+            <Link href={`/${area}/team`} className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
+              {t("nav.team")}
+            </Link>
+          ) : null}
           {addCompany ? (
             <Link href={`/account/add-side?another=${addCompany}`} className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
               {t(`nav.addCompany.${addCompany}`)}
@@ -94,6 +99,11 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           <div className="flex items-center">
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
             <ThemeToggle compact />
+            {area !== "admin" ? (
+              <Link href={`/${area}/team`} aria-label={t("nav.team")} className="inline-flex size-11 items-center justify-center text-muted-foreground">
+                <UserCog aria-hidden className="size-5" />
+              </Link>
+            ) : null}
             <Link href="/account/password" aria-label={t("nav.changePassword")} className="inline-flex size-11 items-center justify-center text-muted-foreground">
               <KeyRound aria-hidden className="size-5" />
             </Link>

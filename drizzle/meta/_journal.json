@@ -239,6 +239,13 @@
       "when": 1794569762441,
       "tag": "0033_invitation_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794580181042,
+      "tag": "0034_team_invites",
+      "breakpoints": true
     }
   ]
 }
