@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { parseDateInput, todayIn } from "@/lib/dates";
 import { requireSupplier } from "@/server/auth/guards";
+import { BrandScope } from "@/components/orders/brand-scope";
+import { listMyBrands } from "@/server/domain/suppliers/brands";
 import { getPickList } from "@/server/domain/orders/pick-list";
 import { getDb } from "@/server/db/client";
 import { organizations } from "@/server/db/schema";
@@ -45,19 +47,24 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
   const [org] = await getDb().select({ timezone: organizations.timezone }).from(organizations).where(eq(organizations.id, ctx.orgId));
   const raw = typeof params.day === "string" ? params.day : "";
   const day = raw === "none" ? "none" : (parseDateInput(raw) ?? todayIn(org?.timezone ?? "UTC"));
-  const list = await getPickList(ctx, day);
+  const brands = await listMyBrands(ctx);
+  const all = params.brand === "all" && brands.length > 1;
+  const list = await getPickList(ctx, day, all);
+  const brandQ = all ? "&brand=all" : "";
   const view = params.view === "stops" ? "stops" : "products";
   const dayLabel = day === "none" ? t("noDay") : format.dateTime(new Date(`${day}T00:00:00Z`), { dateStyle: "full", timeZone: "UTC" });
 
   return (
     <div className="space-y-6">
+      {brands.length > 1 ? <BrandScope all={all} thisHref={`/supplier/orders/pick?day=${day}`} allHref={`/supplier/orders/pick?day=${day}&brand=all`} /> : null}
       <form method="get" className="flex flex-wrap items-end gap-2 print:hidden">
+        {all ? <input type="hidden" name="brand" value="all" /> : null}
         <div className="space-y-1">
           <label htmlFor="day" className="text-sm font-medium">{t("day")}</label>
           <Input id="day" name="day" type="date" defaultValue={day === "none" ? "" : day} className="w-48" />
         </div>
         <Button type="submit" variant="outline">{t("show")}</Button>
-        <Button asChild variant="ghost"><Link href="/supplier/orders/pick?day=none">{t("noDayLink")}</Link></Button>
+        <Button asChild variant="ghost"><Link href={`/supplier/orders/pick?day=none${brandQ}`}>{t("noDayLink")}</Link></Button>
         <PrintButton label={t("print")} />
       </form>
 
@@ -71,7 +78,7 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
             {(["products", "stops"] as const).map((v) => (
               <Link
                 key={v}
-                href={`/supplier/orders/pick?day=${day}&view=${v}`}
+                href={`/supplier/orders/pick?day=${day}&view=${v}${brandQ}`}
                 replace
                 aria-current={view === v ? "true" : undefined}
                 className={`inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-medium ${view === v ? "bg-surface shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground"}`}
@@ -92,6 +99,7 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
                         <span className="flex items-baseline justify-between gap-3">
                           <span className="min-w-0">
                             {r.name}
+                            {all && r.parts[0] ? <span className="block text-xs font-medium text-brand">{r.parts[0].supplierName}</span> : null}
                             {r.sku ? <span className="block text-xs text-muted-foreground">{r.sku}</span> : null}
                           </span>
                           <span className="whitespace-nowrap tabular-nums text-base font-semibold">
@@ -119,8 +127,9 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
                 <li key={o.id} className="break-inside-avoid space-y-1">
                   <div className="text-sm">
                     <span className="mr-2 inline-flex size-6 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">{index + 1}</span>
-                    <Link href={`/supplier/orders/${o.id}`} className="font-medium tabular-nums hover:underline">GST-{o.number}</Link>{" "}
+                    <Link href={all ? `/o/${o.number}` : `/supplier/orders/${o.id}`} className="font-medium tabular-nums hover:underline">GST-{o.number}</Link>{" "}
                     <b>{o.buyerName}</b>
+                    {all ? <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand">{o.supplierName}</span> : null}
                     <span className="block pl-8 text-muted-foreground">
                       {o.address}, {o.city}
                       {o.instructions ? ` · ${o.instructions}` : ""}

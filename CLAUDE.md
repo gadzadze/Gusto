@@ -887,6 +887,30 @@ and the delivery row is marked `skipped`, not `sent`.
   its links; using the link instead marks a waiting request approved.
 - Not built yet: name search.
 
+## Several companies under one login (2026-11-13)
+
+A group that runs several legal entities (a wine producer with brands that each issue their own waybills and
+invoices) keeps **one organization per legal entity**, each vetted by the admin on its own legal ID, and one login that
+belongs to all of them. Companies are never merged: prices, customers, orders and invoices stay per company.
+
+- **Adding a company** (`/account/add-side?another=supplier|buyer`, sidebar link "add another company",
+  `submitAddAnother`, `createOrganizationForUser(..., { addSide: true, additional: true })`): always starts
+  `pending_review` (the registration on the sign-in address vouches for the first business only, and the legal ID must
+  differ: `legal_id_taken` stays one organization per kind and ID). At most 10 companies of a kind per person
+  (`MAX_COMPANIES_PER_KIND`). Without `additional`, a second company of a kind is still `already_has_kind`.
+- **Switching**: `SideSwitch` shows a list by company name when a person has several companies (the two-part role
+  switch when it is one buyer and one supplier). `/switch` and `/o/<number>` already accept any of the person's companies.
+- **All brands** (`domain/suppliers/brands.ts`): `listMyBrands` = the approved supplier companies the person is a member
+  of; `scopeOrgIds(ctx, all)` is what the "all" mode reads, **always derived from memberships in the database, never
+  from the request**. The supplier order inbox and the loading sheet take `?brand=all` (`BrandScope` toggle, shown only
+  with 2+ brands): rows name their brand and open through `/o/<number>` (which switches company first); the sheet sorts
+  by customer so one drop's brands sit together, each stop labelled with its brand (one waybill per brand). Catalog,
+  prices, customers and order actions stay inside one company at a time.
+- **One customer, several brands**: in the connections panel a supplier with other approved companies can tick them
+  and `sendConnectionRequestsForBrandsAction` sends one request from each (as that company, its default price list);
+  the customer approves each separately. Invitation links are not multi-brand.
+- No combined buyer cart: a buyer orders from each company separately.
+
 ## Photo background remover
 
 `components/catalog/background-remover.tsx`, `lib/image/background-removal/*`.

@@ -1,9 +1,10 @@
 import "server-only";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { parseDateInput } from "@/lib/dates";
 import { getDb } from "@/server/db/client";
 import { categories, orderItems, orders, products } from "@/server/db/schema";
 import { assertSupplier, type OrgCtx } from "@/server/domain/context";
+import { scopeOrgIds } from "@/server/domain/suppliers/brands";
 
 // The warehouse's view: what to pick for all confirmed orders going out on one
 // delivery day, as totals per product grouped by category, plus the stops.
@@ -11,7 +12,7 @@ import { assertSupplier, type OrgCtx } from "@/server/domain/context";
 
 export type PickList = {
   day: string;
-  orders: { id: string; number: number; buyerName: string; address: string; city: string; instructions: string | null; note: string | null }[];
+  orders: { id: string; number: number; supplierName: string; buyerName: string; address: string; city: string; instructions: string | null; note: string | null }[];
   groups: {
     category: string;
     rows: {
@@ -22,20 +23,22 @@ export type PickList = {
       qtyMilli: number;
       orderCount: number;
       /** Who gets how much of this product: the split to set aside while loading. */
-      parts: { orderNumber: number; buyerName: string; qtyMilli: number }[];
+      parts: { orderNumber: number; supplierName: string; buyerName: string; qtyMilli: number }[];
     }[];
   }[];
   /** The same lines per stop, for checking each drop-off. */
   stopLines: Record<string, { key: string; name: string; unit: string; qtyMilli: number }[]>;
 };
 
-export async function getPickList(ctx: OrgCtx, rawDay: string): Promise<PickList> {
+/** `all`: the loading sheet across every approved supplier company of the same person (each brand keeps its own orders and waybills). */
+export async function getPickList(ctx: OrgCtx, rawDay: string, all = false): Promise<PickList> {
   assertSupplier(ctx);
   const day = rawDay === "none" ? "none" : parseDateInput(rawDay);
   if (!day) return { day: "none", orders: [], groups: [], stopLines: {} };
   const db = getDb();
+  const orgIds = await scopeOrgIds(ctx, all);
   const scope = and(
-    eq(orders.supplierOrgId, ctx.orgId),
+    inArray(orders.supplierOrgId, orgIds),
     eq(orders.status, "confirmed"),
     day === "none" ? isNull(orders.deliveryDate) : eq(orders.deliveryDate, day),
   );
@@ -44,6 +47,7 @@ export async function getPickList(ctx: OrgCtx, rawDay: string): Promise<PickList
       .select({
         id: orders.id,
         number: orders.number,
+        supplierName: orders.supplierName,
         buyerName: orders.buyerName,
         address: orders.deliveryAddress,
         city: orders.deliveryCity,
@@ -75,6 +79,7 @@ export async function getPickList(ctx: OrgCtx, rawDay: string): Promise<PickList
       .select({
         orderId: orders.id,
         orderNumber: orders.number,
+        supplierName: orders.supplierName,
         buyerName: orders.buyerName,
         key: sql<string>`coalesce(${orderItems.productId}::text, ${orderItems.name})`,
         name: orderItems.name,
@@ -86,10 +91,10 @@ export async function getPickList(ctx: OrgCtx, rawDay: string): Promise<PickList
       .where(and(scope, sql`${orderItems.confirmedQtyMilli} > 0`))
       .orderBy(asc(orders.number), asc(orderItems.name)),
   ]);
-  const byKey = new Map<string, { orderNumber: number; buyerName: string; qtyMilli: number }[]>();
+  const byKey = new Map<string, { orderNumber: number; supplierName: string; buyerName: string; qtyMilli: number }[]>();
   const stopLines: Record<string, { key: string; name: string; unit: string; qtyMilli: number }[]> = {};
   for (const p of parts) {
-    (byKey.get(p.key) ?? byKey.set(p.key, []).get(p.key)!).push({ orderNumber: p.orderNumber, buyerName: p.buyerName, qtyMilli: p.qtyMilli });
+    (byKey.get(p.key) ?? byKey.set(p.key, []).get(p.key)!).push({ orderNumber: p.orderNumber, supplierName: p.supplierName, buyerName: p.buyerName, qtyMilli: p.qtyMilli });
     (stopLines[p.orderId] ??= []).push({ key: p.key, name: p.name, unit: p.unit, qtyMilli: p.qtyMilli });
   }
   const groups: PickList["groups"] = [];
@@ -97,6 +102,10 @@ export async function getPickList(ctx: OrgCtx, rawDay: string): Promise<PickList
     let g = groups.find((x) => x.category === l.category);
     if (!g) groups.push((g = { category: l.category, rows: [] }));
     g.rows.push({ key: l.key, name: l.name, sku: l.sku, unit: l.unit, qtyMilli: l.qtyMilli, orderCount: l.orderCount, parts: byKey.get(l.key) ?? [] });
+  }
+  // Across brands the driver works by customer: all of one customer's drop (every brand's waybill) together.
+  if (orgIds.length > 1) {
+    stops.sort((a, b) => a.buyerName.localeCompare(b.buyerName) || a.address.localeCompare(b.address) || a.supplierName.localeCompare(b.supplierName) || a.number - b.number);
   }
   return { day, orders: stops, groups, stopLines };
 }

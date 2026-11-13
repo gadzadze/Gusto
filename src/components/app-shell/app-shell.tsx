@@ -28,12 +28,14 @@ export type ShellProps = {
   sides?: Side[];
   /** The side this person could still add (an "also sell / also buy" link), or null. */
   addSide?: "buyer" | "supplier" | null;
+  /** Offer "add another company" of this kind (a further brand of the same group). */
+  addCompany?: "buyer" | "supplier" | null;
   /** Counts shown next to nav items, keyed by href. */
   navBadges?: Record<string, number>;
   children: React.ReactNode;
 };
 
-export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, sides, addSide, navBadges, children }: ShellProps) {
+export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, sides, addSide, addCompany, navBadges, children }: ShellProps) {
   const t = await getTranslations();
   const roleLabel = t(`roles.${area}`);
   const navProps = { area, homeHref, showAdminLink, badges: navBadges };
@@ -63,6 +65,11 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           <Link href="/account/password" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
             {t("nav.changePassword")}
           </Link>
+          {addCompany ? (
+            <Link href={`/account/add-side?another=${addCompany}`} className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
+              {t(`nav.addCompany.${addCompany}`)}
+            </Link>
+          ) : null}
           {addSide ? (
             <Link href="/account/add-side" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
               {t(`nav.addSide.${addSide}`)}

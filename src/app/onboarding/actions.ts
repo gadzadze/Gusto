@@ -15,7 +15,7 @@ import {
 
 export type OnboardingResult = {
   ok: false;
-  error: "invalid" | "already_onboarded" | "already_has_kind" | "not_onboarded" | "wrong_role" | "legal_id_taken" | "unknown";
+  error: "invalid" | "already_onboarded" | "already_has_kind" | "not_onboarded" | "too_many_companies" | "wrong_role" | "legal_id_taken" | "unknown";
   fieldErrors?: Record<string, ValidationKey>;
 };
 

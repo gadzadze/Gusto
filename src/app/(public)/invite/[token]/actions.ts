@@ -22,7 +22,7 @@ export type AcceptResult = {
 function toResult(error: unknown): AcceptResult {
   if (error instanceof StateError) return { ok: false, error: error.code as InvitationError };
   // An invitation only ever creates a first organization: the add-a-side codes cannot come from here.
-  if (error instanceof OnboardingError) return { ok: false, error: error.code === "already_has_kind" || error.code === "not_onboarded" ? "already_onboarded" : error.code };
+  if (error instanceof OnboardingError) return { ok: false, error: error.code === "already_has_kind" || error.code === "not_onboarded" || error.code === "too_many_companies" ? "already_onboarded" : error.code };
   console.error("[invite] accept failed", { message: error instanceof Error ? error.message : String(error) });
   return { ok: false, error: "unknown" };
 }

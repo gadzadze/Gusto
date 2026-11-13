@@ -8,6 +8,7 @@ import {
   decideConnectionRequestAction,
   findBusinessAction,
   sendConnectionRequestAction,
+  sendConnectionRequestsForBrandsAction,
   setFindableAction,
   withdrawConnectionRequestAction,
 } from "@/app/connections/actions";
@@ -37,6 +38,8 @@ type Props = {
   priceLists: { id: string; name: string; isDefault: boolean }[];
   /** Where "invite instead" goes. */
   inviteHref: string;
+  /** A supplier's other approved companies (brands), offered as "also connect from". */
+  otherBrands?: { id: string; name: string }[];
 };
 
 type Note = { tone: "error" | "success"; text: string } | null;
@@ -46,14 +49,14 @@ type Note = { tone: "error" | "success"; text: string } | null;
  * requests received (approve or decline), the lookup and request form, requests sent, and the switch
  * that lets this business be found. Everything is decided again on the server.
  */
-export function ConnectionsPanel({ role, findable, incoming, outgoing, priceLists, inviteHref }: Props) {
+export function ConnectionsPanel({ role, findable, incoming, outgoing, priceLists, inviteHref, otherBrands = [] }: Props) {
   const t = useTranslations("connections.errors");
   const errorText = (code: string) => t(`${(["invalid_code", "not_active", "not_found", "already_connected", "already_pending", "declined_recently", "blocked", "request_not_pending", "invalid_list", "rate_limited"].includes(code) ? code : "unknown") as "unknown"}`);
 
   return (
     <div className="space-y-6">
       {incoming.length > 0 ? <Incoming rows={incoming} role={role} priceLists={priceLists} errorText={errorText} /> : null}
-      <Finder role={role} priceLists={priceLists} inviteHref={inviteHref} errorText={errorText} />
+      <Finder role={role} priceLists={priceLists} inviteHref={inviteHref} otherBrands={otherBrands} errorText={errorText} />
       {outgoing.length > 0 ? <Outgoing rows={outgoing} errorText={errorText} /> : null}
       <FindableSwitch initial={findable} errorText={errorText} />
     </div>
@@ -121,7 +124,7 @@ function IncomingRow({ row, role, priceLists, errorText, t }: { row: RequestView
   );
 }
 
-function Finder({ role, priceLists, inviteHref, errorText }: { role: "supplier" | "buyer"; priceLists: Props["priceLists"]; inviteHref: string; errorText: (c: string) => string }) {
+function Finder({ role, priceLists, inviteHref, otherBrands, errorText }: { role: "supplier" | "buyer"; priceLists: Props["priceLists"]; inviteHref: string; otherBrands: NonNullable<Props["otherBrands"]>; errorText: (c: string) => string }) {
   const t = useTranslations("connections");
   const [code, setCode] = useState("");
   const [pending, startTransition] = useTransition();
@@ -162,18 +165,19 @@ function Finder({ role, priceLists, inviteHref, errorText }: { role: "supplier" 
         </Button>
       </form>
       {note ? <FormAlert tone={note.tone}>{note.text}</FormAlert> : null}
-      {result ? <Result role={role} result={result} priceLists={priceLists} inviteHref={inviteHref} errorText={errorText} /> : null}
+      {result ? <Result role={role} result={result} priceLists={priceLists} inviteHref={inviteHref} otherBrands={otherBrands} errorText={errorText} /> : null}
     </section>
   );
 }
 
-function Result({ role, result, priceLists, inviteHref, errorText }: { role: "supplier" | "buyer"; result: LookupResult; priceLists: Props["priceLists"]; inviteHref: string; errorText: (c: string) => string }) {
+function Result({ role, result, priceLists, inviteHref, otherBrands, errorText }: { role: "supplier" | "buyer"; result: LookupResult; priceLists: Props["priceLists"]; inviteHref: string; otherBrands: NonNullable<Props["otherBrands"]>; errorText: (c: string) => string }) {
   const t = useTranslations("connections");
   const [pending, startTransition] = useTransition();
   const [note, setNote] = useState<Note>(null);
   const [message, setMessage] = useState("");
   const [list, setList] = useState("");
   const [sent, setSent] = useState<null | "sent" | "connected">(null);
+  const [also, setAlso] = useState<string[]>([]);
 
   if (result.state === "self") return <FormAlert tone="warning">{t("self")}</FormAlert>;
   if (result.state === "not_found") {
@@ -193,8 +197,11 @@ function Result({ role, result, priceLists, inviteHref, errorText }: { role: "su
     setNote(null);
     startTransition(async () => {
       const response = await sendConnectionRequestAction({ targetOrgId: result.orgId, message, priceListId: role === "supplier" && list ? list : null });
-      if (response.ok) setSent(response.status);
-      else setNote({ tone: "error", text: errorText(response.error) });
+      if (response.ok) {
+        setSent(response.status);
+        // The same customer, from the person's other brands too (each as its own company).
+        if (also.length > 0) await sendConnectionRequestsForBrandsAction({ targetOrgId: result.orgId, brandIds: also });
+      } else setNote({ tone: "error", text: errorText(response.error) });
     });
   }
 
@@ -232,6 +239,23 @@ function Result({ role, result, priceLists, inviteHref, errorText }: { role: "su
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 sm:text-sm"
             />
           </div>
+          {role === "supplier" && otherBrands.length > 0 ? (
+            <fieldset className="max-w-md space-y-1.5">
+              <legend className="text-sm font-medium">{t("send.alsoFrom")}</legend>
+              {otherBrands.map((brand) => (
+                <label key={brand.id} className="flex min-h-11 items-center gap-2 text-sm md:min-h-8">
+                  <input
+                    type="checkbox"
+                    className="size-4"
+                    checked={also.includes(brand.id)}
+                    onChange={(event) => setAlso((cur) => (event.target.checked ? [...cur, brand.id] : cur.filter((x) => x !== brand.id)))}
+                  />
+                  {brand.name}
+                </label>
+              ))}
+              <p className="text-xs text-muted-foreground">{t("send.alsoHint")}</p>
+            </fieldset>
+          ) : null}
           <Button disabled={pending} onClick={send}>{t("send.button")}</Button>
         </>
       ) : (
