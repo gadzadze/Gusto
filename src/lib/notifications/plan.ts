@@ -24,7 +24,9 @@ export type PlannedRecipient = { userId: string; orgId: string; channels: Channe
 
 /** New orders and new requests (something to act on) vs. updates about things already going. */
 export function eventGroup(event: NotificationEvent): EventGroup {
-  return event === "order_submitted" || event === "terms_requested" || event === "customer_connected" ? "new_orders" : "order_updates";
+  return event === "order_submitted" || event === "terms_requested" || event === "customer_connected" || event === "connection_requested"
+    ? "new_orders"
+    : "order_updates";
 }
 
 /** Events that are not about an order: they carry their own link and subject id instead. */

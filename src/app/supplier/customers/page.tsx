@@ -14,6 +14,7 @@ import { requireSupplier } from "@/server/auth/guards";
 import { listInvitingBuyers } from "@/server/domain/buyer/supplier-invites";
 import { listTermsRequests } from "@/server/domain/pricing/conditions";
 import { listCustomers } from "@/server/domain/customers/customers";
+import { ConnectionsSection } from "@/components/connections/connections-section";
 import { InvitingBuyers } from "@/components/customers/inviting-buyers";
 
 export default async function CustomersPage() {
@@ -55,6 +56,9 @@ async function Customers() {
           </ul>
         </section>
       ) : null}
+      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
+        <ConnectionsSection ctx={ctx} inviteHref="/supplier/customers/new" />
+      </Suspense>
       {ctx.orgStatus === "pending_review" ? <Notice icon={Users} tone="amber" title={t("notActive")} /> : null}
       {canInvite ? (
         <Button asChild>

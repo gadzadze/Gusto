@@ -46,6 +46,9 @@ export const notificationEvent = pgEnum("notification_event", [
   "terms_approved",
   "terms_declined",
   "customer_connected",
+  "connection_requested",
+  "connection_approved",
+  "connection_declined",
 ]);
 export const deliveryChannel = pgEnum("delivery_channel", ["email"]);
 export const deliveryStatus = pgEnum("delivery_status", ["pending", "sent", "skipped", "failed"]);
@@ -109,6 +112,9 @@ export const organizations = pgTable(
     // Display defaults for this org, not constants in code.
     timezone: text("timezone").notNull().default("Asia/Tbilisi"),
     currency: text("currency").notNull().default("GEL"),
+    // Other businesses may look this one up by its identification code to send a connection request.
+    // The business can switch it off; an off business answers every lookup like one that is not on 202.
+    findable: boolean("findable").notNull().default(true),
     ...timestamps,
   },
   (t) => [
@@ -865,5 +871,40 @@ export const regularOrderItems = pgTable(
   (t) => [
     primaryKey({ columns: [t.regularOrderId, t.productId] }),
     check("regular_order_items_qty_positive", sql`${t.qtyMilli} > 0`),
+  ],
+);
+
+// A business asks another to connect (like a friend request): a supplier asks a buyer, or a buyer asks a
+// supplier. Only an approval creates the supplier_customers row, so nothing is visible before it.
+// `price_list_id` is the list a supplier offers when it is the one asking.
+export const connectionRequests = pgTable(
+  "connection_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fromOrgId: uuid("from_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    toOrgId: uuid("to_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"),
+    message: text("message"),
+    priceListId: uuid("price_list_id").references(() => priceLists.id, { onDelete: "set null" }),
+    requestedByUserId: uuid("requested_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    decidedByUserId: uuid("decided_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    // One open request per pair of businesses, whichever of them asked.
+    uniqueIndex("connection_requests_one_pending")
+      .on(sql`least(${t.fromOrgId}, ${t.toOrgId})`, sql`greatest(${t.fromOrgId}, ${t.toOrgId})`)
+      .where(sql`${t.status} = 'pending'`),
+    index("connection_requests_to_idx").on(t.toOrgId, t.status),
+    index("connection_requests_from_idx").on(t.fromOrgId, t.status),
+    check("connection_requests_status", sql`${t.status} in ('pending', 'approved', 'declined', 'withdrawn', 'expired')`),
+    check("connection_requests_distinct", sql`${t.fromOrgId} <> ${t.toOrgId}`),
+    check("connection_requests_message_len", sql`${t.message} is null or char_length(${t.message}) <= 300`),
   ],
 );
