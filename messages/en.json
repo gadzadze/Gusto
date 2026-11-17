@@ -350,6 +350,23 @@
       "topEmpty": "No data yet.",
       "repeat": "Repeat buyers",
       "repeatHint": "Buyers who sent you 2 or more orders in the last 30 days."
+    },
+    "today": {
+      "queueTitle": "Waiting for your answer",
+      "queueAll": "All orders",
+      "queueEmpty": "No orders are waiting for an answer.",
+      "review": "Review",
+      "items": "{count, plural, one {# item} other {# items}}",
+      "deliveriesTitle": "Next deliveries",
+      "deliveriesEmpty": "No confirmed orders yet. Once you confirm an order, its delivery day shows here.",
+      "deliveryCounts": "{orders, plural, one {# order} other {# orders}} · {customers, plural, one {# customer} other {# customers}}",
+      "noDay": "No day agreed",
+      "overdue": "Overdue",
+      "todayLabel": "Today",
+      "loadingSheet": "Loading sheet",
+      "chartLabel": "Order value per day, last 30 days",
+      "deltaUp": "+{count} vs last week",
+      "deltaDown": "−{count} vs last week"
     }
   },
   "buyer": {
@@ -415,6 +432,19 @@
         "unknown": "Could not send the request. Try again.",
         "rate_limited": "Too many requests. Try again in an hour."
       }
+    },
+    "home": {
+      "inProgress": "In progress",
+      "waiting": "Waiting for supplier",
+      "stepSent": "Sent",
+      "stepConfirmed": "Confirmed",
+      "stepDelivered": "Delivered",
+      "deliveryOn": "Delivery {date}",
+      "lastOrder": "Last order {when}",
+      "neverOrdered": "No orders yet",
+      "catalog": "Catalog",
+      "findBusiness": "Find a supplier",
+      "openTotal": "{amount} in total, not yet delivered"
     }
   },
   "admin": {
@@ -722,6 +752,20 @@
         "invalid_email": "The email is invalid."
       },
       "invitedBy": "Invited by a buyer: {name}"
+    },
+    "attention": {
+      "title": "Needs attention",
+      "requests": "{count, plural, one {# supplier asked} other {# suppliers asked}} to be onboarded",
+      "requestsHint": "Review their contact details and identification code.",
+      "requestsAction": "Requests",
+      "pending": "{count, plural, one {# business is} other {# businesses are}} waiting for verification",
+      "pendingHint": "Suppliers and buyers you haven't approved yet.",
+      "pendingAction": "Review",
+      "health": "Notifications are late",
+      "healthHint": "The sending queue has been stuck for over 15 minutes, or the database is not answering.",
+      "clear": "Everything is on time",
+      "clearHint": "No requests, nothing to verify, and notifications are going out on time.",
+      "goalSuppliers": "Pilot goal: 3 to 5 suppliers"
     }
   },
   "notFound": {
@@ -1520,6 +1564,13 @@
       "days": "{count, plural, one {# day} other {# days}} after delivery",
       "listPrice": "List price {price}",
       "paymentLabel": "Payment"
+    },
+    "review": {
+      "close": "Close",
+      "error": "Could not load the order. Try again.",
+      "subtotal": "Excluding VAT",
+      "vat": "VAT",
+      "total": "Total"
     }
   },
   "notifications": {

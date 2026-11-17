@@ -27,6 +27,8 @@ export function SupplierOrderActions({
   requestedDate,
   minDate,
   maxDate,
+  onDone,
+  hidePrint,
 }: {
   orderId: string;
   actions: OrderAction[];
@@ -35,6 +37,10 @@ export function SupplierOrderActions({
   requestedDate: string | null;
   minDate: string;
   maxDate: string;
+  /** Called after an action succeeded (the review side panel closes itself). */
+  onDone?: () => void;
+  /** The side panel has no use for a print button. */
+  hidePrint?: boolean;
 }) {
   const t = useTranslations("orders");
   const [mode, setMode] = useState<Mode>(null);
@@ -53,6 +59,7 @@ export function SupplierOrderActions({
       if (result.ok) {
         setMode(null);
         setText("");
+        onDone?.();
         return;
       }
       setError(t(`errors.${(result.error ?? "unknown") as "unknown"}`));
@@ -164,10 +171,12 @@ export function SupplierOrderActions({
               {t("actions.supplierCancel")}
             </Button>
           ) : null}
-          <Button variant="ghost" onClick={() => window.print()}>
-            <Printer />
-            {t("detail.print")}
-          </Button>
+          {hidePrint ? null : (
+            <Button variant="ghost" onClick={() => window.print()}>
+              <Printer />
+              {t("detail.print")}
+            </Button>
+          )}
         </div>
       ) : null}
     </div>

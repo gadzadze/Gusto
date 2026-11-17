@@ -959,6 +959,30 @@ goods that were **confirmed** (lines at 0 are left out; VAT per line from `compu
   waybill is a legal tax document that cannot be tested against production. Decide the fixed IP and a test user first.
   Credentials found in third-party repositories must never be used.
 
+## Dashboards (2026-11-17)
+
+The three home pages were reworked (decided 2026-11-17: modern B2B pattern, "work queue first, numbers second"). Each is a
+presentational component in `components/dashboard/` (`SupplierToday`, `BuyerHome`, `AdminOverview`) that takes its data as
+props; the page under `app/` only guards, loads and passes it, so a fixture can render it without a database.
+Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRow`, `OrderProgress`.
+
+- **Supplier home** (`/supplier`, nav label stays "Home"): "waiting for your answer" queue (oldest first, amber after 4 h),
+  next delivery days with a loading-sheet link each (days already past are marked overdue), order value of the last 30 days
+  with a daily bar chart, week-on-week change, repeat customers, top products as proportional bars. Data:
+  `domain/orders/today.ts` (`listPendingQueue`, `listUpcomingDeliveries`, `getOrderValueSeries`, `getSupplierClock`) plus
+  `getSupplierMetrics`. Definitions stay printed next to each number and the "not revenue" caption stays.
+- **Review in a side panel** (`components/orders/review-sheet.tsx`): "Review" on a queue row opens a native modal `<dialog>`
+  (focus trap, Escape and backdrop close it) that loads the order with `loadOrderReviewAction` (supplier-only, other
+  company's order = not found, formatted on the server) and reuses `SupplierOrderActions` (confirm with quantities and
+  delivery day, reject with reason). `ReviewBody` is the content without the dialog.
+- **Buyer home**: search, regular orders (accent block when due today), "in progress" orders with a Sent / Confirmed /
+  Delivered strip and the agreed delivery day, recent orders with reorder, often-ordered products, suppliers with the
+  last order date (`lastOrderDates`) and "find a supplier".
+- **Admin overview**: "needs attention" (new supplier requests, businesses waiting for verification, stalled notifications
+  via `checkHealth`, or an all-clear line), then pilot health (a bar only where there is a real ratio, the reorder rate)
+  and the 30-day order split.
+- Planned next, not built: Ctrl/Cmd+K command palette, live refresh of the queue, saved list filters.
+
 ## Photo background remover
 
 `components/catalog/background-remover.tsx`, `lib/image/background-removal/*`.

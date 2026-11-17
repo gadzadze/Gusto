@@ -2,22 +2,15 @@ import { Store } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
-import { BuyerSearchForm } from "@/components/buyer/search-form";
-import { SupplierCard } from "@/components/buyer/supplier-card";
+import { ProductCard } from "@/components/buyer/product-card";
+import { toProductViews } from "@/components/buyer/product-view";
+import { BuyerHome } from "@/components/dashboard/buyer-home";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
-import { listConnectedSuppliers } from "@/server/domain/buyer/catalog";
-import { toProductViews } from "@/components/buyer/product-view";
-import { ProductCard } from "@/components/buyer/product-card";
-import { listTopOrderedProducts } from "@/server/domain/buyer/catalog";
-import { RegularOrderButtons } from "@/components/orders/regular-order-controls";
+import { listConnectedSuppliers, listTopOrderedProducts } from "@/server/domain/buyer/catalog";
+import { lastOrderDates, listBuyerOrders, listOpenBuyerOrders } from "@/server/domain/orders/queries";
 import { listRegularOrders } from "@/server/domain/orders/regular";
-import { listBuyerOrders, listOpenBuyerOrders } from "@/server/domain/orders/queries";
-import { ReorderButton } from "@/components/orders/order-buttons";
-import { OrderStatusBadge } from "@/components/orders/order-status-badge";
-import Link from "next/link";
-import { getFormats } from "@/server/i18n/formats";
 
 export default async function BuyerDashboardPage() {
   const t = await getTranslations("buyer");
@@ -32,119 +25,54 @@ export default async function BuyerDashboardPage() {
 }
 
 async function Dashboard() {
-  const fmt = await getFormats();
   const ctx = await requireBuyer();
   const t = await getTranslations("buyer");
-  const [suppliers, recent, open, top, regular] = await Promise.all([
+  const td = await getTranslations("buyer.dashboard");
+  const [suppliers, recent, open, top, regular, lastOrders] = await Promise.all([
     listConnectedSuppliers(ctx),
     listBuyerOrders(ctx, 1, 5),
     listOpenBuyerOrders(ctx),
     listTopOrderedProducts(ctx, 10),
     listRegularOrders(ctx),
+    lastOrderDates(ctx),
   ]);
-  const tr = await getTranslations("regular");
-  const dueToday = regular.filter((r) => r.dueToday);
-  const to = await getTranslations("orders");
-  const td = await getTranslations("buyer.dashboard");
+  if (suppliers.length === 0 && recent.items.length === 0) {
+    return <EmptyState icon={Store} title={t("emptyTitle")} body={t("emptyBody")} />;
+  }
   const topViews = await Promise.all(
     top.map(async (entry) => {
       const [view] = await toProductViews([entry.product], entry.supplier, new Map([[entry.product.id, entry.cartQtyMilli]]));
       return { view, entry };
     }),
   );
-  if (suppliers.length === 0 && recent.items.length === 0) {
-    return <EmptyState icon={Store} title={t("emptyTitle")} body={t("emptyBody")} />;
-  }
-  return (
-    <div className="space-y-6">
-      <BuyerSearchForm />
-      {regular.length > 0 ? (
-        <section className="space-y-3" aria-labelledby="regular-orders">
-          <div className="flex items-center justify-between gap-3">
-            <h2 id="regular-orders" className="text-sm font-semibold text-muted-foreground">
-              {dueToday.length > 0 ? tr("dueTitle") : tr("title")}
-            </h2>
-            <Link href="/buyer/regular" className="text-sm font-medium text-brand hover:underline">{tr("viewAll")}</Link>
-          </div>
-          {(dueToday.length > 0 ? dueToday : regular.slice(0, 3)).map((r) => (
-            <div key={r.id} className="space-y-2 rounded-xl border border-border px-4 py-3">
-              <p className="font-medium">{r.name}</p>
-              <p className="text-sm text-muted-foreground">{r.supplierName} · {tr("every", { day: tr(`days.${r.weekday as 1}`) })}</p>
-              <RegularOrderButtons id={r.id} />
-            </div>
-          ))}
-        </section>
-      ) : null}
-      <section className="space-y-3" aria-labelledby="open-orders">
-        <h2 id="open-orders" className="text-sm font-semibold text-muted-foreground">{td("open")}</h2>
-        {open.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border px-4 py-5 text-sm text-muted-foreground">{td("openEmpty")}</p>
-        ) : (
-          <ul className="divide-y divide-border rounded-xl border border-border">
-            {open.map((o) => (
-              <li key={o.id}>
-                <Link href={`/buyer/orders/${o.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
-                  <span className="min-w-0 flex-1">
-                    <span className="font-medium tabular-nums">{to("number", { number: o.number })}</span>
-                    <span className="block truncate text-sm text-muted-foreground">
-                      {o.supplierName} · {fmt.money(o.totalMinor, o.currency)}
-                    </span>
-                  </span>
-                  <OrderStatusBadge status={o.status} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-      {recent.items.length > 0 ? (
-        <section className="space-y-3">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-muted-foreground">{to("recent")}</h2>
-            <Link href="/buyer/orders" className="text-sm font-medium text-brand hover:underline">{to("viewAll")}</Link>
-          </div>
-          <ul className="divide-y divide-border rounded-xl border border-border">
-            {recent.items.map((o) => (
-              <li key={o.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <Link href={`/buyer/orders/${o.id}`} className="min-w-0 flex-1 hover:underline">
-                  <span className="font-medium tabular-nums">{to("number", { number: o.number })}</span>
-                  <span className="block truncate text-sm text-muted-foreground">
-                    {o.supplierName} · {fmt.money(o.totalMinor, o.currency)}
-                  </span>
-                </Link>
-                <OrderStatusBadge status={o.status} />
-                <ReorderButton orderId={o.id} size="sm" />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-      {topViews.length > 0 ? (
-        <section className="space-y-3" aria-labelledby="top-products">
-          <div>
-            <h2 id="top-products" className="text-sm font-semibold text-muted-foreground">{td("topTitle")}</h2>
-            <p className="text-xs text-muted-foreground">{td("topHint")}</p>
-          </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {topViews.map(({ view, entry }) => (
-              <div key={view.id} className="space-y-1">
-                <ProductCard product={view} />
-                <p className="px-1 text-xs text-muted-foreground">
-                  {td("from", { supplier: entry.supplier.name })} · {td("orderedTimes", { count: entry.orderCount })}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted-foreground">{t("suppliersTitle")}</h2>
+  const topSection =
+    topViews.length > 0 ? (
+      <section className="space-y-3" aria-labelledby="top-products">
+        <div>
+          <h2 id="top-products" className="text-sm font-semibold">{td("topTitle")}</h2>
+          <p className="text-xs text-muted-foreground">{td("topHint")}</p>
+        </div>
         <div className="grid gap-3 md:grid-cols-2">
-          {suppliers.map((s) => (
-            <SupplierCard key={s.id} supplier={s} />
+          {topViews.map(({ view, entry }) => (
+            <div key={view.id} className="space-y-1">
+              <ProductCard product={view} />
+              <p className="px-1 text-xs text-muted-foreground">
+                {td("from", { supplier: entry.supplier.name })} · {td("orderedTimes", { count: entry.orderCount })}
+              </p>
+            </div>
           ))}
         </div>
       </section>
-    </div>
+    ) : null;
+  return (
+    <BuyerHome
+      suppliers={suppliers}
+      recent={recent.items}
+      open={open}
+      regular={regular}
+      lastOrders={Object.fromEntries(lastOrders)}
+      topSection={topSection}
+      now={new Date()}
+    />
   );
 }
