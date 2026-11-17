@@ -42,6 +42,7 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
   const ctx = await requireSupplier();
   const t = await getTranslations("orders.pick");
   const tu = await getTranslations("units");
+  const tw = await getTranslations("waybill");
   const format = await getFormatter();
   const params = await searchParams;
   const [org] = await getDb().select({ timezone: organizations.timezone }).from(organizations).where(eq(organizations.id, ctx.orgId));
@@ -129,6 +130,7 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
                     <span className="mr-2 inline-flex size-6 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand">{index + 1}</span>
                     <Link href={all ? `/o/${o.number}` : `/supplier/orders/${o.id}`} className="font-medium tabular-nums hover:underline">GST-{o.number}</Link>{" "}
                     <b>{o.buyerName}</b>
+                    {!all ? <Link href={`/supplier/orders/${o.id}/waybill`} className="ml-2 text-xs text-brand underline-offset-2 hover:underline print:hidden">{tw("open")}</Link> : null}
                     {all ? <span className="ml-2 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand">{o.supplierName}</span> : null}
                     <span className="block pl-8 text-muted-foreground">
                       {o.address}, {o.city}

@@ -1,7 +1,13 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { z } from "zod";
+import { addDays, MAX_DELIVERY_DAYS_AHEAD, todayIn } from "@/lib/dates";
+import { availableActions, type OrderAction } from "@/lib/orders/transitions";
+import { NotFoundError } from "@/server/domain/errors";
+import { getOrder } from "@/server/domain/orders/queries";
+import { getFormats } from "@/server/i18n/formats";
 import { parseQuantityInput } from "@/lib/quantity";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireSupplier } from "@/server/auth/guards";
@@ -64,4 +70,71 @@ export async function cancelOrderBySupplierAction(orderId: string, reason: strin
     refresh();
     return { ok: true };
   });
+}
+
+/** Everything the review side panel shows, already formatted on the server. */
+export type ReviewData = {
+  number: number;
+  buyerName: string;
+  placedAt: string;
+  address: string;
+  instructions: string | null;
+  note: string | null;
+  requestedDay: string | null;
+  lines: { id: string; name: string; qty: string; price: string; total: string }[];
+  totals: { subtotal: string; vat: string; total: string };
+  pricesIncludeVat: boolean;
+  actions: OrderAction[];
+  actionLines: { itemId: string; name: string; orderedQty: string; unit: string }[];
+  requestedDate: string | null;
+  minDate: string;
+  maxDate: string;
+};
+
+/** Loads one of this company's orders for the review panel. Another company's order is "not found". */
+export async function loadOrderReviewAction(orderId: string): Promise<{ ok: true; data: ReviewData } | { ok: false }> {
+  const ctx = await requireSupplier();
+  if (!id.safeParse(orderId).success) return { ok: false };
+  try {
+    const detail = await getOrder(ctx, orderId);
+    const fmt = await getFormats();
+    const format = await getFormatter();
+    const tu = await getTranslations("units");
+    const { order, items } = detail;
+    const today = todayIn(detail.supplierTimezone);
+    const day = (d: string) => format.dateTime(new Date(`${d}T00:00:00Z`), { dateStyle: "medium", timeZone: "UTC" });
+    return {
+      ok: true,
+      data: {
+        number: order.number,
+        buyerName: order.buyerName,
+        placedAt: format.dateTime(order.createdAt, { dateStyle: "medium", timeStyle: "short" }),
+        address: `${order.deliveryAddress}, ${order.deliveryCity}`,
+        instructions: order.deliveryInstructions,
+        note: order.note,
+        requestedDay: order.requestedDeliveryDate ? day(order.requestedDeliveryDate) : null,
+        lines: items.map((i) => ({
+          id: i.id,
+          name: i.name,
+          qty: `${fmt.input(i.confirmedQtyMilli ?? i.orderedQtyMilli)} ${tu(i.unit)}`,
+          price: fmt.money(i.unitPriceMinor, order.currency),
+          total: fmt.money(i.lineTotalMinor, order.currency),
+        })),
+        totals: {
+          subtotal: fmt.money(order.subtotalMinor, order.currency),
+          vat: fmt.money(order.vatMinor, order.currency),
+          total: fmt.money(order.totalMinor, order.currency),
+        },
+        pricesIncludeVat: order.pricesIncludeVat,
+        actions: ctx.orgStatus === "suspended" ? [] : availableActions(order.status, "supplier"),
+        actionLines: items.map((i) => ({ itemId: i.id, name: i.name, orderedQty: fmt.input(i.orderedQtyMilli), unit: tu(i.unit) })),
+        requestedDate: order.requestedDeliveryDate,
+        minDate: today,
+        maxDate: addDays(today, MAX_DELIVERY_DAYS_AHEAD),
+      },
+    };
+  } catch (error) {
+    if (error instanceof NotFoundError) return { ok: false };
+    throw error;
+  }
 }

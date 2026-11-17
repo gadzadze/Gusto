@@ -32,6 +32,8 @@ export const RATE_LIMITS = {
   /** Looking a business up by its identification code: 30 per hour per organization (misses count, so a list of codes cannot be tried). */
   connectionSearch: { name: "connection_search", limit: 30, windowSeconds: 3600 },
   /** Connection requests: 20 per hour per organization (each one notifies the other business). */
+  /** Team invitations: 20 per hour per organization (each one emails a sign-in link). */
+  teamInvite: { name: "team_invite", limit: 20, windowSeconds: 3600 },
   connectionRequest: { name: "connection_request", limit: 20, windowSeconds: 3600 },
   /** A buyer asking a supplier for payment terms: 10 per hour per buyer organization (each one emails the supplier). */
   termsRequest: { name: "terms_request", limit: 10, windowSeconds: 3600 },

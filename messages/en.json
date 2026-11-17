@@ -315,7 +315,8 @@
     "addCompany": {
       "supplier": "Add another company (brand)",
       "buyer": "Add another company"
-    }
+    },
+    "team": "Team"
   },
   "roles": {
     "buyer": "Buyer",
@@ -349,6 +350,23 @@
       "topEmpty": "No data yet.",
       "repeat": "Repeat buyers",
       "repeatHint": "Buyers who sent you 2 or more orders in the last 30 days."
+    },
+    "today": {
+      "queueTitle": "Waiting for your answer",
+      "queueAll": "All orders",
+      "queueEmpty": "No orders are waiting for an answer.",
+      "review": "Review",
+      "items": "{count, plural, one {# item} other {# items}}",
+      "deliveriesTitle": "Next deliveries",
+      "deliveriesEmpty": "No confirmed orders yet. Once you confirm an order, its delivery day shows here.",
+      "deliveryCounts": "{orders, plural, one {# order} other {# orders}} · {customers, plural, one {# customer} other {# customers}}",
+      "noDay": "No day agreed",
+      "overdue": "Overdue",
+      "todayLabel": "Today",
+      "loadingSheet": "Loading sheet",
+      "chartLabel": "Order value per day, last 30 days",
+      "deltaUp": "+{count} vs last week",
+      "deltaDown": "−{count} vs last week"
     }
   },
   "buyer": {
@@ -414,6 +432,19 @@
         "unknown": "Could not send the request. Try again.",
         "rate_limited": "Too many requests. Try again in an hour."
       }
+    },
+    "home": {
+      "inProgress": "In progress",
+      "waiting": "Waiting for supplier",
+      "stepSent": "Sent",
+      "stepConfirmed": "Confirmed",
+      "stepDelivered": "Delivered",
+      "deliveryOn": "Delivery {date}",
+      "lastOrder": "Last order {when}",
+      "neverOrdered": "No orders yet",
+      "catalog": "Catalog",
+      "findBusiness": "Find a supplier",
+      "openTotal": "{amount} in total, not yet delivered"
     }
   },
   "admin": {
@@ -721,6 +752,20 @@
         "invalid_email": "The email is invalid."
       },
       "invitedBy": "Invited by a buyer: {name}"
+    },
+    "attention": {
+      "title": "Needs attention",
+      "requests": "{count, plural, one {# supplier asked} other {# suppliers asked}} to be onboarded",
+      "requestsHint": "Review their contact details and identification code.",
+      "requestsAction": "Requests",
+      "pending": "{count, plural, one {# business is} other {# businesses are}} waiting for verification",
+      "pendingHint": "Suppliers and buyers you haven't approved yet.",
+      "pendingAction": "Review",
+      "health": "Notifications are late",
+      "healthHint": "The sending queue has been stuck for over 15 minutes, or the database is not answering.",
+      "clear": "Everything is on time",
+      "clearHint": "No requests, nothing to verify, and notifications are going out on time.",
+      "goalSuppliers": "Pilot goal: 3 to 5 suppliers"
     }
   },
   "notFound": {
@@ -1519,6 +1564,13 @@
       "days": "{count, plural, one {# day} other {# days}} after delivery",
       "listPrice": "List price {price}",
       "paymentLabel": "Payment"
+    },
+    "review": {
+      "close": "Close",
+      "error": "Could not load the order. Try again.",
+      "subtotal": "Excluding VAT",
+      "vat": "VAT",
+      "total": "Total"
     }
   },
   "notifications": {
@@ -1824,7 +1876,9 @@
             "Technical data: we use the IP address only to protect against abuse (limiting the number of requests) and keep it in encrypted (hashed) form, for a short time.",
             "Error reports: when an error happens in the service, we send the error description, the page address and the type of browser or device to an error monitoring service. We remove emails, cookies, request parameters, identification tokens and entered data from the reports.",
             "Administrators' security-related actions (for example, approving an organization) are kept in a log.",
-            "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202."
+            "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202.",
+            "Team members: when a company owner adds a colleague, we keep the colleague's email address and the role given (owner or member) so they can sign in and join that company. Everyone in the same company can see the names, email addresses and roles of its team members, and the company's owners can also see open invitations. Removing a person from a company ends their access to it; the audit log keeps a record of who added and removed whom.",
+            "Waybill data: for a confirmed order, 202 prepares the details a waybill needs (seller, buyer and their identification codes, delivery address and date, goods) for the supplier to copy into RS.ge. 202 does not send anything to RS.ge. The driver and vehicle details the supplier types are kept in the supplier's own browser only. A supplier you are connected with also sees your business's identification code on the order and on the waybill data prepared from it, because a waybill has to name the buyer."
           ]
         },
         {
@@ -2071,5 +2125,89 @@
     "thisCompany": "This company",
     "allBrands": "All brands",
     "allHint": "Orders of all your companies together. Each company keeps its own orders, prices and waybills."
+  },
+  "team": {
+    "title": "Team",
+    "members": "Team members",
+    "you": "(you)",
+    "role": {
+      "owner": "Owner",
+      "member": "Member"
+    },
+    "remove": "Remove",
+    "leave": "Leave",
+    "removeConfirm": "This person will lose access to the company. Continue?",
+    "leaveConfirm": "You will leave this company and lose access. Continue?",
+    "pending": "Invited",
+    "pendingHint": "An invited person joins the company the first time they sign in.",
+    "revoke": "Cancel",
+    "add": "Add a colleague",
+    "addHint": "Everyone has their own email and password, so you can see who did what. No approval from the 202 team is needed.",
+    "email": "Colleague's email",
+    "roleLabel": "Role",
+    "roleHint": "An owner also manages the team. A member works with orders and the catalog.",
+    "alsoIn": "Also add them to these companies",
+    "send": "Add and send sign-in link",
+    "ownersOnly": "Only an owner can manage the team.",
+    "invited": {
+      "sent": "Added. A sign-in link was emailed.",
+      "skipped": "Added. The email could not be sent (no email service connected): your colleague should choose \"Set or reset password\" on the sign-in page.",
+      "failed": "Added, but the email could not be sent. Your colleague should choose \"Set or reset password\" on the sign-in page."
+    },
+    "errors": {
+      "invalid_email": "Enter a valid email address.",
+      "not_owner": "Only an owner can do this.",
+      "not_active": "Your account is not approved yet.",
+      "already_member": "This person is already on the team.",
+      "already_invited": "An invitation for this address is already open.",
+      "blocked": "This address is blocked. Please contact us.",
+      "too_many": "You have reached the maximum team size.",
+      "last_owner": "A company needs at least one owner.",
+      "rate_limited": "Too many attempts. Try again later.",
+      "unknown": "Could not complete this. Try again."
+    }
+  },
+  "teamInviteEmail": {
+    "subject": "202 - you were added to a team",
+    "body": "Hello,\n\nYou were added on 202: {companies}.\n\nTo sign in and set your own password, open this link:\n\n{link}\n\nThe link is single-use and valid for a limited time. If it has expired, open the sign-in page and choose \"Set or reset password\" to get a new one.\n\nIf you weren't expecting this email, just ignore it."
+  },
+  "waybill": {
+    "title": "Waybill data",
+    "back": "Order",
+    "open": "Waybill data",
+    "notice": "202 prepares the data to copy into RS.ge. It does not send the waybill: you create it on RS.ge yourself. The data comes from the order you confirmed.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyAll": "Copy everything",
+    "copyGoods": "Copy goods table",
+    "print": "Print",
+    "seller": "Seller",
+    "buyer": "Buyer",
+    "name": "Name",
+    "legalId": "Identification code",
+    "delivery": "Delivery",
+    "endAddress": "Delivery address",
+    "date": "Date",
+    "instructions": "Delivery instructions",
+    "note": "Buyer's note",
+    "transport": "Transport",
+    "transportHint": "Type this once: it is remembered in this browser only and 202 stores it nowhere.",
+    "startAddress": "Loading address",
+    "driver": "Driver",
+    "driverId": "Driver's personal number",
+    "vehicle": "Vehicle plate",
+    "goods": "Goods",
+    "goodsHint": "The copy is a table you can paste into Excel. Quantities and prices use a dot as the decimal separator.",
+    "code": "Code",
+    "unit": "Unit",
+    "qty": "Quantity",
+    "price": "Price",
+    "vat": "VAT",
+    "total": "Total",
+    "subtotal": "Excluding VAT",
+    "vatTotal": "VAT",
+    "grandTotal": "Total",
+    "pricesInclude": "Prices include VAT.",
+    "pricesExclude": "Prices exclude VAT."
   }
 }

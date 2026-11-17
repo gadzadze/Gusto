@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, inArray, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
 import { getDb } from "@/server/db/client";
 import { orderItems, orders, orderStatusHistory, organizations, type Order, type OrderItem, type OrderStatus } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
@@ -18,7 +18,7 @@ export type SupplierTab = keyof typeof SUPPLIER_TABS;
 
 export type OrderListItem = Pick<
   Order,
-  "id" | "number" | "status" | "buyerName" | "supplierName" | "supplierOrgId" | "currency" | "totalMinor" | "createdAt"
+  "id" | "number" | "status" | "buyerName" | "supplierName" | "supplierOrgId" | "currency" | "totalMinor" | "createdAt" | "deliveryDate"
 > & { itemCount: number };
 
 const listColumns = {
@@ -31,6 +31,7 @@ const listColumns = {
   currency: orders.currency,
   totalMinor: orders.totalMinor,
   createdAt: orders.createdAt,
+  deliveryDate: orders.deliveryDate,
 };
 
 async function paged(where: SQL | undefined, page: number) {
@@ -187,4 +188,15 @@ export async function reorder(
   );
   const lost = items.filter((i) => i.productId === null).map((i) => i.name);
   return { supplierOrgId: order.supplierOrgId, added: result.added, skipped: [...result.skipped, ...lost] };
+}
+
+/** When this buyer last ordered from each supplier (any status except cancelled/rejected by the supplier). */
+export async function lastOrderDates(ctx: OrgCtx): Promise<Map<string, Date>> {
+  if (ctx.orgType !== "buyer") throw new NotFoundError();
+  const rows = await getDb()
+    .select({ supplierOrgId: orders.supplierOrgId, last: sql<Date>`max(${orders.createdAt})` })
+    .from(orders)
+    .where(and(eq(orders.buyerOrgId, ctx.orgId), inArray(orders.status, ["pending", "confirmed", "delivered"])))
+    .groupBy(orders.supplierOrgId);
+  return new Map(rows.map((r) => [r.supplierOrgId, new Date(r.last)]));
 }

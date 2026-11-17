@@ -1,6 +1,7 @@
 import "server-only";
 import type { User } from "@supabase/supabase-js";
 import { ensureProfile } from "@/server/domain/profiles";
+import { claimTeamInvites } from "@/server/domain/team/team";
 import { createSupabaseServerClient } from "@/server/supabase/server";
 import { isEmailAllowed } from "./allow-list";
 import { takeNextPath } from "./next-cookie";
@@ -20,5 +21,7 @@ export async function completeSignIn(user: User): Promise<string> {
   }
   const fullName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : null;
   await ensureProfile(user.id, fullName);
+  // A colleague added by a company owner joins that company now.
+  await claimTeamInvites(user.id, user.email);
   return next ?? "/start";
 }

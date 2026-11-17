@@ -133,19 +133,21 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   const number = (await buyer.getByRole("heading", { level: 1 }).textContent())!.match(/GST-(\d+)/)![1];
 
   // Supplier dashboard: one order waiting; after confirming, its value counts, as "order value".
-  const tile = (label: string) => supplier.getByText(label, { exact: true }).locator("xpath=..");
+  const region = (name: string) => supplier.getByRole("region", { name, exact: true });
+  const weekTile = () => supplier.getByRole("heading", { name: "შეკვეთები ბოლო 7 დღეში", exact: true }).locator("xpath=../..");
   await supplier.goto("/supplier");
-  await expect(tile("ელოდება თქვენს გადაწყვეტილებას").locator("p").nth(1)).toHaveText("1");
-  await expect(tile("შეკვეთები ბოლო 7 დღეში").locator("p").nth(1)).toHaveText("1");
+  await expect(region("ელოდება თქვენს პასუხს")).toContainText("GST-");
+  await expect(region("ელოდება თქვენს პასუხს").getByRole("button", { name: "ნახვა" })).toHaveCount(1);
+  await expect(weekTile().locator("p").last()).toHaveText("1");
   await supplier.goto(`/supplier/orders/${orderId}`);
   await supplier.waitForLoadState("networkidle");
   await supplier.getByRole("button", { name: "დადასტურება" }).click();
   await supplier.getByRole("button", { name: "დადასტურება" }).click();
   await expect(supplier.getByText("დადასტურებული").first()).toBeVisible();
   await supplier.goto("/supplier");
-  await expect(tile("ელოდება თქვენს გადაწყვეტილებას").locator("p").nth(1)).toHaveText("0");
-  await expect(tile("შეკვეთების ღირებულება, 30 დღე").locator("p").nth(1)).toContainText("18,50");
-  await expect(tile("ყველაზე მოთხოვნადი 5 პროდუქტი, 30 დღე")).toContainText("ყველი სულგუნი");
+  await expect(region("ელოდება თქვენს პასუხს")).toContainText("პასუხის მომლოდინე შეკვეთა არ არის");
+  await expect(region("შეკვეთების ღირებულება, 30 დღე")).toContainText("18,50");
+  await expect(region("ყველაზე მოთხოვნადი 5 პროდუქტი, 30 დღე")).toContainText("ყველი სულგუნი");
   await expect(supplier.getByText("შეკვეთილი თანხაა და არა შემოსავალი", { exact: false })).toBeVisible();
   await expect(supplier.locator("main")).not.toContainText("გაყიდვ");
 

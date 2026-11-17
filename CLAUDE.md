@@ -282,6 +282,7 @@ Tables (snake_case in SQL, camelCase in TypeScript):
 - `buyer_supplier_invites`: a buyer's invitation to a supplier (buyer org, supplier name, phone/email, `token_hash`, `expires_at`, `revoked_at`, `used_at` when a join request used it, `supplier_org_id` once that supplier has an organization, `connected_at`); `supplier_requests.invite_id` points back to it.
 - `buyer_invite_links`: a buyer's reusable invitation link (buyer org as primary key, `token`; replaced on request). Each supplier that joins through it gets its own used `buyer_supplier_invites` row.
 - `connection_requests`: one business asks another to connect (from/to organization, status pending/approved/declined/withdrawn/expired, optional message and offered price list, expiry). `organizations.findable` lets a business be looked up by its code.
+- `team_invites`: a company owner's invitation of a colleague (organization, lowercase email, role `owner`/`member`, `accepted_at`, `revoked_at`; one open row per organization and address).
 - `rate_limits`: fixed-window counters for abuse limits (key, window, hits).
 
 ### Order lifecycle
@@ -910,6 +911,77 @@ belongs to all of them. Companies are never merged: prices, customers, orders an
   and `sendConnectionRequestsForBrandsAction` sends one request from each (as that company, its default price list);
   the customer approves each separately. Invitation links are not multi-brand.
 - No combined buyer cart: a buyer orders from each company separately.
+
+## Team access (2026-11-13)
+
+Several people work in one company, **each with their own email and password** (never a shared login: no audit trail,
+one inbox for alerts, password changes when someone leaves). `domain/team/team.ts`, `/supplier/team` and `/buyer/team`
+(`components/team/*`, sidebar link and phone-header icon), shared actions in `app/team/actions.ts`.
+
+- **An owner adds a colleague by email, no 202 approval** (decided 2026-11-13: the company itself was already vetted).
+  `inviteColleague` writes a `team_invites` row and lets the address sign in (`allowed_emails` row with note
+  `team:<organization id>`, `intended_role` = the company's kind; an address the admin already registered keeps its own
+  row; one the admin **blocked** stays blocked: `blocked`). The colleague gets a one-time sign-in link directly
+  (`server/auth/team-invite-email.ts`, never stored or logged, Georgian) and **joins at their first sign-in**
+  (`claimTeamInvites`, called by `completeSignIn` and by `/start`, so an already signed-in person joins on their next
+  visit). 20 invitations per hour per company; at most 20 people (members + open invitations); only `active` companies.
+- **Roles:** `owner` (manages the team) and `member`. In this version the **only** thing restricted to owners is the team
+  itself; every member can work with orders, the catalog, prices and customers. Restricting prices/customers per role
+  would need role plumbing through every supplier domain function: not built.
+- A company always keeps at least one owner (`last_owner`); anyone may leave; an owner removes anyone. Removing a person
+  (or cancelling an invitation) revokes the allow-list row **only** when it was created by a team invitation and nothing
+  else needs it (no other company, no open invitation); an admin-registered address is never revoked here. Guards read
+  memberships from the database on every request, so removal is immediate. Every invite, join, revoke, removal and leave
+  is audited (`team.*`).
+- A person who owns several companies can add a colleague to several at once (checkboxes limited to companies of the
+  same kind the caller **owns** and that are approved; anything else in the input is ignored).
+- Members see the team list (names, emails, roles); only owners see open invitations and the add form. The privacy text
+  mentions it.
+
+## E-waybills, phase 1 (2026-11-17)
+
+RS.ge e-waybills were out of scope until asked; the user asked on 2026-11-17 and agreed to **phase 1 only**:
+`/supplier/orders/<id>/waybill` (`domain/orders/waybill.ts` `getWaybillSheet`, `components/orders/waybill-sheet.tsx`,
+button on a confirmed/delivered order and a link per stop on the loading sheet). It shows, for one confirmed order,
+what a waybill needs: seller and buyer with their identification codes, delivery address and the agreed day, and the
+goods that were **confirmed** (lines at 0 are left out; VAT per line from `computeTotals`), each with a copy button, a
+"copy goods table" (tab separated, dot decimals, for Excel) and print.
+
+- **202 sends nothing to RS.ge and stores nothing about the waybill.** The driver, vehicle and loading address the
+  supplier types are kept in `localStorage` of that browser only (the supplier's company has no warehouse address in
+  the schema, so it is typed once; no migration was needed).
+- Seller side only: another company's order, or an order still pending/rejected/cancelled, is `NotFoundError`.
+- **The buyer's identification code is shown to the supplier it ordered from** (needed to name the buyer on a waybill);
+  the privacy text says so. It is still never shown to anyone the buyer has no order with.
+- **Phase 2 (API) is not built.** RS.ge's SOAP service (`services.rs.ge/WayBillService/WayBillService.asmx`: `save_waybill`,
+  `send_waybill`, `close_waybill`, `get_waybill_units`, ...) needs a per-company *service user* that RS.ge ties to **one fixed
+  IP address**, so calls would have to come from a fixed address (Vercel's are not), RS.ge unit codes must be mapped, and a
+  waybill is a legal tax document that cannot be tested against production. Decide the fixed IP and a test user first.
+  Credentials found in third-party repositories must never be used.
+
+## Dashboards (2026-11-17)
+
+The three home pages were reworked (decided 2026-11-17: modern B2B pattern, "work queue first, numbers second"). Each is a
+presentational component in `components/dashboard/` (`SupplierToday`, `BuyerHome`, `AdminOverview`) that takes its data as
+props; the page under `app/` only guards, loads and passes it, so a fixture can render it without a database.
+Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRow`, `OrderProgress`.
+
+- **Supplier home** (`/supplier`, nav label stays "Home"): "waiting for your answer" queue (oldest first, amber after 4 h),
+  next delivery days with a loading-sheet link each (days already past are marked overdue), order value of the last 30 days
+  with a daily bar chart, week-on-week change, repeat customers, top products as proportional bars. Data:
+  `domain/orders/today.ts` (`listPendingQueue`, `listUpcomingDeliveries`, `getOrderValueSeries`, `getSupplierClock`) plus
+  `getSupplierMetrics`. Definitions stay printed next to each number and the "not revenue" caption stays.
+- **Review in a side panel** (`components/orders/review-sheet.tsx`): "Review" on a queue row opens a native modal `<dialog>`
+  (focus trap, Escape and backdrop close it) that loads the order with `loadOrderReviewAction` (supplier-only, other
+  company's order = not found, formatted on the server) and reuses `SupplierOrderActions` (confirm with quantities and
+  delivery day, reject with reason). `ReviewBody` is the content without the dialog.
+- **Buyer home**: search, regular orders (accent block when due today), "in progress" orders with a Sent / Confirmed /
+  Delivered strip and the agreed delivery day, recent orders with reorder, often-ordered products, suppliers with the
+  last order date (`lastOrderDates`) and "find a supplier".
+- **Admin overview**: "needs attention" (new supplier requests, businesses waiting for verification, stalled notifications
+  via `checkHealth`, or an all-clear line), then pilot health (a bar only where there is a real ratio, the reorder rate)
+  and the 30-day order split.
+- Planned next, not built: Ctrl/Cmd+K command palette, live refresh of the queue, saved list filters.
 
 ## Photo background remover
 
