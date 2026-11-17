@@ -16,6 +16,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
@@ -55,6 +56,8 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
   const query = await searchParams;
   const q = one(query.q).slice(0, 100);
   const categoryId = one(query.category);
+  // "Selected only": just the products that are on this list (this partner's assortment).
+  const selectedOnly = one(query.selected) === "1";
   const page = Number.parseInt(one(query.page), 10) || 1;
 
   const list = await getPriceList(ctx, id).catch((error: unknown) => {
@@ -62,7 +65,7 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
     throw error;
   });
   const [products, settings, customerCount, categories, rules, included] = await Promise.all([
-    listPriceListProducts(ctx, id, { q, categoryId, page }),
+    listPriceListProducts(ctx, id, { q, categoryId, onlyIncluded: selectedOnly, page }),
     getSupplierSettings(ctx),
     customersOnPriceList(ctx, id),
     listActiveCategories(),
@@ -86,7 +89,31 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
       </div>
 
       <section className="space-y-3">
+        <nav aria-label={t("detail.show.label")} className="grid max-w-md grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+          {([false, true] as const).map((only) => {
+            const params = new URLSearchParams();
+            if (q) params.set("q", q);
+            if (categoryId) params.set("category", categoryId);
+            if (only) params.set("selected", "1");
+            const active = only === selectedOnly;
+            return (
+              <Link
+                key={String(only)}
+                href={`/supplier/pricing/${list.id}${params.size ? `?${params}` : ""}`}
+                replace
+                aria-current={active ? "true" : undefined}
+                className={cn(
+                  "inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-medium md:min-h-9",
+                  active ? "bg-surface shadow-sm ring-1 ring-border" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {only ? t("detail.show.selected", { count: included.length }) : t("detail.show.all")}
+              </Link>
+            );
+          })}
+        </nav>
         <form method="get" className="grid max-w-2xl gap-2 sm:grid-cols-[minmax(0,1fr)_14rem_auto]">
+          {selectedOnly ? <input type="hidden" name="selected" value="1" /> : null}
           <label className="sr-only" htmlFor="q">{tc("search")}</label>
           <Input id="q" name="q" type="search" defaultValue={q} placeholder={tc("searchPlaceholder")} />
           <label className="sr-only" htmlFor="category">{t("detail.category")}</label>
@@ -102,11 +129,11 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
           </Button>
         </form>
         {products.items.length === 0 ? (
-          <EmptyState icon={Search} title={q || categoryId ? tc("search") : t("detail.noProducts")} />
+          <EmptyState icon={Search} title={selectedOnly && !q && !categoryId ? t("detail.show.noneSelected") : q || categoryId ? tc("search") : t("detail.noProducts")} />
         ) : (
           <>
             <AssortmentEditor
-              key={`${q}-${categoryId}-${products.page}`}
+              key={`${q}-${categoryId}-${selectedOnly}-${products.page}`}
               filters={{ q, categoryId }}
               priceListId={list.id}
               disabled={disabled}
@@ -121,7 +148,7 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
                 listPriceMinor: p.listPriceMinor,
               }))}
             />
-            <Pagination basePath={`/supplier/pricing/${list.id}`} params={{ q, category: categoryId }} page={products.page} pageCount={products.pageCount} />
+            <Pagination basePath={`/supplier/pricing/${list.id}`} params={{ q, category: categoryId, selected: selectedOnly ? "1" : undefined }} page={products.page} pageCount={products.pageCount} />
           </>
         )}
       </section>

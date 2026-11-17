@@ -88,7 +88,7 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
       {customer.status === "active" || customer.status === "invited" ? (
         customer.priceListId ? (
           <p className="text-sm">
-            <Link href={`/supplier/pricing/${customer.priceListId}`} className="font-medium text-brand underline-offset-2 hover:underline">
+            <Link href={`/supplier/pricing/${customer.priceListId}?selected=1`} className="font-medium text-brand underline-offset-2 hover:underline">
               {t("detail.editAssortment", { name: customer.priceListName ?? "" })}
             </Link>
           </p>

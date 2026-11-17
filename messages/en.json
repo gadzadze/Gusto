@@ -1282,7 +1282,13 @@
       "bulkSample": "Examples",
       "importTitle": "Import prices",
       "importHint": "The file needs a code (SKU) column and a price column. The products listed in the file are ticked in the list at the price given.",
-      "inactive": "Disabled"
+      "inactive": "Disabled",
+      "show": {
+        "label": "Show",
+        "all": "All products",
+        "selected": "Selected only ({count})",
+        "noneSelected": "No products are selected on this list yet."
+      }
     },
     "import": {
       "summary": "To update: {set} · with errors: {error}",
