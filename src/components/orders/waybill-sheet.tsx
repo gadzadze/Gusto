@@ -2,8 +2,17 @@
 
 import { Check, Copy, Printer } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState, useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
+import Link from "next/link";
+import {
+  activateWaybillAction,
+  closeWaybillAction,
+  discardWaybillDraftAction,
+  readWaybillAtRsAction,
+  saveWaybillDraftAction,
+} from "@/app/supplier/orders/[id]/waybill/actions";
 import { Button } from "@/components/ui/button";
+import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -34,6 +43,8 @@ export type SheetProps = {
   lines: SheetLine[];
   totals: { subtotal: string; vat: string; total: string };
   vatIncluded: boolean;
+  /** RS.ge sending (phase 2): null = the integration is off for this company. */
+  rs: null | { orderId: string; state: "not_connected" | "ready" | "draft" | "active" | "closed"; rsWaybillId: number | null; rsNumber: string; hasZeroVat: boolean };
 };
 
 const listeners = new Set<() => void>();
@@ -106,6 +117,87 @@ function Row({ label, value, copy }: { label: string; value: string; copy?: stri
   );
 }
 
+const RS_ERRORS = [
+  "disabled", "not_owner", "not_connected", "invalid_credentials", "wrong_company", "rs_unreachable", "rs_rejected", "already_exists",
+  "not_draft", "not_active", "invalid_transport", "rate_limited", "unit_unmapped", "vat_unsupported", "empty", "transport_missing", "invalid_amount",
+];
+
+/** The two deliberate steps of sending a waybill to RS.ge: save a draft, then (after checking it) activate. */
+function RsPanel({ rs, transport, vatNote }: { rs: NonNullable<SheetProps["rs"]>; transport: { startAddress: string; driverName: string; driverId: string; vehicle: string }; vatNote: boolean }) {
+  const t = useTranslations("waybill.rs");
+  const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
+  const [xml, setXml] = useState<string | null>(null);
+  const fail = (code: string) => t(`errors.${(RS_ERRORS.includes(code) ? code : "unknown") as "unknown"}`);
+  const run = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
+    startTransition(async () => {
+      setError(null);
+      const result = await fn();
+      if (!result.ok) setError(fail(result.error ?? "unknown"));
+    });
+
+  return (
+    <section aria-labelledby="rs-title" className="space-y-3 rounded-xl border border-border p-4 print:hidden">
+      <h2 id="rs-title" className="font-semibold">{t("title")}</h2>
+      {error ? <FormAlert tone="error">{error}</FormAlert> : null}
+      {rs.state === "not_connected" ? (
+        <p className="text-sm text-muted-foreground">
+          {t("notConnected")}{" "}
+          <Link href="/supplier/settings" className="font-medium text-brand underline-offset-2 hover:underline">{t("settingsLink")}</Link>
+        </p>
+      ) : null}
+      {rs.state === "ready" ? (
+        <>
+          <p className="text-sm text-muted-foreground">{t("readyHint")}</p>
+          {vatNote ? <p className="text-xs text-muted-foreground">{t("vatNote")}</p> : null}
+          <Button type="button" disabled={pending} onClick={() => run(() => saveWaybillDraftAction(rs.orderId, transport))}>
+            {pending ? t("saving") : t("saveDraft")}
+          </Button>
+        </>
+      ) : null}
+      {rs.state === "draft" ? (
+        <>
+          <p className="text-sm">{t("draftSaved", { id: rs.rsWaybillId ?? 0 })}</p>
+          {vatNote ? <p className="text-xs text-muted-foreground">{t("vatNote")}</p> : null}
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() =>
+                startTransition(async () => {
+                  setError(null);
+                  const result = await readWaybillAtRsAction(rs.orderId);
+                  if (result.ok) setXml(result.xml);
+                  else setError(fail(result.error));
+                })
+              }
+            >
+              {t("check")}
+            </Button>
+            <Button type="button" disabled={pending} onClick={() => window.confirm(t("activateConfirm")) && run(() => activateWaybillAction(rs.orderId))}>
+              {t("activate")}
+            </Button>
+            <Button type="button" variant="ghost" disabled={pending} onClick={() => run(() => discardWaybillDraftAction(rs.orderId))}>
+              {t("discard")}
+            </Button>
+          </div>
+          {xml ? <pre className="max-h-64 overflow-auto rounded-lg bg-muted p-3 text-xs">{xml}</pre> : null}
+        </>
+      ) : null}
+      {rs.state === "active" ? (
+        <>
+          <p className="text-sm font-medium">{t("active", { number: rs.rsNumber })}</p>
+          <Button type="button" variant="outline" disabled={pending} onClick={() => window.confirm(t("closeConfirm")) && run(() => closeWaybillAction(rs.orderId))}>
+            {t("close")}
+          </Button>
+        </>
+      ) : null}
+      {rs.state === "closed" ? <p className="text-sm font-medium">{t("closed", { number: rs.rsNumber })}</p> : null}
+    </section>
+  );
+}
+
 export function WaybillSheet(props: SheetProps) {
   const t = useTranslations("waybill");
   const [start, setStart] = useStored("waybill:start");
@@ -130,7 +222,7 @@ export function WaybillSheet(props: SheetProps) {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <p className="rounded-lg border border-border bg-surface-2 p-3 text-sm text-muted-foreground print:hidden">{t("notice")}</p>
+      <p className="rounded-lg border border-border bg-surface-2 p-3 text-sm text-muted-foreground print:hidden">{t(props.rs ? "noticeRs" : "notice")}</p>
 
       <div className="flex flex-wrap gap-2 print:hidden">
         <Button
@@ -198,6 +290,8 @@ export function WaybillSheet(props: SheetProps) {
           </div>
         </div>
       </section>
+
+      {props.rs ? <RsPanel rs={props.rs} transport={{ startAddress: start, driverName: driver, driverId, vehicle }} vatNote={props.rs.hasZeroVat} /> : null}
 
       <section className="space-y-2">
         <div className="flex items-center justify-between gap-2">

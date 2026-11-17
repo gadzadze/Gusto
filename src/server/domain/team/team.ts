@@ -34,7 +34,7 @@ export const TEAM_NOTE_PREFIX = "team:";
 
 type Db = ReturnType<typeof getDb> | Tx;
 
-async function assertOwner(db: Db, ctx: Pick<OrgCtx, "userId" | "orgId">): Promise<void> {
+export async function assertOwner(db: Db, ctx: Pick<OrgCtx, "userId" | "orgId">): Promise<void> {
   const [m] = await db
     .select({ role: organizationMemberships.role })
     .from(organizationMemberships)

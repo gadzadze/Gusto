@@ -1878,7 +1878,8 @@
             "Administrators' security-related actions (for example, approving an organization) are kept in a log.",
             "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202.",
             "Team members: when a company owner adds a colleague, we keep the colleague's email address and the role given (owner or member) so they can sign in and join that company. Everyone in the same company can see the names, email addresses and roles of its team members, and the company's owners can also see open invitations. Removing a person from a company ends their access to it; the audit log keeps a record of who added and removed whom.",
-            "Waybill data: for a confirmed order, 202 prepares the details a waybill needs (seller, buyer and their identification codes, delivery address and date, goods) for the supplier to copy into RS.ge. 202 does not send anything to RS.ge. The driver and vehicle details the supplier types are kept in the supplier's own browser only. A supplier you are connected with also sees your business's identification code on the order and on the waybill data prepared from it, because a waybill has to name the buyer."
+            "Waybill data: for a confirmed order, 202 prepares the details a waybill needs (seller, buyer and their identification codes, delivery address and date, goods) for the supplier to copy into RS.ge. 202 does not send anything to RS.ge. The driver and vehicle details the supplier types are kept in the supplier's own browser only. A supplier you are connected with also sees your business's identification code on the order and on the waybill data prepared from it, because a waybill has to name the buyer.",
+            "RS.ge waybills (only if a supplier turns this on): the supplier's RS.ge service user is stored encrypted and is never shown again. At the supplier's request, 202 sends the details a waybill needs (seller and buyer with their identification codes, delivery address and date, goods, quantities, prices, driver and vehicle) to the Revenue Service (RS.ge) to create the waybill. Calls may pass through a relay server run by 202 that only forwards them."
           ]
         },
         {
@@ -2208,6 +2209,56 @@
     "vatTotal": "VAT",
     "grandTotal": "Total",
     "pricesInclude": "Prices include VAT.",
-    "pricesExclude": "Prices exclude VAT."
+    "pricesExclude": "Prices exclude VAT.",
+    "rs": {
+      "title": "RS.ge",
+      "notConnected": "RS.ge is not connected. Connect it in Settings (owner only).",
+      "settingsLink": "Settings",
+      "readyHint": "The waybill is first saved in RS.ge as a draft: it is not in force yet. Then you check it and activate it.",
+      "saveDraft": "Save draft in RS.ge",
+      "saving": "Saving…",
+      "draftSaved": "The draft is in RS.ge (no. {id}). It is not in force yet.",
+      "check": "See what RS.ge saved",
+      "activate": "Activate waybill",
+      "activateConfirm": "Once activated, the waybill is in force. Continue?",
+      "discard": "Discard draft",
+      "active": "The waybill is active. Number: {number}",
+      "close": "Close waybill",
+      "closeConfirm": "Closing means the goods were received. Continue?",
+      "closed": "The waybill is closed. Number: {number}",
+      "vatNote": "Lines with 0% VAT go to RS.ge as VAT-exempt. Check them in the draft.",
+      "errors": {
+        "disabled": "The RS.ge integration is off.",
+        "not_owner": "Only an owner can do this.",
+        "not_connected": "RS.ge is not connected.",
+        "invalid_credentials": "RS.ge did not accept these credentials.",
+        "wrong_company": "This user belongs to another company: the identification code does not match.",
+        "rs_unreachable": "RS.ge is not answering. Try again later.",
+        "rs_rejected": "RS.ge refused the waybill.",
+        "already_exists": "This order already has a waybill.",
+        "not_draft": "The waybill is no longer a draft.",
+        "not_active": "The waybill is not active.",
+        "invalid_transport": "Check the loading address, the driver's personal number (11 digits) and the vehicle plate.",
+        "rate_limited": "Too many attempts. Try again later.",
+        "unit_unmapped": "A unit was not found in RS.ge's list.",
+        "vat_unsupported": "Waybills support only 18% and 0% VAT.",
+        "empty": "The waybill has no goods.",
+        "transport_missing": "Fill in the loading address and the vehicle plate.",
+        "invalid_amount": "A quantity is not valid.",
+        "unknown": "Could not complete this. Try again."
+      },
+      "connect": {
+        "title": "Connect RS.ge",
+        "intro": "Enter the service user created on RS.ge. The password is stored encrypted and never shown again. 202 checks that the user belongs to this company.",
+        "user": "Service user",
+        "password": "Service password",
+        "submit": "Connect",
+        "connected": "Connected ({date}).",
+        "disconnect": "Disconnect",
+        "ownerOnly": "Only an owner can connect or disconnect.",
+        "ipNote": "RS.ge ties a service user to one IP address: the user must be created for the address 202 connects to RS.ge from."
+      }
+    },
+    "noticeRs": "202 prepares the data and, if RS.ge is connected, saves it in RS.ge as a draft. The waybill only comes into force when you activate it."
   }
 }
