@@ -34,6 +34,10 @@ export const RATE_LIMITS = {
   /** Connection requests: 20 per hour per organization (each one notifies the other business). */
   /** Team invitations: 20 per hour per organization (each one emails a sign-in link). */
   teamInvite: { name: "team_invite", limit: 20, windowSeconds: 3600 },
+  /** Connecting an RS.ge service user: 5 attempts per hour per company (each one sends credentials to RS.ge). */
+  rsgeConnect: { name: "rsge_connect", limit: 5, windowSeconds: 3600 },
+  /** Calls that create or change waybills at RS.ge: 60 per hour per company. */
+  rsgeCall: { name: "rsge_call", limit: 60, windowSeconds: 3600 },
   connectionRequest: { name: "connection_request", limit: 20, windowSeconds: 3600 },
   /** A buyer asking a supplier for payment terms: 10 per hour per buyer organization (each one emails the supplier). */
   termsRequest: { name: "terms_request", limit: 10, windowSeconds: 3600 },

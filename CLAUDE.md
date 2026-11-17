@@ -959,6 +959,21 @@ goods that were **confirmed** (lines at 0 are left out; VAT per line from `compu
   waybill is a legal tax document that cannot be tested against production. Decide the fixed IP and a test user first.
   Credentials found in third-party repositories must never be used.
 
+## E-waybills, phase 2: sending to RS.ge (2026-11-17, built, **not yet run against RS.ge**)
+
+Details, safety design and the first-test checklist: [`docs/rsge-integration.md`](docs/rsge-integration.md). Summary:
+
+- **Off unless `RSGE_ENABLED=1` and `RSGE_ENCRYPTION_KEY` are set** (`rsgeEnabled()`); without them the waybill page is
+  exactly phase 1. Code: `src/server/rsge/` (`client.ts` SOAP client with an injectable transport, `crypto.ts`),
+  `src/lib/rsge-waybill.ts` (XML builder, unit and VAT mapping, fails closed), `src/lib/rsge-xml.ts`,
+  `domain/waybills/rsge.ts`, tables `rs_connections` (encrypted service user) and `order_waybills` (migration 0035).
+- Owner connects the company's service user in Settings; RS.ge's tax id for it must equal the company's legal id.
+  Sending is two steps (save draft, then activate); one waybill per order; a row lock stops double sends.
+- **RS.ge ties a service user to one fixed IP**: `ops/rsge-relay/server.mjs` is the fixed-IP forwarder
+  (`RSGE_RELAY_URL`/`RSGE_RELAY_SECRET`). **The XML field names and RS.ge's answer shapes are unverified** (the WSDL types the
+  waybill as "any XML"); one supervised test with a real service user is required before real use.
+- 0% VAT lines go to RS.ge as VAT-exempt; only 18% and 0% are supported; credentials are never logged or audited.
+
 ## Dashboards (2026-11-17)
 
 The three home pages were reworked (decided 2026-11-17: modern B2B pattern, "work queue first, numbers second"). Each is a

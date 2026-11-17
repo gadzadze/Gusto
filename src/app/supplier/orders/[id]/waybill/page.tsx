@@ -12,6 +12,7 @@ import { milliToInput } from "@/lib/quantity";
 import { requireSupplier } from "@/server/auth/guards";
 import { NotFoundError } from "@/server/domain/errors";
 import { getWaybillSheet } from "@/server/domain/orders/waybill";
+import { getOrderWaybill, getRsStatus } from "@/server/domain/waybills/rsge";
 import { getFormats } from "@/server/i18n/formats";
 
 export default async function WaybillPage(props: PageProps<"/supplier/orders/[id]/waybill">) {
@@ -44,6 +45,16 @@ async function Sheet({ params }: PageProps<"/supplier/orders/[id]/waybill">) {
     if (error instanceof NotFoundError) notFound();
     throw error;
   });
+  const [rsStatus, rsWaybill] = await Promise.all([getRsStatus(ctx), getOrderWaybill(ctx, id)]);
+  const rs = !rsStatus.enabled
+    ? null
+    : {
+        orderId: sheet.orderId,
+        state: (rsWaybill ? rsWaybill.status : rsStatus.connected ? "ready" : "not_connected") as "not_connected" | "ready" | "draft" | "active" | "closed",
+        rsWaybillId: rsWaybill?.rsWaybillId ?? null,
+        rsNumber: rsWaybill?.rsNumber ?? "",
+        hasZeroVat: sheet.lines.some((l) => l.vatRateBp === 0),
+      };
   const money = (minor: number) => fmt.money(minor, sheet.currency);
   return (
     <WaybillSheet
@@ -73,6 +84,7 @@ async function Sheet({ params }: PageProps<"/supplier/orders/[id]/waybill">) {
       }))}
       totals={{ subtotal: money(sheet.subtotalMinor), vat: money(sheet.vatMinor), total: money(sheet.totalMinor) }}
       vatIncluded={sheet.pricesIncludeVat}
+      rs={rs}
     />
   );
 }

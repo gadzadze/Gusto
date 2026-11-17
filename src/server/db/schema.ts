@@ -852,6 +852,56 @@ export const teamInvites = pgTable(
   ],
 );
 
+// RS.ge e-waybills (phase 2). A company's RS.ge *service user* (username + password made in the RS.ge portal) is
+// stored encrypted (AES-256-GCM, key in the environment), never logged and never shown again. `order_waybills` holds
+// what 202 did for an order so a waybill is never created twice and its state is visible.
+export const rsConnections = pgTable("rs_connections", {
+  organizationId: uuid("organization_id")
+    .primaryKey()
+    .references(() => organizations.id, { onDelete: "cascade" }),
+  suCipher: text("su_cipher").notNull(),
+  spCipher: text("sp_cipher").notNull(),
+  // The RS.ge ids returned when the credentials were checked (the taxpayer and the service user).
+  payerId: integer("payer_id").notNull(),
+  serviceUserId: integer("service_user_id").notNull(),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }).notNull(),
+  connectedByUserId: uuid("connected_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+  createdAt: timestamps.createdAt,
+});
+
+export const orderWaybills = pgTable(
+  "order_waybills",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // One waybill per order.
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    // draft = saved in RS.ge but not activated; active = sent (legally in force); closed; cancelled.
+    status: text("status").notNull().default("draft"),
+    rsWaybillId: integer("rs_waybill_id"),
+    rsNumber: text("rs_number"),
+    startAddress: text("start_address").notNull(),
+    driverName: text("driver_name"),
+    driverId: text("driver_id"),
+    vehicle: text("vehicle"),
+    lastError: text("last_error"),
+    createdByUserId: uuid("created_by_user_id").references(() => profiles.id, { onDelete: "set null" }),
+    createdAt: timestamps.createdAt,
+    activatedAt: timestamp("activated_at", { withTimezone: true }),
+    closedAt: timestamp("closed_at", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("order_waybills_order_key").on(t.orderId),
+    index("order_waybills_org_idx").on(t.organizationId, t.status),
+    check("order_waybills_status", sql`${t.status} in ('draft', 'active', 'closed', 'cancelled')`),
+  ],
+);
+
+export type OrderWaybill = typeof orderWaybills.$inferSelect;
 export type MembershipRole = (typeof membershipRole.enumValues)[number];
 export type Category = typeof categories.$inferSelect;
 export type Product = typeof products.$inferSelect;

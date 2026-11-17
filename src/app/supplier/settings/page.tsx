@@ -6,6 +6,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { minorToInput } from "@/lib/money";
 import { requireSupplier } from "@/server/auth/guards";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
+import { RsConnection } from "@/components/waybills/rs-connection";
+import { getRsStatus } from "@/server/domain/waybills/rsge";
+import { listTeam } from "@/server/domain/team/team";
+import { getFormatter } from "next-intl/server";
 import { SupplierSettingsForm } from "./settings-form";
 
 export default async function SupplierSettingsPage() {
@@ -25,6 +29,9 @@ async function Settings() {
   const t = await getTranslations("products");
   const s = await getSupplierSettings(ctx);
   const readOnly = ctx.orgStatus === "suspended";
+  const rs = await getRsStatus(ctx);
+  const canManage = rs.enabled ? (await listTeam(ctx)).canManage : false;
+  const format = await getFormatter();
   return (
     <div className="space-y-6">
       {readOnly ? <FormAlert tone="error">{t("errors.suspended")}</FormAlert> : null}
@@ -40,6 +47,13 @@ async function Settings() {
           orderCutoffNote: s.orderCutoffNote ?? "",
         }}
       />
+      {rs.enabled ? (
+        <RsConnection
+          connected={rs.connected}
+          verified={rs.verifiedAt ? format.dateTime(rs.verifiedAt, { dateStyle: "medium" }) : ""}
+          canManage={canManage}
+        />
+      ) : null}
     </div>
   );
 }
