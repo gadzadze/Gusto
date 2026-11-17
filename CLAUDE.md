@@ -938,6 +938,27 @@ one inbox for alerts, password changes when someone leaves). `domain/team/team.t
 - Members see the team list (names, emails, roles); only owners see open invitations and the add form. The privacy text
   mentions it.
 
+## E-waybills, phase 1 (2026-11-17)
+
+RS.ge e-waybills were out of scope until asked; the user asked on 2026-11-17 and agreed to **phase 1 only**:
+`/supplier/orders/<id>/waybill` (`domain/orders/waybill.ts` `getWaybillSheet`, `components/orders/waybill-sheet.tsx`,
+button on a confirmed/delivered order and a link per stop on the loading sheet). It shows, for one confirmed order,
+what a waybill needs: seller and buyer with their identification codes, delivery address and the agreed day, and the
+goods that were **confirmed** (lines at 0 are left out; VAT per line from `computeTotals`), each with a copy button, a
+"copy goods table" (tab separated, dot decimals, for Excel) and print.
+
+- **202 sends nothing to RS.ge and stores nothing about the waybill.** The driver, vehicle and loading address the
+  supplier types are kept in `localStorage` of that browser only (the supplier's company has no warehouse address in
+  the schema, so it is typed once; no migration was needed).
+- Seller side only: another company's order, or an order still pending/rejected/cancelled, is `NotFoundError`.
+- **The buyer's identification code is shown to the supplier it ordered from** (needed to name the buyer on a waybill);
+  the privacy text says so. It is still never shown to anyone the buyer has no order with.
+- **Phase 2 (API) is not built.** RS.ge's SOAP service (`services.rs.ge/WayBillService/WayBillService.asmx`: `save_waybill`,
+  `send_waybill`, `close_waybill`, `get_waybill_units`, ...) needs a per-company *service user* that RS.ge ties to **one fixed
+  IP address**, so calls would have to come from a fixed address (Vercel's are not), RS.ge unit codes must be mapped, and a
+  waybill is a legal tax document that cannot be tested against production. Decide the fixed IP and a test user first.
+  Credentials found in third-party repositories must never be used.
+
 ## Photo background remover
 
 `components/catalog/background-remover.tsx`, `lib/image/background-removal/*`.

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { FileText } from "lucide-react";
 import { OrderView } from "@/components/orders/order-view";
 import { WhatsappShare } from "@/components/orders/whatsapp-share";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ async function Order({ params }: PageProps<"/supplier/orders/[id]">) {
   const fmt = await getFormats();
   const ctx = await requireSupplier();
   const tu = await getTranslations("units");
+  const tw = await getTranslations("waybill");
   const { id } = await params;
   const detail = await getOrder(ctx, id).catch((error: unknown) => {
     if (error instanceof NotFoundError) notFound();
@@ -47,6 +49,14 @@ async function Order({ params }: PageProps<"/supplier/orders/[id]">) {
       <OrderView detail={detail} viewer="supplier" />
       {detail.order.status === "confirmed" || detail.order.status === "rejected" || detail.order.status === "delivered" ? (
         <WhatsappShare detail={detail} kind={detail.order.status} />
+      ) : null}
+      {detail.order.status === "confirmed" || detail.order.status === "delivered" ? (
+        <Button asChild variant="outline">
+          <Link href={`/supplier/orders/${detail.order.id}/waybill`}>
+            <FileText />
+            {tw("open")}
+          </Link>
+        </Button>
       ) : null}
       <div className="border-t border-border pt-6">
         <SupplierOrderActions

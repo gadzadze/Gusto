@@ -1826,7 +1826,8 @@
             "Error reports: when an error happens in the service, we send the error description, the page address and the type of browser or device to an error monitoring service. We remove emails, cookies, request parameters, identification tokens and entered data from the reports.",
             "Administrators' security-related actions (for example, approving an organization) are kept in a log.",
             "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202.",
-            "Team members: when a company owner adds a colleague, we keep the colleague's email address and the role given (owner or member) so they can sign in and join that company. Everyone in the same company can see the names, email addresses and roles of its team members, and the company's owners can also see open invitations. Removing a person from a company ends their access to it; the audit log keeps a record of who added and removed whom."
+            "Team members: when a company owner adds a colleague, we keep the colleague's email address and the role given (owner or member) so they can sign in and join that company. Everyone in the same company can see the names, email addresses and roles of its team members, and the company's owners can also see open invitations. Removing a person from a company ends their access to it; the audit log keeps a record of who added and removed whom.",
+            "Waybill data: for a confirmed order, 202 prepares the details a waybill needs (seller, buyer and their identification codes, delivery address and date, goods) for the supplier to copy into RS.ge. 202 does not send anything to RS.ge. The driver and vehicle details the supplier types are kept in the supplier's own browser only. A supplier you are connected with also sees your business's identification code on the order and on the waybill data prepared from it, because a waybill has to name the buyer."
           ]
         },
         {
@@ -2118,5 +2119,44 @@
   "teamInviteEmail": {
     "subject": "202 - you were added to a team",
     "body": "Hello,\n\nYou were added on 202: {companies}.\n\nTo sign in and set your own password, open this link:\n\n{link}\n\nThe link is single-use and valid for a limited time. If it has expired, open the sign-in page and choose \"Set or reset password\" to get a new one.\n\nIf you weren't expecting this email, just ignore it."
+  },
+  "waybill": {
+    "title": "Waybill data",
+    "back": "Order",
+    "open": "Waybill data",
+    "notice": "202 prepares the data to copy into RS.ge. It does not send the waybill: you create it on RS.ge yourself. The data comes from the order you confirmed.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyAll": "Copy everything",
+    "copyGoods": "Copy goods table",
+    "print": "Print",
+    "seller": "Seller",
+    "buyer": "Buyer",
+    "name": "Name",
+    "legalId": "Identification code",
+    "delivery": "Delivery",
+    "endAddress": "Delivery address",
+    "date": "Date",
+    "instructions": "Delivery instructions",
+    "note": "Buyer's note",
+    "transport": "Transport",
+    "transportHint": "Type this once: it is remembered in this browser only and 202 stores it nowhere.",
+    "startAddress": "Loading address",
+    "driver": "Driver",
+    "driverId": "Driver's personal number",
+    "vehicle": "Vehicle plate",
+    "goods": "Goods",
+    "goodsHint": "The copy is a table you can paste into Excel. Quantities and prices use a dot as the decimal separator.",
+    "code": "Code",
+    "unit": "Unit",
+    "qty": "Quantity",
+    "price": "Price",
+    "vat": "VAT",
+    "total": "Total",
+    "subtotal": "Excluding VAT",
+    "vatTotal": "VAT",
+    "grandTotal": "Total",
+    "pricesInclude": "Prices include VAT.",
+    "pricesExclude": "Prices exclude VAT."
   }
 }
