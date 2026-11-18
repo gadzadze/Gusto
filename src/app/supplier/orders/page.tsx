@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
+import { LiveOrders } from "@/components/orders/live-orders";
 import { OrderList } from "@/components/orders/order-list";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -11,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { requireSupplier } from "@/server/auth/guards";
 import { BrandScope } from "@/components/orders/brand-scope";
+import { getPendingPulse } from "@/server/domain/orders/today";
 import { listMyBrands } from "@/server/domain/suppliers/brands";
 import { countSupplierOrders, listSupplierOrders, SUPPLIER_TABS, type SupplierTab } from "@/server/domain/orders/queries";
 
@@ -36,10 +38,12 @@ async function Inbox({ searchParams }: Pick<PageProps<"/supplier/orders">, "sear
   const all = params.brand === "all" && brands.length > 1;
   const q = (extra: string) => `/supplier/orders${[all ? "brand=all" : "", extra].filter(Boolean).length ? `?${[all ? "brand=all" : "", extra].filter(Boolean).join("&")}` : ""}`;
   const [list, counts] = await Promise.all([listSupplierOrders(ctx, tab, page, all), countSupplierOrders(ctx, all)]);
+  const pulse = await getPendingPulse(ctx);
   const total = counts.new + counts.confirmed + counts.done;
 
   return (
     <div className="space-y-5">
+      <LiveOrders signature={pulse.signature} pending={pulse.pending} />
       {brands.length > 1 ? <BrandScope all={all} thisHref="/supplier/orders" allHref="/supplier/orders?brand=all" /> : null}
       <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-2 p-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">{counts.confirmed > 0 ? t("pick.cardHint", { count: counts.confirmed }) : t("pick.cardEmpty")}</p>

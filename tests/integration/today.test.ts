@@ -8,7 +8,7 @@ import type { OrgCtx, SupplierCtx } from "@/server/domain/context";
 import { getCart, setCartQuantity } from "@/server/domain/orders/cart";
 import { lastOrderDates, listOpenBuyerOrders } from "@/server/domain/orders/queries";
 import { submitOrder } from "@/server/domain/orders/submit";
-import { getOrderValueSeries, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
+import { getOrderValueSeries, getPendingPulse, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
 import { confirmOrder } from "@/server/domain/orders/transitions";
 import { connectBuyer, createAdmin, createBuyer, createSupplier, createTestCategory, createTestProduct } from "./helpers";
 
@@ -49,6 +49,30 @@ describe("supplier home data", () => {
     await confirmOrder(supplier, first, []);
     expect((await listPendingQueue(supplier)).map((o) => o.id)).toEqual([second]);
     await expect(listPendingQueue(buyer)).rejects.toThrow();
+  });
+
+  it("gives a pulse whose signature changes when the waiting queue changes, for this company only", async () => {
+    const supplier = await createSupplier();
+    const other = await createSupplier();
+    const buyer = await createBuyer();
+    await connectBuyer(supplier, buyer);
+    const wine = await createTestProduct(supplier, categoryId, { name: "[TEST] Wine", basePrice: "10" });
+    const empty = await getPendingPulse(supplier);
+    expect(empty.pending).toBe(0);
+    const first = await placeOrder(buyer, supplier, [[wine, 1000]]);
+    const one = await getPendingPulse(supplier);
+    expect(one.pending).toBe(1);
+    expect(one.signature).not.toBe(empty.signature);
+    await placeOrder(buyer, supplier, [[wine, 2000]]);
+    const two = await getPendingPulse(supplier);
+    expect(two.pending).toBe(2);
+    expect(two.signature).not.toBe(one.signature);
+    await confirmOrder(supplier, first, []);
+    const after = await getPendingPulse(supplier);
+    expect(after.pending).toBe(1);
+    expect(after.signature).not.toBe(two.signature);
+    expect((await getPendingPulse(other)).pending).toBe(0);
+    await expect(getPendingPulse(buyer)).rejects.toThrow();
   });
 
   it("groups confirmed orders by delivery day, earliest first, days not agreed last", async () => {

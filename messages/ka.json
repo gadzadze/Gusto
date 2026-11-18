@@ -1465,6 +1465,9 @@
     }
   },
   "orders": {
+    "live": {
+      "newOrder": "მოვიდა ახალი შეკვეთა"
+    },
     "title": "შეკვეთები",
     "number": "GST-{number}",
     "emptyTitle": "შეკვეთები ჯერ არ არის",

@@ -1000,7 +1000,14 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
 - **Admin overview**: "needs attention" (new supplier requests, businesses waiting for verification, stalled notifications
   via `checkHealth`, or an all-clear line), then pilot health (a bar only where there is a real ratio, the reorder rate)
   and the 30-day order split.
-- Planned next, not built: Ctrl/Cmd+K command palette, live refresh of the queue, saved list filters.
+- **Live queue** (decided 2026-11-18): the open supplier dashboard and order inbox mount `LiveOrders`
+  (`components/orders/live-orders.tsx`), which polls `GET /api/supplier/pulse` (`getPendingPulse`: pending count + a
+  fingerprint, scoped to the acting company, guarded like any supplier page) every 20 s (60 s in a background tab, at once when
+  the tab returns) and calls `router.refresh()` when the queue changed. **Polling, not Supabase Realtime, on purpose**: the
+  browser never talks to Supabase and RLS has no policies. It never refreshes while a `<dialog>` is open, shows a short
+  "new order received" notice, puts the waiting count in a background tab's title, and stops after 3 failures (signed out,
+  offline). Other supplier pages are not live.
+- Planned next, not built: Ctrl/Cmd+K command palette, saved list filters.
 
 ## Photo background remover
 
