@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import "../../scripts/load-env";
 import { signInAsNewUser } from "./auth-helpers";
 import { adminWithCategory, approveSupplier, createProduct, onboardBuyer, onboardSupplier } from "./flows";
+import { selectIn } from "./select";
 
 test("a supplier invites a customer on a custom price list; the buyer joins and sees their price", async ({
   browser,
@@ -41,7 +42,7 @@ test("a supplier invites a customer on a custom price list; the buyer joins and 
   await supplier.getByLabel("ბიზნესის სახელი").fill("[E2E] Restaurant Mtsvadi");
   await supplier.getByLabel("საკონტაქტო პირი").fill("Levan");
   await supplier.getByLabel("ტელეფონი (WhatsApp)").fill("555 98 76 54");
-  await supplier.getByRole("combobox", { name: "ფასების სია" }).selectOption({ label: "[E2E] რესტორნები" });
+  await selectIn(supplier.getByRole("combobox", { name: "ფასების სია" }), { label: "[E2E] რესტორნები" });
   await supplier.getByRole("button", { name: "დამატება და ბმულის შექმნა" }).click();
   await expect(supplier.getByText("მოწვევის ბმული მზადაა")).toBeVisible();
   const inviteUrl = await supplier.getByRole("textbox", { name: "მოწვევის ბმული მზადაა" }).inputValue();
@@ -63,7 +64,7 @@ test("a supplier invites a customer on a custom price list; the buyer joins and 
   await signInAsNewUser(buyer, "invited-buyer");
   await buyer.goto(invitePath);
   await expect(buyer.getByLabel("ბიზნესის სახელი")).toHaveValue("[E2E] Restaurant Mtsvadi");
-  await buyer.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("restaurant");
+  await selectIn(buyer.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "restaurant");
   await buyer.getByLabel("ქალაქი").fill("თბილისი");
   await buyer.getByLabel("მიწოდების მისამართი").fill("ვაჟა-ფშაველას 10");
   await buyer.getByRole("button", { name: "დაკავშირება" }).click();

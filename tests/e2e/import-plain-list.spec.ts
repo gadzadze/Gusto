@@ -28,7 +28,7 @@ test("a plain name / unit / price list imports with guessed categories and gener
 
   await upload(csv("8,50"));
   // The fallbacks are switched on because the file has no category and no code column.
-  await expect(supplier.getByLabel("კატეგორია, თუ ფაილში არ არის")).toHaveValue("guess");
+  await expect(supplier.getByLabel("კატეგორია, თუ ფაილში არ არის").locator("xpath=..").locator("select")).toHaveValue("guess");
   await expect(supplier.getByLabel("კოდი (SKU) ავტომატურად შეიქმნას, თუ ფაილში არ არის")).toBeChecked();
   await supplier.getByRole("button", { name: "შემოწმება" }).click();
   await expect(supplier.getByText("დაემატება: 3 · განახლდება: 0 · შეცდომით: 1")).toBeVisible();

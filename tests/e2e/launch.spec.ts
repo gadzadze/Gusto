@@ -11,6 +11,7 @@ import {
   onboardBuyer,
   onboardSupplier,
 } from "./flows";
+import { selectIn } from "./select";
 
 // Pilot-launch scenarios, end to end, from an empty (migrated, unseeded)
 // database: image → buyer catalog, order, dashboards, admin support tools,
@@ -94,8 +95,8 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   await supplier.getByRole("link", { name: "ახალი პროდუქტი" }).click();
   await supplier.waitForLoadState("networkidle");
   await supplier.getByLabel("დასახელება").fill("ყველი სულგუნი");
-  await supplier.getByRole("combobox", { name: "კატეგორია", exact: true }).selectOption({ label: category });
-  await supplier.getByRole("combobox", { name: "ერთეული", exact: true }).selectOption("kg");
+  await selectIn(supplier.getByRole("combobox", { name: "კატეგორია", exact: true }), { label: category });
+  await selectIn(supplier.getByRole("combobox", { name: "ერთეული", exact: true }), "kg");
   await supplier.getByLabel("ფასი ერთეულზე").fill("18,50");
   // Until React has attached its change handler the chosen file is ignored; the label shows the name once it took.
   await expect(async () => {

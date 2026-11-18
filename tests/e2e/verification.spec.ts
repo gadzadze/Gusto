@@ -3,6 +3,7 @@ import { expect, test, type Browser, type Page } from "@playwright/test";
 import "../../scripts/load-env";
 import { grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
 import { adminWithCategory, approveSupplier, inviteCustomer, onboardSupplier } from "./flows";
+import { selectIn } from "./select";
 
 // Partners use their own company address and choose their own password; the
 // admin vets who is real, either before (registering the address with a legal
@@ -31,7 +32,7 @@ test("a vetted partner picks their own password, then signs in with it", async (
   await admin.getByLabel("ელფოსტა", { exact: true }).fill(email);
   await admin.getByLabel("ბიზნესის დასახელება").fill("[E2E] Alcorium");
   await admin.getByLabel("საიდენტიფიკაციო კოდი").fill("12345");
-  await admin.getByLabel("როლი", { exact: true }).selectOption("buyer");
+  await selectIn(admin.getByLabel("როლი", { exact: true }), "buyer");
   await admin.getByRole("button", { name: "დამატება" }).click();
   await expect(admin.getByText("კოდი უნდა შედგებოდეს 9 ან 11 ციფრისგან")).toBeVisible();
   await admin.getByLabel("საიდენტიფიკაციო კოდი").fill(legalId);
@@ -57,7 +58,7 @@ test("a vetted partner picks their own password, then signs in with it", async (
   await expect(partner.getByLabel("საიდენტიფიკაციო კოდი")).toHaveValue(legalId);
   await expect(partner.getByLabel("საიდენტიფიკაციო კოდი")).not.toBeEditable();
   await expect(partner.getByLabel("ბიზნესის სახელი")).toHaveValue("[E2E] Alcorium");
-  await partner.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("retailer");
+  await selectIn(partner.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "retailer");
   await partner.getByLabel("საკონტაქტო პირი").fill("Nino");
   await partner.getByLabel("ტელეფონი").fill("555 12 34 56");
   await partner.getByLabel("ქალაქი").fill("თბილისი");
@@ -98,7 +99,7 @@ async function waitingBuyer(browser: Browser, suffix: string) {
   await buyer.goto(invitePath);
   await buyer.waitForLoadState("networkidle");
   await buyer.getByLabel("საიდენტიფიკაციო კოდი").fill(randomLegalId());
-  await buyer.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("restaurant");
+  await selectIn(buyer.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "restaurant");
   await buyer.getByLabel("საკონტაქტო პირი").fill("Levan");
   await buyer.getByLabel("ქალაქი").fill("თბილისი");
   await buyer.getByLabel("მიწოდების მისამართი").fill("ვაჟა-ფშაველას 10");

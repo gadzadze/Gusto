@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import sharp from "sharp";
 import "../../scripts/load-env";
 import { grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
+import { selectIn } from "./select";
 
 test("admin sets up a category; a supplier builds a catalog by hand and by import; admin approves it", async ({
   browser,
@@ -43,9 +44,9 @@ test("admin sets up a category; a supplier builds a catalog by hand and by impor
 
   await page.getByLabel("დასახელება").fill("ყველი სულგუნი");
   // Role queries skip hidden elements: Next keeps the previous page mounted but hidden.
-  await page.getByRole("combobox", { name: "კატეგორია", exact: true }).selectOption({ label: category });
+  await selectIn(page.getByRole("combobox", { name: "კატეგორია", exact: true }), { label: category });
   await page.getByLabel("კოდი (SKU)").fill("SUL-1");
-  await page.getByRole("combobox", { name: "ერთეული", exact: true }).selectOption("kg");
+  await selectIn(page.getByRole("combobox", { name: "ერთეული", exact: true }), "kg");
   await page.getByLabel("ფასი ერთეულზე").fill("18,50");
   await page.getByLabel("მინიმალური რაოდენობა").fill("0,5");
   await page.getByLabel("რაოდენობის ბიჯი").fill("0,5");
@@ -99,7 +100,7 @@ test("a buyer cannot open supplier catalog pages", async ({ page }) => {
   await signInAsNewUser(page, "buyer-catalog");
   await page.getByText("ვყიდულობ", { exact: true }).click();
   await page.getByLabel("ბიზნესის სახელი").fill("[E2E] Café");
-  await page.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("cafe");
+  await selectIn(page.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "cafe");
   await page.getByLabel("საკონტაქტო პირი").fill("Nino");
   await page.getByLabel("ტელეფონი").fill("555 12 34 56");
   await page.getByLabel("ქალაქი").fill("თბილისი");
