@@ -209,6 +209,30 @@ export async function getProductUsage(ctx: OrgCtx, productId: string): Promise<{
   return { openOrders, orderLines };
 }
 
+/** Usage counts for several of the supplier's own products at once (the product list's delete confirmation). */
+export async function getProductsUsage(
+  ctx: OrgCtx,
+  productIds: string[],
+): Promise<Map<string, { openOrders: number; orderLines: number }>> {
+  assertSupplier(ctx);
+  const result = new Map<string, { openOrders: number; orderLines: number }>();
+  if (productIds.length === 0) return result;
+  const rows = await getDb()
+    .select({ productId: orderItems.productId, status: orders.status, n: count() })
+    .from(orderItems)
+    .innerJoin(orders, eq(orders.id, orderItems.orderId))
+    .where(and(inArray(orderItems.productId, productIds), eq(orders.supplierOrgId, ctx.orgId)))
+    .groupBy(orderItems.productId, orders.status);
+  for (const r of rows) {
+    if (!r.productId) continue;
+    const cur = result.get(r.productId) ?? { openOrders: 0, orderLines: 0 };
+    cur.orderLines += r.n;
+    if (r.status === "pending" || r.status === "confirmed") cur.openOrders += r.n;
+    result.set(r.productId, cur);
+  }
+  return result;
+}
+
 /**
  * Deletes a product for good (the supplier asked for it; hiding stays available). It disappears from price
  * lists, buyers' carts and saved regular orders (a regular order left with no products is removed too).

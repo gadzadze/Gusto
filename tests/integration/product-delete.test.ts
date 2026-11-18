@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getDb } from "@/server/db/client";
 import { addresses, cartItems, orderItems, organizations, priceListItems, products, regularOrders } from "@/server/db/schema";
-import { deleteProduct, getProductUsage, getSupplierProduct } from "@/server/domain/catalog/products";
+import { deleteProduct, getProductsUsage, getProductUsage, getSupplierProduct } from "@/server/domain/catalog/products";
 import type { OrgCtx, SupplierCtx } from "@/server/domain/context";
 import { NotFoundError, StateError } from "@/server/domain/errors";
 import { getCart, setCartQuantity } from "@/server/domain/orders/cart";
@@ -55,6 +55,11 @@ describe("deleting a product", () => {
     await setCartQuantity(buyer, supplier.orgId, wine, 2000);
 
     expect(await getProductUsage(supplier, wine)).toEqual({ openOrders: 2, orderLines: 2 });
+    const batch = await getProductsUsage(supplier, [wine, water]);
+    expect(batch.get(wine)).toEqual({ openOrders: 2, orderLines: 2 });
+    expect(batch.get(water)).toEqual({ openOrders: 1, orderLines: 1 });
+    expect((await getProductsUsage(await createSupplier(), [wine, water])).size).toBe(0);
+    expect((await getProductsUsage(supplier, [])).size).toBe(0);
 
     const storage = memoryStorage();
     await deleteProduct(supplier, wine, storage);

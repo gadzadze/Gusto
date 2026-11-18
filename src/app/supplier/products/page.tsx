@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductImage } from "@/components/catalog/product-image";
+import { ProductRowDelete } from "@/components/catalog/product-row-delete";
 import { ProductStatusBadge } from "@/components/catalog/product-status-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
-import { isUuid, listSupplierProducts } from "@/server/domain/catalog/products";
+import { getProductsUsage, isUuid, listSupplierProducts } from "@/server/domain/catalog/products";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import { getFormats } from "@/server/i18n/formats";
 
@@ -57,6 +58,8 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
     getSupplierSettings(ctx),
   ]);
   const readOnly = ctx.orgStatus === "suspended";
+  const usage = readOnly ? new Map() : await getProductsUsage(ctx, list.items.map((p) => p.id));
+  const usageOf = (id: string): { openOrders: number; orderLines: number } => usage.get(id) ?? { openOrders: 0, orderLines: 0 };
   const filtered = Boolean(q || categoryId || status !== "all" || lowStock);
 
   return (
@@ -128,6 +131,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                   <TH className="text-right">{t("columns.price")}</TH>
                   <TH className="text-right">{t("columns.stock")}</TH>
                   <TH>{t("columns.status")}</TH>
+                  {readOnly ? null : <TH><span className="sr-only">{t("delete.button")}</span></TH>}
                 </TR>
               </THead>
               <TBody>
@@ -160,6 +164,11 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                       )}
                     </TD>
                     <TD><ProductStatusBadge isActive={p.isActive} /></TD>
+                    {readOnly ? null : (
+                      <TD className="text-right">
+                        <ProductRowDelete productId={p.id} name={p.name} {...usageOf(p.id)} />
+                      </TD>
+                    )}
                   </TR>
                 ))}
               </TBody>
@@ -168,8 +177,8 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
           {/* Mobile list */}
           <ul className="divide-y divide-border rounded-xl border border-border md:hidden">
             {list.items.map((p) => (
-              <li key={p.id}>
-                <Link href={`/supplier/products/${p.id}`} className="flex items-center gap-3 p-3">
+              <li key={p.id} className="flex items-center gap-2 pr-3">
+                <Link href={`/supplier/products/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 p-3">
                   <ProductImage path={p.imagePath} alt="" size={48} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{p.name}</span>
@@ -180,6 +189,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                   </span>
                   <ProductStatusBadge isActive={p.isActive} />
                 </Link>
+                {readOnly ? null : <ProductRowDelete productId={p.id} name={p.name} {...usageOf(p.id)} />}
               </li>
             ))}
           </ul>
