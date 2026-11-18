@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
+import { ProductDelete } from "@/components/catalog/product-delete";
 import { ProductActiveToggle } from "@/components/catalog/product-active-toggle";
 import { ProductForm } from "@/components/catalog/product-form";
 import { ProductImageManager } from "@/components/catalog/product-image-manager";
@@ -15,7 +16,7 @@ import { minorToInput } from "@/lib/money";
 import type { ProductInput } from "@/lib/validation/product";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
-import { getSupplierProduct } from "@/server/domain/catalog/products";
+import { getProductUsage, getSupplierProduct } from "@/server/domain/catalog/products";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
 import { NotFoundError } from "@/server/domain/errors";
 import { notFound } from "next/navigation";
@@ -52,6 +53,7 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
     if (error instanceof NotFoundError) notFound();
     throw error;
   });
+  const usage = await getProductUsage(ctx, id);
   const [activeCategories, settings] = await Promise.all([listActiveCategories(), getSupplierSettings(ctx)]);
   // Keep an archived category selectable for the product that already has it.
   const categories = activeCategories.some((c) => c.id === product.categoryId)
@@ -113,6 +115,10 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
 
       <section className="border-t border-border pt-6">
         <ProductActiveToggle productId={product.id} isActive={product.isActive} disabled={readOnly} />
+      </section>
+
+      <section className="border-t border-border pt-6">
+        <ProductDelete productId={product.id} name={product.name} openOrders={usage.openOrders} orderLines={usage.orderLines} disabled={readOnly} />
       </section>
     </div>
   );

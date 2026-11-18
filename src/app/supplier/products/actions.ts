@@ -9,6 +9,7 @@ import { requireSupplier } from "@/server/auth/guards";
 import {
   adjustStock,
   createProduct,
+  deleteProduct,
   removeProductImage,
   setProductActive,
   setProductImage,
@@ -100,6 +101,15 @@ export async function removeProductImageAction(productId: string): Promise<{ ok:
   const ctx = await requireSupplier();
   return runAction<{ ok: true }, CatalogWriteError>("removeProductImage", async () => {
     await removeProductImage(ctx, productId, supabaseImageStorage());
+    refresh();
+    return { ok: true };
+  });
+}
+
+export async function deleteProductAction(productId: string): Promise<{ ok: true } | ProductError> {
+  const ctx = await requireSupplier();
+  return runAction<{ ok: true }, CatalogWriteError>("deleteProduct", async () => {
+    await deleteProduct(ctx, productId, supabaseImageStorage());
     refresh();
     return { ok: true };
   });
