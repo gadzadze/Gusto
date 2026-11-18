@@ -281,6 +281,55 @@ export async function setProductActive(ctx: OrgCtx, productId: string, active: b
   if (updated.length === 0) throw new NotFoundError("product");
 }
 
+export const MAX_BULK_PRODUCTS = 100;
+
+function bulkIds(ids: string[]): string[] {
+  const unique = [...new Set(ids)].filter(isUuid);
+  if (unique.length === 0 || unique.length > MAX_BULK_PRODUCTS) throw new NotFoundError("product");
+  return unique;
+}
+
+/** Show or hide several of the supplier's own products at once. Returns how many were changed. */
+export async function bulkSetActive(ctx: OrgCtx, productIds: string[], active: boolean): Promise<number> {
+  assertCatalogWritable(ctx);
+  const updated = await getDb()
+    .update(products)
+    .set({ isActive: active })
+    .where(and(inArray(products.id, bulkIds(productIds)), eq(products.supplierOrgId, ctx.orgId)))
+    .returning({ id: products.id });
+  return updated.length;
+}
+
+/** Move several of the supplier's own products into one category (an archived one is refused). */
+export async function bulkSetCategory(ctx: OrgCtx, productIds: string[], categoryId: string): Promise<number> {
+  assertCatalogWritable(ctx);
+  const ids = bulkIds(productIds);
+  return getDb().transaction(async (tx) => {
+    await assertCategoryUsable(tx, categoryId);
+    const updated = await tx
+      .update(products)
+      .set({ categoryId })
+      .where(and(inArray(products.id, ids), eq(products.supplierOrgId, ctx.orgId)))
+      .returning({ id: products.id });
+    return updated.length;
+  });
+}
+
+/** Delete several of the supplier's own products for good, one by one (each is audited). Returns how many went. */
+export async function bulkDeleteProducts(ctx: OrgCtx, productIds: string[], storage: ImageStorage): Promise<number> {
+  assertCatalogWritable(ctx);
+  let deleted = 0;
+  for (const id of bulkIds(productIds)) {
+    try {
+      await deleteProduct(ctx, id, storage);
+      deleted += 1;
+    } catch (error) {
+      if (!(error instanceof NotFoundError)) throw error; // already gone, or not this company's: skip
+    }
+  }
+  return deleted;
+}
+
 /**
  * Validates and re-encodes an uploaded image, stores it, and points the
  * product at it. The previous image is removed afterwards (best effort: a

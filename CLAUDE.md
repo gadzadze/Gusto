@@ -1007,6 +1007,13 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   browser never talks to Supabase and RLS has no policies. It never refreshes while a `<dialog>` is open, shows a short
   "new order received" notice, puts the waiting count in a background tab's title, and stops after 3 failures (signed out,
   offline). Other supplier pages are not live.
+- **Bulk actions on the product list** (decided 2026-11-18, `components/catalog/product-bulk.tsx`, `bulkProductsAction`,
+  `bulkSetActive` / `bulkSetCategory` / `bulkDeleteProducts` in `domain/catalog/products.ts`): row checkboxes (server-rendered rows,
+  client checkboxes over a `BulkSelection` context) and a select-all for the page; once something is chosen a bar offers Enable,
+  Disable, Delete (a dialog summing the usage of the chosen products, same wording as the single delete) and "move to category"
+  (archived categories refused). Selection is limited to the current page and at most 100 ids per action; ids that are not this
+  company's are silently skipped (never counted); a suspended company is refused; delete audits each product. Hidden for suspended
+  companies.
 - Planned next, not built: Ctrl/Cmd+K command palette, saved list filters.
 
 ## Photo background remover

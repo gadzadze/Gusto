@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
+import { BulkPageCheck, BulkRowCheck, BulkSelection } from "@/components/catalog/product-bulk";
 import { ProductImage } from "@/components/catalog/product-image";
 import { ProductRowDelete } from "@/components/catalog/product-row-delete";
 import { ProductStatusBadge } from "@/components/catalog/product-status-badge";
@@ -31,6 +32,24 @@ export default async function ProductsPage({ searchParams }: PageProps<"/supplie
       </Suspense>
     </>
   );
+}
+
+/** The selection bar only exists for companies that can change their catalog. */
+function MaybeBulk({
+  readOnly,
+  categories,
+  usage,
+  pageIds,
+  children,
+}: {
+  readOnly: boolean;
+  categories: { id: string; name: string }[];
+  usage: Record<string, { openOrders: number; orderLines: number }>;
+  pageIds: string[];
+  children: React.ReactNode;
+}) {
+  if (readOnly) return <>{children}</>;
+  return <BulkSelection categories={categories} usage={usage} pageIds={pageIds}>{children}</BulkSelection>;
 }
 
 function one(value: string | string[] | undefined): string {
@@ -120,12 +139,13 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
           <EmptyState icon={PackageSearch} title={t("emptyTitle")} body={t("emptyBody")} />
         )
       ) : (
-        <>
+        <MaybeBulk readOnly={readOnly} categories={categories.map((c) => ({ id: c.id, name: c.name }))} usage={Object.fromEntries(usage)} pageIds={list.items.map((p) => p.id)}>
           {/* Desktop table */}
           <div className="hidden md:block">
             <Table>
               <THead>
                 <TR>
+                  {readOnly ? null : <TH className="w-12"><BulkPageCheck ids={list.items.map((p) => p.id)} /></TH>}
                   <TH>{t("columns.product")}</TH>
                   <TH>{t("columns.category")}</TH>
                   <TH className="text-right">{t("columns.price")}</TH>
@@ -137,6 +157,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
               <TBody>
                 {list.items.map((p) => (
                   <TR key={p.id} className="hover:bg-muted/50">
+                    {readOnly ? null : <TD className="w-12"><BulkRowCheck id={p.id} name={p.name} /></TD>}
                     <TD>
                       <Link href={`/supplier/products/${p.id}`} className="flex items-center gap-3 font-medium hover:underline">
                         <ProductImage path={p.imagePath} alt="" size={40} />
@@ -177,7 +198,8 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
           {/* Mobile list */}
           <ul className="divide-y divide-border rounded-xl border border-border md:hidden">
             {list.items.map((p) => (
-              <li key={p.id} className="flex items-center gap-2 pr-3">
+              <li key={p.id} className="flex items-center gap-1 pr-3">
+                {readOnly ? null : <BulkRowCheck id={p.id} name={p.name} />}
                 <Link href={`/supplier/products/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 p-3">
                   <ProductImage path={p.imagePath} alt="" size={48} />
                   <span className="min-w-0 flex-1">
@@ -199,7 +221,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
             page={list.page}
             pageCount={list.pageCount}
           />
-        </>
+        </MaybeBulk>
       )}
     </div>
   );
