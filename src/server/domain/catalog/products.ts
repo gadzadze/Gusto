@@ -1,8 +1,9 @@
 import "server-only";
-import { and, asc, count, desc, eq, ilike, isNotNull, lte, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, ilike, inArray, isNotNull, lte, notExists, or, sql, type SQL } from "drizzle-orm";
 import type { ProductValues } from "@/lib/validation/product";
 import { getDb, type Tx } from "@/server/db/client";
-import { categories, products, type Product } from "@/server/db/schema";
+import { categories, orderItems, orders, products, regularOrderItems, regularOrders, type Product } from "@/server/db/schema";
+import { writeAudit } from "@/server/domain/audit";
 import { assertSupplier, type OrgCtx, type SupplierCtx } from "@/server/domain/context";
 import { ConflictError, NotFoundError, StateError, isUniqueViolation } from "@/server/domain/errors";
 import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
@@ -193,7 +194,58 @@ export async function updateProduct(ctx: OrgCtx, productId: string, values: Prod
   }
 }
 
-/** Deactivate / reactivate. Products are never hard-deleted (orders will reference them). */
+/** What would be affected by deleting a product, so the supplier is told before confirming. */
+export async function getProductUsage(ctx: OrgCtx, productId: string): Promise<{ openOrders: number; orderLines: number }> {
+  assertSupplier(ctx);
+  const product = await getSupplierProduct(ctx, productId);
+  const rows = await getDb()
+    .select({ status: orders.status, n: count() })
+    .from(orderItems)
+    .innerJoin(orders, eq(orders.id, orderItems.orderId))
+    .where(and(eq(orderItems.productId, product.id), eq(orders.supplierOrgId, ctx.orgId)))
+    .groupBy(orders.status);
+  const orderLines = rows.reduce((sum, r) => sum + r.n, 0);
+  const openOrders = rows.filter((r) => r.status === "pending" || r.status === "confirmed").reduce((sum, r) => sum + r.n, 0);
+  return { openOrders, orderLines };
+}
+
+/**
+ * Deletes a product for good (the supplier asked for it; hiding stays available). It disappears from price
+ * lists, buyers' carts and saved regular orders (a regular order left with no products is removed too).
+ * Orders keep their own copy of every line (name, code, unit, price, VAT, quantities), so history, open
+ * orders, loading sheets and waybill data are unaffected: only the link to the product is cleared.
+ */
+export async function deleteProduct(ctx: OrgCtx, productId: string, storage: ImageStorage): Promise<void> {
+  assertCatalogWritable(ctx);
+  const product = await getSupplierProduct(ctx, productId); // another company's product: not found
+  await getDb().transaction(async (tx) => {
+    const deleted = await tx
+      .delete(products)
+      .where(and(eq(products.id, product.id), eq(products.supplierOrgId, ctx.orgId)))
+      .returning({ id: products.id });
+    if (deleted.length === 0) throw new NotFoundError("product");
+    // Saved regular orders that lost their last product.
+    const empty = await tx
+      .select({ id: regularOrders.id })
+      .from(regularOrders)
+      .where(and(eq(regularOrders.supplierOrgId, ctx.orgId), notExists(tx.select({ one: sql`1` }).from(regularOrderItems).where(eq(regularOrderItems.regularOrderId, regularOrders.id)))));
+    if (empty.length > 0) await tx.delete(regularOrders).where(inArray(regularOrders.id, empty.map((r) => r.id)));
+    await writeAudit(tx, {
+      actorUserId: ctx.userId,
+      action: "product.deleted",
+      targetType: "organization",
+      targetId: ctx.orgId,
+      data: { name: product.name, sku: product.sku },
+    });
+  });
+  if (product.imagePath) {
+    await storage.remove(imageFilePaths(product.imagePath)).catch((error: unknown) => {
+      console.error("[catalog] image removal failed", { productId: product.id, message: error instanceof Error ? error.message : String(error) });
+    });
+  }
+}
+
+/** Deactivate / reactivate (hide from or show to customers). */
 export async function setProductActive(ctx: OrgCtx, productId: string, active: boolean): Promise<void> {
   assertCatalogWritable(ctx);
   if (!isUuid(productId)) throw new NotFoundError("product");

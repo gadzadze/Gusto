@@ -333,8 +333,12 @@ pending ──supplier confirms (may adjust qty)──▶ confirmed ──suppli
     `lib/quantity.ts`, but must not format for display.
 - **IDs:** UUIDs. Human references are `GST-<number>`, and the number is
   never used for authorization.
-- **Deletes:** products and orgs are deactivated, not deleted. Order items keep
-  their snapshot even if a product row is ever removed.
+- **Deletes:** orgs are deactivated, not deleted. **A supplier can delete one of its own products for good**
+  (decided 2026-11-18; `deleteProduct`, "Delete product" under the Disable button on the product page, an inline
+  two-step confirmation that says how many order lines and open orders include it). Disabling stays the reversible
+  way to hide it. Deleting removes it from price lists, carts and saved regular orders (a regular order left with no
+  products is removed) and deletes its photo; **order items keep their snapshot** (`product_id` becomes null), so
+  history, open orders, loading sheets and waybill data are unaffected. Audited as `product.deleted`.
 
 ## Language, search and typography
 

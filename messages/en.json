@@ -959,6 +959,19 @@
       "too_large": "The file is larger than 4 MB.",
       "unsupported": "This format isn't supported. Use JPEG, PNG or WebP.",
       "upload_failed": "The photo could not be uploaded. Try again."
+    },
+    "delete": {
+      "button": "Delete product",
+      "hint": "Deletes the product for good. If you only want to hide it, use \"Disable\".",
+      "title": "Delete \"{name}\" for good?",
+      "effects": "The product disappears from price lists, buyers' carts and saved regular orders. Its photo is deleted too.",
+      "history": "It appears in {count, plural, one {# order line} other {# order lines}}: orders keep their own copy (name, price, quantity), so history does not change.",
+      "noHistory": "No orders include this product.",
+      "openOrders": "{count, plural, one {# open order still includes} other {# open orders still include}} it. They finish as usual, but their stock is no longer adjusted for this product.",
+      "hideInstead": "This cannot be undone. A disabled product can be enabled again at any time.",
+      "confirm": "Yes, delete",
+      "cancel": "Cancel",
+      "error": "Could not delete. Try again."
     }
   },
   "import": {
