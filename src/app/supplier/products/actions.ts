@@ -1,6 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { z } from "zod";
 import { parseQuantityInput } from "@/lib/quantity";
 import { fieldErrorsFrom } from "@/lib/validation/form-errors";
 import { productSchema } from "@/lib/validation/product";
@@ -8,6 +9,10 @@ import { runAction, type ActionError } from "@/server/actions/result";
 import { requireSupplier } from "@/server/auth/guards";
 import {
   adjustStock,
+  bulkDeleteProducts,
+  bulkSetActive,
+  bulkSetCategory,
+  MAX_BULK_PRODUCTS,
   createProduct,
   deleteProduct,
   removeProductImage,
@@ -112,5 +117,29 @@ export async function deleteProductAction(productId: string): Promise<{ ok: true
     await deleteProduct(ctx, productId, supabaseImageStorage());
     refresh();
     return { ok: true };
+  });
+}
+
+const bulkInput = z.discriminatedUnion("action", [
+  z.object({ action: z.literal("show"), ids: z.array(z.uuid()).min(1).max(MAX_BULK_PRODUCTS) }),
+  z.object({ action: z.literal("hide"), ids: z.array(z.uuid()).min(1).max(MAX_BULK_PRODUCTS) }),
+  z.object({ action: z.literal("delete"), ids: z.array(z.uuid()).min(1).max(MAX_BULK_PRODUCTS) }),
+  z.object({ action: z.literal("category"), ids: z.array(z.uuid()).min(1).max(MAX_BULK_PRODUCTS), categoryId: z.uuid() }),
+]);
+
+/** One action for the selected rows of the product list; returns how many products it changed. */
+export async function bulkProductsAction(raw: unknown): Promise<{ ok: true; count: number } | ProductError> {
+  const ctx = await requireSupplier();
+  const parsed = bulkInput.safeParse(raw);
+  if (!parsed.success) return { ok: false, error: "invalid" };
+  const input = parsed.data;
+  return runAction<{ ok: true; count: number }, CatalogWriteError>("bulkProducts", async () => {
+    const count =
+      input.action === "show" ? await bulkSetActive(ctx, input.ids, true)
+      : input.action === "hide" ? await bulkSetActive(ctx, input.ids, false)
+      : input.action === "category" ? await bulkSetCategory(ctx, input.ids, input.categoryId)
+      : await bulkDeleteProducts(ctx, input.ids, supabaseImageStorage());
+    refresh();
+    return { ok: true, count };
   });
 }
