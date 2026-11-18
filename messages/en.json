@@ -1465,6 +1465,9 @@
     }
   },
   "orders": {
+    "live": {
+      "newOrder": "New order received"
+    },
     "title": "Orders",
     "number": "GST-{number}",
     "emptyTitle": "No orders yet",

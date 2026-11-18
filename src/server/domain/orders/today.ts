@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, asc, count, eq, gte, inArray, max, sql } from "drizzle-orm";
 import { addDays, todayIn } from "@/lib/dates";
 import { getDb } from "@/server/db/client";
 import { orders, organizations } from "@/server/db/schema";
@@ -93,4 +93,19 @@ export async function getSupplierClock(ctx: OrgCtx, now: Date = new Date()): Pro
   const [org] = await getDb().select({ timezone: organizations.timezone }).from(organizations).where(eq(organizations.id, ctx.orgId));
   const timezone = org?.timezone ?? "UTC";
   return { timezone, today: todayIn(timezone, now) };
+}
+
+/**
+ * A cheap fingerprint of the supplier's waiting queue, polled by the open dashboard / inbox so a new
+ * (or withdrawn) order shows up without a manual reload. The signature changes when the count changes
+ * or a newer pending order arrives; it carries no order data.
+ */
+export async function getPendingPulse(ctx: OrgCtx): Promise<{ pending: number; signature: string }> {
+  assertSupplier(ctx);
+  const [row] = await getDb()
+    .select({ n: count(), latest: max(orders.createdAt) })
+    .from(orders)
+    .where(and(eq(orders.supplierOrgId, ctx.orgId), eq(orders.status, "pending")));
+  const pending = row?.n ?? 0;
+  return { pending, signature: `${pending}:${row?.latest ? new Date(row.latest).getTime() : 0}` };
 }
