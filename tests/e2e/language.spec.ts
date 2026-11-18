@@ -1,6 +1,7 @@
 import { expect, test, type BrowserContext } from "@playwright/test";
 import "../../scripts/load-env";
 import { signInAsNewUser } from "./auth-helpers";
+import { selectIn } from "./select";
 
 // The platform speaks Georgian (the default) and English. The choice is a cookie, set by the
 // switch on the landing page, sign-in and inside the app; every address stays the same.
@@ -49,7 +50,7 @@ test("a buyer onboards and works in English, on a phone too", async ({ browser }
   await expect(page.getByRole("heading", { name: "Welcome to 202" })).toBeVisible();
   await page.getByText("I buy", { exact: true }).click();
   await page.getByLabel("Business name").fill("[E2E] English Cafe");
-  await page.getByRole("combobox", { name: "Business type" }).selectOption("cafe");
+  await selectIn(page.getByRole("combobox", { name: "Business type" }), "cafe");
   await page.getByLabel("Contact person").fill("Nino");
   await page.getByLabel("Phone").fill("555 12 34 56");
   await page.getByLabel("City").fill("Tbilisi");

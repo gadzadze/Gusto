@@ -1,5 +1,6 @@
 import { expect, type Browser, type Page } from "@playwright/test";
 import { grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
+import { selectIn } from "./select";
 
 // Reusable UI flows for e2e specs. Everything goes through the real UI and
 // Server Actions; only admin rights come from the admin:grant script.
@@ -38,7 +39,7 @@ export async function onboardBuyer(page: Page, name: string): Promise<void> {
   await page.getByText("ვყიდულობ", { exact: true }).click();
   await page.getByLabel("ბიზნესის სახელი").fill(name);
   await fillLegalId(page);
-  await page.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("cafe");
+  await selectIn(page.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "cafe");
   await page.getByLabel("საკონტაქტო პირი").fill("Nino");
   await page.getByLabel("ტელეფონი").fill("555 12 34 56");
   await page.getByLabel("ქალაქი").fill("თბილისი");
@@ -65,8 +66,8 @@ export async function createProduct(
   await page.goto("/supplier/products/new");
   await page.waitForLoadState("networkidle");
   await page.getByLabel("დასახელება").fill(product.name);
-  await page.getByRole("combobox", { name: "კატეგორია", exact: true }).selectOption({ label: product.category });
-  await page.getByRole("combobox", { name: "ერთეული", exact: true }).selectOption(product.unit ?? "kg");
+  await selectIn(page.getByRole("combobox", { name: "კატეგორია", exact: true }), { label: product.category });
+  await selectIn(page.getByRole("combobox", { name: "ერთეული", exact: true }), product.unit ?? "kg");
   await page.getByLabel("ფასი ერთეულზე").fill(product.price);
   await page.getByRole("button", { name: "პროდუქტის დამატება" }).click();
   await expect(page.getByText("პროდუქტი დაემატა")).toBeVisible();
@@ -97,7 +98,7 @@ export async function inviteCustomer(supplier: Page, businessName: string): Prom
 
   await supplier.goto("/supplier/customers/new");
   await supplier.waitForLoadState("networkidle");
-  await supplier.getByRole("combobox", { name: "ფასების სია" }).selectOption({ label: listName });
+  await selectIn(supplier.getByRole("combobox", { name: "ფასების სია" }), { label: listName });
   await supplier.getByLabel("ბიზნესის სახელი").fill(businessName);
   await supplier.getByLabel("ტელეფონი (WhatsApp)").fill("555 98 76 54");
   await supplier.getByRole("button", { name: "დამატება და ბმულის შექმნა" }).click();
@@ -108,7 +109,7 @@ export async function inviteCustomer(supplier: Page, businessName: string): Prom
 /** A signed-in user without an org accepts an invite through the short onboarding. */
 export async function acceptInviteAsNewBuyer(buyer: Page, invitePath: string): Promise<void> {
   await buyer.goto(invitePath);
-  await buyer.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("restaurant");
+  await selectIn(buyer.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "restaurant");
   await buyer.getByLabel("საკონტაქტო პირი").fill("Levan");
   await buyer.getByLabel("ქალაქი").fill("თბილისი");
   await buyer.getByLabel("მიწოდების მისამართი").fill("ვაჟა-ფშაველას 10");

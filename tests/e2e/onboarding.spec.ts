@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import "../../scripts/load-env";
 import { randomLegalId, signInAsNewUser } from "./auth-helpers";
+import { selectIn } from "./select";
 
 test("a signed-out visitor is sent to login with a return path", async ({ page }) => {
   await page.goto("/supplier");
@@ -34,7 +35,7 @@ test("a buyer gets a 404, not the supplier area", async ({ page }) => {
 
   await page.getByText("ვყიდულობ", { exact: true }).click();
   await page.getByLabel("ბიზნესის სახელი").fill("[E2E] Café");
-  await page.getByLabel("ბიზნესის ტიპი").selectOption("cafe");
+  await selectIn(page.getByLabel("ბიზნესის ტიპი"), "cafe");
   await page.getByLabel("საკონტაქტო პირი").fill("Nino");
   await page.getByLabel("ტელეფონი").fill("555 12 34 56");
   await page.getByLabel("ქალაქი").fill("თბილისი");

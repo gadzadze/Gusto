@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 import "../../scripts/load-env";
 import { allowEmail, grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
 import { adminWithCategory, approveSupplier, inviteCustomer, onboardSupplier } from "./flows";
+import { selectIn } from "./select";
 
 // Sign-in is closed until the business is accepted: unknown addresses get no
 // link, the admin manages the allow-list, and an invitation link alone opens nothing.
@@ -123,7 +124,7 @@ test("a registered role skips the choice, and a waiting supplier shows up on the
   await admin.goto("/admin/access");
   await admin.waitForLoadState("networkidle");
   await admin.getByLabel("ელფოსტა", { exact: true }).fill(supplierEmail);
-  await admin.getByLabel("როლი", { exact: true }).selectOption("supplier");
+  await selectIn(admin.getByLabel("როლი", { exact: true }), "supplier");
   await admin.getByRole("button", { name: "დამატება" }).click();
   await expect(admin.getByRole("listitem").filter({ hasText: supplierEmail })).toContainText("მომწოდებელი");
 

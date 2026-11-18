@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 import "../../scripts/load-env";
 import { grantAdmin, randomLegalId, signInAsNewUser } from "./auth-helpers";
 import { onboardBuyer } from "./flows";
+import { selectIn } from "./select";
 
 // A business that buys from some suppliers and resells to others has both a buyer and a
 // supplier side under one login, and switches between them.
@@ -15,7 +16,7 @@ test("a business onboards as both and switches sides", async ({ browser }) => {
   await page.waitForLoadState("networkidle");
   await page.getByText("ორივე", { exact: true }).click();
   await page.getByLabel("ბიზნესის სახელი").fill("[E2E] Reseller");
-  await page.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("retailer");
+  await selectIn(page.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "retailer");
   await page.getByLabel("საკონტაქტო პირი").fill("Gela");
   await page.getByLabel("ტელეფონი").fill("599 11 22 33");
   await page.getByLabel("ქალაქი").fill("თბილისი");
@@ -75,7 +76,7 @@ test("an address the admin registered as both creates both sides without a choic
   await admin.goto("/admin/access");
   await admin.waitForLoadState("networkidle");
   await admin.getByLabel("ელფოსტა", { exact: true }).fill(email);
-  await admin.getByLabel("როლი", { exact: true }).selectOption("both");
+  await selectIn(admin.getByLabel("როლი", { exact: true }), "both");
   await admin.getByLabel("ბიზნესის დასახელება").fill("[E2E] Pinned Reseller");
   await admin.getByLabel("საიდენტიფიკაციო კოდი").fill(legalId);
   await admin.getByRole("button", { name: "დამატება", exact: true }).click();
@@ -100,7 +101,7 @@ test("an address the admin registered as both creates both sides without a choic
   // No "how do you use 202?" choice: both sides' fields in one form, the vetted ID read-only.
   await expect(person.getByText("როგორ იყენებთ 202-ს?")).toBeHidden();
   await expect(person.getByLabel("საიდენტიფიკაციო კოდი")).toHaveValue(legalId);
-  await person.getByRole("combobox", { name: "ბიზნესის ტიპი" }).selectOption("retailer");
+  await selectIn(person.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "retailer");
   await person.getByLabel("საკონტაქტო პირი").fill("Gela");
   await person.getByLabel("ტელეფონი").fill("599 11 22 33");
   await person.getByLabel("ქალაქი").fill("თბილისი");
