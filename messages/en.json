@@ -1732,6 +1732,10 @@
         "note": "Note: {note}",
         "link": "Details and confirmation: {link}"
       }
+    },
+    "push": {
+      "testTitle": "202",
+      "testBody": "Notifications are on. New orders will show up on this device too."
     }
   },
   "adminAlerts": {
@@ -1955,6 +1959,7 @@
             "Orders: contents, quantities, prices, statuses, comments and the history of changes.",
             "Catalog (for suppliers): products, prices, price lists and images.",
             "Notifications and your notification settings.",
+            "Push notifications (only if you turn them on): the address your browser's push service gave us for that browser, its encryption keys and the browser type. We use them only to send you the notifications you asked for, and delete them when you turn notifications off.",
             "Invitations: when a buyer invites a supplier, we keep the supplier's name and the phone or email given, so the link can be sent and the invitation's status shown. This data is visible only to the buyer who sent the invitation. A supplier who writes to us through the link sees the name of the buyer who invited them. If an identification code was given (by a buyer for a supplier, or by a supplier for a customer), we keep it with the invitation. When a business with that code is on 202 and findable, the invitation is shown to it as a connection request from the inviter (the inviter's name only).",
             "Technical data: we use the IP address only to protect against abuse (limiting the number of requests) and keep it in encrypted (hashed) form, for a short time.",
             "Error reports: when an error happens in the service, we send the error description, the page address and the type of browser or device to an error monitoring service. We remove emails, cookies, request parameters, identification tokens and entered data from the reports.",
@@ -1985,6 +1990,7 @@
             "Other businesses on 202 can look your business up by its identification code. They see only its name and city, and can send a connection request; nothing else is shown until you approve one. You can turn this off at any time (Customers or Suppliers page, \"Visibility\").",
             "202 administrators: contact and status information, and order lookup. Every order lookup is recorded in the log. Administrators' support tools don't show price lists or the catalog.",
             "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry).",
+            "If you turn on push notifications, your browser's push service (Google, Apple, Mozilla or Microsoft, depending on the browser) delivers them. The messages are encrypted so that only your browser can read them; the service sees that a message was sent to your browser.",
             "When you remove the background from a product photo, your browser downloads a helper model file once from Hugging Face, which therefore sees your IP address. The photo itself is processed on your device and sent nowhere.",
             "Public authorities, only in cases required by law."
           ],
@@ -2371,5 +2377,24 @@
       "team": "Team",
       "password": "Change password"
     }
+  },
+  "push": {
+    "title": "Notifications on this device",
+    "hint": "Get a message on this phone or computer when an order needs you, even when 202 is closed.",
+    "enable": "Turn on",
+    "disable": "Turn off",
+    "test": "Send a test",
+    "testSent": "Test sent. Check this device.",
+    "testFailed": "The test could not be delivered. Try turning notifications off and on again.",
+    "on": "On for this device",
+    "denied": "Notifications are blocked for this site. Allow them in your browser settings, then come back here.",
+    "unsupported": "This browser cannot show notifications from a website.",
+    "iosInstall": "On iPhone: tap Share, choose Add to Home Screen, then open 202 from your home screen and turn notifications on there.",
+    "error": "Could not change notifications. Try again.",
+    "tooMany": "Notifications are already on for 10 devices. Turn one off first.",
+    "notConfigured": "Notifications are not set up on the server yet.",
+    "nudgeTitle": "Get new orders on your phone",
+    "nudgeBody": "Turn on notifications and a new order reaches you even when 202 is closed.",
+    "nudgeLater": "Not now"
   }
 }

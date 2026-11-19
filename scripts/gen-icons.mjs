@@ -5,6 +5,7 @@
 //   src/app/icon.svg        1024 square, rounded corners (browser tabs, Android)
 //   src/app/apple-icon.png  180 square, full bleed (iOS rounds it itself)
 //   src/app/favicon.ico     16 / 32 / 48, the same "202" a little larger
+//   public/icons/*.png      192 / 512 and a maskable 512 for the web app manifest
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -68,4 +69,14 @@ images.forEach((image, index) => {
 await mkdir(path.join(root, "src/app"), { recursive: true });
 await writeFile(path.join(root, "src/app/favicon.ico"), Buffer.concat([header, directory, ...images]));
 
-console.log("Wrote src/app/icon.svg, src/app/apple-icon.png, src/app/favicon.ico");
+// 4. Web app manifest icons (public/icons): the number on burgundy. The "maskable" one is full bleed with the
+// number well inside the safe zone, so any platform mask can crop it.
+await mkdir(path.join(root, "public/icons"), { recursive: true });
+for (const [name, size, radius] of [["icon-192.png", 192, 43], ["icon-512.png", 512, 115], ["icon-maskable-512.png", 512, 0]]) {
+  await sharp(Buffer.from(square(1024, 655, radius * (1024 / size))), { density: 300 })
+    .resize(size, size)
+    .png()
+    .toFile(path.join(root, "public/icons", name));
+}
+
+console.log("Wrote src/app/icon.svg, src/app/apple-icon.png, src/app/favicon.ico, public/icons/*");

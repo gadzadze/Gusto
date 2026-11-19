@@ -61,7 +61,8 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // api/health stays out so the monitor never depends on the auth provider.
-    "/((?!_next/static|_next/image|favicon.ico|api/health$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
+    // api/health stays out so the monitor never depends on the auth provider; the service worker and the web app
+    // manifest are fetched by the browser itself and need no session.
+    "/((?!_next/static|_next/image|favicon.ico|api/health$|sw\\.js$|manifest\\.webmanifest$|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],
 };

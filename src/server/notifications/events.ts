@@ -6,6 +6,7 @@ import {
   notificationPreferences,
   orders,
   organizationMemberships,
+  pushSubscriptions,
   type NotificationEvent,
 } from "@/server/db/schema";
 import { channels as defaultChannels, type Channel } from "./channels";
@@ -18,6 +19,16 @@ import { channels as defaultChannels, type Channel } from "./channels";
 // carries the raw token, which 202 never stores (only its hash), and the
 // outbox persists its payload. That email is sent directly from the action
 // that creates the invitation instead (supplier/customers/actions.ts).
+
+/** Which of these people turned Web Push on for at least one browser. */
+async function usersWithPush(tx: Tx, userIds: string[]): Promise<Set<string>> {
+  if (userIds.length === 0) return new Set();
+  const rows = await tx
+    .selectDistinct({ userId: pushSubscriptions.userId })
+    .from(pushSubscriptions)
+    .where(inArray(pushSubscriptions.userId, userIds));
+  return new Set(rows.map((r) => r.userId));
+}
 
 export type OrderEventInput = {
   orderId: string;
@@ -58,16 +69,19 @@ export async function recordOrderEvent(
     : [];
   const preferences = new Map<string, EmailPreferences>(prefRows.map((p) => [p.userId, p]));
 
+  const pushUsers = await usersWithPush(tx, members.map((m) => m.userId));
   const planned = planRecipients({
     event: input.event,
     order,
     actor: input.actor,
     members,
     preferences,
+    pushUsers,
   });
 
   const inApp = channels.find((c) => c.name === "in_app");
   const email = channels.find((c) => c.name === "email");
+  const push = channels.find((c) => c.name === "push");
   if (!inApp) throw new Error("in-app channel is required");
 
   let notified = 0;
@@ -85,6 +99,9 @@ export async function recordOrderEvent(
     notified += 1;
     if (email && recipient.channels.includes("email")) {
       await email.enqueue(tx, { ...draft, notificationId });
+    }
+    if (push && recipient.channels.includes("push")) {
+      await push.enqueue(tx, { ...draft, notificationId });
     }
   }
   return { notified };
@@ -135,8 +152,10 @@ export async function recordSubjectEvent(
     .where(inArray(notificationPreferences.userId, recipients.map((m) => m.userId)));
   const preferences = new Map<string, EmailPreferences>(prefRows.map((p) => [p.userId, p]));
 
+  const pushUsers = await usersWithPush(tx, recipients.map((m) => m.userId));
   const inApp = channels.find((c) => c.name === "in_app");
   const email = channels.find((c) => c.name === "email");
+  const push = channels.find((c) => c.name === "push");
   if (!inApp) throw new Error("in-app channel is required");
   const group = eventGroup(input.event);
 
@@ -158,6 +177,7 @@ export async function recordSubjectEvent(
     const prefs = preferences.get(member.userId) ?? DEFAULT_PREFERENCES;
     const emailOn = group === "new_orders" ? prefs.emailNewOrders : prefs.emailOrderUpdates;
     if (email && emailOn) await email.enqueue(tx, { ...draft, notificationId });
+    if (push && pushUsers.has(member.userId)) await push.enqueue(tx, { ...draft, notificationId });
   }
   return { notified };
 }

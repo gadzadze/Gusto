@@ -643,6 +643,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
   with `prepare: false`.
 - `DATABASE_URL_DIRECT`: direct or session connection, for migrations only.
 - `RESEND_API_KEY`, `EMAIL_FROM`
+- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (**secret**), `VAPID_SUBJECT`: Web Push, optional (see Dashboards > Web Push).
 - `CRON_SECRET`
 - `NEXT_PUBLIC_SENTRY_DSN` (public, build time), `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (build-only, **secret**): see Operations.
 - `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build). `LEGAL_CONTACT_EMAIL` alone is also the contact line on the sign-in "not accepted" message.
@@ -1039,6 +1040,20 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   `orderLinkTarget` so only your side's orders resolve). Only names, ids and a short hint leave; no prices or contacts. The
   admin area has pages and actions only (no entity search). Arrows, Enter and Escape work; results never need the mouse.
   Adding a menu page needs no palette change; adding a quick action means an entry in the component and `palette.actions.*`.
+- **Web Push for new orders** (decided 2026-11-19, migration 0037, `lib/push.ts`, `server/notifications/push.ts`,
+  `server/notifications/channels/push.ts`, `server/domain/push/subscriptions.ts`, `app/push/actions.ts`,
+  `components/push/push-settings.tsx`, `public/sw.js`, `app/manifest.ts`): a person turns notifications on for a browser (a "Get new
+  orders on your phone" card on the supplier home, a full card with "send a test" in the notification settings on both sides). It is
+  a **third outbox channel** next to email: every event that reaches a person also queues a `push` delivery if they have at least one
+  subscription (`planRecipients` `pushUsers`), sent later by the same cron/outbox with the same retries; the text is Georgian, rendered
+  at send time (title, the other side's name, total) and travels encrypted to the browser's push service. **Off unless
+  `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` are set** (`npm run push:keys` makes a pair; keep it, a new pair invalidates every
+  subscription; `VAPID_SUBJECT` optional, defaults to the app URL); without them the UI is hidden and deliveries are `skipped`.
+  **The browser chooses the endpoint the server posts to, so only the push services' hosts are accepted** (`isAllowedPushEndpoint`,
+  https, no port or credentials, tested). One row per browser (`push_subscriptions`, endpoint unique: signing in as someone else on the
+  same browser moves it), at most 10 per person, 404/410 from the push service deletes the row. The service worker shows the message
+  and opens an internal path only. **iPhone only receives web push from an installed web app**, so the card explains "Add to Home
+  Screen" there (`app/manifest.ts`, icons from `npm run brand:icons`). The privacy text lists the push services as processors.
 - Planned next, not built: nothing queued.
 
 ## Photo background remover

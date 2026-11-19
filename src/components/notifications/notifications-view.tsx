@@ -7,6 +7,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { counterpartyLine, counterpartyRoleFor, notificationTitle } from "@/lib/notifications/templates";
 import { cn } from "@/lib/utils";
 import { getPreferences, listNotifications } from "@/server/notifications/queries";
+import { PushSettings } from "@/components/push/push-settings";
+import { pushPublicKey } from "@/server/notifications/push";
 import { PreferencesForm } from "./preferences-form";
 
 /** The list page body, shared by the buyer and supplier areas. */
@@ -74,6 +76,7 @@ export async function NotificationsView({
           </>
         )}
       </section>
+      {pushPublicKey() ? <PushSettings publicKey={pushPublicKey() as string} /> : null}
       <PreferencesForm initial={preferences} />
     </div>
   );
