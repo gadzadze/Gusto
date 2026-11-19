@@ -1021,7 +1021,16 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   and on read, so a stored view can only ever carry those four filters. A view is an ordinary link; the active one is highlighted;
   at most 20 per person and company (`too_many`), names unique (`name_taken`), nothing to save without a filter
   (`nothing_to_save`). The `list` column leaves room for other lists (today only `products`). Hidden for suspended companies.
-- Planned next, not built: Ctrl/Cmd+K command palette.
+- **Command palette** (decided 2026-11-19, `components/app-shell/command-palette.tsx`, `app/palette/actions.ts`,
+  `domain/search/palette.ts`, `lib/palette.ts`): Ctrl/Cmd+K (or the "Search" field in the sidebar, the magnifier in the phone
+  header) opens one `<dialog>` mounted in `AppShell`. It lists the menu pages ("Go to", from the same `itemsFor` as the nav) and
+  a few quick actions, filtered as you type; from two characters it also asks `paletteSearchAction` (guarded by `requireOrg`,
+  scoped by the context, rate limited 240/min per person, debounced 200 ms) for the acting company's own matches: a supplier's
+  products and customers, a buyer's connected suppliers, and an order by number ("GST-1004", "1004", opened through
+  `orderLinkTarget` so only your side's orders resolve). Only names, ids and a short hint leave; no prices or contacts. The
+  admin area has pages and actions only (no entity search). Arrows, Enter and Escape work; results never need the mouse.
+  Adding a menu page needs no palette change; adding a quick action means an entry in the component and `palette.actions.*`.
+- Planned next, not built: nothing queued.
 
 ## Photo background remover
 

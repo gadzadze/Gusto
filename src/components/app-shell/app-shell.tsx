@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Area } from "./nav";
 import { SideSwitch, type Side } from "./side-switch";
+import { CommandPalette, PaletteTrigger } from "./command-palette";
 import { BottomNav, SidebarNav } from "./nav-links";
 
 export type ShellProps = {
@@ -57,6 +58,9 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
             <Badge tone="brand" className="mt-1.5">{roleLabel}</Badge>
           )}
         </div>
+        <div className="px-3 pb-3">
+          <PaletteTrigger />
+        </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-3">
           <SidebarNav {...navProps} />
         </div>
@@ -97,6 +101,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
             ) : null}
           </div>
           <div className="flex items-center">
+            <PaletteTrigger compact />
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
             <ThemeToggle compact />
             {area !== "admin" ? (
@@ -122,6 +127,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
       </div>
 
       <BottomNav {...navProps} />
+      <CommandPalette area={area} homeHref={homeHref} showAdminLink={showAdminLink} entitySearch={area !== "admin"} />
     </div>
   );
 }

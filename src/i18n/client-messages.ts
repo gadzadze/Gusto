@@ -25,6 +25,7 @@ export const CLIENT_NAMESPACES = [
   "notifications.preferences",
   "onboarding",
   "orders",
+  "palette",
   "password",
   "pricing",
   "products",
