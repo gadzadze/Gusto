@@ -852,6 +852,30 @@ export const teamInvites = pgTable(
   ],
 );
 
+// A person's saved filter views for a list (today: the supplier product list), per user and per company, so the
+// same view is there on the phone and on the desktop. `query` is the canonical query string of the list's own
+// filters (built and re-validated on the server from a whitelist, never trusted as typed).
+export const savedFilters = pgTable(
+  "saved_filters",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    list: text("list").notNull(),
+    name: text("name").notNull(),
+    query: text("query").notNull(),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    uniqueIndex("saved_filters_name_key").on(t.userId, t.organizationId, t.list, t.name),
+    check("saved_filters_name_len", sql`char_length(${t.name}) between 1 and 40`),
+  ],
+);
+
 // RS.ge e-waybills (phase 2). A company's RS.ge *service user* (username + password made in the RS.ge portal) is
 // stored encrypted (AES-256-GCM, key in the environment), never logged and never shown again. `order_waybills` holds
 // what 202 did for an order so a waybill is never created twice and its state is visible.

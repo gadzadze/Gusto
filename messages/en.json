@@ -973,26 +973,43 @@
       "cancel": "Cancel",
       "error": "Could not delete. Try again."
     },
-      "bulk": {
-        "selected": "{count, plural, one {# selected} other {# selected}}",
-        "selectAll": "Select all on this page",
-        "selectRow": "Select {name}",
-        "show": "Enable",
-        "hide": "Disable",
-        "category": "Change category",
-        "categoryChoose": "Choose a category",
-        "categoryApply": "Move",
-        "delete": "Delete",
-        "clear": "Clear selection",
-        "deleteTitle": "Delete {count, plural, one {# product} other {# products}} for good?",
-        "done": {
-          "show": "{count, plural, one {# product enabled} other {# products enabled}}",
-          "hide": "{count, plural, one {# product disabled} other {# products disabled}}",
-          "category": "{count, plural, one {# product moved} other {# products moved}}",
-          "delete": "{count, plural, one {# product deleted} other {# products deleted}}"
-        },
-        "error": "Could not apply the change. Try again."
+    "bulk": {
+      "selected": "{count, plural, one {# selected} other {# selected}}",
+      "selectAll": "Select all on this page",
+      "selectRow": "Select {name}",
+      "show": "Enable",
+      "hide": "Disable",
+      "category": "Change category",
+      "categoryChoose": "Choose a category",
+      "categoryApply": "Move",
+      "delete": "Delete",
+      "clear": "Clear selection",
+      "deleteTitle": "Delete {count, plural, one {# product} other {# products}} for good?",
+      "done": {
+        "show": "{count, plural, one {# product enabled} other {# products enabled}}",
+        "hide": "{count, plural, one {# product disabled} other {# products disabled}}",
+        "category": "{count, plural, one {# product moved} other {# products moved}}",
+        "delete": "{count, plural, one {# product deleted} other {# products deleted}}"
+      },
+      "error": "Could not apply the change. Try again."
+    },
+    "saved": {
+      "title": "Saved views",
+      "save": "Save this view",
+      "saveConfirm": "Save",
+      "cancel": "Cancel",
+      "nameLabel": "Name of the view",
+      "namePlaceholder": "For example: Low stock cheese",
+      "remove": "Remove the view \"{name}\"",
+      "removeShort": "Remove",
+      "errors": {
+        "name_required": "Give the view a name.",
+        "nothing_to_save": "Choose at least one filter first.",
+        "too_many": "You can keep up to 20 saved views. Remove one first.",
+        "name_taken": "You already have a view with this name.",
+        "unknown": "Could not save. Try again."
       }
+    }
   },
   "import": {
     "title": "Import products",
