@@ -990,6 +990,13 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   with a daily bar chart, week-on-week change, repeat customers, top products as proportional bars. Data:
   `domain/orders/today.ts` (`listPendingQueue`, `listUpcomingDeliveries`, `getOrderValueSeries`, `getSupplierClock`) plus
   `getSupplierMetrics`. Definitions stay printed next to each number and the "not revenue" caption stays.
+- **Loading and empty states** (2026-11-19): while a dashboard loads, `DashboardSkeleton` (`components/dashboard/skeletons.tsx`)
+  draws the same two columns of panels (the `Skeleton` tone is `bg-border/70`, visible on both themes). A supplier with **no orders
+  at all** sees the `GetStarted` checklist (`components/dashboard/get-started.tsx`, data from `getSetupProgress` in
+  `domain/orders/today.ts`: products, price lists, customers that are invited or active) instead of an empty box; each step ticks
+  itself off, and while the company is `pending_review` the invite step says it opens after approval. The "Loading sheet" button and
+  the chart's best-day legend only show once there is something to show. A buyer with no suppliers gets "Find a supplier" and
+  "Invite a supplier" buttons.
 - **Review in a side panel** (`components/orders/review-sheet.tsx`): "Review" on a queue row opens a native modal `<dialog>`
   (focus trap, Escape and backdrop close it) that loads the order with `loadOrderReviewAction` (supplier-only, other
   company's order = not found, formatted on the server) and reuses `SupplierOrderActions` (confirm with quantities and

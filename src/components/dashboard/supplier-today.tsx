@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { BarRow, SparkBars } from "@/components/dashboard/bars";
+import { GetStarted, type SetupProgress } from "@/components/dashboard/get-started";
 import { Panel, PanelRow } from "@/components/dashboard/panel";
 import { ReviewSheet } from "@/components/orders/review-sheet";
 import { Button } from "@/components/ui/button";
@@ -27,10 +28,12 @@ export type SupplierTodayProps = {
   series: { day: string; valueMinor: number }[];
   clock: { timezone: string; today: string };
   now: Date;
+  /** What the company has prepared; only read while it has no orders at all (the "get started" checklist). */
+  setup?: SetupProgress;
 };
 
 /** The supplier's home: what needs an answer, what goes out next, and the shape of the last 30 days. */
-export async function SupplierToday({ title, orgStatus, counts, metrics, queue, deliveries, series, clock, now }: SupplierTodayProps) {
+export async function SupplierToday({ title, orgStatus, counts, metrics, queue, deliveries, series, clock, now, setup }: SupplierTodayProps) {
   const fmt = await getFormats();
   const format = await getFormatter();
   const t = await getTranslations("supplier");
@@ -49,12 +52,14 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
         title={title}
         subtitle={format.dateTime(now, { dateStyle: "full", timeZone: clock.timezone })}
         actions={
-          <Button asChild>
-            <Link href="/supplier/orders/pick">
-              <Truck />
-              {tt("loadingSheet")}
-            </Link>
-          </Button>
+          total > 0 ? (
+            <Button asChild>
+              <Link href="/supplier/orders/pick">
+                <Truck />
+                {tt("loadingSheet")}
+              </Link>
+            </Button>
+          ) : null
         }
       />
       {orgStatus === "pending_review" ? (
@@ -68,7 +73,11 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
         </Notice>
       ) : null}
       {total === 0 ? (
-        <EmptyState icon={Inbox} title={t("emptyTitle")} body={t("emptyBody")} />
+        setup ? (
+          <GetStarted progress={setup} canInvite={orgStatus === "active"} />
+        ) : (
+          <EmptyState icon={Inbox} title={t("emptyTitle")} body={t("emptyBody")} />
+        )
       ) : (
         <div className="grid items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
           <div className="space-y-5">
@@ -157,7 +166,9 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                       <span>{format.dateTime(dayOf(series[series.length - 1].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
                     </div>
                   ) : null}
-                  <p className="mt-1 text-[11px] text-muted-foreground">{tt("chartLegend", { best: fmt.money(Math.max(...series.map((s) => s.valueMinor), 0), metrics.currency) })}</p>
+                  {series.some((s) => s.valueMinor > 0) ? (
+                    <p className="mt-1 text-[11px] text-muted-foreground">{tt("chartLegend", { best: fmt.money(Math.max(...series.map((s) => s.valueMinor), 0), metrics.currency) })}</p>
+                  ) : null}
                 </div>
                 <p className="text-xs leading-relaxed text-muted-foreground">{td("valueHint")}</p>
               </div>

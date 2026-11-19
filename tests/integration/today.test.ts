@@ -8,7 +8,8 @@ import type { OrgCtx, SupplierCtx } from "@/server/domain/context";
 import { getCart, setCartQuantity } from "@/server/domain/orders/cart";
 import { lastOrderDates, listOpenBuyerOrders } from "@/server/domain/orders/queries";
 import { submitOrder } from "@/server/domain/orders/submit";
-import { getOrderValueSeries, getPendingPulse, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
+import { getOrderValueSeries, getPendingPulse, getSetupProgress, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
+import { createPriceList } from "@/server/domain/pricing/price-lists";
 import { confirmOrder } from "@/server/domain/orders/transitions";
 import { connectBuyer, createAdmin, createBuyer, createSupplier, createTestCategory, createTestProduct } from "./helpers";
 
@@ -49,6 +50,20 @@ describe("supplier home data", () => {
     await confirmOrder(supplier, first, []);
     expect((await listPendingQueue(supplier)).map((o) => o.id)).toEqual([second]);
     await expect(listPendingQueue(buyer)).rejects.toThrow();
+  });
+
+  it("counts what a supplier has prepared for the get-started checklist, for this company only", async () => {
+    const supplier = await createSupplier();
+    const other = await createSupplier();
+    const buyer = await createBuyer();
+    expect(await getSetupProgress(supplier)).toEqual({ products: 0, priceLists: 0, customers: 0 });
+    await createTestProduct(supplier, categoryId, { name: "[TEST] Wine", basePrice: "10" });
+    await createTestProduct(other, categoryId, { name: "[TEST] Other", basePrice: "10" });
+    await createPriceList(supplier, "[TEST] List");
+    await connectBuyer(supplier, buyer);
+    expect(await getSetupProgress(supplier)).toEqual({ products: 1, priceLists: 1, customers: 1 });
+    expect(await getSetupProgress(other)).toEqual({ products: 1, priceLists: 0, customers: 0 });
+    await expect(getSetupProgress(buyer)).rejects.toThrow();
   });
 
   it("gives a pulse whose signature changes when the waiting queue changes, for this company only", async () => {

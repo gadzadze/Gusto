@@ -1,16 +1,16 @@
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { DashboardSkeleton } from "@/components/dashboard/skeletons";
 import { LiveOrders } from "@/components/orders/live-orders";
 import { SupplierToday } from "@/components/dashboard/supplier-today";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireSupplier } from "@/server/auth/guards";
 import { getSupplierMetrics } from "@/server/domain/metrics/supplier";
 import { countSupplierOrders } from "@/server/domain/orders/queries";
-import { getOrderValueSeries, getPendingPulse, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
+import { getOrderValueSeries, getPendingPulse, getSetupProgress, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
 
 export default function SupplierDashboardPage() {
   return (
-    <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+    <Suspense fallback={<DashboardSkeleton />}>
       <Dashboard />
     </Suspense>
   );
@@ -28,6 +28,8 @@ async function Dashboard() {
     getSupplierClock(ctx),
     getPendingPulse(ctx),
   ]);
+  // A company with no orders at all gets a "get started" checklist instead of an empty home.
+  const setup = counts.new + counts.confirmed + counts.done === 0 ? await getSetupProgress(ctx) : undefined;
   return (
     <>
     <LiveOrders signature={pulse.signature} pending={pulse.pending} />
@@ -41,6 +43,7 @@ async function Dashboard() {
       series={series}
       clock={clock}
       now={new Date()}
+      setup={setup}
     />
     </>
   );

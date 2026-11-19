@@ -369,6 +369,27 @@
       "deltaUp": "+{count} vs last week",
       "deltaDown": "−{count} vs last week",
       "chartLegend": "Darker bars are the last 7 days. Best day: {best}."
+    },
+    "getStarted": {
+      "title": "Get started",
+      "intro": "Three steps and your customers can order from you.",
+      "done": "Done",
+      "afterApproval": "Available once the 202 team has approved your business.",
+      "products": {
+        "title": "Add your products",
+        "body": "Type them in or import a price list from Excel or CSV.",
+        "action": "Add products"
+      },
+      "prices": {
+        "title": "Set up a price list",
+        "body": "A list says which products a customer may order, and at what price.",
+        "action": "Create a list"
+      },
+      "customers": {
+        "title": "Invite your first customer",
+        "body": "Send them a link. They see only their own prices.",
+        "action": "Invite a customer"
+      }
     }
   },
   "buyer": {
@@ -447,7 +468,9 @@
       "catalog": "Catalog",
       "findBusiness": "Find a supplier",
       "openTotal": "{amount} in total, not yet delivered"
-    }
+    },
+    "emptyFind": "Find a supplier",
+    "emptyInvite": "Invite a supplier"
   },
   "admin": {
     "overviewTitle": "Overview",

@@ -1,8 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { DashboardSkeleton } from "@/components/dashboard/skeletons";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { AdminOverview } from "@/components/dashboard/admin-overview";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireAdmin } from "@/server/auth/guards";
 import { countPendingOrganizations } from "@/server/domain/admin/organizations";
 import { countSupplierRequests } from "@/server/domain/admin/supplier-requests";
@@ -15,7 +15,7 @@ export default async function AdminOverviewPage() {
   return (
     <>
       <PageHeader title={t("overviewTitle")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
+      <Suspense fallback={<DashboardSkeleton />}>
         <Overview />
       </Suspense>
     </>

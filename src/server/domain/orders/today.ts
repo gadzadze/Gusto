@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, count, eq, gte, inArray, max, sql } from "drizzle-orm";
 import { addDays, todayIn } from "@/lib/dates";
 import { getDb } from "@/server/db/client";
-import { orders, organizations } from "@/server/db/schema";
+import { orders, organizations, priceLists, products, supplierCustomers } from "@/server/db/schema";
 import { assertSupplier, type OrgCtx } from "@/server/domain/context";
 
 // What the supplier's home page needs beyond the headline metrics: the queue of orders waiting for an
@@ -108,4 +108,22 @@ export async function getPendingPulse(ctx: OrgCtx): Promise<{ pending: number; s
     .where(and(eq(orders.supplierOrgId, ctx.orgId), eq(orders.status, "pending")));
   const pending = row?.n ?? 0;
   return { pending, signature: `${pending}:${row?.latest ? new Date(row.latest).getTime() : 0}` };
+}
+
+/**
+ * What a supplier with no orders yet has prepared, for the "get started" checklist on their home: products, price
+ * lists and customers of this company (a blocked customer does not count as a customer).
+ */
+export async function getSetupProgress(ctx: OrgCtx): Promise<{ products: number; priceLists: number; customers: number }> {
+  assertSupplier(ctx);
+  const db = getDb();
+  const [[p], [l], [c]] = await Promise.all([
+    db.select({ n: count() }).from(products).where(eq(products.supplierOrgId, ctx.orgId)),
+    db.select({ n: count() }).from(priceLists).where(eq(priceLists.supplierOrgId, ctx.orgId)),
+    db
+      .select({ n: count() })
+      .from(supplierCustomers)
+      .where(and(eq(supplierCustomers.supplierOrgId, ctx.orgId), inArray(supplierCustomers.status, ["invited", "active"]))),
+  ]);
+  return { products: p.n, priceLists: l.n, customers: c.n };
 }
