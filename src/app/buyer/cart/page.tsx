@@ -66,9 +66,11 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
               </div>
               <ul className="divide-y divide-border">
                 {cart.lines.map((line) => (
-                  <li key={line.productId} className="flex flex-wrap items-center gap-3 py-3">
+                  // Phone: picture and name on top, then the quantity control and the line total on one row (one flex row
+                  // left the name a few letters wide). From sm up it is the single row it always was.
+                  <li key={line.productId} className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 py-3 sm:flex sm:flex-wrap sm:items-center">
                     <ProductImage path={line.imagePath} alt="" size={48} />
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 sm:flex-1">
                       <p className="font-medium leading-snug">{line.name}</p>
                       <p className="text-sm tabular-nums text-muted-foreground">
                         <UnitPrice price={fmt.money(line.unitPriceMinor, cart.supplier.currency)} listPrice={fmt.money(line.listPriceMinor, cart.supplier.currency)} adjustBp={line.adjustBp} /> / {tu(line.unit)}
@@ -80,18 +82,20 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
                         </p>
                       ) : null}
                     </div>
-                    <QuantityStepper
-                      supplierOrgId={cart.supplier.id}
-                      productId={line.productId}
-                      qtyMilli={line.qtyMilli}
-                      minQtyMilli={line.minQtyMilli}
-                      qtyStepMilli={line.qtyStepMilli}
-                      unit={tu(line.unit)}
-                      productName={line.name}
-                    />
-                    <p className="w-24 text-right text-sm font-medium tabular-nums">
-                      {fmt.money(line.lineTotalMinor, cart.supplier.currency)}
-                    </p>
+                    <div className="col-span-2 flex items-center justify-between gap-3 sm:contents">
+                      <QuantityStepper
+                        supplierOrgId={cart.supplier.id}
+                        productId={line.productId}
+                        qtyMilli={line.qtyMilli}
+                        minQtyMilli={line.minQtyMilli}
+                        qtyStepMilli={line.qtyStepMilli}
+                        unit={tu(line.unit)}
+                        productName={line.name}
+                      />
+                      <p className="text-right text-sm font-medium tabular-nums sm:w-24">
+                        {fmt.money(line.lineTotalMinor, cart.supplier.currency)}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ul>

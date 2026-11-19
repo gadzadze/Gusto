@@ -19,6 +19,25 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
   const { order, items, history } = detail;
   const qty = (milli: number, unit: (typeof items)[number]["unit"]) => `${fmt.input(milli)} ${tu(unit)}`;
 
+  // The ordered quantity, or the changed one with the ordered one struck through: shared by the table and the phone list.
+  const qtyNode = (item: (typeof items)[number]) => {
+    const changed = item.confirmedQtyMilli !== null && item.confirmedQtyMilli !== item.orderedQtyMilli;
+    return changed ? (
+      <>
+        <span className="block text-xs text-muted-foreground line-through">
+          {t("detail.ordered", { qty: qty(item.orderedQtyMilli, item.unit) })}
+        </span>
+        <span className="block font-medium">
+          {item.confirmedQtyMilli === 0
+            ? t("detail.unavailableLine")
+            : t("detail.confirmedQty", { qty: qty(item.confirmedQtyMilli!, item.unit) })}
+        </span>
+      </>
+    ) : (
+      qty(item.confirmedQtyMilli ?? item.orderedQtyMilli, item.unit)
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
@@ -83,6 +102,30 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">{t("detail.lines")}</h2>
+        {/* Phone: one card-like row per line (a five-column table leaves the product name a few letters wide). */}
+        <ul className="divide-y divide-border rounded-xl border border-border sm:hidden">
+          {items.map((item) => {
+            const changed = item.confirmedQtyMilli !== null && item.confirmedQtyMilli !== item.orderedQtyMilli;
+            return (
+              <li key={item.id} className={cn("space-y-1 px-4 py-3", changed && "bg-[var(--status-amber-bg)]/40")}>
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 font-medium leading-snug">{item.name}</p>
+                  <p className="whitespace-nowrap font-medium tabular-nums">{fmt.money(item.lineTotalMinor, order.currency)}</p>
+                </div>
+                {[item.sku, item.packDescription].filter(Boolean).length ? (
+                  <p className="text-xs text-muted-foreground">{[item.sku, item.packDescription].filter(Boolean).join(" · ")}</p>
+                ) : null}
+                <div className="flex items-end justify-between gap-3 text-sm tabular-nums">
+                  <span>{qtyNode(item)}</span>
+                  <span className="text-muted-foreground">
+                    <UnitPrice price={fmt.money(item.unitPriceMinor, order.currency)} listPrice={item.listPriceMinor === null ? null : fmt.money(item.listPriceMinor, order.currency)} adjustBp={item.adjustBp} />
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <div className="hidden sm:block">
         <Table>
           <THead>
             <TR>
@@ -105,22 +148,7 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
                       {[item.sku, item.packDescription].filter(Boolean).join(" · ")}
                     </span>
                   </TD>
-                  <TD className="whitespace-nowrap text-right tabular-nums">
-                    {changed ? (
-                      <>
-                        <span className="block text-xs text-muted-foreground line-through">
-                          {t("detail.ordered", { qty: qty(item.orderedQtyMilli, item.unit) })}
-                        </span>
-                        <span className="block font-medium">
-                          {item.confirmedQtyMilli === 0
-                            ? t("detail.unavailableLine")
-                            : t("detail.confirmedQty", { qty: qty(item.confirmedQtyMilli!, item.unit) })}
-                        </span>
-                      </>
-                    ) : (
-                      qty(item.confirmedQtyMilli ?? item.orderedQtyMilli, item.unit)
-                    )}
-                  </TD>
+                  <TD className="whitespace-nowrap text-right tabular-nums">{qtyNode(item)}</TD>
                   <TD className="hidden whitespace-nowrap text-right tabular-nums sm:table-cell">
                     <UnitPrice price={fmt.money(item.unitPriceMinor, order.currency)} listPrice={item.listPriceMinor === null ? null : fmt.money(item.listPriceMinor, order.currency)} adjustBp={item.adjustBp} />
                   </TD>
@@ -130,6 +158,7 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
             })}
           </TBody>
         </Table>
+        </div>
         <TotalsBlock subtotalMinor={order.subtotalMinor} vatMinor={order.vatMinor} totalMinor={order.totalMinor} currency={order.currency} />
         <p className="text-right text-xs text-muted-foreground">{t("detail.pricesNote")}</p>
       </section>
