@@ -1,12 +1,14 @@
 import { Store } from "lucide-react";
+import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
+import { DashboardSkeleton } from "@/components/dashboard/skeletons";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductCard } from "@/components/buyer/product-card";
 import { toProductViews } from "@/components/buyer/product-view";
 import { BuyerHome } from "@/components/dashboard/buyer-home";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
 import { listConnectedSuppliers, listTopOrderedProducts } from "@/server/domain/buyer/catalog";
 import { lastOrderDates, listBuyerOrders, listOpenBuyerOrders } from "@/server/domain/orders/queries";
@@ -17,7 +19,7 @@ export default async function BuyerDashboardPage() {
   return (
     <>
       <PageHeader title={t("dashboardTitle")} />
-      <Suspense fallback={<Skeleton className="h-48 w-full" />}>
+      <Suspense fallback={<DashboardSkeleton />}>
         <Dashboard />
       </Suspense>
     </>
@@ -37,7 +39,23 @@ async function Dashboard() {
     lastOrderDates(ctx),
   ]);
   if (suppliers.length === 0 && recent.items.length === 0) {
-    return <EmptyState icon={Store} title={t("emptyTitle")} body={t("emptyBody")} />;
+    return (
+      <EmptyState
+        icon={Store}
+        title={t("emptyTitle")}
+        body={t("emptyBody")}
+        action={
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button asChild>
+              <Link href="/buyer/suppliers">{t("emptyFind")}</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/buyer/suppliers/invite">{t("emptyInvite")}</Link>
+            </Button>
+          </div>
+        }
+      />
+    );
   }
   const topViews = await Promise.all(
     top.map(async (entry) => {
