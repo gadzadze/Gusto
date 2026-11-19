@@ -26,6 +26,7 @@ export const CLIENT_NAMESPACES = [
   "onboarding",
   "orders",
   "palette",
+  "push",
   "password",
   "pricing",
   "products",

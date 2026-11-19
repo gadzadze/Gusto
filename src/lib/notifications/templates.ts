@@ -26,6 +26,11 @@ export function counterpartyLine(role: CounterpartyRole, name: string): string {
   return t(`counterparty.${role}`, { name });
 }
 
+/** The message a person gets from "send a test" in the notification settings. */
+export function renderTestPush(): { title: string; body: string } {
+  return { title: t("push.testTitle"), body: t("push.testBody") };
+}
+
 export function orderRef(number: number): string {
   return `GST-${number}`;
 }

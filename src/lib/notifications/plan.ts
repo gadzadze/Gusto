@@ -4,7 +4,7 @@ import type { NotificationEvent } from "@/server/db/schema";
 // side (server/notifications/events.ts) feeds it members and preferences and
 // writes whatever it returns.
 
-export type ChannelName = "in_app" | "email";
+export type ChannelName = "in_app" | "email" | "push";
 export type EventGroup = "new_orders" | "order_updates";
 export type EmailPreferences = { emailNewOrders: boolean; emailOrderUpdates: boolean };
 
@@ -18,6 +18,8 @@ export type PlanInput = {
   members: { userId: string; orgId: string }[];
   /** Missing entry = defaults (email on). */
   preferences: ReadonlyMap<string, EmailPreferences>;
+  /** People who turned Web Push on for at least one browser: they also get a push. */
+  pushUsers?: ReadonlySet<string>;
 };
 
 export type PlannedRecipient = { userId: string; orgId: string; channels: ChannelName[] };
@@ -50,7 +52,7 @@ export function recipientOrgId(
  * - cancelled → every member of the other side from whoever cancelled (a
  *   buyer cancelling is news to the supplier).
  * The actor never notifies themselves. In-app is always on; email follows
- * the user's preference for the event's group.
+ * the user's preference for the event's group; push goes to everyone who turned it on.
  */
 export function planRecipients(input: PlanInput): PlannedRecipient[] {
   const orgId = recipientOrgId(input.event, input.order, input.actor.orgId);
@@ -60,7 +62,9 @@ export function planRecipients(input: PlanInput): PlannedRecipient[] {
     .map((m) => {
       const prefs = input.preferences.get(m.userId) ?? DEFAULT_PREFERENCES;
       const emailOn = group === "new_orders" ? prefs.emailNewOrders : prefs.emailOrderUpdates;
-      return { userId: m.userId, orgId: m.orgId, channels: emailOn ? (["in_app", "email"] as ChannelName[]) : ["in_app" as ChannelName] };
+      const channels: ChannelName[] = emailOn ? ["in_app", "email"] : ["in_app"];
+      if (input.pushUsers?.has(m.userId)) channels.push("push");
+      return { userId: m.userId, orgId: m.orgId, channels };
     });
 }
 

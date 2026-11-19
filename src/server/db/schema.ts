@@ -50,7 +50,7 @@ export const notificationEvent = pgEnum("notification_event", [
   "connection_approved",
   "connection_declined",
 ]);
-export const deliveryChannel = pgEnum("delivery_channel", ["email"]);
+export const deliveryChannel = pgEnum("delivery_channel", ["email", "push"]);
 export const deliveryStatus = pgEnum("delivery_status", ["pending", "sent", "skipped", "failed"]);
 export const customerStatus = pgEnum("customer_status", ["invited", "active", "blocked"]);
 export const productUnit = pgEnum("product_unit", [
@@ -874,6 +874,25 @@ export const savedFilters = pgTable(
     uniqueIndex("saved_filters_name_key").on(t.userId, t.organizationId, t.list, t.name),
     check("saved_filters_name_len", sql`char_length(${t.name}) between 1 and 40`),
   ],
+);
+
+// Web Push: one row per browser or installed app a person turned notifications on for. `endpoint` is the push
+// service's address for that browser (unique: if another person signs in on the same browser it moves to them), the
+// two keys encrypt the message for it. The server posts only to hosts of the known push services (lib/push.ts).
+export const pushSubscriptions = pgTable(
+  "push_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => profiles.id, { onDelete: "cascade" }),
+    endpoint: text("endpoint").notNull(),
+    p256dh: text("p256dh").notNull(),
+    auth: text("auth").notNull(),
+    userAgent: text("user_agent"),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [uniqueIndex("push_subscriptions_endpoint_key").on(t.endpoint), index("push_subscriptions_user_idx").on(t.userId)],
 );
 
 // RS.ge e-waybills (phase 2). A company's RS.ge *service user* (username + password made in the RS.ge portal) is

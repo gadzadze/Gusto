@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
 import { DashboardSkeleton } from "@/components/dashboard/skeletons";
+import { PushSettings } from "@/components/push/push-settings";
+import { pushPublicKey } from "@/server/notifications/push";
 import { LiveOrders } from "@/components/orders/live-orders";
 import { SupplierToday } from "@/components/dashboard/supplier-today";
 import { requireSupplier } from "@/server/auth/guards";
@@ -33,6 +35,7 @@ async function Dashboard() {
   return (
     <>
     <LiveOrders signature={pulse.signature} pending={pulse.pending} />
+    {pushPublicKey() ? <div className="mb-5"><PushSettings publicKey={pushPublicKey() as string} variant="nudge" /></div> : null}
     <SupplierToday
       title={t("dashboardTitle")}
       orgStatus={ctx.orgStatus}
