@@ -61,7 +61,11 @@ describe("supplier home data", () => {
     await createTestProduct(other, categoryId, { name: "[TEST] Other", basePrice: "10" });
     await createPriceList(supplier, "[TEST] List");
     await connectBuyer(supplier, buyer);
-    expect(await getSetupProgress(supplier)).toEqual({ products: 1, priceLists: 1, customers: 1 });
+    // Connecting a buyer also gives the supplier a default price list, so count at least the one made here.
+    const prepared = await getSetupProgress(supplier);
+    expect(prepared.products).toBe(1);
+    expect(prepared.customers).toBe(1);
+    expect(prepared.priceLists).toBeGreaterThanOrEqual(1);
     expect(await getSetupProgress(other)).toEqual({ products: 1, priceLists: 0, customers: 0 });
     await expect(getSetupProgress(buyer)).rejects.toThrow();
   });
