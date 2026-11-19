@@ -151,6 +151,13 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                 <p className="text-3xl font-semibold tabular-nums tracking-tight">{fmt.money(metrics.orderValue30dMinor, metrics.currency)}</p>
                 <div className="py-2">
                   <SparkBars values={series.map((s) => s.valueMinor)} label={tt("chartLabel")} />
+                  {series.length > 1 ? (
+                    <div className="mt-1 flex justify-between text-[11px] tabular-nums text-muted-foreground" aria-hidden>
+                      <span>{format.dateTime(dayOf(series[0].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
+                      <span>{format.dateTime(dayOf(series[series.length - 1].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
+                    </div>
+                  ) : null}
+                  <p className="mt-1 text-[11px] text-muted-foreground">{tt("chartLegend", { best: fmt.money(Math.max(...series.map((s) => s.valueMinor), 0), metrics.currency) })}</p>
                 </div>
                 <p className="text-xs leading-relaxed text-muted-foreground">{td("valueHint")}</p>
               </div>

@@ -1,4 +1,4 @@
-import { KeyRound, LogOut, UserCog } from "lucide-react";
+import { LogOut } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Area } from "./nav";
 import { SideSwitch, type Side } from "./side-switch";
+import { AccountMenu } from "./account-menu";
 import { CommandPalette, PaletteTrigger } from "./command-palette";
 import { BottomNav, SidebarNav } from "./nav-links";
 
@@ -104,15 +105,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
             <PaletteTrigger compact />
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
             <ThemeToggle compact />
-            {area !== "admin" ? (
-              <Link href={`/${area}/team`} aria-label={t("nav.team")} className="inline-flex size-11 items-center justify-center text-muted-foreground">
-                <UserCog aria-hidden className="size-5" />
-              </Link>
-            ) : null}
-            <Link href="/account/password" aria-label={t("nav.changePassword")} className="inline-flex size-11 items-center justify-center text-muted-foreground">
-              <KeyRound aria-hidden className="size-5" />
-            </Link>
-            <SignOutButton label={t("nav.signOut")} compact />
+            <AccountMenu area={area} email={email} />
           </div>
         </header>
         {sides && sides.length > 1 ? (
@@ -132,19 +125,13 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
   );
 }
 
-function SignOutButton({ label, compact }: { label: string; compact?: boolean }) {
+function SignOutButton({ label }: { label: string }) {
   return (
     <form action="/auth/sign-out" method="post">
-      {compact ? (
-        <Button type="submit" variant="ghost" size="icon" aria-label={label} title={label}>
-          <LogOut />
-        </Button>
-      ) : (
-        <Button type="submit" variant="ghost" className="w-full justify-start text-muted-foreground">
-          <LogOut />
-          {label}
-        </Button>
-      )}
+      <Button type="submit" variant="ghost" className="w-full justify-start text-muted-foreground">
+        <LogOut />
+        {label}
+      </Button>
     </form>
   );
 }

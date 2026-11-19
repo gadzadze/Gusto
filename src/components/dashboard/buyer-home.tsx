@@ -37,6 +37,8 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
   const th = await getTranslations("buyer.home");
   const dueToday = regular.filter((r) => r.dueToday);
   const format = await getFormatter();
+  const openIds = new Set(open.map((o) => o.id));
+  const earlier = recent.filter((o) => !openIds.has(o.id)); // the ones in progress are already shown above
   const openTotal = open.reduce((sum, o) => sum + o.totalMinor, 0);
   const currency = open[0]?.currency ?? "GEL";
   const day = (iso: string) => format.dateTime(new Date(`${iso}T00:00:00Z`), { dateStyle: "medium", timeZone: "UTC" });
@@ -55,7 +57,7 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
             >
               {regularShown.map((r) => (
                 <PanelRow key={r.id} className="flex-wrap">
-                  <div className="min-w-0 flex-1">
+                  <div className="w-full min-w-0 sm:w-auto sm:flex-1">
                     <p className="font-semibold">{r.name}</p>
                     <p className="text-sm text-muted-foreground">{r.supplierName} · {tr("every", { day: tr(`days.${r.weekday as 1}`) })}</p>
                   </div>
@@ -85,20 +87,26 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
                 </Link>
               ))
             )}
+            {open.length > 0 ? (
+              <p className="border-t border-border px-4 py-2.5 text-xs text-muted-foreground">{th("openTotal", { amount: fmt.money(openTotal, currency) })}</p>
+            ) : null}
           </Panel>
 
-          {recent.length > 0 ? (
+          {earlier.length > 0 ? (
             <Panel id="recent-orders" title={to("recent")} action={{ href: "/buyer/orders", label: to("viewAll") }}>
-              {recent.map((o) => (
-                <PanelRow key={o.id} className="flex-wrap">
-                  <Link href={`/buyer/orders/${o.id}`} className="min-w-0 flex-1 hover:underline">
+              {earlier.map((o) => (
+                // Phone: name and status share the first line and the button gets its own; wider: all in one row.
+                <PanelRow key={o.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-y-2 sm:flex">
+                  <Link href={`/buyer/orders/${o.id}`} className="min-w-0 hover:underline sm:flex-1">
                     <span className="block truncate font-semibold">{o.supplierName}</span>
                     <span className="block text-sm text-muted-foreground">
                       <span className="tabular-nums">{to("number", { number: o.number })}</span> · {fmt.money(o.totalMinor, o.currency)}
                     </span>
                   </Link>
                   <OrderStatusBadge status={o.status} />
-                  <ReorderButton orderId={o.id} size="sm" />
+                  <div className="col-span-2 sm:col-span-1">
+                    <ReorderButton orderId={o.id} size="sm" />
+                  </div>
                 </PanelRow>
               ))}
             </Panel>
@@ -126,13 +134,6 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
               );
             })}
           </Panel>
-          {open.length > 0 ? (
-            <section aria-labelledby="open-total" className="rounded-xl border border-border bg-surface px-4 py-4">
-              <h2 id="open-total" className="text-sm text-muted-foreground">{td("open")}</h2>
-              <p className="mt-1 text-2xl font-semibold tabular-nums">{open.length}</p>
-              <p className="text-xs text-muted-foreground">{th("openTotal", { amount: fmt.money(openTotal, currency) })}</p>
-            </section>
-          ) : null}
         </div>
       </div>
     </div>

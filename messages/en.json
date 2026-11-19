@@ -316,7 +316,8 @@
       "supplier": "Add another company (brand)",
       "buyer": "Add another company"
     },
-    "team": "Team"
+    "team": "Team",
+    "account": "Account"
   },
   "roles": {
     "buyer": "Buyer",
@@ -366,7 +367,8 @@
       "loadingSheet": "Loading sheet",
       "chartLabel": "Order value per day, last 30 days",
       "deltaUp": "+{count} vs last week",
-      "deltaDown": "−{count} vs last week"
+      "deltaDown": "−{count} vs last week",
+      "chartLegend": "Darker bars are the last 7 days. Best day: {best}."
     }
   },
   "buyer": {
@@ -556,7 +558,6 @@
       "title": "Pilot metrics",
       "intro": "Every number is computed from real data. A \"week\" is a rolling 7 days.",
       "suppliers": "Suppliers by status",
-      "suppliersHint": "Pending review / approved / suspended.",
       "buyerOrgs": "Buyer organizations",
       "activeProducts": "Active products",
       "orders30": "Orders by status, 30 days",

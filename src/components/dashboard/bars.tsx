@@ -11,8 +11,8 @@ export function SparkBars({ values, highlight = 7, label }: { values: number[]; 
       {values.map((v, i) => (
         <span
           key={i}
-          className={cn("flex-1 rounded-t-sm", i >= values.length - highlight ? "bg-brand" : "bg-brand/25")}
-          style={{ height: `${Math.max(v === 0 ? 4 : 8, (v / max) * 100)}%` }}
+          className={cn("flex-1 rounded-t-sm", v === 0 ? "bg-border" : i >= values.length - highlight ? "bg-brand" : "bg-brand/25")}
+          style={{ height: v === 0 ? "2px" : `${Math.max(8, (v / max) * 100)}%` }}
         />
       ))}
     </div>
