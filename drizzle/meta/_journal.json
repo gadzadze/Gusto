@@ -253,6 +253,13 @@
       "when": 1794932413498,
       "tag": "0035_rsge_waybills",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1795037854536,
+      "tag": "0036_saved_filters",
+      "breakpoints": true
     }
   ]
 }

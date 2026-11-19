@@ -21,6 +21,7 @@ import {
   updateProduct,
   type CatalogWriteError,
 } from "@/server/domain/catalog/products";
+import { createSavedFilter, deleteSavedFilter, type SavedFilterError } from "@/server/domain/filters/saved-filters";
 import { ImageError, MAX_IMAGE_BYTES, type ImageErrorCode } from "@/server/storage/images";
 import { supabaseImageStorage } from "@/server/storage/image-storage";
 
@@ -141,5 +142,25 @@ export async function bulkProductsAction(raw: unknown): Promise<{ ok: true; coun
       : await bulkDeleteProducts(ctx, input.ids, supabaseImageStorage());
     refresh();
     return { ok: true, count };
+  });
+}
+
+/** Save the list's current filters under a name (per user and company). */
+export async function saveProductFilterAction(name: string, query: string): Promise<{ ok: true } | ActionError<SavedFilterError>> {
+  const ctx = await requireSupplier();
+  if (typeof name !== "string" || typeof query !== "string" || query.length > 600) return { ok: false, error: "invalid" };
+  return runAction<{ ok: true }, SavedFilterError>("saveProductFilter", async () => {
+    await createSavedFilter(ctx, "products", name, query);
+    refresh();
+    return { ok: true };
+  });
+}
+
+export async function deleteSavedFilterAction(id: string): Promise<{ ok: true } | ActionError<SavedFilterError>> {
+  const ctx = await requireSupplier();
+  return runAction<{ ok: true }, SavedFilterError>("deleteSavedFilter", async () => {
+    await deleteSavedFilter(ctx, String(id));
+    refresh();
+    return { ok: true };
   });
 }

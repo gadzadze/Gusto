@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { BulkPageCheck, BulkRowCheck, BulkSelection } from "@/components/catalog/product-bulk";
+import { SavedFilters, type SavedView } from "@/components/catalog/saved-filters";
 import { ProductImage } from "@/components/catalog/product-image";
 import { ProductRowDelete } from "@/components/catalog/product-row-delete";
 import { ProductStatusBadge } from "@/components/catalog/product-status-badge";
@@ -20,6 +21,8 @@ import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
 import { getProductsUsage, isUuid, listSupplierProducts } from "@/server/domain/catalog/products";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
+import { listSavedFilters } from "@/server/domain/filters/saved-filters";
+import { canonicalProductQuery } from "@/lib/saved-filters";
 import { getFormats } from "@/server/i18n/formats";
 
 export default async function ProductsPage({ searchParams }: PageProps<"/supplier/products">) {
@@ -71,14 +74,17 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
   const lowStock = one(params.stock) === "low";
   const page = Number.parseInt(one(params.page), 10) || 1;
 
-  const [list, categories, settings] = await Promise.all([
+  const [list, categories, settings, saved] = await Promise.all([
     listSupplierProducts(ctx, { q, categoryId: categoryId || undefined, status, lowStock, page }),
     listActiveCategories(),
     getSupplierSettings(ctx),
+    listSavedFilters(ctx, "products"),
   ]);
   const readOnly = ctx.orgStatus === "suspended";
   const usage = readOnly ? new Map() : await getProductsUsage(ctx, list.items.map((p) => p.id));
   const usageOf = (id: string): { openOrders: number; orderLines: number } => usage.get(id) ?? { openOrders: 0, orderLines: 0 };
+  const currentQuery = canonicalProductQuery({ q, category: categoryId, status: status === "all" ? "" : status, stock: lowStock ? "low" : "" });
+  const views: SavedView[] = saved.map((v) => ({ id: v.id, name: v.name, href: v.query ? `/supplier/products?${v.query}` : "/supplier/products", active: v.query === currentQuery }));
   const filtered = Boolean(q || categoryId || status !== "all" || lowStock);
 
   return (
@@ -111,6 +117,10 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
           {tc("apply")}
         </Button>
       </form>
+
+      {readOnly ? null : (
+        <SavedFilters views={views} currentQuery={currentQuery} canSave={currentQuery !== "" && !views.some((v) => v.active)} />
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">{tc("total", { count: list.total })}</p>

@@ -1014,7 +1014,14 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   (archived categories refused). Selection is limited to the current page and at most 100 ids per action; ids that are not this
   company's are silently skipped (never counted); a suspended company is refused; delete audits each product. Hidden for suspended
   companies.
-- Planned next, not built: Ctrl/Cmd+K command palette, saved list filters.
+- **Saved list filters** (decided 2026-11-19, table `saved_filters` migration 0036, `lib/saved-filters.ts` pure,
+  `domain/filters/saved-filters.ts`, `components/catalog/saved-filters.tsx`): on the supplier product list a person saves the
+  filters now applied (search, category, status, stock) under a name and applies it again in one tap. Stored **per user and per
+  company** (so the same views are on the phone and the desktop), as a canonical query string built from a whitelist both on save
+  and on read, so a stored view can only ever carry those four filters. A view is an ordinary link; the active one is highlighted;
+  at most 20 per person and company (`too_many`), names unique (`name_taken`), nothing to save without a filter
+  (`nothing_to_save`). The `list` column leaves room for other lists (today only `products`). Hidden for suspended companies.
+- Planned next, not built: Ctrl/Cmd+K command palette.
 
 ## Photo background remover
 
