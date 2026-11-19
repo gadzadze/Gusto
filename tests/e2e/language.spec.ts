@@ -70,7 +70,8 @@ test("a buyer onboards and works in English, on a phone too", async ({ browser }
   expect(result.cut).toEqual([]);
   expect(result.pageOverflow).toBe(false);
 
-  // The language can be changed from inside the app (the key icon opens the account page).
+  // The language can be changed from inside the app (the account menu opens the account page).
+  await page.getByRole("button", { name: "Account" }).click();
   await page.getByRole("link", { name: "Change password" }).click();
   await expect(page).toHaveURL(/\/account\/password$/);
   await page.getByRole("button", { name: "ქართული" }).click();

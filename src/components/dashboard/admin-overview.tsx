@@ -28,6 +28,7 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
   const ta = await getTranslations("admin.attention");
   const tp = await getTranslations("admin.pilot");
   const ts = await getTranslations("orderStatus");
+  const tst = await getTranslations("admin.status");
   const format = await getFormatter();
   const pendingBusinesses = suppliers.pending_review + pendingBuyers;
   const attention = [
@@ -131,12 +132,12 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
         </section>
 
         <Panel id="network" title={tp("suppliers")}>
-          <PanelRow className="justify-between">
-            <span className="text-sm text-muted-foreground">{tp("suppliersHint")}</span>
-            <b className="whitespace-nowrap tabular-nums">
-              {pilot.suppliersByStatus.pending_review} / {pilot.suppliersByStatus.active} / {pilot.suppliersByStatus.suspended}
-            </b>
-          </PanelRow>
+          {(["pending_review", "active", "suspended"] as const).map((status) => (
+            <PanelRow key={status} className="justify-between">
+              <span className="text-sm text-muted-foreground">{tst(status)}</span>
+              <b className="tabular-nums">{pilot.suppliersByStatus[status]}</b>
+            </PanelRow>
+          ))}
           <PanelRow className="justify-between">
             <span className="text-sm text-muted-foreground">{tp("buyerOrgs")}</span>
             <b className="tabular-nums">{pilot.buyerOrgs}</b>

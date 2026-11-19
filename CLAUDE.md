@@ -985,7 +985,7 @@ presentational component in `components/dashboard/` (`SupplierToday`, `BuyerHome
 props; the page under `app/` only guards, loads and passes it, so a fixture can render it without a database.
 Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRow`, `OrderProgress`.
 
-- **Supplier home** (`/supplier`, nav label stays "Home"): "waiting for your answer" queue (oldest first, amber after 4 h),
+- **Supplier home** (`/supplier`, nav label stays "Home"; the order-value chart prints its first and last date and a legend, a day with no orders is a hairline): "waiting for your answer" queue (oldest first, amber after 4 h),
   next delivery days with a loading-sheet link each (days already past are marked overdue), order value of the last 30 days
   with a daily bar chart, week-on-week change, repeat customers, top products as proportional bars. Data:
   `domain/orders/today.ts` (`listPendingQueue`, `listUpcomingDeliveries`, `getOrderValueSeries`, `getSupplierClock`) plus
@@ -994,8 +994,10 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   (focus trap, Escape and backdrop close it) that loads the order with `loadOrderReviewAction` (supplier-only, other
   company's order = not found, formatted on the server) and reuses `SupplierOrderActions` (confirm with quantities and
   delivery day, reject with reason). `ReviewBody` is the content without the dialog.
+- **Phone header** (decided 2026-11-19, `components/app-shell/account-menu.tsx`): team, change password and sign out sit behind one
+  account button (Popover API) so the company name fits next to search, bell and theme; the sidebar still shows them directly.
 - **Buyer home**: search, regular orders (accent block when due today), "in progress" orders with a Sent / Confirmed /
-  Delivered strip and the agreed delivery day, recent orders with reorder, often-ordered products, suppliers with the
+  Delivered strip and the agreed delivery day (with the open total under the list), recent orders with reorder (the ones already in progress are not repeated; on a phone the button sits under the text), often-ordered products, suppliers with the
   last order date (`lastOrderDates`) and "find a supplier".
 - **Admin overview**: "needs attention" (new supplier requests, businesses waiting for verification, stalled notifications
   via `checkHealth`, or an all-clear line), then pilot health (a bar only where there is a real ratio, the reorder rate)
