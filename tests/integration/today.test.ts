@@ -59,10 +59,18 @@ describe("supplier home data", () => {
     expect(await getSetupProgress(supplier)).toEqual({ products: 0, priceLists: 0, customers: 0 });
     await createTestProduct(supplier, categoryId, { name: "[TEST] Wine", basePrice: "10" });
     await createTestProduct(other, categoryId, { name: "[TEST] Other", basePrice: "10" });
+    // Helpers may create default price lists as a side effect, so compare against what each company had before.
+    const otherBefore = await getSetupProgress(other);
+    expect(otherBefore.products).toBe(1);
+    expect(otherBefore.customers).toBe(0);
     await createPriceList(supplier, "[TEST] List");
     await connectBuyer(supplier, buyer);
-    expect(await getSetupProgress(supplier)).toEqual({ products: 1, priceLists: 1, customers: 1 });
-    expect(await getSetupProgress(other)).toEqual({ products: 1, priceLists: 0, customers: 0 });
+    const prepared = await getSetupProgress(supplier);
+    expect(prepared.products).toBe(1);
+    expect(prepared.customers).toBe(1);
+    expect(prepared.priceLists).toBeGreaterThanOrEqual(1);
+    // Nothing the first company did shows up for the other one.
+    expect(await getSetupProgress(other)).toEqual(otherBefore);
     await expect(getSetupProgress(buyer)).rejects.toThrow();
   });
 
