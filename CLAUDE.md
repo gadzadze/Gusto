@@ -1115,6 +1115,9 @@ one; only the chosen file is uploaded, through the normal image action.
   filter pills grow below `md`); don't put `whitespace-nowrap` buttons with long
   Georgian labels in narrow containers (the WhatsApp button wraps). The launch
   e2e checks horizontal overflow and control heights at 360px.
+- **Order lines on a phone** (2026-11-19): the buyer's cart lines and the order detail lines (`OrderView`, both sides) are stacked lists
+  below `sm` (name and price first, then quantity control and line total on one row); a table or one flex row left the product name a
+  few letters wide at 360px. From `sm` up they are the row and the table they were.
 - **Contrast** is a unit test (`tests/unit/contrast.test.ts`) over the tokens in
   `globals.css`, light and dark. Changing a colour token means the test tells
   you whether it still passes AA. Text on a brand fill uses
