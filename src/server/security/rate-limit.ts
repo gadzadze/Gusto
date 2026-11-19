@@ -38,6 +38,8 @@ export const RATE_LIMITS = {
   rsgeConnect: { name: "rsge_connect", limit: 5, windowSeconds: 3600 },
   /** Calls that create or change waybills at RS.ge: 60 per hour per company. */
   rsgeCall: { name: "rsge_call", limit: 60, windowSeconds: 3600 },
+  /** Command palette lookups: 240 per minute per person (one per pause in typing). */
+  palette: { name: "palette", limit: 240, windowSeconds: 60 },
   connectionRequest: { name: "connection_request", limit: 20, windowSeconds: 3600 },
   /** A buyer asking a supplier for payment terms: 10 per hour per buyer organization (each one emails the supplier). */
   termsRequest: { name: "terms_request", limit: 10, windowSeconds: 3600 },

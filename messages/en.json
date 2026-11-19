@@ -2319,5 +2319,33 @@
       }
     },
     "noticeRs": "202 prepares the data and, if RS.ge is connected, saves it in RS.ge as a draft. The waybill only comes into force when you activate it."
+  },
+  "palette": {
+    "title": "Quick search",
+    "placeholder": "Search or jump to...",
+    "trigger": "Search",
+    "empty": "Nothing found.",
+    "searchFor": "Search products for \"{q}\"",
+    "groups": {
+      "results": "Results",
+      "goTo": "Go to",
+      "actions": "Actions"
+    },
+    "kinds": {
+      "product": "Product",
+      "customer": "Customer",
+      "supplier": "Supplier",
+      "order": "Order"
+    },
+    "actions": {
+      "newProduct": "New product",
+      "importProducts": "Import products",
+      "loadingSheet": "Loading sheet",
+      "newCustomer": "Add a customer",
+      "inviteSupplier": "Invite a supplier",
+      "regular": "Regular orders",
+      "team": "Team",
+      "password": "Change password"
+    }
   }
 }

@@ -10,7 +10,7 @@ import { NAV_ITEMS, ADMIN_LINK, type Area, type NavItem } from "./nav";
 
 // Icons can't cross the server→client boundary as props, so the client side
 // rebuilds the list from the area name.
-function itemsFor(area: Area, homeHref: string | null, showAdminLink: boolean): NavItem[] {
+export function itemsFor(area: Area, homeHref: string | null, showAdminLink: boolean): NavItem[] {
   const items = [...NAV_ITEMS[area]];
   if (area === "admin" && homeHref) {
     items.push({ ...NAV_ITEMS[homeHref === "/buyer" ? "buyer" : "supplier"][0] });
