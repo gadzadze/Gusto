@@ -8,8 +8,7 @@ function load() {
   const handlers = new Map<string, (event: unknown) => void>();
   const shown: { title: string; options: Record<string, unknown> }[] = [];
   const opened: string[] = [];
-  const navigated: string[] = [];
-  let windows: { navigate: (u: string) => Promise<unknown>; focus: () => Promise<unknown> }[] = [];
+  let windows: { navigate: (u: string) => Promise<unknown>; focus: () => Promise<unknown>; postMessage: (m: unknown) => unknown }[] = [];
   const self = {
     addEventListener: (type: string, fn: (event: unknown) => void) => handlers.set(type, fn),
     registration: { showNotification: (title: string, options: Record<string, unknown>) => { shown.push({ title, options }); return Promise.resolve(); } },
@@ -24,7 +23,7 @@ function load() {
     handlers.get(type)!({ ...event, waitUntil: (p: Promise<unknown>) => { pending = p; } });
     await pending;
   };
-  return { run, shown, opened, navigated, setWindows: (w: typeof windows) => { windows = w; } };
+  return { run, shown, opened, setWindows: (w: typeof windows) => { windows = w; } };
 }
 
 describe("service worker", () => {
@@ -46,17 +45,38 @@ describe("service worker", () => {
     expect(sw.shown[2].title).toBe("202");
   });
 
-  it("opens the page when tapped: reuses an open window, else opens one", async () => {
+  it("opens the page when tapped and nothing is open", async () => {
     const sw = load();
     let closed = 0;
     await sw.run("notificationclick", { notification: { close: () => { closed += 1; }, data: { url: "/o/1051" } } });
     expect(closed).toBe(1);
     expect(sw.opened).toEqual(["/o/1051"]);
+  });
 
-    const navigated: string[] = [];
-    sw.setWindows([{ navigate: (u) => { navigated.push(u); return Promise.resolve({ focus: () => Promise.resolve() }); }, focus: () => Promise.resolve() }]);
-    await sw.run("notificationclick", { notification: { close: () => undefined, data: { url: "//evil.example" } } });
-    expect(navigated).toEqual(["/start"]);
-    expect(sw.opened).toHaveLength(1);
+  it("brings an open window forward, tells the page and navigates it", async () => {
+    const sw = load();
+    const log: string[] = [];
+    sw.setWindows([
+      {
+        focus: () => { log.push("focus"); return Promise.resolve(); },
+        postMessage: (m: unknown) => log.push(`message:${JSON.stringify(m)}`),
+        navigate: (u: string) => { log.push(`navigate:${u}`); return Promise.resolve({}); },
+      },
+    ]);
+    await sw.run("notificationclick", { notification: { close: () => undefined, data: { url: "/o/1051" } } });
+    expect(log).toEqual(["focus", 'message:{"type":"202:navigate","url":"/o/1051"}', "navigate:/o/1051"]);
+    expect(sw.opened).toHaveLength(0);
+  });
+
+  it("opens the page as a new window when the open one cannot be navigated", async () => {
+    const sw = load();
+    sw.setWindows([{ focus: () => Promise.resolve(), postMessage: () => undefined, navigate: () => Promise.resolve(null) }]);
+    await sw.run("notificationclick", { notification: { close: () => undefined, data: { url: "/o/1051" } } });
+    expect(sw.opened).toEqual(["/o/1051"]);
+
+    const refused = load();
+    refused.setWindows([{ focus: () => Promise.reject(new Error("no")), postMessage: () => { throw new Error("gone"); }, navigate: () => Promise.reject(new Error("no")) }]);
+    await refused.run("notificationclick", { notification: { close: () => undefined, data: { url: "//evil.example" } } });
+    expect(refused.opened).toEqual(["/start"]);
   });
 });

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Area } from "./nav";
 import { SideSwitch, type Side } from "./side-switch";
+import { PushNavigation } from "@/components/push/push-navigation";
 import { AccountMenu } from "./account-menu";
 import { CommandPalette, PaletteTrigger } from "./command-palette";
 import { BottomNav, SidebarNav } from "./nav-links";
@@ -120,6 +121,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
       </div>
 
       <BottomNav {...navProps} />
+      <PushNavigation />
       <CommandPalette area={area} homeHref={homeHref} showAdminLink={showAdminLink} entitySearch={area !== "admin"} />
     </div>
   );

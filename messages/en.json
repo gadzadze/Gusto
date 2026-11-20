@@ -1735,7 +1735,7 @@
     },
     "push": {
       "testTitle": "202",
-      "testBody": "Notifications are on. New orders will show up on this device too."
+      "testBody": "Notifications are on."
     }
   },
   "adminAlerts": {

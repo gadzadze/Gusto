@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Georgian } from "next/font/google";
 import { Suspense } from "react";
 import { LOCALE_COOKIE } from "@/i18n/locales";
@@ -15,6 +15,10 @@ const notoGeorgian = Noto_Sans_Georgian({
   variable: "--font-noto-georgian",
   subsets: ["georgian"],
 });
+
+// viewport-fit=cover makes the page fill the whole screen of an installed iPhone app, so the fixed bottom bar sits
+// at the true bottom and env(safe-area-inset-*) is real.
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("metadata");
