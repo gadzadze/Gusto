@@ -158,7 +158,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   await expect(buyer.getByRole("link", { name: new RegExp(`GST-${number}`) }).first()).toBeVisible();
   await expect(buyer.getByRole("heading", { name: "ყველაზე ხშირად შეკვეთილი პროდუქტები" })).toBeVisible();
   await expect(buyer.getByRole("button", { name: "დამატება: ყველი სულგუნი" })).toBeVisible();
-  await expect(buyer.getByRole("button", { name: "ხელახლა შეკვეთა" }).first()).toBeVisible();
+  // (Order again shows on delivered orders: the ordering spec covers it. This one is still in progress.)
 
   // Admin overview: pilot metrics from real rows.
   await admin.goto("/admin");

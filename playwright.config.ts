@@ -8,7 +8,10 @@ export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
-  retries: 0,
+  // CI: one worker and one retry. Invitation acceptance is limited to 10 a minute per address, so two workers
+  // accepting invitations back to back on a fast runner can trip it; a retry lands in a fresh window.
+  workers: process.env.CI ? 1 : undefined,
+  retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: `http://localhost:${PORT}`,
