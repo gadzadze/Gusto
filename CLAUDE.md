@@ -1024,6 +1024,7 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   (archived categories refused). Selection is limited to the current page and at most 100 ids per action; ids that are not this
   company's are silently skipped (never counted); a suspended company is refused; delete audits each product. Hidden for suspended
   companies.
+- **Limits and audit on the live queue and bulk actions** (2026-11-20): `/api/supplier/pulse` answers 429 past 120 requests a minute per company (`RATE_LIMITS.supplierPulse`; the poller backs off on any non-OK answer); bulk show/hide/category/delete share 20 calls a minute per company (`RATE_LIMITS.bulkProducts`); bulk show, hide and category moves are audited (`product.bulk_shown|bulk_hidden|bulk_category`, with a count), as delete already was.
 - **Saved list filters** (decided 2026-11-19, table `saved_filters` migration 0036, `lib/saved-filters.ts` pure,
   `domain/filters/saved-filters.ts`, `components/catalog/saved-filters.tsx`): on the supplier product list a person saves the
   filters now applied (search, category, status, stock) under a name and applies it again in one tap. Stored **per user and per

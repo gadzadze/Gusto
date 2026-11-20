@@ -42,6 +42,10 @@ export const RATE_LIMITS = {
   palette: { name: "palette", limit: 240, windowSeconds: 60 },
   /** Turning Web Push on or off for a browser: 20 per hour per person. */
   pushSubscribe: { name: "push_subscribe", limit: 20, windowSeconds: 3600 },
+  /** The open supplier dashboard asks for the queue every 20 s: 120 per minute per supplier company leaves room for several tabs. */
+  supplierPulse: { name: "supplier_pulse", limit: 120, windowSeconds: 60 },
+  /** Bulk changes to the product list: 20 per minute per supplier company. */
+  bulkProducts: { name: "bulk_products", limit: 20, windowSeconds: 60 },
   connectionRequest: { name: "connection_request", limit: 20, windowSeconds: 3600 },
   /** A buyer asking a supplier for payment terms: 10 per hour per buyer organization (each one emails the supplier). */
   termsRequest: { name: "terms_request", limit: 10, windowSeconds: 3600 },

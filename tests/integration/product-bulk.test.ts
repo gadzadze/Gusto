@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getDb } from "@/server/db/client";
-import { categories, organizations, products } from "@/server/db/schema";
+import { auditLogs, categories, organizations, products } from "@/server/db/schema";
 import { bulkDeleteProducts, bulkSetActive, bulkSetCategory, getSupplierProduct } from "@/server/domain/catalog/products";
 import { NotFoundError, StateError } from "@/server/domain/errors";
 import { createAdmin, createSupplier, createTestCategory, createTestProduct, memoryStorage } from "./helpers";
@@ -65,5 +65,17 @@ describe("bulk product actions", () => {
     await expect(bulkSetCategory(suspended, [a], categoryId)).rejects.toEqual(new StateError("suspended"));
     await expect(bulkDeleteProducts(suspended, [a], memoryStorage())).rejects.toEqual(new StateError("suspended"));
     expect((await getSupplierProduct(supplier, a)).isActive).toBe(true);
+  });
+
+  it("audits bulk show, hide and category moves and limits how often they run", async () => {
+    const supplier = await createSupplier();
+    const a = await createTestProduct(supplier, categoryId, { name: "[TEST] A" });
+    await bulkSetActive(supplier, [a], false);
+    await bulkSetCategory(supplier, [a], otherCategoryId);
+    const rows = await getDb().select({ action: auditLogs.action }).from(auditLogs).where(eq(auditLogs.targetId, supplier.orgId));
+    expect(rows.map((r) => r.action).filter((x) => x.startsWith("product.")).sort()).toEqual(["product.bulk_category", "product.bulk_hidden"]);
+
+    for (let i = 0; i < 18; i += 1) await bulkSetActive(supplier, [a], true); // 20 calls so far, the limit is 20
+    await expect(bulkSetActive(supplier, [a], true)).rejects.toEqual(new StateError("rate_limited"));
   });
 });

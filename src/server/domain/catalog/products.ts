@@ -292,18 +292,30 @@ function bulkIds(ids: string[]): string[] {
 /** Show or hide several of the supplier's own products at once. Returns how many were changed. */
 export async function bulkSetActive(ctx: OrgCtx, productIds: string[], active: boolean): Promise<number> {
   assertCatalogWritable(ctx);
-  const updated = await getDb()
-    .update(products)
-    .set({ isActive: active })
-    .where(and(inArray(products.id, bulkIds(productIds)), eq(products.supplierOrgId, ctx.orgId)))
-    .returning({ id: products.id });
-  return updated.length;
+  const ids = bulkIds(productIds);
+  await consumeRateLimit(RATE_LIMITS.bulkProducts, ctx.orgId);
+  return getDb().transaction(async (tx) => {
+    const updated = await tx
+      .update(products)
+      .set({ isActive: active })
+      .where(and(inArray(products.id, ids), eq(products.supplierOrgId, ctx.orgId)))
+      .returning({ id: products.id });
+    await writeAudit(tx, {
+      actorUserId: ctx.userId,
+      action: active ? "product.bulk_shown" : "product.bulk_hidden",
+      targetType: "organization",
+      targetId: ctx.orgId,
+      data: { count: updated.length },
+    });
+    return updated.length;
+  });
 }
 
 /** Move several of the supplier's own products into one category (an archived one is refused). */
 export async function bulkSetCategory(ctx: OrgCtx, productIds: string[], categoryId: string): Promise<number> {
   assertCatalogWritable(ctx);
   const ids = bulkIds(productIds);
+  await consumeRateLimit(RATE_LIMITS.bulkProducts, ctx.orgId);
   return getDb().transaction(async (tx) => {
     await assertCategoryUsable(tx, categoryId);
     const updated = await tx
@@ -311,6 +323,13 @@ export async function bulkSetCategory(ctx: OrgCtx, productIds: string[], categor
       .set({ categoryId })
       .where(and(inArray(products.id, ids), eq(products.supplierOrgId, ctx.orgId)))
       .returning({ id: products.id });
+    await writeAudit(tx, {
+      actorUserId: ctx.userId,
+      action: "product.bulk_category",
+      targetType: "organization",
+      targetId: ctx.orgId,
+      data: { count: updated.length, categoryId },
+    });
     return updated.length;
   });
 }
@@ -318,8 +337,10 @@ export async function bulkSetCategory(ctx: OrgCtx, productIds: string[], categor
 /** Delete several of the supplier's own products for good, one by one (each is audited). Returns how many went. */
 export async function bulkDeleteProducts(ctx: OrgCtx, productIds: string[], storage: ImageStorage): Promise<number> {
   assertCatalogWritable(ctx);
+  const ids = bulkIds(productIds);
+  await consumeRateLimit(RATE_LIMITS.bulkProducts, ctx.orgId);
   let deleted = 0;
-  for (const id of bulkIds(productIds)) {
+  for (const id of ids) {
     try {
       await deleteProduct(ctx, id, storage);
       deleted += 1;
