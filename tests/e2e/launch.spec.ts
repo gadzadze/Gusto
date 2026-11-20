@@ -134,7 +134,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   const number = (await buyer.getByRole("heading", { level: 1 }).textContent())!.match(/GST-(\d+)/)![1];
 
   // Supplier dashboard: one order waiting; after confirming, its value counts, as "order value".
-  const region = (name: string) => supplier.getByRole("region", { name, exact: true });
+  const region = (name: string) => supplier.getByRole("region", { name }); // the panel title carries a count badge, so match on the words
   const weekTile = () => supplier.getByRole("heading", { name: "შეკვეთები ბოლო 7 დღეში", exact: true }).locator("xpath=../..");
   await supplier.goto("/supplier");
   await expect(region("ელოდება თქვენს პასუხს")).toContainText("GST-");

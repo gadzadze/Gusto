@@ -95,8 +95,8 @@ test("order loop: cart → checkout → supplier confirms with a change → deli
   // Buyer sees the confirmation, the change, and the new total (33,60 − 2,40 = 31,20).
   await buyer.goto(buyerOrderUrl);
   await expect(buyer.getByText("დადასტურებული").first()).toBeVisible();
-  await expect(buyer.getByText("შეკვეთილი 3 ც")).toBeVisible();
-  await expect(buyer.getByText("დადასტურდა 2 ც")).toBeVisible();
+  await expect(buyer.getByRole("table").getByText("შეკვეთილი 3 ც")).toBeVisible();
+  await expect(buyer.getByRole("table").getByText("დადასტურდა 2 ც")).toBeVisible();
   await expect(buyer.getByText("მაწონი მხოლოდ 2 დარჩა")).toBeVisible();
   await expect(buyer.getByText(/შეთანხმებული:/)).toBeVisible();
   await expect(buyer.getByText("31,20 ₾").first()).toBeVisible();
