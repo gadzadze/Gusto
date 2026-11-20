@@ -1052,7 +1052,9 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   **The browser chooses the endpoint the server posts to, so only the push services' hosts are accepted** (`isAllowedPushEndpoint`,
   https, no port or credentials, tested). One row per browser (`push_subscriptions`, endpoint unique: signing in as someone else on the
   same browser moves it), at most 10 per person, 404/410 from the push service deletes the row. The service worker shows the message
-  and opens an internal path only. **iPhone only receives web push from an installed web app**, so the card explains "Add to Home
+  and opens an internal path only: with a window already open it focuses it, messages the page (`PushNavigation` in the shell
+  follows an internal `202:navigate` URL, because an iPhone web app can ignore `WindowClient.navigate`), tries to navigate it, and
+  falls back to `openWindow`. **iPhone only receives web push from an installed web app**, so the card explains "Add to Home
   Screen" there (`app/manifest.ts`, icons from `npm run brand:icons`). The privacy text lists the push services as processors.
 - Planned next, not built: nothing queued.
 

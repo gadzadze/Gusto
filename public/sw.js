@@ -31,13 +31,30 @@ self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const url = safePath(event.notification.data && event.notification.data.url);
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
-      for (const client of windows) {
-        if ("navigate" in client && "focus" in client) {
-          return client.navigate(url).then((c) => (c || client).focus());
-        }
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (windows) => {
+      const client = windows.find((w) => "focus" in w);
+      if (!client) return self.clients.openWindow(url);
+      // An open window: bring it to the front and send it to the page. Browsers differ in what works (iPhone web apps
+      // can ignore WindowClient.navigate), so the page is also told by message (components/push/push-navigation.tsx)
+      // and, if navigating fails outright, the page is opened as a new window, which a web app loads in place.
+      try {
+        await client.focus();
+      } catch {
+        /* focusing can be refused: carry on */
       }
-      return self.clients.openWindow(url);
+      try {
+        client.postMessage({ type: "202:navigate", url });
+      } catch {
+        /* the page may be gone */
+      }
+      let navigated = false;
+      try {
+        navigated = Boolean(await client.navigate(url));
+      } catch {
+        navigated = false;
+      }
+      if (!navigated) return self.clients.openWindow(url);
+      return undefined;
     }),
   );
 });
