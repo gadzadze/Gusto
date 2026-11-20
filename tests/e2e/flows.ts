@@ -114,5 +114,6 @@ export async function acceptInviteAsNewBuyer(buyer: Page, invitePath: string): P
   await buyer.getByLabel("ქალაქი").fill("თბილისი");
   await buyer.getByLabel("მიწოდების მისამართი").fill("ვაჟა-ფშაველას 10");
   await buyer.getByRole("button", { name: "დაკავშირება" }).click();
-  await expect(buyer).toHaveURL(/\/buyer\/suppliers\/[0-9a-f-]{36}$/);
+  // A cold server (the restart spec starts a fresh one) needs longer than 5 s for its first action.
+  await expect(buyer).toHaveURL(/\/buyer\/suppliers\/[0-9a-f-]{36}$/, { timeout: 20_000 });
 }

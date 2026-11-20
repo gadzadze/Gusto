@@ -184,7 +184,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   // Admin: find the buyer, suspend with a reason; the buyer can't order; reactivate.
   await admin.goto("/admin/organizations");
   await admin.getByRole("textbox", { name: "ძიება" }).fill(buyerName);
-  await admin.getByRole("button", { name: "ძიება" }).click();
+  await admin.getByRole("button", { name: "ძიება", exact: true }).click();
   await admin.getByRole("link", { name: buyerName }).click();
   await admin.waitForLoadState("networkidle");
   await admin.getByRole("button", { name: "შეჩერება" }).click();
