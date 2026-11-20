@@ -108,9 +108,9 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   // The photo is uploaded right after the product is created; wait for it before moving on.
   await expect(supplier.getByRole("img", { name: "ყველი სულგუნი" })).toBeVisible();
 
-  // The supplier's dashboard before any order: an empty state.
+  // The supplier's dashboard before any order: the "get started" checklist instead of an empty box.
   await supplier.goto("/supplier");
-  await expect(supplier.getByText("შეკვეთები ჯერ არ არის")).toBeVisible();
+  await expect(supplier.getByText("დაწყება", { exact: true })).toBeVisible();
 
   // Connected buyer sees the product with its photo.
   const invitePath = await inviteCustomer(supplier, buyerName);

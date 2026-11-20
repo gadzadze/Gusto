@@ -86,6 +86,8 @@ test("order loop: cart → checkout → supplier confirms with a change → deli
   await supplier.goto(`/supplier/orders/pick?day=${wanted}`);
   await expect(supplier.getByText("მაწონი")).toBeVisible();
   await expect(supplier.getByText(/^2 /).first()).toBeVisible();
+  // The stops view lists each order with its number.
+  await supplier.goto(`/supplier/orders/pick?day=${wanted}&view=stops`);
   await expect(supplier.getByText(`GST-${number}`).first()).toBeVisible();
   await supplier.getByRole("link", { name: `GST-${number}` }).click();
   await supplier.waitForLoadState("networkidle");
