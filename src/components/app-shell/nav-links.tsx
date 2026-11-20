@@ -1,6 +1,6 @@
 "use client";
 
-import { Ellipsis } from "lucide-react";
+import { ChevronRight, Ellipsis, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -40,29 +40,80 @@ function Count({ n, label }: { n: number; label: string }) {
   );
 }
 
+function SidebarLink({ item, area, badges }: { item: NavItem; area: Area; badges?: Record<string, number> }) {
+  const t = useTranslations("nav");
+  const pathname = usePathname();
+  const active = isActive(pathname, item.href, area);
+  return (
+    <Link
+      href={item.href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
+        active ? "bg-brand-soft text-brand" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+      )}
+    >
+      <item.icon aria-hidden className="size-4" />
+      {t(item.labelKey)}
+      <Count n={badges?.[item.href] ?? 0} label={String(badges?.[item.href] ?? 0)} />
+    </Link>
+  );
+}
+
+/**
+ * Desktop sidebar. A platform admin keeps their own company's menu and gets an expandable
+ * "Administration" group under it (open while on an admin page), so the menu never swaps.
+ */
 export function SidebarNav(props: Props) {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const onAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+  const [openChoice, setOpenChoice] = useState<boolean | null>(null);
+  const open = openChoice ?? onAdmin;
+
+  const ownArea: Area | null = props.area !== "admin" ? props.area : props.homeHref ? (props.homeHref === "/buyer" ? "buyer" : "supplier") : null;
+  const hasAdmin = props.area === "admin" || props.showAdminLink;
+
+  // Admin without a company: just the admin items, flat.
+  if (!ownArea) {
+    return (
+      <nav aria-label={t("menu")} className="flex flex-col gap-1">
+        {NAV_ITEMS.admin.map((item) => (
+          <SidebarLink key={item.href + item.labelKey} item={item} area="admin" badges={props.badges} />
+        ))}
+      </nav>
+    );
+  }
+
+  const adminBadge = Object.values(props.badges ?? {}).reduce((sum, n) => sum + n, 0);
   return (
     <nav aria-label={t("menu")} className="flex flex-col gap-1">
-      {itemsFor(props.area, props.homeHref, props.showAdminLink).map((item) => {
-        const active = isActive(pathname, item.href, props.area);
-        return (
-          <Link
-            key={item.href + item.labelKey}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            className={cn(
-              "flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
-              active ? "bg-brand-soft text-brand" : "text-muted-foreground hover:bg-muted hover:text-foreground",
-            )}
+      {NAV_ITEMS[ownArea].map((item) => (
+        <SidebarLink key={item.href + item.labelKey} item={item} area={ownArea} badges={props.badges} />
+      ))}
+      {hasAdmin ? (
+        <div className="mt-1">
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-controls="sidebar-admin-group"
+            onClick={() => setOpenChoice(!open)}
+            className="flex min-h-10 w-full items-center gap-3 rounded-md px-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            <item.icon aria-hidden className="size-4" />
-            {t(item.labelKey)}
-            <Count n={props.badges?.[item.href] ?? 0} label={String(props.badges?.[item.href] ?? 0)} />
-          </Link>
-        );
-      })}
+            <ShieldCheck aria-hidden className="size-4" />
+            {t("admin")}
+            {!open ? <Count n={adminBadge} label={String(adminBadge)} /> : null}
+            <ChevronRight aria-hidden className={cn("ml-auto size-4 transition-transform", open && "rotate-90")} />
+          </button>
+          {open ? (
+            <div id="sidebar-admin-group" className="ml-5 mt-1 flex flex-col gap-1 border-l border-border pl-2">
+              {NAV_ITEMS.admin.map((item) => (
+                <SidebarLink key={item.href + item.labelKey} item={item} area="admin" badges={props.badges} />
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </nav>
   );
 }
@@ -129,7 +180,7 @@ export function BottomNav(props: Props) {
       ) : null}
       <nav
         aria-label={t("menu")}
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] [transform:translateZ(0)] md:hidden print:hidden"
       >
         <ul className="mx-auto flex max-w-md">
           {primary.map((item) => {
