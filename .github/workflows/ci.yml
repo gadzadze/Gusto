@@ -55,3 +55,38 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:integration
+
+  e2e:
+    name: End-to-end tests (local Supabase)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # A throwaway local Supabase (Postgres, Auth, Storage) inside the runner: never a real project.
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: supabase start -x studio,imgproxy,vector,logflare,edge-runtime,supavisor,postgres-meta
+      # Writes the local URL and keys into .env.local; refuses anything that is not a local address.
+      - run: npm run env:local
+      - run: npm run db:migrate
+      - run: npx playwright install --with-deps chromium
+      # The suite builds the app itself (playwright.config.ts) and starts it on port 3100.
+      - run: npx playwright test --trace off
+        env:
+          CI: "true"
+      - name: Upload the report when a test fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-output
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 7
+      - if: always()
+        run: supabase stop --no-backup

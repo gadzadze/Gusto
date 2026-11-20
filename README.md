@@ -148,8 +148,9 @@ The persistence spec starts and stops its own web server on port 3101 to prove
 orders survive a restart.
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests and build,
-plus the integration tests against a Postgres service container. E2E is not in
-CI yet: it needs a running Supabase.
+plus the integration tests against a Postgres service container, and the e2e suite
+against a throwaway local Supabase started inside the runner (`supabase start`,
+`env:local`, `db:migrate`, then Playwright). It never touches a real project.
 
 ## Supabase Auth setup
 
