@@ -79,7 +79,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
           <EmptyState icon={Inbox} title={t("emptyTitle")} body={t("emptyBody")} />
         )
       ) : (
-        <div className="grid items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
           <div className="space-y-5">
             <Panel id="queue" title={tt("queueTitle")} count={counts.new} action={{ href: "/supplier/orders", label: tt("queueAll") }}>
               {queue.length === 0 ? (

@@ -169,7 +169,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   // Admin: order lookup is read-only and audited.
   await admin.goto("/admin/orders");
   await admin.getByLabel("შეკვეთის ნომერი").fill(`GST-${number}`);
-  await admin.getByRole("button", { name: "ძიება" }).click();
+  await admin.getByRole("button", { name: "ძიება", exact: true }).click();
   await expect(admin).toHaveURL(new RegExp(`/admin/orders/${number}$`));
   await expect(admin.getByRole("heading", { level: 1 })).toContainText(`GST-${number}`);
   await expect(admin.getByText(buyerName).first()).toBeVisible();

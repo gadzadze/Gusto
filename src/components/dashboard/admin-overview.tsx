@@ -61,7 +61,7 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
   const orderTotal = orderEntries.reduce((sum, [, n]) => sum + n, 0);
 
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
       <div className="space-y-5">
         <Panel id="attention" title={ta("title")}>
           {attention.length === 0 ? (

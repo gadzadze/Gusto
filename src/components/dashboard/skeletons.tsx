@@ -36,7 +36,7 @@ function StatSkeleton() {
 /** Supplier and buyer homes: a wide column of lists and a narrow column of figures. */
 export function DashboardSkeleton() {
   return (
-    <div className="grid items-start gap-5 lg:grid-cols-[1.55fr_1fr]" aria-hidden>
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[1.55fr_1fr]" aria-hidden>
       <div className="space-y-5">
         <PanelSkeleton rows={3} tall />
         <PanelSkeleton rows={3} />
