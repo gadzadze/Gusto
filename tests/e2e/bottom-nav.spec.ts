@@ -35,17 +35,13 @@ test("phone bottom bar: supplier, buyer and admin fit, and More opens the rest",
   await supplier.goto("/supplier");
   await supplier.waitForLoadState("networkidle");
   await checkBar(supplier, "supplier");
-  // Six items: four in the bar, pricing and settings behind More.
-  const more = supplier.getByRole("button", { name: "მეტი" });
-  await expect(more).toBeVisible();
-  await more.click();
+  // Five items: all of them tabs, no "More". Settings moved to the account menu.
+  await expect(supplier.getByRole("button", { name: "მეტი" })).toHaveCount(0);
   await expect(supplier.getByRole("link", { name: "ფასები" })).toBeVisible();
-  if (SHOTS) await supplier.screenshot({ path: `${SHOTS}/nav-supplier-more.png` });
+  if (SHOTS) await supplier.screenshot({ path: `${SHOTS}/nav-supplier-account.png` });
+  await supplier.getByRole("button", { name: "ანგარიში" }).click();
   await supplier.getByRole("link", { name: "პარამეტრები" }).click();
   await expect(supplier).toHaveURL(/\/supplier\/settings/);
-  // The menu closes after choosing, and "More" shows as the active place.
-  await expect(supplier.getByRole("link", { name: "ფასები" })).toBeHidden();
-  await expect(supplier.getByRole("button", { name: "მეტი" })).toHaveClass(/text-brand/);
 
   const buyer = await (await browser.newContext({ viewport: { width: 360, height: 740 } })).newPage();
   await signInAsNewUser(buyer, "buyer");

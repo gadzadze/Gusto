@@ -288,7 +288,8 @@
       "orders": "Orders",
       "customers": "Customers",
       "organizations": "Businesses",
-      "requests": "Requests"
+      "requests": "Requests",
+      "overview": "Overview"
     },
     "more": "More",
     "closeMore": "Close menu",
@@ -318,7 +319,8 @@
     },
     "team": "Team",
     "account": "Account",
-    "skipToContent": "Skip to content"
+    "skipToContent": "Skip to content",
+    "withCount": "{label}: {count}"
   },
   "roles": {
     "buyer": "Buyer",

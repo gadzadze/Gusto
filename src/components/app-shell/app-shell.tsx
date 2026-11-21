@@ -15,6 +15,7 @@ import { SideSwitch, type Side } from "./side-switch";
 import { PushNavigation } from "@/components/push/push-navigation";
 import { AccountMenu } from "./account-menu";
 import { CommandPalette, PaletteTrigger } from "./command-palette";
+import { NavBadgesProvider } from "./nav-badges";
 import { BottomNav, SidebarNav } from "./nav-links";
 
 export type ShellProps = {
@@ -44,6 +45,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
   const navProps = { area, homeHref, showAdminLink, badges: navBadges };
 
   return (
+    <NavBadgesProvider initial={navBadges} pollPending={area === "supplier"}>
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
       <a
         href="#main-content"
@@ -106,10 +108,10 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
             <span className="truncate text-base font-semibold">{title ?? roleLabel}</span>
           </div>
           <div className="flex items-center">
-            <PaletteTrigger compact />
+            {area !== "buyer" ? <PaletteTrigger compact /> : null}
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
             <ThemeToggle compact />
-            <AccountMenu area={area} email={email} />
+            <AccountMenu area={area} email={email} showAdminLink={showAdminLink} />
           </div>
         </header>
         {sides && sides.length > 1 ? (
@@ -127,6 +129,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
       <PushNavigation />
       <CommandPalette area={area} homeHref={homeHref} showAdminLink={showAdminLink} entitySearch={area !== "admin"} />
     </div>
+    </NavBadgesProvider>
   );
 }
 

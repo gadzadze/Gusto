@@ -288,7 +288,8 @@
       "orders": "შეკვეთე­ბი",
       "customers": "კლიენ­ტები",
       "organizations": "ორგანიზა­ციები",
-      "requests": "მოთხოვ­ნები"
+      "requests": "მოთხოვ­ნები",
+      "overview": "მიმო­ხილვა"
     },
     "more": "მეტი",
     "closeMore": "მენიუს დახურვა",
@@ -318,7 +319,8 @@
     },
     "team": "გუნდი",
     "account": "ანგარიში",
-    "skipToContent": "მთავარ შინაარსზე გადასვლა"
+    "skipToContent": "მთავარ შინაარსზე გადასვლა",
+    "withCount": "{label}: {count}"
   },
   "roles": {
     "buyer": "მყიდველი",

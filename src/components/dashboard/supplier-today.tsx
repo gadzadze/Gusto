@@ -51,16 +51,6 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
       <PageHeader
         title={title}
         subtitle={format.dateTime(now, { dateStyle: "full", timeZone: clock.timezone })}
-        actions={
-          total > 0 ? (
-            <Button asChild>
-              <Link href="/supplier/orders/pick">
-                <Truck />
-                {tt("loadingSheet")}
-              </Link>
-            </Button>
-          ) : null
-        }
       />
       {orgStatus === "pending_review" ? (
         <Notice icon={Clock} tone="amber" title={t("pendingTitle")}>

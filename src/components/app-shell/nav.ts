@@ -42,6 +42,8 @@ export type NavItem = {
     | "access"
     | "requests";
   icon: LucideIcon;
+  /** On a phone this item is not a tab: it sits in the account menu (the bar keeps to five tabs). */
+  inAccountMenuOnPhone?: boolean;
 };
 
 // Only what exists. Later milestones add items here; nothing is shown
@@ -60,7 +62,7 @@ export const NAV_ITEMS: Record<Area, NavItem[]> = {
     { href: "/supplier/products", labelKey: "products", icon: Package },
     { href: "/supplier/customers", labelKey: "customers", icon: Users },
     { href: "/supplier/pricing", labelKey: "pricing", icon: BadgePercent },
-    { href: "/supplier/settings", labelKey: "settings", icon: Settings },
+    { href: "/supplier/settings", labelKey: "settings", icon: Settings, inAccountMenuOnPhone: true },
   ],
   admin: [
     { href: "/admin", labelKey: "overview", icon: LayoutDashboard },
@@ -74,4 +76,4 @@ export const NAV_ITEMS: Record<Area, NavItem[]> = {
   ],
 };
 
-export const ADMIN_LINK: NavItem = { href: "/admin", labelKey: "admin", icon: ShieldCheck };
+export const ADMIN_LINK: NavItem = { href: "/admin", labelKey: "admin", icon: ShieldCheck, inAccountMenuOnPhone: true };
