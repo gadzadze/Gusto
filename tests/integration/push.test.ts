@@ -7,6 +7,7 @@ import { addresses, notificationDeliveries, notifications } from "@/server/db/sc
 import { StateError } from "@/server/domain/errors";
 import { getCart, setCartQuantity } from "@/server/domain/orders/cart";
 import { submitOrder } from "@/server/domain/orders/submit";
+import { confirmOrder } from "@/server/domain/orders/transitions";
 import { deletePushSubscription, hasPushSubscription, listPushTargets, savePushSubscription } from "@/server/domain/push/subscriptions";
 import { createPushChannel } from "@/server/notifications/channels/push";
 import type { PushResult } from "@/server/notifications/push";
@@ -124,6 +125,45 @@ describe("push delivery", () => {
     expect(await listPushTargets(supplier.userId)).toHaveLength(0);
     expect(await expired.send!(claimed)).toMatchObject({ status: "skipped", note: "recipient has no push subscription" });
     expect(orderId).toBeTruthy();
+  });
+
+  it("tells the buyer, in Georgian and with a link to the order, when the supplier confirms", async () => {
+    const supplier = await createSupplier();
+    const buyer = await createBuyer();
+    await connectBuyer(supplier, buyer);
+    const product = await createTestProduct(supplier, categoryId, { name: "[TEST] Cheese", basePrice: "10" });
+    await savePushSubscription(buyer.userId, sub(), "Safari");
+    const orderId = await placeOrder(buyer, supplier, product);
+
+    // Nothing for the buyer yet: only the supplier was told about the new order.
+    const before = await getDb().select().from(notificationDeliveries).where(and(eq(notificationDeliveries.recipientUserId, buyer.userId), eq(notificationDeliveries.channel, "push")));
+    expect(before).toHaveLength(0);
+
+    await confirmOrder(supplier, orderId, []);
+
+    const rows = await getDb().select().from(notificationDeliveries).where(and(eq(notificationDeliveries.recipientUserId, buyer.userId), eq(notificationDeliveries.channel, "push")));
+    expect(rows).toHaveLength(1);
+    const [delivery] = rows;
+    expect(delivery.payload).toMatchObject({ event: "order_confirmed", orderId });
+    const [notification] = await getDb().select().from(notifications).where(eq(notifications.id, delivery.notificationId));
+
+    const seen: { title: string; body: string; url: string }[] = [];
+    const channel = createPushChannel(async (_target, payload) => {
+      seen.push(payload);
+      return "sent";
+    });
+    const claimed = { id: delivery.id, notificationId: delivery.notificationId, recipientUserId: buyer.userId, payload: delivery.payload as { event: string; orderId?: string }, attempts: 1 };
+    expect(await channel.send!(claimed)).toEqual({ status: "sent" });
+
+    expect(seen).toHaveLength(1);
+    expect(seen[0].title).toBe(`შეკვეთა GST-${notification.orderNumber} დადასტურდა`);
+    expect(seen[0].body).toContain(notification.counterpartyName); // the supplier's name, as "from ..."
+    expect(seen[0].body).toContain("10"); // the total
+    expect(seen[0].url).toBe(`/o/${notification.orderNumber}`);
+
+    // The supplier who confirmed is not told about their own action.
+    const mine = await getDb().select().from(notificationDeliveries).where(and(eq(notificationDeliveries.recipientUserId, supplier.userId), eq(notificationDeliveries.channel, "push")));
+    expect(mine.some((r) => (r.payload as { event: string }).event === "order_confirmed")).toBe(false);
   });
 
   it("is skipped, never sent, when push is not configured", async () => {
