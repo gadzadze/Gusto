@@ -288,7 +288,8 @@
       "orders": "Orders",
       "customers": "Customers",
       "organizations": "Businesses",
-      "requests": "Requests"
+      "requests": "Requests",
+      "overview": "Overview"
     },
     "more": "More",
     "closeMore": "Close menu",
@@ -317,7 +318,9 @@
       "buyer": "Add another company"
     },
     "team": "Team",
-    "account": "Account"
+    "account": "Account",
+    "skipToContent": "Skip to content",
+    "withCount": "{label}: {count}"
   },
   "roles": {
     "buyer": "Buyer",
@@ -345,12 +348,14 @@
       "weekHint": "Orders sent to you, whatever their status, compared with the previous 7 days.",
       "weekPrevious": "Previous 7 days: {count}",
       "value": "Order value, 30 days",
-      "valueHint": "Total of confirmed and delivered orders in the last 30 days. This is order value, not revenue: 202 doesn't know whether they were paid.",
+      "valueHint": "Total of confirmed and delivered orders in the last 30 days. This is order value, not revenue.",
       "top": "Top 5 products, 30 days",
       "topHint": "By confirmed quantity, in confirmed and delivered orders of the last 30 days.",
       "topEmpty": "No data yet.",
       "repeat": "Repeat buyers",
-      "repeatHint": "Buyers who sent you 2 or more orders in the last 30 days."
+      "repeatHint": "Buyers who sent you 2 or more orders in the last 30 days.",
+      "valueWhy": "202 doesn't know whether they were paid.",
+      "valueWhyLabel": "Why?"
     },
     "today": {
       "queueTitle": "Waiting for your answer",
@@ -821,7 +826,8 @@
       "retry": "Try again",
       "reference": "Code: {digest}"
     },
-    "language": "Language"
+    "language": "Language",
+    "dismiss": "Dismiss"
   },
   "units": {
     "piece": "pc",
@@ -1618,7 +1624,8 @@
       "buyerCancel": "Cancel the order",
       "buyerCancelConfirm": "Yes, cancel it",
       "back": "Back",
-      "submitConfirm": "Confirm"
+      "submitConfirm": "Confirm",
+      "confirmedFlash": "Order confirmed"
     },
     "errors": {
       "stale_status": "The order's status has already changed. Refresh the page.",

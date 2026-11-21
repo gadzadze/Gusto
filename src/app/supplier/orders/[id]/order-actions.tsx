@@ -3,6 +3,7 @@
 import { Check, PackageCheck, Printer, X, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { SuccessMark } from "@/components/ui/success-mark";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
@@ -51,12 +52,15 @@ export function SupplierOrderActions({
   const [deliveryDate, setDeliveryDate] = useState(requestedDate ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [flash, setFlash] = useState(false);
 
-  const run = (fn: () => Promise<{ ok: boolean; error?: string }>) => {
+  const run = (fn: () => Promise<{ ok: boolean; error?: string }>, flashOnSuccess = false) => {
     setError(null);
+    setFlash(false);
     startTransition(async () => {
       const result = await fn();
       if (result.ok) {
+        setFlash(flashOnSuccess);
         setMode(null);
         setText("");
         onDone?.();
@@ -69,6 +73,12 @@ export function SupplierOrderActions({
   return (
     <div className="space-y-4 print:hidden">
       {error ? <FormAlert tone="error">{error}</FormAlert> : null}
+      {flash ? (
+        <p role="status" className="flex items-center gap-3 font-semibold text-[var(--status-green-fg)]">
+          <SuccessMark />
+          {t("actions.confirmedFlash")}
+        </p>
+      ) : null}
 
       {mode === "confirm" ? (
         <div className="space-y-4 rounded-xl border border-border p-4">
@@ -114,6 +124,7 @@ export function SupplierOrderActions({
                     note: text || undefined,
                     deliveryDate: deliveryDate || undefined,
                   }),
+                  true,
                 )
               }
             >

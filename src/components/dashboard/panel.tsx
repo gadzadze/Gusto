@@ -26,9 +26,9 @@ export function Panel({
   return (
     <section
       aria-labelledby={id}
-      className={cn("rounded-xl border bg-surface", tone === "accent" ? "border-brand/30 bg-brand-soft" : "border-border", className)}
+      className={cn("rounded-xl border bg-card", tone === "accent" ? "border-brand/30 bg-brand-soft" : "border-border", className)}
     >
-      <header className={cn("flex items-center justify-between gap-3 border-b px-4 py-3", tone === "accent" ? "border-brand/20" : "border-border")}>
+      <header className={cn("flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-4 py-3", tone === "accent" ? "border-brand/20" : "border-border")}>
         <h2 id={id} className="flex items-center gap-2 text-sm font-semibold">
           {title}
           {count !== undefined ? (
@@ -36,11 +36,11 @@ export function Panel({
           ) : null}
         </h2>
         {action ? (
-          <Link href={action.href} className="text-xs font-medium text-brand underline-offset-2 hover:underline">
+          <Link href={action.href} className="whitespace-nowrap text-xs font-medium text-brand underline-offset-2 hover:underline">
             {action.label}
           </Link>
         ) : aside ? (
-          <span className="text-xs text-muted-foreground">{aside}</span>
+          <span className="whitespace-nowrap text-xs text-muted-foreground">{aside}</span>
         ) : null}
       </header>
       {children}
@@ -49,5 +49,5 @@ export function Panel({
 }
 
 export function PanelRow({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("flex items-center gap-3.5 border-b border-border px-4 py-3 last:border-b-0", className)}>{children}</div>;
+  return <div className={cn("flex flex-wrap items-center gap-x-3.5 gap-y-2.5 border-b border-border px-4 py-3 last:border-b-0", className)}>{children}</div>;
 }

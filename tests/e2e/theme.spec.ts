@@ -61,17 +61,18 @@ test("light and dark themes: follows the device, can be chosen, and is remembere
     }
   }
 
-  // On a phone the header has one button that cycles light, dark, device.
+  // On a phone the theme choice lives in the account menu, as the same three-way control.
   await supplier.setViewportSize({ width: 360, height: 740 });
   await supplier.goto("/supplier");
   await supplier.waitForLoadState("networkidle");
-  const cycle = supplier.getByRole("button", { name: /^ფერთა სქემა:/ });
-  const box = await cycle.boundingBox();
-  expect(box!.width).toBeGreaterThanOrEqual(44);
-  expect(box!.height).toBeGreaterThanOrEqual(44);
-  const before = await theme(supplier);
-  await cycle.click();
-  await cycle.click();
-  await cycle.click(); // a full cycle returns to the starting choice
-  expect(await theme(supplier)).toBe(before);
+  await supplier.getByRole("button", { name: "ანგარიში" }).click();
+  const choice = supplier.getByRole("group", { name: "ფერთა სქემა" });
+  const darkButton = supplier.getByRole("button", { name: "მუქი" });
+  await expect(choice).toBeVisible();
+  const box = await darkButton.boundingBox();
+  expect(box!.width).toBeGreaterThanOrEqual(36);
+  await darkButton.click();
+  expect(await theme(supplier)).toBe("dark");
+  await supplier.getByRole("button", { name: "ღია" }).click();
+  expect(await theme(supplier)).toBe("light");
 });

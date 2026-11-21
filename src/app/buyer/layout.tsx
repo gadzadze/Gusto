@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { AppShell, AppShellSkeleton } from "@/components/app-shell/app-shell";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { getAccessState, requireBuyer } from "@/server/auth/guards";
+import { listCarts } from "@/server/domain/orders/cart";
 
 // The guard here picks the shell; it does not protect child pages on its own.
 // Every page and action under /buyer calls requireBuyer() itself.
@@ -15,7 +16,7 @@ export default function BuyerLayout({ children }: LayoutProps<"/buyer">) {
 
 async function BuyerShell({ children }: { children: React.ReactNode }) {
   const ctx = await requireBuyer();
-  const state = await getAccessState();
+  const [state, carts] = await Promise.all([getAccessState(), listCarts(ctx)]);
   const memberships = state.signedIn ? state.memberships : [];
   const sides = memberships.map((m) => ({ orgId: m.orgId, type: m.orgType, name: m.orgName, current: m.orgId === ctx.orgId }));
   const missing = memberships.length === 1 ? (memberships[0].orgType === "buyer" ? "supplier" : "buyer") : null;
@@ -26,6 +27,7 @@ async function BuyerShell({ children }: { children: React.ReactNode }) {
       email={ctx.email}
       homeHref="/buyer"
       showAdminLink={ctx.isPlatformAdmin}
+      navBadges={{ "/buyer/cart": carts.reduce((sum, c) => sum + c.itemCount, 0) }}
       sides={sides}
       addSide={missing}
       addCompany={ctx.orgStatus === "active" ? "buyer" : null}

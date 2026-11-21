@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { inviteColleagueAction, removeTeamMemberAction, revokeTeamInviteAction } from "@/app/team/actions";
 import { Field } from "@/components/forms/field";
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,6 @@ export function TeamManager({
   }
 
   function remove(member: MemberView) {
-    if (!window.confirm(t(member.you ? "leaveConfirm" : "removeConfirm"))) return;
     setNote(null);
     startTransition(async () => {
       const result = await removeTeamMemberAction(member.userId);
@@ -76,7 +76,7 @@ export function TeamManager({
         <h2 id="team-members" className="font-semibold">{t("members")} ({members.length})</h2>
         <ul className="divide-y divide-border rounded-xl border border-border">
           {members.map((m) => (
-            <li key={m.userId} className="flex items-center gap-3 px-4 py-3">
+            <li key={m.userId} className="flex flex-wrap items-center gap-3 px-4 py-3">
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium">
                   {m.name || m.email || "-"}
@@ -88,10 +88,15 @@ export function TeamManager({
                 </span>
               </span>
               {canManage || m.you ? (
-                <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => remove(m)} aria-label={t(m.you ? "leave" : "remove")}>
-                  <Trash2 />
-                  {t(m.you ? "leave" : "remove")}
-                </Button>
+                <ConfirmAction
+                  label={t(m.you ? "leave" : "remove")}
+                  ariaLabel={t(m.you ? "leave" : "remove")}
+                  icon={<Trash2 />}
+                  message={t(m.you ? "leaveConfirm" : "removeConfirm")}
+                  confirmLabel={t(m.you ? "leave" : "remove")}
+                  disabled={pending}
+                  onConfirm={() => remove(m)}
+                />
               ) : null}
             </li>
           ))}

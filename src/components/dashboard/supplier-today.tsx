@@ -51,16 +51,6 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
       <PageHeader
         title={title}
         subtitle={format.dateTime(now, { dateStyle: "full", timeZone: clock.timezone })}
-        actions={
-          total > 0 ? (
-            <Button asChild>
-              <Link href="/supplier/orders/pick">
-                <Truck />
-                {tt("loadingSheet")}
-              </Link>
-            </Button>
-          ) : null
-        }
       />
       {orgStatus === "pending_review" ? (
         <Notice icon={Clock} tone="amber" title={t("pendingTitle")}>
@@ -90,7 +80,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                   const number = to("number", { number: o.number });
                   return (
                     <PanelRow key={o.id}>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-[1_1_12rem]">
                         <p className="truncate font-semibold">{o.buyerName}</p>
                         <p className="text-sm text-muted-foreground">
                           <span className="tabular-nums">{number}</span> · {tt("items", { count: o.itemCount })} ·{" "}
@@ -126,13 +116,13 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                         {d.date ? (
                           <>
                             <b className="block text-base leading-tight tabular-nums">{format.dateTime(dayOf(d.date), { day: "numeric", timeZone: "UTC" })}</b>
-                            <span className="text-[11px] text-muted-foreground">{format.dateTime(dayOf(d.date), { weekday: "short", timeZone: "UTC" })}</span>
+                            <span className="text-xs text-muted-foreground">{format.dateTime(dayOf(d.date), { weekday: "short", timeZone: "UTC" })}</span>
                           </>
                         ) : (
                           <b className="block py-1 text-base">?</b>
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-[1_1_12rem]">
                         <p className="font-semibold">
                           {d.date ? format.dateTime(dayOf(d.date), { dateStyle: "medium", timeZone: "UTC" }) : tt("noDay")}
                           {isToday ? <span className="ml-2 text-xs font-medium text-brand">{tt("todayLabel")}</span> : null}
@@ -154,23 +144,29 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
           </div>
 
           <div className="space-y-5">
-            <section aria-labelledby="value" className="rounded-xl border border-border bg-surface">
+            <section aria-labelledby="value" className="rounded-xl border border-border bg-card">
               <div className="space-y-1 border-b border-border px-4 py-4">
                 <h2 id="value" className="text-sm text-muted-foreground">{td("value")}</h2>
                 <p className="text-3xl font-semibold tabular-nums tracking-tight">{fmt.money(metrics.orderValue30dMinor, metrics.currency)}</p>
                 <div className="py-2">
                   <SparkBars values={series.map((s) => s.valueMinor)} label={tt("chartLabel")} />
                   {series.length > 1 ? (
-                    <div className="mt-1 flex justify-between text-[11px] tabular-nums text-muted-foreground" aria-hidden>
+                    <div className="mt-1 flex justify-between text-xs tabular-nums text-muted-foreground" aria-hidden>
                       <span>{format.dateTime(dayOf(series[0].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
                       <span>{format.dateTime(dayOf(series[series.length - 1].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
                     </div>
                   ) : null}
                   {series.some((s) => s.valueMinor > 0) ? (
-                    <p className="mt-1 text-[11px] text-muted-foreground">{tt("chartLegend", { best: fmt.money(Math.max(...series.map((s) => s.valueMinor), 0), metrics.currency) })}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{tt("chartLegend", { best: fmt.money(Math.max(...series.map((s) => s.valueMinor), 0), metrics.currency) })}</p>
                   ) : null}
                 </div>
                 <p className="text-xs leading-relaxed text-muted-foreground">{td("valueHint")}</p>
+                <details className="group text-xs text-muted-foreground">
+                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center font-medium text-brand underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+                    {td("valueWhyLabel")}
+                  </summary>
+                  <p className="pb-2 leading-relaxed">{td("valueWhy")}</p>
+                </details>
               </div>
               <div className="divide-y divide-border">
                 <div className="flex items-center justify-between gap-4 px-4 py-3">

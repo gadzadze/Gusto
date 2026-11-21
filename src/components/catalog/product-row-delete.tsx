@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState, useTransition } from "react";
 import { deleteProductAction } from "@/app/supplier/products/actions";
+import { SheetGrabber } from "@/components/ui/sheet-grabber";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 
@@ -44,8 +45,9 @@ export function ProductRowDelete({
       <dialog
         ref={ref}
         aria-labelledby={`del-${productId}`}
-        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface p-5 text-foreground backdrop:bg-black/40"
+        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface p-5 text-foreground backdrop:bg-black/40 max-sm:m-0 max-sm:mt-auto max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none max-sm:pt-0"
       >
+        <SheetGrabber dialogRef={ref} />
         <div className="space-y-3">
           <p id={`del-${productId}`} className="font-semibold">{t("title", { name })}</p>
           <div className="space-y-1 text-sm text-muted-foreground">

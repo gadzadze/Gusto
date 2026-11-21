@@ -20,7 +20,7 @@ export async function GetStarted({ progress, canInvite }: { progress: SetupProgr
   ] as const;
   const firstOpen = steps.findIndex((s) => !s.done && s.enabled);
   return (
-    <section aria-labelledby="get-started" className="rounded-xl border border-border bg-surface">
+    <section aria-labelledby="get-started" className="rounded-xl border border-border bg-card">
       <header className="border-b border-border px-4 py-4">
         <h2 id="get-started" className="font-semibold">{t("title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("intro")}</p>
@@ -45,7 +45,7 @@ export async function GetStarted({ progress, canInvite }: { progress: SetupProgr
               <p className="text-sm text-muted-foreground">{step.enabled ? t(`${step.key}.body`) : t("afterApproval")}</p>
             </div>
             {step.enabled && !step.done ? (
-              <Button asChild variant={i === firstOpen ? "default" : "outline"} size="sm" className="ml-12 sm:ml-0">
+              <Button asChild variant={i === firstOpen ? "default" : "outline"} size="sm" className="ml-12 h-auto max-w-[calc(100%-3rem)] whitespace-normal py-2 text-center sm:ml-0 sm:max-w-none">
                 <Link href={step.href}>{t(`${step.key}.action`)}</Link>
               </Button>
             ) : null}

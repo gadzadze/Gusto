@@ -7,6 +7,8 @@ import { bulkProductsAction } from "@/app/supplier/products/actions";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
+import { SheetGrabber } from "@/components/ui/sheet-grabber";
+import { StatusToast } from "@/components/ui/status-toast";
 
 type Usage = { openOrders: number; orderLines: number };
 type Ctx = { selected: ReadonlySet<string>; toggle: (id: string) => void; setMany: (ids: string[], on: boolean) => void };
@@ -108,12 +110,6 @@ export function BulkSelection({
     [selected],
   );
 
-  useEffect(() => {
-    if (!done) return;
-    const timer = setTimeout(() => setDone(null), 5000);
-    return () => clearTimeout(timer);
-  }, [done]);
-
   const ids = pageIds.filter((id) => selected.has(id));
   const totals = ids.reduce((sum, id) => ({ openOrders: sum.openOrders + (usage[id]?.openOrders ?? 0), orderLines: sum.orderLines + (usage[id]?.orderLines ?? 0) }), { openOrders: 0, orderLines: 0 });
 
@@ -174,15 +170,16 @@ export function BulkSelection({
         </div>
       ) : null}
       {done && ids.length === 0 ? (
-        <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-40 flex justify-center px-4 md:bottom-6">
-          <p className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium shadow-lg">{done}</p>
-        </div>
+        <StatusToast className="z-40" onDismiss={() => setDone(null)}>
+          {done}
+        </StatusToast>
       ) : null}
       <dialog
         ref={dialog}
         aria-labelledby="bulk-delete-title"
-        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface p-5 text-foreground backdrop:bg-black/40"
+        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface p-5 text-foreground backdrop:bg-black/40 max-sm:m-0 max-sm:mt-auto max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none max-sm:pt-0"
       >
+        <SheetGrabber dialogRef={dialog} />
         <div className="space-y-3">
           <p id="bulk-delete-title" className="font-semibold">{t("deleteTitle", { count: ids.length })}</p>
           <div className="space-y-1 text-sm text-muted-foreground">

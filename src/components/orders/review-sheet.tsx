@@ -9,6 +9,7 @@ import {
   type ReviewData,
 } from "@/app/supplier/orders/actions";
 import { SupplierOrderActions } from "@/app/supplier/orders/[id]/order-actions";
+import { SheetGrabber } from "@/components/ui/sheet-grabber";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -146,9 +147,11 @@ export function ReviewSheet({
           // A click on the backdrop lands on the dialog element itself.
           if (event.target === dialog.current) close();
         }}
-        className="m-0 ml-auto h-dvh max-h-none w-full max-w-lg overflow-y-auto border-l border-border bg-surface p-0 text-foreground shadow-xl backdrop:bg-black/40"
+        className="m-0 ml-auto h-dvh max-h-none w-full max-w-lg overflow-y-auto border-l border-border bg-surface p-0 text-foreground shadow-xl backdrop:bg-black/40 max-sm:mt-auto max-sm:ml-0 max-sm:h-auto max-sm:max-h-[92dvh] max-sm:max-w-none max-sm:rounded-t-2xl max-sm:border-l-0 max-sm:border-t"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-border bg-surface px-5 py-3">
+        <div className="sticky top-0 z-10 border-b border-border bg-surface">
+        <SheetGrabber dialogRef={dialog} />
+        <div className="flex items-center justify-between gap-3 px-5 py-3 max-sm:pt-0">
           <div className="min-w-0">
             <p className="truncate font-semibold">{buyerName}</p>
             <p className="text-sm tabular-nums text-muted-foreground">
@@ -164,6 +167,7 @@ export function ReviewSheet({
           >
             <X />
           </Button>
+        </div>
         </div>
         <div className="space-y-6 px-5 py-5">
           {state === "loading" ? (

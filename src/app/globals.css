@@ -15,6 +15,7 @@
   --ink: #0b0b0c;
   --surface: #ffffff;
   --surface-2: #fafaf9;
+  --surface-raised: #ffffff;
   --border-color: #e7e5e4;
   --muted-text: #57534e;
   --brand: #7a1f2b;
@@ -24,7 +25,7 @@
 
   --background: var(--surface);
   --foreground: var(--ink);
-  --card: var(--surface);
+  --card: var(--surface-raised);
   --card-foreground: var(--ink);
   --primary: var(--ink);
   --primary-foreground: #ffffff;
@@ -36,7 +37,7 @@
   --accent-foreground: var(--brand);
   --destructive: var(--danger);
   --border: var(--border-color);
-  --input: var(--border-color);
+  --input: #8a857f;
   --ring: var(--brand);
 
   /* Status tones (badges): muted, never competing with brand or errors. */
@@ -58,7 +59,9 @@
   --ink: #f5f5f4;
   --surface: #0b0b0c;
   --surface-2: #161617;
+  --surface-raised: #131314;
   --border-color: #2a2a2c;
+  --input: #68686c;
   --muted-text: #a8a29e;
   /* Burgundy on black fails contrast; dark mode uses a lighter tone. */
   --brand: #d46a7c;
@@ -107,6 +110,76 @@
 
   /* Inter first for Latin and digits; Georgian glyphs fall through to Noto. */
   --font-sans: var(--font-inter), var(--font-noto-georgian), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Moving between pages: the loading skeleton only appears if the wait is noticeable (after 150 ms), then fades
+   in; page content fades in when it arrives instead of popping over the skeleton. Opacity only (a transform would
+   change how fixed-position children behave). Skeleton wrappers are aria-hidden, the page title is marked. */
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+@keyframes content-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.skeleton {
+  animation:
+    skeleton-in 200ms ease-out 150ms backwards,
+    skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 350ms infinite;
+}
+main > :not([data-page-header]):not([aria-hidden="true"]) {
+  animation: content-in 180ms ease-out backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  main > :not([data-page-header]):not([aria-hidden="true"]) {
+    animation: none;
+  }
+}
+
+/* Phone type scale (below 640px): Apple's iOS default is 17 pt and the floor 11 pt (typography.md, accessibility.md).
+   Text that was 14px body and 12px secondary reads as 16px and 14px; Tailwind's text-sm/text-xs/text-base follow. */
+@media (max-width: 639.98px) {
+  :root {
+    --text-xs: 0.875rem;
+    --text-xs--line-height: calc(1.25 / 0.875);
+    --text-sm: 1rem;
+    --text-sm--line-height: calc(1.5 / 1);
+    --text-base: 1.0625rem;
+    --text-base--line-height: calc(1.5 / 1.0625);
+  }
+}
+
+/* The check of a SuccessMark draws itself once. */
+@keyframes success-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.success-check {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: success-draw 380ms ease-out 120ms forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .success-check {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
 }
 
 @layer base {
