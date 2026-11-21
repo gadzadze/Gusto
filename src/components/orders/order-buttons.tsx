@@ -16,7 +16,7 @@ export function ReorderButton({ orderId, size = "default" }: { orderId: string; 
       <Button
         variant="outline"
         size={size}
-        disabled={pending}
+        loading={pending}
         onClick={() =>
           startTransition(async () => {
             const result = await reorderAction(orderId);
@@ -44,7 +44,7 @@ export function BuyerCancelButton({ orderId }: { orderId: string }) {
         <div className="flex gap-2">
           <Button
             variant="outline"
-            disabled={pending}
+            loading={pending}
             onClick={() =>
               startTransition(async () => {
                 const result = await cancelOrderAction(orderId);

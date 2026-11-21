@@ -463,6 +463,10 @@ Black, burgundy and white.
   - A "Skip to content" link leads the shell (`main#main-content`). The theme choice lives in the account menu on a phone (and in
     the sidebar on desktop). Two moments get a `SuccessMark` (a check that draws itself once, still under reduced motion): the
     buyer's order sent, the supplier's order confirmed.
+- **Actions and taps answer at once** (2026-11-21): `Button` takes `loading` (spinner, blocks a second press, stays at full strength:
+  a dimmed button reads as broken); use it on the one button that started the action, never on siblings that merely share `pending`.
+  Buttons and nav links shrink slightly while pressed (off under reduced motion). A nav link shows `PendingHighlight`
+  (`useLinkStatus`) while its page is being prepared, so the tap is acknowledged before the page arrives.
 - **Avoid:** gradients, emoji as icons, decorative motion, modals for
   multi-step flows (use pages or sheets).
 

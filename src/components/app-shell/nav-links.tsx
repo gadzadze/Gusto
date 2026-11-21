@@ -1,7 +1,7 @@
 "use client";
 
 import { ChevronRight, Ellipsis, ShieldCheck } from "lucide-react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
@@ -29,6 +29,16 @@ function isActive(pathname: string, href: string, area: Area): boolean {
 /** `badges` maps a nav href to a count shown next to it (e.g. suppliers waiting for approval). */
 type Props = { area: Area; homeHref: string | null; showAdminLink: boolean; badges?: Record<string, number> };
 
+/**
+ * Instant feedback on a tap: while the next page is still being prepared, the link you pressed is already
+ * highlighted (the page itself only changes when it arrives). Must sit inside the `Link`, which must be `relative`.
+ */
+function PendingHighlight({ className }: { className?: string }) {
+  const { pending } = useLinkStatus();
+  if (!pending) return null;
+  return <span aria-hidden className={cn("pointer-events-none absolute inset-0 -z-10 animate-in-soft bg-brand-soft/80", className)} />;
+}
+
 function Count({ n, label }: { n: number; label: string }) {
   if (n <= 0) return null;
   return (
@@ -51,10 +61,11 @@ function SidebarLink({ item, area }: { item: NavItem; area: Area }) {
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-colors",
+        "relative isolate flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-[color,background-color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100",
         active ? "bg-brand-soft text-brand" : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
+      <PendingHighlight className="rounded-md" />
       <item.icon aria-hidden className="size-4" />
       {t(item.labelKey)}
       <Count n={badges?.[item.href] ?? 0} label={String(badges?.[item.href] ?? 0)} />
@@ -197,8 +208,9 @@ export function BottomNav(props: Props) {
                   aria-current={active ? "page" : undefined}
                   onClick={() => setOpen(false)}
                   aria-label={count > 0 ? t("withCount", { label: t(item.labelKey), count }) : t(item.labelKey)}
-                  className={cn(slot, active ? "text-brand" : "text-muted-foreground")}
+                  className={cn(slot, "relative isolate transition-transform duration-150 active:scale-95 motion-reduce:active:scale-100", active ? "text-brand" : "text-muted-foreground")}
                 >
+                  <PendingHighlight />
                   <span className="relative">
                     <item.icon aria-hidden className="size-5" />
                     {count > 0 ? (
