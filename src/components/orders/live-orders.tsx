@@ -4,6 +4,7 @@ import { BellRing } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { StatusToast } from "@/components/ui/status-toast";
 
 const VISIBLE_MS = 20_000;
 const HIDDEN_MS = 60_000;
@@ -13,7 +14,7 @@ const MAX_FAILURES = 3;
  * Keeps an open supplier page current: it asks /api/supplier/pulse every 20 s (60 s in a background tab,
  * and at once when the tab comes back), and when the waiting queue changed it re-renders the page with
  * router.refresh(). A refresh is never forced while a dialog is open, so a half-finished review is not
- * disturbed; the next poll applies it. A new order also shows a short notice and, in a background tab,
+ * disturbed; the next poll applies it. A new order also shows a notice (kept until closed) and, in a background tab,
  * the waiting count in the tab title. Renders nothing otherwise.
  */
 export function LiveOrders({ signature, pending }: { signature: string; pending: number }) {
@@ -32,7 +33,6 @@ export function LiveOrders({ signature, pending }: { signature: string; pending:
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let noticeTimer: ReturnType<typeof setTimeout> | undefined;
     let failures = 0;
     let stopped = false;
 
@@ -50,9 +50,7 @@ export function LiveOrders({ signature, pending }: { signature: string; pending:
         failures = 0;
         if (data.signature !== seen.current && !document.querySelector("dialog[open]")) {
           if (data.pending > seenPending.current) {
-            setNotice(true);
-            clearTimeout(noticeTimer);
-            noticeTimer = setTimeout(() => setNotice(false), 8000);
+            setNotice(true); // stays until the person closes it
           }
           seen.current = data.signature;
           seenPending.current = data.pending;
@@ -81,7 +79,6 @@ export function LiveOrders({ signature, pending }: { signature: string; pending:
     return () => {
       stopped = true;
       clearTimeout(timer);
-      clearTimeout(noticeTimer);
       document.removeEventListener("visibilitychange", onVisible);
       if (baseTitle.current !== null) document.title = baseTitle.current;
     };
@@ -89,11 +86,8 @@ export function LiveOrders({ signature, pending }: { signature: string; pending:
 
   if (!notice) return null;
   return (
-    <div role="status" aria-live="polite" className="pointer-events-none fixed inset-x-0 bottom-20 z-50 flex justify-center px-4 md:bottom-6">
-      <p className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-surface px-4 py-2 text-sm font-medium shadow-lg">
-        <BellRing className="size-4 text-brand" aria-hidden />
-        {t("newOrder")}
-      </p>
-    </div>
+    <StatusToast icon={<BellRing className="size-4 shrink-0 text-brand" aria-hidden />} onDismiss={() => setNotice(false)}>
+      {t("newOrder")}
+    </StatusToast>
   );
 }

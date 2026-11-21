@@ -143,7 +143,7 @@ export function BottomNav(props: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const slot = "flex min-h-14 w-full min-w-0 flex-col items-center justify-center gap-1 px-0 text-center text-[10px] font-medium leading-tight";
+  const slot = "flex min-h-14 w-full min-w-0 flex-col items-center justify-center gap-1 px-0 text-center text-[0.6875rem] font-medium leading-tight";
   // Long words carry soft hyphens in `nav.bar.*`, so on a narrow phone they wrap at a syllable instead of being cut.
   const barLabel = (key: NavItem["labelKey"]) => ((BAR_LABELS as readonly string[]).includes(key) ? t(`bar.${key as (typeof BAR_LABELS)[number]}`) : t(key));
   return (

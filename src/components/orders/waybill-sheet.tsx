@@ -11,6 +11,7 @@ import {
   readWaybillAtRsAction,
   saveWaybillDraftAction,
 } from "@/app/supplier/orders/[id]/waybill/actions";
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
@@ -175,9 +176,15 @@ function RsPanel({ rs, transport, vatNote }: { rs: NonNullable<SheetProps["rs"]>
             >
               {t("check")}
             </Button>
-            <Button type="button" disabled={pending} onClick={() => window.confirm(t("activateConfirm")) && run(() => activateWaybillAction(rs.orderId))}>
-              {t("activate")}
-            </Button>
+            <ConfirmAction
+              variant="default"
+              size="default"
+              label={t("activate")}
+              message={t("activateConfirm")}
+              confirmLabel={t("activate")}
+              disabled={pending}
+              onConfirm={() => run(() => activateWaybillAction(rs.orderId))}
+            />
             <Button type="button" variant="ghost" disabled={pending} onClick={() => run(() => discardWaybillDraftAction(rs.orderId))}>
               {t("discard")}
             </Button>
@@ -188,9 +195,14 @@ function RsPanel({ rs, transport, vatNote }: { rs: NonNullable<SheetProps["rs"]>
       {rs.state === "active" ? (
         <>
           <p className="text-sm font-medium">{t("active", { number: rs.rsNumber })}</p>
-          <Button type="button" variant="outline" disabled={pending} onClick={() => window.confirm(t("closeConfirm")) && run(() => closeWaybillAction(rs.orderId))}>
-            {t("close")}
-          </Button>
+          <ConfirmAction
+            size="default"
+            label={t("close")}
+            message={t("closeConfirm")}
+            confirmLabel={t("close")}
+            disabled={pending}
+            onConfirm={() => run(() => closeWaybillAction(rs.orderId))}
+          />
         </>
       ) : null}
       {rs.state === "closed" ? <p className="text-sm font-medium">{t("closed", { number: rs.rsNumber })}</p> : null}

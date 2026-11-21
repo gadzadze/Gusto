@@ -45,6 +45,12 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr] print:block">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:text-primary-foreground print:hidden"
+      >
+        {t("nav.skipToContent")}
+      </a>
       <aside className="hidden border-r border-border bg-surface-2 md:sticky md:top-0 md:flex md:h-dvh md:flex-col print:!hidden">
         <div className="flex items-center justify-between gap-2 px-5 pb-4 pt-5">
           <Logo />
@@ -115,7 +121,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
             <SideSwitch sides={sides} compact />
           </div>
         ) : null}
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
+        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 outline-none px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
           {children}
         </main>
       </div>

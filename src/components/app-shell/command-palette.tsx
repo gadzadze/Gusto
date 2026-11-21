@@ -225,7 +225,7 @@ export function PaletteTrigger({ compact }: { compact?: boolean }) {
     <button
       type="button"
       onClick={fire}
-      className="flex min-h-10 w-full items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm text-muted-foreground hover:bg-muted"
+      className="flex min-h-10 w-full items-center gap-2 rounded-md border border-input bg-surface px-3 text-sm text-muted-foreground hover:bg-muted"
     >
       <Search aria-hidden className="size-4" />
       <span className="flex-1 text-left">{t("trigger")}</span>

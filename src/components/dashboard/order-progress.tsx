@@ -10,7 +10,7 @@ export async function OrderProgress({ step }: { step: 1 | 2 | 3 }) {
       {labels.map((label, i) => (
         <li key={label} className="space-y-1">
           <span className={cn("block h-1 rounded-full", i < step ? "bg-brand" : "bg-border")} aria-hidden />
-          <span className={cn("block text-[11px]", i === step - 1 ? "font-medium text-foreground" : "text-muted-foreground", i === 1 && "text-center", i === 2 && "text-right")}>
+          <span className={cn("block text-xs", i === step - 1 ? "font-medium text-foreground" : "text-muted-foreground", i === 1 && "text-center", i === 2 && "text-right")}>
             {label}
           </span>
         </li>

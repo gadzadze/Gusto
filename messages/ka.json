@@ -317,7 +317,8 @@
       "buyer": "სხვა კომპანიის დამატება"
     },
     "team": "გუნდი",
-    "account": "ანგარიში"
+    "account": "ანგარიში",
+    "skipToContent": "მთავარ შინაარსზე გადასვლა"
   },
   "roles": {
     "buyer": "მყიდველი",
@@ -821,7 +822,8 @@
       "retry": "ხელახლა ცდა",
       "reference": "კოდი: {digest}"
     },
-    "language": "ენა"
+    "language": "ენა",
+    "dismiss": "დახურვა"
   },
   "units": {
     "piece": "ც",

@@ -36,7 +36,7 @@
   --accent-foreground: var(--brand);
   --destructive: var(--danger);
   --border: var(--border-color);
-  --input: var(--border-color);
+  --input: #8a857f;
   --ring: var(--brand);
 
   /* Status tones (badges): muted, never competing with brand or errors. */
@@ -59,6 +59,7 @@
   --surface: #0b0b0c;
   --surface-2: #161617;
   --border-color: #2a2a2c;
+  --input: #68686c;
   --muted-text: #a8a29e;
   /* Burgundy on black fails contrast; dark mode uses a lighter tone. */
   --brand: #d46a7c;

@@ -126,7 +126,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                         {d.date ? (
                           <>
                             <b className="block text-base leading-tight tabular-nums">{format.dateTime(dayOf(d.date), { day: "numeric", timeZone: "UTC" })}</b>
-                            <span className="text-[11px] text-muted-foreground">{format.dateTime(dayOf(d.date), { weekday: "short", timeZone: "UTC" })}</span>
+                            <span className="text-xs text-muted-foreground">{format.dateTime(dayOf(d.date), { weekday: "short", timeZone: "UTC" })}</span>
                           </>
                         ) : (
                           <b className="block py-1 text-base">?</b>
@@ -161,13 +161,13 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                 <div className="py-2">
                   <SparkBars values={series.map((s) => s.valueMinor)} label={tt("chartLabel")} />
                   {series.length > 1 ? (
-                    <div className="mt-1 flex justify-between text-[11px] tabular-nums text-muted-foreground" aria-hidden>
+                    <div className="mt-1 flex justify-between text-xs tabular-nums text-muted-foreground" aria-hidden>
                       <span>{format.dateTime(dayOf(series[0].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
                       <span>{format.dateTime(dayOf(series[series.length - 1].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
                     </div>
                   ) : null}
                   {series.some((s) => s.valueMinor > 0) ? (
-                    <p className="mt-1 text-[11px] text-muted-foreground">{tt("chartLegend", { best: fmt.money(Math.max(...series.map((s) => s.valueMinor), 0), metrics.currency) })}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{tt("chartLegend", { best: fmt.money(Math.max(...series.map((s) => s.valueMinor), 0), metrics.currency) })}</p>
                   ) : null}
                 </div>
                 <p className="text-xs leading-relaxed text-muted-foreground">{td("valueHint")}</p>

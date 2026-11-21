@@ -317,7 +317,8 @@
       "buyer": "Add another company"
     },
     "team": "Team",
-    "account": "Account"
+    "account": "Account",
+    "skipToContent": "Skip to content"
   },
   "roles": {
     "buyer": "Buyer",
@@ -821,7 +822,8 @@
       "retry": "Try again",
       "reference": "Code: {digest}"
     },
-    "language": "Language"
+    "language": "Language",
+    "dismiss": "Dismiss"
   },
   "units": {
     "piece": "pc",
