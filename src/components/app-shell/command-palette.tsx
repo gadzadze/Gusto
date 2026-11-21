@@ -174,6 +174,7 @@ export function CommandPalette({ area, homeHref, showAdminLink, entitySearch }: 
           className="min-h-12 w-full bg-transparent text-base outline-none placeholder:text-muted-foreground"
         />
       </div>
+      <p role="status" aria-live="polite" className="sr-only">{list.length === 0 ? t("empty") : t("results", { count: list.length })}</p>
       <ul id="palette-list" role="listbox" className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
         {list.length === 0 ? <li className="px-3 py-6 text-center text-sm text-muted-foreground">{t("empty")}</li> : null}
         {list.map((c, i) => (

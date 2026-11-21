@@ -92,7 +92,10 @@ export async function sendMagicLink(_prev: MagicLinkState, formData: FormData): 
     },
   });
   if (error) {
-    if (error.status === 429) return { status: "error", error: "rate_limited" };
+    if (error.status === 429) {
+      console.error("[auth] signInWithOtp rate limited", { code: error.code }); // the code only, to tell which limit fired
+      return { status: "error", error: "rate_limited" };
+    }
     // Log the code only — never the address or the link.
     console.error("[auth] signInWithOtp failed", { code: error.code, status: error.status });
     return { status: "error", error: "unknown" };
