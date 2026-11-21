@@ -76,7 +76,7 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
             attention.map((item) => (
               <PanelRow key={item.key}>
                 <span className="size-2 shrink-0 rounded-full bg-brand" aria-hidden />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-[1_1_12rem]">
                   <p className="font-semibold">{item.title}</p>
                   <p className="text-sm text-muted-foreground">{item.hint}</p>
                 </div>

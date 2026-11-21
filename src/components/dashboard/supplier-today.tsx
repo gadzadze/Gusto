@@ -90,7 +90,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                   const number = to("number", { number: o.number });
                   return (
                     <PanelRow key={o.id}>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-[1_1_12rem]">
                         <p className="truncate font-semibold">{o.buyerName}</p>
                         <p className="text-sm text-muted-foreground">
                           <span className="tabular-nums">{number}</span> · {tt("items", { count: o.itemCount })} ·{" "}
@@ -132,7 +132,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                           <b className="block py-1 text-base">?</b>
                         )}
                       </div>
-                      <div className="min-w-0 flex-1">
+                      <div className="min-w-0 flex-[1_1_12rem]">
                         <p className="font-semibold">
                           {d.date ? format.dateTime(dayOf(d.date), { dateStyle: "medium", timeZone: "UTC" }) : tt("noDay")}
                           {isToday ? <span className="ml-2 text-xs font-medium text-brand">{tt("todayLabel")}</span> : null}

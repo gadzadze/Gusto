@@ -121,7 +121,7 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
               const last = lastOrders[s.id];
               return (
                 <PanelRow key={s.id}>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-[1_1_12rem]">
                     <p className="truncate font-semibold">{s.name}</p>
                     <p className="text-sm text-muted-foreground">
                       {last ? th("lastOrder", { when: format.relativeTime(last, now) }) : th("neverOrdered")}

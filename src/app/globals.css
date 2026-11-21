@@ -149,6 +149,19 @@ main > :not([data-page-header]):not([aria-hidden="true"]) {
   }
 }
 
+/* Phone type scale (below 640px): Apple's iOS default is 17 pt and the floor 11 pt (typography.md, accessibility.md).
+   Text that was 14px body and 12px secondary reads as 16px and 14px; Tailwind's text-sm/text-xs/text-base follow. */
+@media (max-width: 639.98px) {
+  :root {
+    --text-xs: 0.875rem;
+    --text-xs--line-height: calc(1.25 / 0.875);
+    --text-sm: 1rem;
+    --text-sm--line-height: calc(1.5 / 1);
+    --text-base: 1.0625rem;
+    --text-base--line-height: calc(1.5 / 1.0625);
+  }
+}
+
 @layer base {
   * {
     border-color: var(--border);
