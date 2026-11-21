@@ -439,6 +439,11 @@ Black, burgundy and white.
   new nav item with a long label needs a `nav.bar.*` entry; `tests/e2e/bottom-nav.spec.ts` fails if
   any label is cut off at 360px or 320px.
 - **States:** every list has empty, loading (skeleton) and error states.
+  **Moving between pages should feel seamless** (2026-11-21, `globals.css`): the `Skeleton` primitive stays invisible for
+  the first 150 ms and then fades in (a wait shorter than that shows no skeleton at all), and anything that is a direct
+  child of the shell's `<main>` fades in over 180 ms when it arrives, except the page title (`data-page-header`) and
+  `aria-hidden` skeleton wrappers. Opacity only (a transform would change how fixed-position children behave); both are
+  off under `prefers-reduced-motion`. Use the `Skeleton` primitive for any new loading state so it inherits this.
 - **Avoid:** gradients, emoji as icons, decorative motion, modals for
   multi-step flows (use pages or sheets).
 

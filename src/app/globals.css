@@ -109,6 +109,45 @@
   --font-sans: var(--font-inter), var(--font-noto-georgian), ui-sans-serif, system-ui, sans-serif;
 }
 
+/* Moving between pages: the loading skeleton only appears if the wait is noticeable (after 150 ms), then fades
+   in; page content fades in when it arrives instead of popping over the skeleton. Opacity only (a transform would
+   change how fixed-position children behave). Skeleton wrappers are aria-hidden, the page title is marked. */
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+@keyframes content-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.skeleton {
+  animation:
+    skeleton-in 200ms ease-out 150ms backwards,
+    skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) 350ms infinite;
+}
+main > :not([data-page-header]):not([aria-hidden="true"]) {
+  animation: content-in 180ms ease-out backwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  main > :not([data-page-header]):not([aria-hidden="true"]) {
+    animation: none;
+  }
+}
+
 @layer base {
   * {
     border-color: var(--border);
