@@ -998,6 +998,7 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   itself off, and while the company is `pending_review` the invite step says it opens after approval. The "Loading sheet" button and
   the chart's best-day legend only show once there is something to show. A buyer with no suppliers gets "Find a supplier" and
   "Invite a supplier" buttons.
+- **Dashboard grids use `grid-cols-[minmax(0,1fr)]` below `lg`** (2026-11-20): a plain `grid` has one `auto` column that grows to the widest non-wrapping child (an action button), which made the admin overview 22px wider than a 320px phone; the e2e `bottom-nav` spec caught it.
 - **Review in a side panel** (`components/orders/review-sheet.tsx`): "Review" on a queue row opens a native modal `<dialog>`
   (focus trap, Escape and backdrop close it) that loads the order with `loadOrderReviewAction` (supplier-only, other
   company's order = not found, formatted on the server) and reuses `SupplierOrderActions` (confirm with quantities and

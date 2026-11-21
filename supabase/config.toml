@@ -27,8 +27,19 @@ enable_signup = false
 site_url = "http://localhost:3000"
 additional_redirect_urls = ["http://localhost:3000/**", "http://localhost:3100/**"]
 
+[auth.rate_limit]
+# Local only: the defaults (2 emails an hour) are far below what the e2e suite sends.
+email_sent = 1000
+sign_in_sign_ups = 1000
+
 [auth.email]
-enable_signup = false
+# Newer CLIs read `enabled` (the email provider itself: needed for magic links and passwords); sign-ups stay
+# off through `enable_signup = false` under [auth] above. The old `enable_signup` key here now switches the
+# whole provider off, which made every sign-in fail with email_provider_disabled.
+enabled = true
+# The tests ask for a sign-in link right after the app generated one for the same address; GoTrue's default
+# minimum gap between emails to one address is 60 s, which would refuse the second.
+max_frequency = "1s"
 # Magic links confirm the address; no separate confirmation step.
 enable_confirmations = false
 

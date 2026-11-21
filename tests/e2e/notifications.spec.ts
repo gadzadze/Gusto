@@ -31,8 +31,11 @@ test("buyer submits → supplier sees an unread notification and opens the order
   await buyer.waitForLoadState("networkidle");
 
   // Nothing yet for the supplier.
+  // (A buyer joining from the invitation already told the supplier once, so count from what is there.)
   await supplier.goto("/supplier");
-  await expect(supplier.getByRole("link", { name: "შეტყობინებები", exact: true })).toBeVisible();
+  const bell = supplier.getByRole("link", { name: /^შეტყობინებები/ });
+  await expect(bell).toBeVisible();
+  const before = Number(/წაუკითხავი: (\d+)/.exec((await bell.getAttribute("aria-label")) ?? "")?.[1] ?? 0);
 
   await buyer.getByRole("button", { name: "დამატება: ყველი სულგუნი" }).click();
   await expect(buyer.getByRole("button", { name: "რაოდენობის გაზრდა: ყველი სულგუნი" })).toBeVisible();
@@ -52,10 +55,11 @@ test("buyer submits → supplier sees an unread notification and opens the order
   expect(decodeURIComponent(href)).toContain(`/o/${number}`);
   await expect(buyer.getByText("გაიგზავნა თუ არა")).toBeVisible();
 
-  // The supplier's bell shows 1 unread; the list has it, unread, and opens the order.
+  // The supplier's bell shows one more unread; the list has it, unread, and opens the order.
   await supplier.goto("/supplier");
-  await expect(supplier.getByRole("link", { name: "შეტყობინებები, წაუკითხავი: 1" })).toBeVisible();
-  await supplier.getByRole("link", { name: "შეტყობინებები, წაუკითხავი: 1" }).click();
+  const withOrder = `შეტყობინებები, წაუკითხავი: ${before + 1}`;
+  await expect(supplier.getByRole("link", { name: withOrder })).toBeVisible();
+  await supplier.getByRole("link", { name: withOrder }).click();
   await expect(supplier).toHaveURL(/\/supplier\/notifications$/);
   await supplier.waitForLoadState("networkidle");
   const row = supplier.getByRole("button", { name: new RegExp(`ახალი შეკვეთა GST-${number}`) });
@@ -67,8 +71,7 @@ test("buyer submits → supplier sees an unread notification and opens the order
 
   // Read now: the count is gone.
   await supplier.goto("/supplier");
-  await expect(supplier.getByRole("link", { name: "შეტყობინებები", exact: true })).toBeVisible();
-  await expect(supplier.getByRole("link", { name: /წაუკითხავი/ })).toHaveCount(0);
+  await expect(supplier.getByRole("link", { name: before === 0 ? "შეტყობინებები" : `შეტყობინებები, წაუკითხავი: ${before}`, exact: true })).toBeVisible();
 
   // Supplier confirms; the buyer is notified and the WhatsApp button for the buyer appears.
   await supplier.goto(`/o/${number}`);

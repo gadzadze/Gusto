@@ -108,9 +108,9 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   // The photo is uploaded right after the product is created; wait for it before moving on.
   await expect(supplier.getByRole("img", { name: "ყველი სულგუნი" })).toBeVisible();
 
-  // The supplier's dashboard before any order: an empty state.
+  // The supplier's dashboard before any order: the "get started" checklist instead of an empty box.
   await supplier.goto("/supplier");
-  await expect(supplier.getByText("შეკვეთები ჯერ არ არის")).toBeVisible();
+  await expect(supplier.getByText("დაწყება", { exact: true })).toBeVisible();
 
   // Connected buyer sees the product with its photo.
   const invitePath = await inviteCustomer(supplier, buyerName);
@@ -134,7 +134,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   const number = (await buyer.getByRole("heading", { level: 1 }).textContent())!.match(/GST-(\d+)/)![1];
 
   // Supplier dashboard: one order waiting; after confirming, its value counts, as "order value".
-  const region = (name: string) => supplier.getByRole("region", { name, exact: true });
+  const region = (name: string) => supplier.getByRole("region", { name }); // the panel title carries a count badge, so match on the words
   const weekTile = () => supplier.getByRole("heading", { name: "შეკვეთები ბოლო 7 დღეში", exact: true }).locator("xpath=../..");
   await supplier.goto("/supplier");
   await expect(region("ელოდება თქვენს პასუხს")).toContainText("GST-");
@@ -158,7 +158,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   await expect(buyer.getByRole("link", { name: new RegExp(`GST-${number}`) }).first()).toBeVisible();
   await expect(buyer.getByRole("heading", { name: "ყველაზე ხშირად შეკვეთილი პროდუქტები" })).toBeVisible();
   await expect(buyer.getByRole("button", { name: "დამატება: ყველი სულგუნი" })).toBeVisible();
-  await expect(buyer.getByRole("button", { name: "ხელახლა შეკვეთა" }).first()).toBeVisible();
+  // (Order again shows on delivered orders: the ordering spec covers it. This one is still in progress.)
 
   // Admin overview: pilot metrics from real rows.
   await admin.goto("/admin");
@@ -169,7 +169,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   // Admin: order lookup is read-only and audited.
   await admin.goto("/admin/orders");
   await admin.getByLabel("შეკვეთის ნომერი").fill(`GST-${number}`);
-  await admin.getByRole("button", { name: "ძიება" }).click();
+  await admin.getByRole("button", { name: "ძიება", exact: true }).click();
   await expect(admin).toHaveURL(new RegExp(`/admin/orders/${number}$`));
   await expect(admin.getByRole("heading", { level: 1 })).toContainText(`GST-${number}`);
   await expect(admin.getByText(buyerName).first()).toBeVisible();
@@ -184,7 +184,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   // Admin: find the buyer, suspend with a reason; the buyer can't order; reactivate.
   await admin.goto("/admin/organizations");
   await admin.getByRole("textbox", { name: "ძიება" }).fill(buyerName);
-  await admin.getByRole("button", { name: "ძიება" }).click();
+  await admin.getByRole("button", { name: "ძიება", exact: true }).click();
   await admin.getByRole("link", { name: buyerName }).click();
   await admin.waitForLoadState("networkidle");
   await admin.getByRole("button", { name: "შეჩერება" }).click();

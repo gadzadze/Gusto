@@ -46,7 +46,7 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
   return (
     <div className="space-y-6">
       <BuyerSearchForm />
-      <div className="grid items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
         <div className="space-y-5">
           {regular.length > 0 ? (
             <Panel
