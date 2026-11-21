@@ -433,8 +433,13 @@ Black, burgundy and white.
 - **Layout:** sidebar on desktop, bottom navigation on mobile. No horizontal
   scroll at 360px width. Touch targets ≥44px.
   The phone bottom bar (`BottomNav` in `components/app-shell/nav-links.tsx`) has five slots: with more
-  than five items the first four show and the rest sit behind "More" (`nav.more`). Georgian words run
-  about 6.9px per letter at 10px, so the long labels have soft-hyphenated variants in `nav.bar.*`
+  than five items the first four show and the rest sit behind "More" (`nav.more`). A buyer and a supplier have exactly five
+  (a supplier's Settings and a platform admin's Administration link carry `inAccountMenuOnPhone` and sit in the phone account
+  menu instead); only the admin area still has a "More". Tabs show a **count badge** (`NavBadgesProvider`, `nav-badges.tsx`): a
+  supplier's Orders = orders waiting for an answer (rendered by the layout, then refreshed every 45 s from `/api/supplier/pulse`
+  while the tab is visible), a buyer's Cart = items in all carts, the admin's items as before; the badge is part of the link's
+  accessible name (`nav.withCount`). Georgian words run
+  about 7px per letter at 11px (the floor Apple sets is 11 pt, so bar labels are `0.6875rem`, never smaller), so the long labels have soft-hyphenated variants in `nav.bar.*`
   (`BAR_LABELS`) that wrap at a syllable on narrow phones; the real name stays as `aria-label`. A
   new nav item with a long label needs a `nav.bar.*` entry; `tests/e2e/bottom-nav.spec.ts` fails if
   any label is cut off at 360px or 320px.
@@ -444,6 +449,20 @@ Black, burgundy and white.
   child of the shell's `<main>` fades in over 180 ms when it arrives, except the page title (`data-page-header`) and
   `aria-hidden` skeleton wrappers. Opacity only (a transform would change how fixed-position children behave); both are
   off under `prefers-reduced-motion`. Use the `Skeleton` primitive for any new loading state so it inherits this.
+- **Apple HIG review, 2026-11-21** (design review against Apple's guidelines; the rules it produced):
+  - **Phone type scale** (`globals.css`, below 640px): `text-xs` is 14px, `text-sm` 16px, `text-base` 17px (Apple's iOS default is
+    17 pt, the floor 11 pt); nothing is set below 12px, and the page title (`PageHeader`) is 28px on a phone. Rows with an action
+    (`PanelRow`) wrap, with the text given a `flex-[1_1_12rem]` basis, so a button drops below the text instead of squeezing it.
+  - **Control edges** use their own `--input` token (3:1 against the page and cards, tested in `contrast.test.ts`), not the hairline
+    `--border`; cards use `--surface-raised` (`bg-card`), which is lighter than the page in dark mode.
+  - **Nothing disappears on a timer**: notices float as `StatusToast` (kept until closed; the live "new order" notice and the bulk
+    result). Hard-to-undo actions use `ConfirmAction` (an inline question with the action named and Cancel, focus on Cancel), never
+    `window.confirm`.
+  - **Phone dialogs are bottom sheets** with a `SheetGrabber` (drag down to dismiss; the close button and Escape stay): the order
+    review, the product card, both delete confirmations. From `sm` up they are the side panel or centred dialog they were.
+  - A "Skip to content" link leads the shell (`main#main-content`). The theme choice lives in the account menu on a phone (and in
+    the sidebar on desktop). Two moments get a `SuccessMark` (a check that draws itself once, still under reduced motion): the
+    buyer's order sent, the supplier's order confirmed.
 - **Avoid:** gradients, emoji as icons, decorative motion, modals for
   multi-step flows (use pages or sheets).
 
@@ -1000,16 +1019,18 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   draws the same two columns of panels (the `Skeleton` tone is `bg-border/70`, visible on both themes). A supplier with **no orders
   at all** sees the `GetStarted` checklist (`components/dashboard/get-started.tsx`, data from `getSetupProgress` in
   `domain/orders/today.ts`: products, price lists, customers that are invited or active) instead of an empty box; each step ticks
-  itself off, and while the company is `pending_review` the invite step says it opens after approval. The "Loading sheet" button and
-  the chart's best-day legend only show once there is something to show. A buyer with no suppliers gets "Find a supplier" and
+  itself off, and while the company is `pending_review` the invite step says it opens after approval. The chart's best-day legend
+  only shows once there is something to show; the loading sheet is opened from each delivery day (there is no header button). A buyer with no suppliers gets "Find a supplier" and
   "Invite a supplier" buttons.
 - **Dashboard grids use `grid-cols-[minmax(0,1fr)]` below `lg`** (2026-11-20): a plain `grid` has one `auto` column that grows to the widest non-wrapping child (an action button), which made the admin overview 22px wider than a 320px phone; the e2e `bottom-nav` spec caught it.
 - **Review in a side panel** (`components/orders/review-sheet.tsx`): "Review" on a queue row opens a native modal `<dialog>`
   (focus trap, Escape and backdrop close it) that loads the order with `loadOrderReviewAction` (supplier-only, other
   company's order = not found, formatted on the server) and reuses `SupplierOrderActions` (confirm with quantities and
   delivery day, reject with reason). `ReviewBody` is the content without the dialog.
-- **Phone header** (decided 2026-11-19, `components/app-shell/account-menu.tsx`): team, change password and sign out sit behind one
-  account button (Popover API) so the company name fits next to search, bell and theme; the sidebar still shows them directly.
+- **Phone header** (decided 2026-11-19, `components/app-shell/account-menu.tsx`; changed 2026-11-21): the company name (not the logo)
+  with search, bell and one account button (Popover API) that holds Administration (platform admins), Settings (suppliers), team,
+  change password, the theme choice and sign out; the sidebar still shows them directly. A buyer has no header magnifier: the
+  Search tab is their one place to search.
 - **Buyer home**: search, regular orders (accent block when due today), "in progress" orders with a Sent / Confirmed /
   Delivered strip and the agreed delivery day (with the open total under the list), recent orders with reorder (the ones already in progress are not repeated; on a phone the button sits under the text), often-ordered products, suppliers with the
   last order date (`lastOrderDates`) and "find a supplier".
@@ -1021,7 +1042,7 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   fingerprint, scoped to the acting company, guarded like any supplier page) every 20 s (60 s in a background tab, at once when
   the tab returns) and calls `router.refresh()` when the queue changed. **Polling, not Supabase Realtime, on purpose**: the
   browser never talks to Supabase and RLS has no policies. It never refreshes while a `<dialog>` is open, shows a short
-  "new order received" notice, puts the waiting count in a background tab's title, and stops after 3 failures (signed out,
+  "new order received" notice (kept until closed), puts the waiting count in a background tab's title, and stops after 3 failures (signed out,
   offline). Other supplier pages are not live.
 - **Bulk actions on the product list** (decided 2026-11-18, `components/catalog/product-bulk.tsx`, `bulkProductsAction`,
   `bulkSetActive` / `bulkSetCategory` / `bulkDeleteProducts` in `domain/catalog/products.ts`): row checkboxes (server-rendered rows,
@@ -1040,7 +1061,7 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   (`nothing_to_save`). The `list` column leaves room for other lists (today only `products`). Hidden for suspended companies.
 - **Command palette** (decided 2026-11-19, `components/app-shell/command-palette.tsx`, `app/palette/actions.ts`,
   `domain/search/palette.ts`, `lib/palette.ts`): Ctrl/Cmd+K (or the "Search" field in the sidebar, the magnifier in the phone
-  header) opens one `<dialog>` mounted in `AppShell`. It lists the menu pages ("Go to", from the same `itemsFor` as the nav) and
+  header for suppliers and admins) opens one `<dialog>` mounted in `AppShell`. It lists the menu pages ("Go to", from the same `itemsFor` as the nav) and
   a few quick actions, filtered as you type; from two characters it also asks `paletteSearchAction` (guarded by `requireOrg`,
   scoped by the context, rate limited 240/min per person, debounced 200 ms) for the acting company's own matches: a supplier's
   products and customers, a buyer's connected suppliers, and an order by number ("GST-1004", "1004", opened through

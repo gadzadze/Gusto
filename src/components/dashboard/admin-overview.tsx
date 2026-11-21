@@ -110,7 +110,7 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
       </div>
 
       <div className="space-y-5">
-        <section aria-labelledby="orders30" className="rounded-xl border border-border bg-surface px-4 py-4">
+        <section aria-labelledby="orders30" className="rounded-xl border border-border bg-card px-4 py-4">
           <h2 id="orders30" className="text-sm text-muted-foreground">{tp("orders30")}</h2>
           <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">{orderTotal}</p>
           {orderTotal > 0 ? (

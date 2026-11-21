@@ -50,6 +50,10 @@ const PAIRS: [string, string, number, string][] = [
   ["status-gray-fg", "status-gray-bg", TEXT, "rejected/cancelled badge"],
   ["brand", "surface", UI, "focus ring against the page"],
   ["brand", "surface-2", UI, "focus ring against cards"],
+  ["ink", "surface-raised", TEXT, "text on dashboard cards"],
+  ["muted-text", "surface-raised", TEXT, "secondary text on dashboard cards"],
+  ["brand", "surface-raised", TEXT, "links on dashboard cards"],
+  ["input", "surface-raised", UI, "text field edges on cards"],
   ["input", "surface", UI, "text field and select edges against the page"],
   ["input", "surface-2", UI, "text field and select edges against cards"],
 ];

@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function PanelSkeleton({ rows, tall }: { rows: number; tall?: boolean }) {
   return (
-    <div className="rounded-xl border border-border bg-surface">
+    <div className="rounded-xl border border-border bg-card">
       <div className="flex items-center justify-between border-b border-border px-4 py-3.5">
         <Skeleton className="h-4 w-40" />
         <Skeleton className="h-3 w-16" />
@@ -25,7 +25,7 @@ function PanelSkeleton({ rows, tall }: { rows: number; tall?: boolean }) {
 
 function StatSkeleton() {
   return (
-    <div className="space-y-3 rounded-xl border border-border bg-surface px-4 py-4">
+    <div className="space-y-3 rounded-xl border border-border bg-card px-4 py-4">
       <Skeleton className="h-3 w-32" />
       <Skeleton className="h-8 w-40" />
       <Skeleton className="h-11 w-full" />

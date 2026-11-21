@@ -7,6 +7,7 @@ import { bulkProductsAction } from "@/app/supplier/products/actions";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Select } from "@/components/ui/select";
+import { SheetGrabber } from "@/components/ui/sheet-grabber";
 import { StatusToast } from "@/components/ui/status-toast";
 
 type Usage = { openOrders: number; orderLines: number };
@@ -176,8 +177,9 @@ export function BulkSelection({
       <dialog
         ref={dialog}
         aria-labelledby="bulk-delete-title"
-        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface p-5 text-foreground backdrop:bg-black/40"
+        className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface p-5 text-foreground backdrop:bg-black/40 max-sm:m-0 max-sm:mt-auto max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none max-sm:pt-0"
       >
+        <SheetGrabber dialogRef={dialog} />
         <div className="space-y-3">
           <p id="bulk-delete-title" className="font-semibold">{t("deleteTitle", { count: ids.length })}</p>
           <div className="space-y-1 text-sm text-muted-foreground">

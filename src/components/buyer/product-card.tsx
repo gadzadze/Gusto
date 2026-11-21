@@ -1,5 +1,6 @@
 "use client";
 
+import { SheetGrabber } from "@/components/ui/sheet-grabber";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useRef } from "react";
@@ -58,7 +59,8 @@ export function ProductCard({ product }: { product: ProductView }) {
           if (e.target === dialog.current) dialog.current?.close();
         }}
       >
-        <div className="space-y-4 p-5">
+        <SheetGrabber dialogRef={dialog} />
+        <div className="space-y-4 p-5 max-sm:pt-1">
           <div className="flex items-start justify-between gap-3">
             <h2 className="text-lg font-semibold">{product.name}</h2>
             <Button variant="ghost" size="icon" aria-label={t("close")} onClick={() => dialog.current?.close()}>

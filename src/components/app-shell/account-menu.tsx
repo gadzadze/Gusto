@@ -4,6 +4,7 @@ import { CircleUserRound, KeyRound, LogOut, Settings, ShieldCheck, UserCog } fro
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useId, useRef } from "react";
+import { ThemeToggle } from "@/components/theme-toggle";
 import type { Area } from "./nav";
 
 /**
@@ -57,6 +58,9 @@ export function AccountMenu({ area, email, showAdminLink }: { area: Area; email:
           <KeyRound aria-hidden className="size-4" />
           {t("changePassword")}
         </Link>
+        <div className="px-3 py-2">
+          <ThemeToggle />
+        </div>
         <form action="/auth/sign-out" method="post">
           <button type="submit" className={item}>
             <LogOut aria-hidden className="size-4" />

@@ -110,7 +110,6 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           <div className="flex items-center">
             {area !== "buyer" ? <PaletteTrigger compact /> : null}
             {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
-            <ThemeToggle compact />
             <AccountMenu area={area} email={email} showAdminLink={showAdminLink} />
           </div>
         </header>

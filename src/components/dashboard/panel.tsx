@@ -26,7 +26,7 @@ export function Panel({
   return (
     <section
       aria-labelledby={id}
-      className={cn("rounded-xl border bg-surface", tone === "accent" ? "border-brand/30 bg-brand-soft" : "border-border", className)}
+      className={cn("rounded-xl border bg-card", tone === "accent" ? "border-brand/30 bg-brand-soft" : "border-border", className)}
     >
       <header className={cn("flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-4 py-3", tone === "accent" ? "border-brand/20" : "border-border")}>
         <h2 id={id} className="flex items-center gap-2 text-sm font-semibold">

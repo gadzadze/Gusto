@@ -144,7 +144,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
           </div>
 
           <div className="space-y-5">
-            <section aria-labelledby="value" className="rounded-xl border border-border bg-surface">
+            <section aria-labelledby="value" className="rounded-xl border border-border bg-card">
               <div className="space-y-1 border-b border-border px-4 py-4">
                 <h2 id="value" className="text-sm text-muted-foreground">{td("value")}</h2>
                 <p className="text-3xl font-semibold tabular-nums tracking-tight">{fmt.money(metrics.orderValue30dMinor, metrics.currency)}</p>
@@ -161,6 +161,12 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                   ) : null}
                 </div>
                 <p className="text-xs leading-relaxed text-muted-foreground">{td("valueHint")}</p>
+                <details className="group text-xs text-muted-foreground">
+                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center font-medium text-brand underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+                    {td("valueWhyLabel")}
+                  </summary>
+                  <p className="pb-2 leading-relaxed">{td("valueWhy")}</p>
+                </details>
               </div>
               <div className="divide-y divide-border">
                 <div className="flex items-center justify-between gap-4 px-4 py-3">

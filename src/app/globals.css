@@ -15,6 +15,7 @@
   --ink: #0b0b0c;
   --surface: #ffffff;
   --surface-2: #fafaf9;
+  --surface-raised: #ffffff;
   --border-color: #e7e5e4;
   --muted-text: #57534e;
   --brand: #7a1f2b;
@@ -24,7 +25,7 @@
 
   --background: var(--surface);
   --foreground: var(--ink);
-  --card: var(--surface);
+  --card: var(--surface-raised);
   --card-foreground: var(--ink);
   --primary: var(--ink);
   --primary-foreground: #ffffff;
@@ -58,6 +59,7 @@
   --ink: #f5f5f4;
   --surface: #0b0b0c;
   --surface-2: #161617;
+  --surface-raised: #131314;
   --border-color: #2a2a2c;
   --input: #68686c;
   --muted-text: #a8a29e;
@@ -159,6 +161,24 @@ main > :not([data-page-header]):not([aria-hidden="true"]) {
     --text-sm--line-height: calc(1.5 / 1);
     --text-base: 1.0625rem;
     --text-base--line-height: calc(1.5 / 1.0625);
+  }
+}
+
+/* The check of a SuccessMark draws itself once. */
+@keyframes success-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.success-check {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: success-draw 380ms ease-out 120ms forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .success-check {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
 

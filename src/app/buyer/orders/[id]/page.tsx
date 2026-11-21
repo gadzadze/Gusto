@@ -1,3 +1,4 @@
+import { SuccessMark } from "@/components/ui/success-mark";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -8,7 +9,6 @@ import { SaveRegularOrder } from "@/components/orders/regular-order-controls";
 import { OrderView } from "@/components/orders/order-view";
 import { WhatsappShare } from "@/components/orders/whatsapp-share";
 import { Button } from "@/components/ui/button";
-import { FormAlert } from "@/components/ui/form-alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { isoWeekdayIn } from "@/lib/dates";
 import { availableActions } from "@/lib/orders/transitions";
@@ -46,9 +46,13 @@ async function Order({ params, searchParams }: PageProps<"/buyer/orders/[id]">) 
   return (
     <div className="max-w-3xl space-y-6">
       {query.placed ? (
-        <FormAlert tone="success">
-          {t("placed")}. {t("placedBody", { supplier: detail.order.supplierName })}
-        </FormAlert>
+        <div role="status" className="flex items-center gap-4 rounded-xl border border-[var(--status-green-fg)]/20 bg-[var(--status-green-bg)] p-4 text-[var(--status-green-fg)]">
+          <SuccessMark className="size-12" />
+          <div className="min-w-0">
+            <p className="font-semibold">{t("placed")}</p>
+            <p className="text-sm opacity-90">{t("placedBody", { supplier: detail.order.supplierName })}</p>
+          </div>
+        </div>
       ) : null}
       {/* Just placed: the next step is right under the confirmation. */}
       {query.placed && detail.order.status === "pending" ? <WhatsappShare detail={detail} kind="to_supplier" prominent /> : null}

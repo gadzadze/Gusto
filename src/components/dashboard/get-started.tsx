@@ -20,7 +20,7 @@ export async function GetStarted({ progress, canInvite }: { progress: SetupProgr
   ] as const;
   const firstOpen = steps.findIndex((s) => !s.done && s.enabled);
   return (
-    <section aria-labelledby="get-started" className="rounded-xl border border-border bg-surface">
+    <section aria-labelledby="get-started" className="rounded-xl border border-border bg-card">
       <header className="border-b border-border px-4 py-4">
         <h2 id="get-started" className="font-semibold">{t("title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("intro")}</p>
