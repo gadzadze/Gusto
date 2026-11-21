@@ -137,7 +137,7 @@ export function PushSettings({ publicKey, variant = "card" }: { publicKey: strin
         </div>
       </div>
       {message ? <FormAlert tone={message.tone}>{message.text}</FormAlert> : null}
-      <div className="flex flex-wrap gap-2 pl-8">
+      <div className="flex flex-wrap gap-2 pl-8 [&>button]:h-auto [&>button]:max-w-full [&>button]:whitespace-normal [&>button]:py-2 [&>button]:text-center">
         {state === "off" ? (
           <Button type="button" size="sm" disabled={pending} onClick={enable}>{t("enable")}</Button>
         ) : null}

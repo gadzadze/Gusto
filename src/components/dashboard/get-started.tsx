@@ -45,7 +45,7 @@ export async function GetStarted({ progress, canInvite }: { progress: SetupProgr
               <p className="text-sm text-muted-foreground">{step.enabled ? t(`${step.key}.body`) : t("afterApproval")}</p>
             </div>
             {step.enabled && !step.done ? (
-              <Button asChild variant={i === firstOpen ? "default" : "outline"} size="sm" className="ml-12 sm:ml-0">
+              <Button asChild variant={i === firstOpen ? "default" : "outline"} size="sm" className="ml-12 h-auto max-w-[calc(100%-3rem)] whitespace-normal py-2 text-center sm:ml-0 sm:max-w-none">
                 <Link href={step.href}>{t(`${step.key}.action`)}</Link>
               </Button>
             ) : null}
