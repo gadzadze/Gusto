@@ -2376,7 +2376,8 @@
       "regular": "Regular orders",
       "team": "Team",
       "password": "Change password"
-    }
+    },
+    "results": "{count, plural, one {# result} other {# results}}"
   },
   "push": {
     "title": "Notifications on this device",
