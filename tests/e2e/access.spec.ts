@@ -12,6 +12,9 @@ const NOT_REGISTERED = "ეს ელფოსტა ჯერ დადას�
 const SENT = "შეამოწმეთ ელფოსტა";
 
 async function requestLink(page: Page, email: string, next = "") {
+  // The admin screen has just generated a link for this address, and Supabase refuses a second email to the
+  // same address within auth.email.max_frequency (1 s locally): a fast runner arrived inside that second.
+  await page.waitForTimeout(1500);
   await page.goto(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   await page.waitForLoadState("networkidle");
   await page.getByLabel("ელფოსტა").fill(email);

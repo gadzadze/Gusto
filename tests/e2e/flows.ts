@@ -109,11 +109,12 @@ export async function inviteCustomer(supplier: Page, businessName: string): Prom
 /** A signed-in user without an org accepts an invite through the short onboarding. */
 export async function acceptInviteAsNewBuyer(buyer: Page, invitePath: string): Promise<void> {
   await buyer.goto(invitePath);
+  // Until React has hydrated, a choice made in the hidden <select> is lost and the form stays invalid.
+  await buyer.waitForLoadState("networkidle");
   await selectIn(buyer.getByRole("combobox", { name: "ბიზნესის ტიპი" }), "restaurant");
   await buyer.getByLabel("საკონტაქტო პირი").fill("Levan");
   await buyer.getByLabel("ქალაქი").fill("თბილისი");
   await buyer.getByLabel("მიწოდების მისამართი").fill("ვაჟა-ფშაველას 10");
   await buyer.getByRole("button", { name: "დაკავშირება" }).click();
-  // A cold server (the restart spec starts a fresh one) needs longer than 5 s for its first action.
-  await expect(buyer).toHaveURL(/\/buyer\/suppliers\/[0-9a-f-]{36}$/, { timeout: 20_000 });
+  await expect(buyer).toHaveURL(/\/buyer\/suppliers\/[0-9a-f-]{36}$/);
 }
