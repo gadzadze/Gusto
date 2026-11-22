@@ -116,7 +116,7 @@ export function SupplierOrderActions({
           </div>
           <div className="flex gap-2">
             <Button
-              disabled={pending}
+              loading={pending}
               onClick={() =>
                 run(() =>
                   confirmOrderAction(orderId, {
@@ -143,7 +143,7 @@ export function SupplierOrderActions({
           <div className="flex gap-2">
             <Button
               variant="outline"
-              disabled={pending}
+              loading={pending}
               onClick={() =>
                 run(() => (mode === "reject" ? rejectOrderAction(orderId, text) : cancelOrderBySupplierAction(orderId, text)))
               }
@@ -165,7 +165,7 @@ export function SupplierOrderActions({
             </Button>
           ) : null}
           {actions.includes("deliver") ? (
-            <Button disabled={pending} onClick={() => run(() => deliverOrderAction(orderId))}>
+            <Button loading={pending} onClick={() => run(() => deliverOrderAction(orderId))}>
               <PackageCheck />
               {t("actions.deliver")}
             </Button>

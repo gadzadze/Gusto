@@ -136,6 +136,9 @@
     opacity: 1;
   }
 }
+.animate-in-soft {
+  animation: skeleton-in 120ms ease-out backwards;
+}
 .skeleton {
   animation:
     skeleton-in 200ms ease-out 150ms backwards,
@@ -146,6 +149,7 @@ main > :not([data-page-header]):not([aria-hidden="true"]) {
 }
 @media (prefers-reduced-motion: reduce) {
   .skeleton,
+  .animate-in-soft,
   main > :not([data-page-header]):not([aria-hidden="true"]) {
     animation: none;
   }

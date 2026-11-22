@@ -60,7 +60,7 @@ export function ReviewPanel({
             <p className="text-sm text-muted-foreground">{t("reasonHint")}</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <Button variant={reasonFor === "suspend" ? "outline" : "default"} disabled={pending} onClick={() => run(reasonFor)}>
+            <Button variant={reasonFor === "suspend" ? "outline" : "default"} loading={pending} onClick={() => run(reasonFor)}>
               {reasonFor === "suspend" ? <PauseCircle /> : <RotateCcw />}
               {reasonFor === "suspend" ? t("confirmSuspend") : t("confirmReactivate")}
             </Button>
@@ -72,7 +72,7 @@ export function ReviewPanel({
       ) : (
         <div className="flex flex-wrap gap-2">
           {status === "pending_review" ? (
-            <Button disabled={pending} onClick={() => run("approve")}>
+            <Button loading={pending} onClick={() => run("approve")}>
               <CircleCheck />
               {t("approve")}
             </Button>
@@ -83,7 +83,7 @@ export function ReviewPanel({
               {t("suspend")}
             </Button>
           ) : (
-            <Button disabled={pending} onClick={() => setReasonFor("reactivate")}>
+            <Button loading={pending} onClick={() => setReasonFor("reactivate")}>
               <RotateCcw />
               {t("reactivate")}
             </Button>
