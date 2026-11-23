@@ -489,6 +489,7 @@ export const cartItems = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.cartId, t.productId] }),
+    index("cart_items_product_idx").on(t.productId),
     check("cart_items_qty_positive", sql`${t.qtyMilli} > 0`),
   ],
 );
@@ -569,6 +570,8 @@ export const orderItems = pgTable(
   },
   (t) => [
     uniqueIndex("order_items_order_line_key").on(t.orderId, t.lineNo),
+    // Usage counts on the product list and the set-null on product delete look rows up by product.
+    index("order_items_product_idx").on(t.productId),
     check("order_items_ordered_positive", sql`${t.orderedQtyMilli} > 0`),
     check("order_items_confirmed_nonneg", sql`${t.confirmedQtyMilli} is null or ${t.confirmedQtyMilli} >= 0`),
   ],
@@ -1003,6 +1006,7 @@ export const regularOrderItems = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.regularOrderId, t.productId] }),
+    index("regular_order_items_product_idx").on(t.productId),
     check("regular_order_items_qty_positive", sql`${t.qtyMilli} > 0`),
   ],
 );

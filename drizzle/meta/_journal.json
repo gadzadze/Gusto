@@ -267,6 +267,13 @@
       "when": 1795105578105,
       "tag": "0037_web_push",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1795449169640,
+      "tag": "0038_product_reference_indexes",
+      "breakpoints": true
     }
   ]
 }
