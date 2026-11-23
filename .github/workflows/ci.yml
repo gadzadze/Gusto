@@ -68,9 +68,11 @@ jobs:
           cache: npm
       - run: npm ci
       # A throwaway local Supabase (Postgres, Auth, Storage) inside the runner: never a real project.
+      # Pinned: "latest" is looked up through the unauthenticated GitHub API, which rate-limits shared runners
+      # (the job then fails before any test runs), and a pin keeps the e2e run reproducible.
       - uses: supabase/setup-cli@v1
         with:
-          version: latest
+          version: 3.2.0
       - run: supabase start -x studio,imgproxy,vector,logflare,edge-runtime,supavisor,postgres-meta
       # Writes the local URL and keys into .env.local; refuses anything that is not a local address.
       - run: npm run env:local
