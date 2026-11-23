@@ -69,8 +69,8 @@ test("light and dark themes: follows the device, can be chosen, and is remembere
   const choice = supplier.getByRole("group", { name: "ფერთა სქემა" });
   const darkButton = supplier.getByRole("button", { name: "მუქი" });
   await expect(choice).toBeVisible();
-  const box = await darkButton.boundingBox();
-  expect(box!.width).toBeGreaterThanOrEqual(36);
+  // The menu opens with a short scale-up, so measure once it has settled.
+  await expect.poll(async () => (await darkButton.boundingBox())?.width ?? 0).toBeGreaterThanOrEqual(36);
   await darkButton.click();
   expect(await theme(supplier)).toBe("dark");
   await supplier.getByRole("button", { name: "ღია" }).click();
