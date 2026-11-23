@@ -68,7 +68,7 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
                 {cart.lines.map((line) => (
                   // Phone: picture and name on top, then the quantity control and the line total on one row (one flex row
                   // left the name a few letters wide). From sm up it is the single row it always was.
-                  <li key={line.productId} className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 py-3 sm:flex sm:flex-wrap sm:items-center">
+                  <li key={line.productId} data-cart-line className="grid grid-cols-[3rem_minmax(0,1fr)] items-start gap-x-3 gap-y-2 py-3 sm:flex sm:flex-wrap sm:items-center">
                     <ProductImage path={line.imagePath} alt="" size={48} />
                     <div className="min-w-0 sm:flex-1">
                       <p className="font-medium leading-snug">{line.name}</p>

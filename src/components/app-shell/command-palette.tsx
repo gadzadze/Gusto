@@ -131,6 +131,7 @@ export function CommandPalette({ area, homeHref, showAdminLink, entitySearch }: 
   return (
     <dialog
       ref={dialog}
+      data-motion="top"
       aria-label={t("title")}
       onClose={() => {
         setQuery("");

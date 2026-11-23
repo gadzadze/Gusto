@@ -53,7 +53,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
       >
         {t("nav.skipToContent")}
       </a>
-      <aside className="hidden border-r border-border bg-surface-2 md:sticky md:top-0 md:flex md:h-dvh md:flex-col print:!hidden">
+      <aside className="[view-transition-name:app-sidebar] hidden border-r border-border bg-surface-2 md:sticky md:top-0 md:flex md:h-dvh md:flex-col print:!hidden">
         <div className="flex items-center justify-between gap-2 px-5 pb-4 pt-5">
           <Logo />
           {bell ? <Suspense fallback={<NotificationBellFallback />}>{bell}</Suspense> : null}
@@ -103,7 +103,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden print:hidden">
+        <header className="[view-transition-name:app-header] flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden print:hidden">
           <div className="flex min-w-0 items-center">
             <span className="truncate text-base font-semibold">{title ?? roleLabel}</span>
           </div>

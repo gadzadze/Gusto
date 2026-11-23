@@ -60,7 +60,7 @@ export function ConfirmAction({
           setOpen(false);
         }
       }}
-      className="w-full basis-full space-y-2 rounded-lg border border-border bg-muted p-3"
+      className="animate-rise-in w-full basis-full space-y-2 rounded-lg border border-border bg-muted p-3"
     >
       <p className="text-sm">{message}</p>
       <div className="flex flex-wrap gap-2">

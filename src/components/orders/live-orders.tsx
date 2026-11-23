@@ -4,6 +4,7 @@ import { BellRing } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
+import { setRowsLive } from "@/components/motion/fresh-row";
 import { StatusToast } from "@/components/ui/status-toast";
 
 const VISIBLE_MS = 20_000;
@@ -24,6 +25,12 @@ export function LiveOrders({ signature, pending }: { signature: string; pending:
   const seenPending = useRef(pending);
   const baseTitle = useRef<string | null>(null);
   const [notice, setNotice] = useState(false);
+
+  // From here on, rows that appear are new ones (they get a highlight); rows already on the page never animate.
+  useEffect(() => {
+    setRowsLive(true);
+    return () => setRowsLive(false);
+  }, []);
 
   // The page re-rendered with fresh data: that is the new baseline.
   useEffect(() => {

@@ -33,6 +33,7 @@ export function AccountMenu({ area, email, showAdminLink }: { area: Area; email:
         ref={menu}
         id={id}
         popover="auto"
+        data-motion="menu"
         className="fixed inset-auto right-3 top-14 m-0 w-64 max-w-[calc(100vw-1.5rem)] rounded-xl border border-border bg-surface p-2 text-foreground shadow-lg"
       >
         {email ? <p className="truncate px-3 py-2 text-xs text-muted-foreground" title={email}>{email}</p> : null}

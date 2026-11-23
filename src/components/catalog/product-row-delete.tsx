@@ -44,6 +44,7 @@ export function ProductRowDelete({
       </Button>
       <dialog
         ref={ref}
+        data-motion="sheet"
         aria-labelledby={`del-${productId}`}
         className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface p-5 text-foreground backdrop:bg-black/40 max-sm:m-0 max-sm:mt-auto max-sm:w-full max-sm:max-w-none max-sm:rounded-b-none max-sm:pt-0"
       >

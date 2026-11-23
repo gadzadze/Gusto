@@ -142,6 +142,7 @@ export function ReviewSheet({
       </Button>
       <dialog
         ref={dialog}
+        data-motion="side"
         aria-label={`${number} ${buyerName}`}
         onClick={(event) => {
           // A click on the backdrop lands on the dialog element itself.

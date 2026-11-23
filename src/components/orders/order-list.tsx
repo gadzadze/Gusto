@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { FreshRow } from "@/components/motion/fresh-row";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import type { OrderListItem } from "@/server/domain/orders/queries";
 import { getFormats } from "@/server/i18n/formats";
@@ -16,7 +17,7 @@ export async function OrderList({ orders, viewer, allBrands = false }: { orders:
   return (
     <ul className="divide-y divide-border rounded-xl border border-border">
       {orders.map((o) => (
-        <li key={o.id}>
+        <FreshRow as="li" key={o.id} id={o.id}>
           <Link href={allBrands ? `/o/${o.number}` : `/${viewer}/orders/${o.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
@@ -32,7 +33,7 @@ export async function OrderList({ orders, viewer, allBrands = false }: { orders:
             <span className="whitespace-nowrap text-sm font-medium tabular-nums">{fmt.money(o.totalMinor, o.currency)}</span>
             <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
           </Link>
-        </li>
+        </FreshRow>
       ))}
     </ul>
   );

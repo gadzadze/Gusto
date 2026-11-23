@@ -1,5 +1,6 @@
 import { UnitPrice } from "@/components/orders/unit-price";
 import { getFormatter, getTranslations } from "next-intl/server";
+import { ChangePulse } from "@/components/motion/change-pulse";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { TotalsBlock } from "@/components/orders/totals-block";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
@@ -42,7 +43,9 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-xl font-semibold tabular-nums">{t("number", { number: order.number })}</h1>
-        <OrderStatusBadge status={order.status} />
+        <ChangePulse value={order.status}>
+          <OrderStatusBadge status={order.status} />
+        </ChangePulse>
       </div>
       <p className="-mt-4 text-sm text-muted-foreground">
         {t("detail.placedAt", { date: format.dateTime(order.createdAt, { dateStyle: "medium", timeStyle: "short" }) })}

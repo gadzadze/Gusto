@@ -79,7 +79,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                   const late = now.getTime() - o.createdAt.getTime() > LATE_AFTER_MS;
                   const number = to("number", { number: o.number });
                   return (
-                    <PanelRow key={o.id}>
+                    <PanelRow key={o.id} freshId={o.id}>
                       <div className="min-w-0 flex-[1_1_12rem]">
                         <p className="truncate font-semibold">{o.buyerName}</p>
                         <p className="text-sm text-muted-foreground">

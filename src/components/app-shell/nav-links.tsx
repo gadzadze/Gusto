@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { ChangePulse } from "@/components/motion/change-pulse";
 import { useNavBadges } from "./nav-badges";
 import { NAV_ITEMS, ADMIN_LINK, type Area, type NavItem } from "./nav";
 
@@ -42,12 +43,14 @@ function PendingHighlight({ className }: { className?: string }) {
 function Count({ n, label }: { n: number; label: string }) {
   if (n <= 0) return null;
   return (
-    <span
-      aria-label={label}
-      className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold leading-5 text-brand-foreground tabular-nums"
-    >
-      {n > 99 ? "99+" : n}
-    </span>
+    <ChangePulse value={n} className="ml-auto">
+      <span
+        aria-label={label}
+        className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold leading-5 text-brand-foreground tabular-nums"
+      >
+        {n > 99 ? "99+" : n}
+      </span>
+    </ChangePulse>
   );
 }
 
@@ -195,7 +198,7 @@ export function BottomNav(props: Props) {
       ) : null}
       <nav
         aria-label={t("menu")}
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] [transform:translateZ(0)] md:hidden print:hidden"
+        className="[view-transition-name:app-bottom-nav] fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] [transform:translateZ(0)] md:hidden print:hidden"
       >
         <ul className="mx-auto flex max-w-md">
           {primary.map((item) => {
@@ -214,12 +217,14 @@ export function BottomNav(props: Props) {
                   <span className="relative">
                     <item.icon aria-hidden className="size-5" />
                     {count > 0 ? (
-                      <span
-                        aria-hidden
-                        className="absolute -right-3 -top-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[0.6875rem] font-semibold leading-4 text-brand-foreground tabular-nums"
-                      >
-                        {count > 99 ? "99+" : count}
-                      </span>
+                      <ChangePulse value={count} className="absolute -right-3 -top-1.5">
+                        <span
+                          aria-hidden
+                          className="inline-flex min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[0.6875rem] font-semibold leading-4 text-brand-foreground tabular-nums"
+                        >
+                          {count > 99 ? "99+" : count}
+                        </span>
+                      </ChangePulse>
                     ) : null}
                   </span>
                   <span className="w-full [hyphens:manual]">{barLabel(item.labelKey)}</span>

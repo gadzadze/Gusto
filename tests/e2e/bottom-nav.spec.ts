@@ -35,6 +35,14 @@ test("phone bottom bar: supplier, buyer and admin fit, and More opens the rest",
   await supplier.goto("/supplier");
   await supplier.waitForLoadState("networkidle");
   await checkBar(supplier, "supplier");
+  // The frame is its own layer for page transitions: header and bottom bar on a phone.
+  const layer = (page: Page, role: string, name?: string) =>
+    page.evaluate(([r, n]) => {
+      const el = r === "banner" ? document.querySelector("header") : document.querySelector(`nav.fixed[aria-label="${n}"]`);
+      return el ? getComputedStyle(el).getPropertyValue("view-transition-name") : null;
+    }, [role, name ?? ""]);
+  expect(await layer(supplier, "banner")).toBe("app-header");
+  expect(await layer(supplier, "nav", "ნავიგაცია")).toBe("app-bottom-nav");
   // Five items: all of them tabs, no "More". Settings moved to the account menu.
   await expect(supplier.getByRole("button", { name: "მეტი" })).toHaveCount(0);
   await expect(supplier.getByRole("link", { name: "ფასები" })).toBeVisible();
