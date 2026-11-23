@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type * as React from "react";
+import { FreshRow } from "@/components/motion/fresh-row";
 import { cn } from "@/lib/utils";
 
 /** A titled block of a dashboard: header with an optional count and link, then rows. */
@@ -48,6 +49,16 @@ export function Panel({
   );
 }
 
-export function PanelRow({ className, children }: { className?: string; children: React.ReactNode }) {
-  return <div className={cn("flex flex-wrap items-center gap-x-3.5 gap-y-2.5 border-b border-border px-4 py-3 last:border-b-0", className)}>{children}</div>;
+const rowClass = "flex flex-wrap items-center gap-x-3.5 gap-y-2.5 border-b border-border px-4 py-3 last:border-b-0";
+
+/** `freshId`: a row that can arrive while the page is open (a new order); it gets a short highlight when it does. */
+export function PanelRow({ className, freshId, children }: { className?: string; freshId?: string; children: React.ReactNode }) {
+  if (freshId) {
+    return (
+      <FreshRow id={freshId} className={cn(rowClass, className)}>
+        {children}
+      </FreshRow>
+    );
+  }
+  return <div className={cn(rowClass, className)}>{children}</div>;
 }

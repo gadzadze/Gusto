@@ -2,7 +2,7 @@
 
 import { Minus, Plus, ShoppingCart } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { milliToInput, stepDown, stepUp } from "@/lib/quantity";
 import { cn } from "@/lib/utils";
@@ -39,13 +39,19 @@ export function QuantityStepper({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
 
+  const root = useRef<HTMLDivElement>(null);
+
   const update = (next: number) => {
     const previous = qty;
     setQty(next);
     setError(null);
+    // Removing a cart line: it fades while the server removes it, instead of vanishing on the refresh.
+    const line = next === 0 ? root.current?.closest("[data-cart-line]") : null;
+    line?.setAttribute("data-removing", "");
     startTransition(async () => {
       const result = await setCartQuantityAction({ supplierOrgId, productId, qtyMilli: next });
       if (!result.ok) {
+        line?.removeAttribute("data-removing");
         setQty(previous);
         setError(
           result.error === "product_unavailable" || result.error === "invalid_quantity"
@@ -57,7 +63,7 @@ export function QuantityStepper({
   };
 
   return (
-    <div className={cn("space-y-1", className)}>
+    <div ref={root} className={cn("space-y-1", className)}>
       {qty === 0 ? (
         <Button
           type="button"

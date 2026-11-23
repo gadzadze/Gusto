@@ -41,7 +41,7 @@ export function BuyerCancelButton({ orderId }: { orderId: string }) {
     <div className="space-y-2">
       {error ? <FormAlert tone="error">{error}</FormAlert> : null}
       {confirming ? (
-        <div className="flex gap-2">
+        <div className="animate-rise-in flex gap-2">
           <Button
             variant="outline"
             loading={pending}

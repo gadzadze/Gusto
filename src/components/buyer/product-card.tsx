@@ -53,6 +53,7 @@ export function ProductCard({ product }: { product: ProductView }) {
 
       <dialog
         ref={dialog}
+        data-motion="sheet"
         aria-label={product.name}
         className="m-0 mt-auto max-h-[90dvh] w-full max-w-none rounded-t-2xl bg-background p-0 text-foreground backdrop:bg-black/40 sm:m-auto sm:max-w-lg sm:rounded-2xl"
         onClick={(e) => {

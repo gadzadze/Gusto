@@ -467,6 +467,17 @@ Black, burgundy and white.
   a dimmed button reads as broken); use it on the one button that started the action, never on siblings that merely share `pending`.
   Buttons and nav links shrink slightly while pressed (off under reduced motion). A nav link shows `PendingHighlight`
   (`useLinkStatus`) while its page is being prepared, so the tap is acknowledged before the page arrives.
+- **Everything comes from somewhere** (2026-11-23; the principle from a design post on spatial continuity): panels and
+  sheets animate from where they belong, set per dialog with `data-motion` (`sheet`: rises from the bottom on a phone,
+  pops in centred above; `side`: the review panel; `top`: the command palette; `menu`: the account menu), in plain CSS
+  (`@starting-style` + `allow-discrete`, in `globals.css`; a browser without them just shows and hides at once). Notices
+  (`StatusToast`) enter and leave; counts and an order's status badge pop when they change (`ChangePulse`, not on first
+  render); a row that arrives while the page is open (a new order in the live queue or inbox) gets a colour highlight
+  (`FreshRow`, `PanelRow freshId`, on only after `LiveOrders` has started, so rows present at load never animate); inline
+  questions and the confirm/reject panels rise in; a cart line fades while the server removes it. **One curve, 150 to
+  250 ms, nothing that moves layout, all of it off under reduced motion** (`tests/unit/motion.test.ts` guards this).
+  The sidebar, phone header and bottom bar carry `view-transition-name`s (`app-sidebar`, `app-header`, `app-bottom-nav`) with
+  no animation of their own, so a page-to-page view transition (not built yet) only moves the content between them.
 - **Avoid:** gradients, emoji as icons, decorative motion, modals for
   multi-step flows (use pages or sheets).
 
