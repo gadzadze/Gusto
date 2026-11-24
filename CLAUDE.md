@@ -914,8 +914,7 @@ and the delivery row is marked `skipped`, not `sent`.
 - **Loading sheet** (`/supplier/orders/pick`, `domain/orders/pick-list.ts`): per delivery day, totals per product
   with the split per customer, and a second view per address with each stop's lines; every line has a tick box
   kept in the browser only (`components/orders/pick-check.tsx`, localStorage per day). Prints cleanly.
-- **Side switch** (`SideSwitch`): on phones a full-width two-part control with icons under the header, not
-  squeezed in it; on desktop in the sidebar.
+- **Side switch** (`SideSwitch` on desktop in the sidebar; `HeaderSideSwitch` on phones, 2026-11-24): on a phone the switch sits **in the header in the place of the company name**, with no row of its own. One buyer and one supplier side: a small two-part pill (`nav.sideSwitch`), only the open side shows its name, the other is an icon whose name stays for screen readers; below 360px both are icons (the open one highlighted). Several companies (a group): `CompanyChip`, a chip with the current company and its role that opens a list of every company with its role, a check on the current one and "add another company" (Popover API, plain `<a>` links, never prefetched). One side only: just the company name. Header padding is `px-3` below 380px so the pill fits next to search, bell and account.
 
 ## Finding and connecting with businesses (2026-11-13)
 
@@ -1061,7 +1060,7 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   company's order = not found, formatted on the server) and reuses `SupplierOrderActions` (confirm with quantities and
   delivery day, reject with reason). `ReviewBody` is the content without the dialog.
 - **Phone header** (decided 2026-11-19, `components/app-shell/account-menu.tsx`; changed 2026-11-21): the company name (not the logo)
-  with search, bell and one account button (Popover API) that holds Administration (platform admins), Settings (suppliers), team,
+  with search, bell and one account button (Popover API) that holds Administration (platform admins), Business settings (suppliers; the nav label `nav.settings`), team,
   change password, the theme choice and sign out; the sidebar still shows them directly. A buyer has no header magnifier: the
   Search tab is their one place to search.
 - **Buyer home**: search, regular orders (accent block when due today), "in progress" orders with a Sent / Confirmed /
