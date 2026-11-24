@@ -398,3 +398,18 @@ dialog[open]::backdrop {
   }
 }
 
+
+/* Squircle corners (2026-11-24). A plain border-radius joins a straight edge to a circular arc, so the curvature jumps
+   and the eye catches a kink. `corner-shape: squircle` eases into the curve like Apple's corners. Progressive
+   enhancement: a browser without it keeps the ordinary rounded corner. Not for rounded-full (pills and dots stay
+   round) and not for the landing page, which has its own styles. */
+@supports (corner-shape: squircle) {
+  .rounded-md,
+  .rounded-lg,
+  .rounded-xl,
+  .rounded-2xl,
+  dialog,
+  [popover] {
+    corner-shape: squircle;
+  }
+}
