@@ -1,6 +1,7 @@
 import { ShoppingBasket, Store } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { cn } from "@/lib/utils";
+import { CompanyChip } from "./company-chip";
 
 export type Side = { orgId: string; type: "buyer" | "supplier"; name: string; current: boolean };
 
@@ -34,6 +35,49 @@ export async function SideSwitch({ sides, compact }: { sides: Side[]; compact?: 
           >
             <Icon aria-hidden className={cn("size-4 shrink-0", side.current && "text-brand")} />
             <span className="truncate">{byName ? side.name : t(`roles.${side.type}`)}</span>
+          </a>
+        );
+      })}
+    </nav>
+  );
+}
+
+/**
+ * The phone header's switch, in the place of the company name (no row of its own). One buyer and one supplier side: a
+ * small two-part pill, only the open side shows its name (the other is an icon with its name kept for screen readers).
+ * Several companies: a chip with the current company that opens the list of them. Plain links to /switch, never prefetched.
+ */
+export async function HeaderSideSwitch({ sides, addCompany }: { sides: Side[]; addCompany?: "buyer" | "supplier" | null }) {
+  const t = await getTranslations();
+  if (sides.length < 2) return null;
+  const byName = new Set(sides.map((s) => s.type)).size < sides.length || sides.length > 2;
+  if (byName) {
+    return (
+      <CompanyChip
+        navLabel={t("nav.sideSwitch")}
+        items={sides.map((side) => ({ id: side.orgId, href: `/switch?org=${side.orgId}`, name: side.name, roleLabel: t(`roles.${side.type}`), type: side.type, current: side.current }))}
+        addHref={addCompany ? `/account/add-side?another=${addCompany}` : null}
+        addLabel={addCompany ? t(`nav.addCompany.${addCompany}`) : ""}
+      />
+    );
+  }
+  return (
+    <nav aria-label={t("nav.sideSwitch")} className="inline-flex max-w-full items-center gap-px rounded-full bg-muted p-[3px]">
+      {sides.map((side) => {
+        const Icon = side.type === "buyer" ? ShoppingBasket : Store;
+        const label = t(`roles.${side.type}`);
+        return (
+          <a
+            key={side.orgId}
+            href={`/switch?org=${side.orgId}`}
+            aria-current={side.current ? "true" : undefined}
+            className={cn(
+              "relative inline-flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-full text-[0.8125rem] font-medium before:absolute before:-inset-1 before:content-[''] transition-colors",
+              side.current ? "bg-brand-soft px-2.5 text-brand" : "min-w-9 px-2 text-muted-foreground hover:text-foreground",
+            )}
+          >
+            <Icon aria-hidden className="size-[18px] shrink-0" />
+            <span className={cn(side.current ? "truncate max-[359px]:sr-only" : "sr-only")}>{label}</span>
           </a>
         );
       })}

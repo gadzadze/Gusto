@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Area } from "./nav";
-import { SideSwitch, type Side } from "./side-switch";
+import { HeaderSideSwitch, SideSwitch, type Side } from "./side-switch";
 import { PushNavigation } from "@/components/push/push-navigation";
 import { AccountMenu } from "./account-menu";
 import { CommandPalette, PaletteTrigger } from "./command-palette";
@@ -103,9 +103,9 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="[view-transition-name:app-header] flex items-center justify-between gap-3 border-b border-border px-4 py-3 md:hidden print:hidden">
+        <header className="[view-transition-name:app-header] flex items-center justify-between gap-3 border-b border-border px-3 py-3 min-[380px]:px-4 md:hidden print:hidden">
           <div className="flex min-w-0 items-center">
-            <span className="truncate text-base font-semibold">{title ?? roleLabel}</span>
+            {sides && sides.length > 1 ? <HeaderSideSwitch sides={sides} addCompany={addCompany} /> : <span className="truncate text-base font-semibold">{title ?? roleLabel}</span>}
           </div>
           <div className="flex items-center">
             {area !== "buyer" ? <PaletteTrigger compact /> : null}
@@ -113,12 +113,6 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
             <AccountMenu area={area} email={email} showAdminLink={showAdminLink} />
           </div>
         </header>
-        {sides && sides.length > 1 ? (
-          // Both sides: a full-width two-part switch under the header, easy to hit with a thumb.
-          <div className="border-b border-border bg-surface-2 px-4 py-2 md:hidden print:hidden">
-            <SideSwitch sides={sides} compact />
-          </div>
-        ) : null}
         <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 outline-none px-4 pb-28 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
           {children}
         </main>
