@@ -188,8 +188,8 @@ export function ProductForm({
       ) : null}
 
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" loading={pending} disabled={disabled}>
-          {pending ? tc("saving") : mode === "create" ? t("form.create") : t("form.save")}
+        <Button type="submit" loading={pending} loadingLabel={tc("saving")} disabled={disabled}>
+          {mode === "create" ? t("form.create") : t("form.save")}
         </Button>
         <Button type="button" variant="outline" onClick={() => router.push("/supplier/products")}>
           {tc("cancel")}

@@ -27,8 +27,8 @@ export function PasswordForm({ first }: { first: boolean }) {
         <Label htmlFor="confirm">{t("confirm")}</Label>
         <Input id="confirm" name="confirm" type="password" autoComplete="new-password" required />
       </div>
-      <Button type="submit" className="w-full sm:w-auto" loading={pending}>
-        {pending ? t("saving") : first ? t("submitFirst") : t("submitChange")}
+      <Button type="submit" className="w-full sm:w-auto" loading={pending} loadingLabel={t("saving")}>
+        {first ? t("submitFirst") : t("submitChange")}
       </Button>
     </form>
   );

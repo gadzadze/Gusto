@@ -9,6 +9,7 @@ import { cancelOrderAction, reorderAction } from "@/app/buyer/orders/actions";
 
 export function ReorderButton({ orderId, size = "default" }: { orderId: string; size?: "default" | "sm" }) {
   const t = useTranslations("orders");
+  const tc = useTranslations("common");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState(false);
   return (
@@ -17,6 +18,7 @@ export function ReorderButton({ orderId, size = "default" }: { orderId: string; 
         variant="outline"
         size={size}
         loading={pending}
+        loadingLabel={tc("working")}
         onClick={() =>
           startTransition(async () => {
             const result = await reorderAction(orderId);
@@ -34,6 +36,7 @@ export function ReorderButton({ orderId, size = "default" }: { orderId: string; 
 
 export function BuyerCancelButton({ orderId }: { orderId: string }) {
   const t = useTranslations("orders");
+  const tc = useTranslations("common");
   const [pending, startTransition] = useTransition();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,6 +48,7 @@ export function BuyerCancelButton({ orderId }: { orderId: string }) {
           <Button
             variant="outline"
             loading={pending}
+            loadingLabel={tc("working")}
             onClick={() =>
               startTransition(async () => {
                 const result = await cancelOrderAction(orderId);

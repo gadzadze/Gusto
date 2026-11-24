@@ -44,6 +44,7 @@ export function SupplierOrderActions({
   hidePrint?: boolean;
 }) {
   const t = useTranslations("orders");
+  const tc = useTranslations("common");
   const [mode, setMode] = useState<Mode>(null);
   const [quantities, setQuantities] = useState<Record<string, string>>(() =>
     Object.fromEntries(lines.map((l) => [l.itemId, l.orderedQty])),
@@ -117,6 +118,7 @@ export function SupplierOrderActions({
           <div className="flex gap-2">
             <Button
               loading={pending}
+              loadingLabel={tc("working")}
               onClick={() =>
                 run(() =>
                   confirmOrderAction(orderId, {
@@ -144,6 +146,7 @@ export function SupplierOrderActions({
             <Button
               variant="outline"
               loading={pending}
+              loadingLabel={tc("working")}
               onClick={() =>
                 run(() => (mode === "reject" ? rejectOrderAction(orderId, text) : cancelOrderBySupplierAction(orderId, text)))
               }
@@ -165,7 +168,7 @@ export function SupplierOrderActions({
             </Button>
           ) : null}
           {actions.includes("deliver") ? (
-            <Button loading={pending} onClick={() => run(() => deliverOrderAction(orderId))}>
+            <Button loading={pending} loadingLabel={tc("working")} onClick={() => run(() => deliverOrderAction(orderId))}>
               <PackageCheck />
               {t("actions.deliver")}
             </Button>
