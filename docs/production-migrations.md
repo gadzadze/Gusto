@@ -1,6 +1,10 @@
 # How migrations reach the production database
 
-**Read this before running `npm run db:migrate` against production.**
+**Read this before touching migrations in production.**
+
+> **Status (2026-11-24):** Drizzle's log in production was brought up to date (ids 31 to 39, migrations 0030 to 0038),
+> so `npm run db:migrate` against production now finds nothing pending. The notes below say how the gap came about and
+> how to keep the two records in step.
 
 ## What actually happens
 
@@ -11,12 +15,12 @@ that is committed under `drizzle/`; only the bookkeeping differs:
 | Where | What it records |
 |---|---|
 | `supabase_migrations` (Supabase's list; `list_migrations`) | every migration applied this way, with a Supabase timestamp |
-| `drizzle.__drizzle_migrations` (Drizzle's log) | stops at `0029_allowed_emails_both_role` (id 30) |
+| `drizzle.__drizzle_migrations` (Drizzle's log) | was stuck at `0029_allowed_emails_both_role` (id 30); reconciled through `0038` on 2026-11-24 |
 
-So migrations **0030 to 0038 are live in production but missing from Drizzle's log** (checked 2026-11-24: their tables
-and indexes exist). `drizzle-kit migrate` decides what to run from the log's last timestamp, so against production it
-would try to run 0030 first, fail on "already exists" and roll the whole batch back. It does not corrupt anything, but
-it cannot be used there as things stand.
+`drizzle-kit migrate` decides what to run from the log's last timestamp. When 0030 to 0038 were live in production but
+not logged, it would have tried to run 0030 first, failed on "already exists" and rolled the whole batch back (no
+corruption, but unusable). The fix was one insert of nine bookkeeping rows (below). **Whenever a migration is applied
+with `apply_migration`, add its row too**, or the log falls behind again.
 
 Local databases and CI are unaffected: they start empty and `db:migrate` runs every file in order.
 
@@ -25,15 +29,28 @@ Local databases and CI are unaffected: they start empty and `db:migrate` runs ev
 1. `npm run db:generate`, read the SQL, commit it, merge (as in `CLAUDE.md`, "Database rules").
 2. Apply the **same SQL** with Supabase's `apply_migration` (name it after the file, without the number).
 3. Check it landed (`list_migrations`, and query the new table, column or index).
+4. Record it in Drizzle's log (next section), so `db:migrate` stays safe against production.
 
 Never use `drizzle-kit push` against production.
 
-## Bringing Drizzle's log up to date (not done yet)
+## Recording a migration in Drizzle's log
 
-This makes `db:migrate` safe to run against production again: it records 0030 to 0038 as applied, using the same
-hash Drizzle computes (SHA-256 of the migration file; verified against the logged row for 0029). It only writes
-bookkeeping rows, no schema. Run it once, in the SQL editor or with `execute_sql`, **only after confirming
-that the nine migrations really are applied**, and add a row for every later migration you also apply this way.
+One row per migration: `id` = the previous max + 1, `hash` = SHA-256 of the committed `.sql` file, `created_at` = the
+`when` of its entry in `drizzle/meta/_journal.json`. The hash method was checked against a row Drizzle wrote itself
+(0029). Bookkeeping only; no schema.
+
+```sql
+select max(id) from drizzle.__drizzle_migrations;   -- the new id is this + 1
+insert into drizzle.__drizzle_migrations (id, hash, created_at) values (<id>, '<sha256 of the file>', <journal when>);
+```
+
+```
+sha256sum drizzle/00NN_name.sql
+```
+
+## What was run on 2026-11-24
+
+After checking that the log ended at id 30 and that the tables, columns and indexes of 0030 to 0038 existed:
 
 ```sql
 insert into drizzle.__drizzle_migrations (id, hash, created_at) values
@@ -48,5 +65,4 @@ insert into drizzle.__drizzle_migrations (id, hash, created_at) values
   (39, 'ccf18daad31a76b8f3e4223de7d4fdd29bb8f83ae9f039ea6c575e9bafc5cb8f', 1795449169640);  -- 0038_product_reference_indexes
 ```
 
-(If the sequence behind `id` complains, check `select max(id) from drizzle.__drizzle_migrations;` first: the ids above
-assume the log still ends at 30.)
+Afterwards the log had 39 rows and ended at the journal's last timestamp (`1795449169640`).
