@@ -65,7 +65,7 @@ export function LandingContent() {
                   <Link className="btn" href="/suppliers">
                     {t("hero.cta")}
                   </Link>
-                  <a className="more" href="#product">
+                  <a className="btn ghost" href="#product">
                     {t("hero.how")}
                   </a>
                 </div>
@@ -117,7 +117,7 @@ export function LandingContent() {
                     </li>
                   ))}
                 </ul>
-                <Link className="more" href="/suppliers">
+                <Link className="btn ghost" href="/suppliers">
                   {t("suppliers.cta")}
                 </Link>
               </Reveal>
@@ -187,7 +187,7 @@ export function LandingContent() {
                   <Link className="btn" href="/suppliers">
                     {t("close.cta")}
                   </Link>
-                  <Link className="more" href="/start">
+                  <Link className="btn ghost" href="/start">
                     {t("close.signIn")}
                   </Link>
                 </div>
@@ -196,14 +196,14 @@ export function LandingContent() {
                 <div>
                   <b className="h3">{t("close.sTitle")}</b>
                   <p>{t("close.sBody")}</p>
-                  <Link className="more" href="/suppliers">
+                  <Link className="btn ghost sm" href="/suppliers">
                     {t("close.sCta")}
                   </Link>
                 </div>
                 <div>
                   <b className="h3">{t("close.bTitle")}</b>
                   <p>{t("close.bBody")}</p>
-                  <Link className="more" href="/start">
+                  <Link className="btn ghost sm" href="/start">
                     {t("close.bCta")}
                   </Link>
                 </div>

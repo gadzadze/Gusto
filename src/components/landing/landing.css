@@ -62,10 +62,9 @@
 .lp .btn.sm { min-height: 40px; padding: 0 18px; font-size: 14px; }
 .lp .btn.light { background: #fff; color: var(--ink); border-color: #fff; }
 .lp .btn.light:hover { background: #F0DCE0; border-color: #F0DCE0; }
-.lp .more { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 16px; font-weight: 700; color: var(--brand); text-decoration: none; }
-.lp .more::after { content: "→"; transition: transform 0.3s var(--ease); }
-.lp .more:hover::after { transform: translateX(4px); }
-.lp .night .more { color: #F0A9B8; }
+/* Secondary: same size as the primary, outline only. */
+.lp .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line2); }
+.lp .btn.ghost:hover { background: #fff; color: var(--brand); border-color: var(--brand); }
 /* Type */
 .lp .kicker { margin: 0; font-size: 16px; font-weight: 700; color: var(--brand); }
 .lp .night .kicker { color: #F0A9B8; }
@@ -98,6 +97,9 @@
 .lp .hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; }
 .lp .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
 .lp .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+/* The hero's two buttons stack at the same width (the wider one sets it). */
+.lp .hero-copy .hero-cta { flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; gap: 12px; }
+.lp .hero-copy .hero-cta .btn { width: 100%; }
 .lp .composite { position: relative; height: 560px; }
 /* Dashboard window */
 .lp .dash { position: absolute; right: -40px; top: 0; width: 680px; height: 470px; background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(11, 18, 32, 0.35); display: grid; grid-template-columns: 150px minmax(0, 1fr); grid-template-rows: 48px minmax(0, 1fr); }
@@ -119,7 +121,7 @@
 .lp .trow.head { border-top: 0; padding-top: 0; font-size: 11px; color: var(--soft); font-weight: 700; }
 .lp .newrow { animation: rowin 0.7s var(--ease) 1.2s both; }
 /* Phone */
-.lp .phone { position: absolute; left: 0; top: 90px; width: 262px; height: 540px; padding: 9px; border-radius: 44px; background: #0B1220; box-shadow: 0 40px 70px -40px rgba(11, 18, 32, 0.6); z-index: 2; }
+.lp .phone { position: absolute; left: 0; top: 90px; width: 262px; height: 540px; padding: 2px; border-radius: 38px; background: #CDD2DA; box-shadow: 0 0 0 1px #7C8594, inset 0 0 0 1px rgba(255, 255, 255, 0.75), 0 14px 30px -10px rgba(11, 18, 32, 0.35), 0 40px 70px -40px rgba(11, 18, 32, 0.5); z-index: 2; }
 .lp .screen { position: relative; height: 100%; border-radius: 36px; overflow: hidden; background: #fff; }
 .lp .island { position: absolute; top: 9px; left: 50%; transform: translateX(-50%); width: 76px; height: 22px; border-radius: 999px; background: #0B1220; }
 .lp .p-top { padding: 42px 16px 10px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
@@ -208,7 +210,7 @@
 .lp .crm.head { border-top: 0; padding-top: 0; font-size: 12px; color: var(--muted); }
 .lp .crm .pl { color: var(--text); font-weight: 600; font-size: 14px; text-align: right; }
 /* Buyer phone (static, larger) */
-.lp .phone-lg { position: relative; width: 300px; height: 610px; margin: 0 auto; padding: 10px; border-radius: 50px; background: #0B1220; box-shadow: 0 40px 70px -40px rgba(11, 18, 32, 0.55); }
+.lp .phone-lg { position: relative; width: 300px; height: 610px; margin: 0 auto; padding: 3px; border-radius: 44px; background: #CDD2DA; box-shadow: 0 0 0 1px #8A92A0, inset 0 0 0 1px rgba(255, 255, 255, 0.75), 0 40px 70px -40px rgba(11, 18, 32, 0.45); }
 .lp .phone-lg .screen { border-radius: 41px; }
 .lp .bsec { margin: 16px 0 6px; font-size: 12px; color: var(--muted); font-weight: 700; }
 .lp .bord { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--line); }
@@ -238,6 +240,7 @@
 .lp .close-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; padding-top: 12px; }
 .lp .close-side div { border-top: 1px solid var(--line); padding-top: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .lp .close-side p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--text); }
+.lp .close-side .btn { margin-top: 8px; }
 /* Footer */
 .lp .foot { border-top: 1px solid var(--line); padding: 56px 0 64px; }
 .lp .foot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 40px; font-size: 14px; color: var(--muted); }
