@@ -62,6 +62,9 @@
 .lp .btn.sm { min-height: 40px; padding: 0 18px; font-size: 14px; }
 .lp .btn.light { background: #fff; color: var(--ink); border-color: #fff; }
 .lp .btn.light:hover { background: #F0DCE0; border-color: #F0DCE0; }
+/* Secondary: same size as the primary, outline only. */
+.lp .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line2); }
+.lp .btn.ghost:hover { background: #fff; color: var(--brand); border-color: var(--brand); }
 .lp .more { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 16px; font-weight: 700; color: var(--brand); text-decoration: none; }
 .lp .more::after { content: "→"; transition: transform 0.3s var(--ease); }
 .lp .more:hover::after { transform: translateX(4px); }
@@ -98,6 +101,9 @@
 .lp .hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; }
 .lp .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
 .lp .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
+/* The hero's two buttons stack at the same width (the wider one sets it). */
+.lp .hero-copy .hero-cta { flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; gap: 12px; }
+.lp .hero-copy .hero-cta .btn { width: 100%; }
 .lp .composite { position: relative; height: 560px; }
 /* Dashboard window */
 .lp .dash { position: absolute; right: -40px; top: 0; width: 680px; height: 470px; background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(11, 18, 32, 0.35); display: grid; grid-template-columns: 150px minmax(0, 1fr); grid-template-rows: 48px minmax(0, 1fr); }

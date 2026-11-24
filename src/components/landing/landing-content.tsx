@@ -65,7 +65,7 @@ export function LandingContent() {
                   <Link className="btn" href="/suppliers">
                     {t("hero.cta")}
                   </Link>
-                  <a className="more" href="#product">
+                  <a className="btn ghost" href="#product">
                     {t("hero.how")}
                   </a>
                 </div>
