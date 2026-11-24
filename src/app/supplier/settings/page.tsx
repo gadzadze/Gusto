@@ -1,8 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { FormAlert } from "@/components/ui/form-alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import { minorToInput } from "@/lib/money";
 import { requireSupplier } from "@/server/auth/guards";
 import { getSupplierSettings } from "@/server/domain/catalog/supplier-settings";
@@ -17,9 +15,7 @@ export default async function SupplierSettingsPage() {
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-96 w-full max-w-2xl" />}>
-        <Settings />
-      </Suspense>
+      <Settings />
     </>
   );
 }

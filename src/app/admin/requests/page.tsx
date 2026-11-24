@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
 import { isFreeMailAddress } from "@/lib/legal-id";
 import { cn } from "@/lib/utils";
 import { requireAdmin } from "@/server/auth/guards";
@@ -17,9 +15,7 @@ export default async function AdminRequestsPage({ searchParams }: PageProps<"/ad
     <>
       <PageHeader title={t("title")} />
       <p className="-mt-3 mb-6 max-w-2xl text-sm text-muted-foreground">{t("intro")}</p>
-      <Suspense fallback={<Skeleton className="h-64 w-full max-w-3xl" />}>
-        <Requests searchParams={searchParams} />
-      </Suspense>
+      <Requests searchParams={searchParams} />
     </>
   );
 }

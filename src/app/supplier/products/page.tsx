@@ -2,7 +2,6 @@ import { PageSlide } from "@/components/motion/page-slide";
 import { FileUp, PackageSearch, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { BulkPageCheck, BulkRowCheck, BulkSelection } from "@/components/catalog/product-bulk";
@@ -16,7 +15,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Notice } from "@/components/ui/notice";
 import { Select } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
@@ -31,9 +29,7 @@ export default async function ProductsPage({ searchParams }: PageProps<"/supplie
   return (
     <PageSlide>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <ProductList searchParams={searchParams} />
-      </Suspense>
+      <ProductList searchParams={searchParams} />
     </PageSlide>
   );
 }

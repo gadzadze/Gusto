@@ -1,10 +1,8 @@
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { PersonalInviteLink } from "@/components/buyer/personal-invite-link";
 import { InviteSupplierForm } from "@/components/buyer/invite-supplier-form";
 import { SupplierInviteList } from "@/components/buyer/supplier-invite-list";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatPhone } from "@/lib/phone";
 import { requireBuyer } from "@/server/auth/guards";
 import { serverEnv } from "@/server/env";
@@ -15,9 +13,7 @@ export default async function InviteSupplierPage() {
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full max-w-xl" />}>
-        <Invite />
-      </Suspense>
+      <Invite />
     </>
   );
 }

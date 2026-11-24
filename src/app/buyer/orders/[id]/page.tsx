@@ -4,13 +4,11 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { BuyerCancelButton, ReorderButton } from "@/components/orders/order-buttons";
 import { SaveRegularOrder } from "@/components/orders/regular-order-controls";
 import { OrderView } from "@/components/orders/order-view";
 import { WhatsappShare } from "@/components/orders/whatsapp-share";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { isoWeekdayIn } from "@/lib/dates";
 import { availableActions } from "@/lib/orders/transitions";
 import { requireBuyer } from "@/server/auth/guards";
@@ -27,9 +25,7 @@ export default async function BuyerOrderPage(props: PageProps<"/buyer/orders/[id
           {t("title")}
         </Link>
       </Button>
-      <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
-        <Order {...props} />
-      </Suspense>
+      <Order {...props} />
     </PageSlide>
   );
 }

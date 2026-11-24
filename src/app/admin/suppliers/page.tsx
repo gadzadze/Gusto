@@ -1,11 +1,9 @@
 import { Store } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { SupplierStatusBadge } from "@/components/admin/supplier-status-badge";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { requireAdmin } from "@/server/auth/guards";
@@ -19,9 +17,7 @@ export default async function AdminSuppliersPage({ searchParams }: PageProps<"/a
   return (
     <>
       <PageHeader title={t("suppliersTitle")} />
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <Suppliers searchParams={searchParams} />
-      </Suspense>
+      <Suppliers searchParams={searchParams} />
     </>
   );
 }

@@ -1,8 +1,6 @@
 import { Store } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
-import { DashboardSkeleton } from "@/components/dashboard/skeletons";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductCard } from "@/components/buyer/product-card";
 import { toProductViews } from "@/components/buyer/product-view";
@@ -19,9 +17,7 @@ export default async function BuyerDashboardPage() {
   return (
     <>
       <PageHeader title={t("dashboardTitle")} />
-      <Suspense fallback={<DashboardSkeleton />}>
-        <Dashboard />
-      </Suspense>
+      <Dashboard />
     </>
   );
 }

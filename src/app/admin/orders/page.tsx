@@ -1,12 +1,10 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireAdmin } from "@/server/auth/guards";
 
 /** "GST-1001", "gst 1001" or "1001" → 1001, else null. */
@@ -20,9 +18,7 @@ export default async function AdminOrderLookupPage({ searchParams }: PageProps<"
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-40 w-full max-w-xl" />}>
-        <Lookup searchParams={searchParams} />
-      </Suspense>
+      <Lookup searchParams={searchParams} />
     </>
   );
 }

@@ -1,8 +1,6 @@
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { NotificationsView } from "@/components/notifications/notifications-view";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
 
 export default async function BuyerNotificationsPage({ searchParams }: PageProps<"/buyer/notifications">) {
@@ -10,9 +8,7 @@ export default async function BuyerNotificationsPage({ searchParams }: PageProps
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full max-w-3xl" />}>
-        <List searchParams={searchParams} />
-      </Suspense>
+      <List searchParams={searchParams} />
     </>
   );
 }

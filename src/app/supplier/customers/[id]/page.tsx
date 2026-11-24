@@ -3,14 +3,12 @@ import { ArrowLeft, Ban, PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { CustomerStatusBadge } from "@/components/customers/customer-status-badge";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { StatTile } from "@/components/ui/stat-tile";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/ui/notice";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatPhone } from "@/lib/phone";
 import { requireSupplier } from "@/server/auth/guards";
 import { getCustomer } from "@/server/domain/customers/customers";
@@ -34,9 +32,7 @@ export default async function CustomerPage(props: PageProps<"/supplier/customers
           {t("title")}
         </Link>
       </Button>
-      <Suspense fallback={<Skeleton className="h-80 w-full max-w-3xl" />}>
-        <Customer {...props} />
-      </Suspense>
+      <Customer {...props} />
     </PageSlide>
   );
 }

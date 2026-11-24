@@ -2,13 +2,11 @@ import { PageSlide } from "@/components/motion/page-slide";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { CustomerStatusBadge } from "@/components/customers/customer-status-badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Notice } from "@/components/ui/notice";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { formatPhone } from "@/lib/phone";
 import { requireSupplier } from "@/server/auth/guards";
@@ -23,9 +21,7 @@ export default async function CustomersPage() {
   return (
     <PageSlide>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <Customers />
-      </Suspense>
+      <Customers />
     </PageSlide>
   );
 }
@@ -57,9 +53,7 @@ async function Customers() {
           </ul>
         </section>
       ) : null}
-      <Suspense fallback={<Skeleton className="h-40 w-full" />}>
-        <ConnectionsSection ctx={ctx} inviteHref="/supplier/customers/new" />
-      </Suspense>
+      <ConnectionsSection ctx={ctx} inviteHref="/supplier/customers/new" />
       {ctx.orgStatus === "pending_review" ? <Notice icon={Users} tone="amber" title={t("notActive")} /> : null}
       {canInvite ? (
         <Button asChild>

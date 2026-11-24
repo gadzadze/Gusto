@@ -2,14 +2,12 @@ import { PageSlide } from "@/components/motion/page-slide";
 import { ClipboardList, Truck } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { LiveOrders } from "@/components/orders/live-orders";
 import { OrderList } from "@/components/orders/order-list";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { requireSupplier } from "@/server/auth/guards";
 import { BrandScope } from "@/components/orders/brand-scope";
@@ -22,9 +20,7 @@ export default async function SupplierOrdersPage({ searchParams }: PageProps<"/s
   return (
     <PageSlide>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <Inbox searchParams={searchParams} />
-      </Suspense>
+      <Inbox searchParams={searchParams} />
     </PageSlide>
   );
 }
