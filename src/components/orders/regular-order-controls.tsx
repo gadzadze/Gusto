@@ -47,7 +47,6 @@ export function SaveRegularOrder({ orderId, defaultName, defaultWeekday }: { ord
       }}
     >
       <p className="font-semibold">{t("save")}</p>
-      <p className="text-sm text-muted-foreground">{t("saveHint")}</p>
       <div className="space-y-2">
         <Label htmlFor="regular-name">{t("name")}</Label>
         <Input id="regular-name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} required />

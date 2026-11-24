@@ -87,7 +87,7 @@
     "buyers": {
       "kicker": "For buyers",
       "title": "The weekly order, in one tap.",
-      "body": "Restaurants, cafés, hotels and shops send their orders to the suppliers they already work with.",
+      "body": "Restaurants, cafés, hotels and shops order from the suppliers they already use.",
       "c1Title": "Your prices",
       "c1Body": "The catalog shows only the prices set for you.",
       "c2Title": "Order again",
@@ -191,7 +191,7 @@
   },
   "login": {
     "title": "Sign in to 202",
-    "subtitle": "Only verified businesses can sign in to 202. First time? Use the link from your email, or choose \"Set or reset password\".",
+    "subtitle": "Only verified businesses can sign in. First time? Use the link from your email.",
     "emailLabel": "Email",
     "emailPlaceholder": "name@company.ge",
     "sendLink": "Send a sign-in link",
@@ -218,7 +218,7 @@
   },
   "onboarding": {
     "title": "Welcome to 202",
-    "subtitle": "Tell us briefly about your business. A verified business is activated at once; otherwise, after our approval.",
+    "subtitle": "Tell us briefly about your business. Verified businesses activate at once.",
     "kindLegend": "How do you use 202?",
     "kindBuyer": "I buy",
     "kindBuyerHint": "A restaurant, café, hotel or shop",
@@ -330,7 +330,7 @@
   "supplier": {
     "dashboardTitle": "Home",
     "pendingTitle": "Your account is under review",
-    "pendingBody": "The 202 team is checking your business. Once approved, you can invite customers and receive orders.",
+    "pendingBody": "The 202 team is checking your business. Once approved, you can invite customers.",
     "suspendedTitle": "Account suspended",
     "suspendedBody": "Contact 202 support for details.",
     "emptyTitle": "No orders yet",
@@ -437,7 +437,7 @@
     "inviteSupplier": "Invite a supplier",
     "terms": {
       "title": "Payment terms and discounts",
-      "intro": "Choose how you pay {supplier}. The price changes by the percentage shown once {supplier} approves; until then the standard price applies.",
+      "intro": "Choose how you pay {supplier}. {supplier} approves it; until then the standard price applies.",
       "methodLabel": "How do you pay?",
       "intervalLabel": "When do you pay?",
       "standard": "Standard price",
@@ -923,7 +923,7 @@
       "qtyStep": "Quantity step",
       "qtyStepHint": "E.g.: 1 - whole units, 0.5 - half a kilogram",
       "stock": "Stock you hold",
-      "stockHint": "Only you see this. Confirming an order lowers stock; cancelling it from your side restores it. It can go negative. Leave empty if you don't track stock.",
+      "stockHint": "Only you see this. Leave empty if you don't track stock.",
       "pricesIncludeVat": "Prices include VAT",
       "pricesExcludeVat": "Prices exclude VAT",
       "create": "Add product",
@@ -942,7 +942,7 @@
       "created": "Product added",
       "stockTitle": "Stock",
       "stockUntracked": "Stock isn't tracked yet.",
-      "stockOnlyYou": "Only you see this. Confirming an order lowers stock; cancelling it from your side restores it. It can go negative.",
+      "stockOnlyYou": "Only you see this. Confirming an order lowers stock; cancelling it restores it.",
       "stockAddLabel": "Quantity received",
       "stockAddHint": "Added to the existing stock.",
       "stockAdd": "Add",
@@ -964,8 +964,8 @@
     "background": {
       "button": "Remove background",
       "running": "Processing...",
-      "hint": "The photo is processed on your device and never sent anywhere. A helper model downloads the first time (about {size} MB), not after.",
-      "unsupported": "Automatic background removal isn't available on this device. Try a newer computer or phone, with Chrome or Safari.",
+      "hint": "Processed on your device, never uploaded. A helper model (about {size} MB) downloads once.",
+      "unsupported": "Background removal isn't available on this device. Try Chrome or Safari on a newer device.",
       "stage": {
         "download": "Downloading the model: {percent}%",
         "verify": "Checking...",
@@ -977,7 +977,7 @@
       "cleaned": "Cleaned",
       "use": "Use the cleaned one",
       "keep": "Keep the original",
-      "poor": "Background removal didn't work well: almost nothing, or almost everything, was removed. Better to keep the original.",
+      "poor": "Background removal didn't work well. Better to keep the original.",
       "errors": {
         "no_webgpu": "This browser doesn't support background removal.",
         "download": "The model could not be downloaded. Check your internet connection and try again.",
@@ -995,10 +995,10 @@
       "button": "Delete product",
       "hint": "Deletes the product for good. If you only want to hide it, use \"Disable\".",
       "title": "Delete \"{name}\" for good?",
-      "effects": "The product disappears from price lists, buyers' carts and saved regular orders. Its photo is deleted too.",
-      "history": "It appears in {count, plural, one {# order line} other {# order lines}}. Orders keep their own copy (name, price, quantity), so history doesn't change.",
+      "effects": "It disappears from price lists, carts and saved regular orders, and its photo is deleted.",
+      "history": "It appears in {count, plural, one {# order line} other {# order lines}}. Order history stays unchanged.",
       "noHistory": "No orders include this product.",
-      "openOrders": "{count, plural, one {# open order still includes} other {# open orders still include}} it. They finish as usual, but stock is no longer adjusted for it.",
+      "openOrders": "{count, plural, one {# open order still includes} other {# open orders still include}} it; they finish as usual.",
       "hideInstead": "This cannot be undone. A disabled product can be enabled again at any time.",
       "confirm": "Yes, delete",
       "cancel": "Cancel",
@@ -1044,7 +1044,7 @@
   },
   "import": {
     "title": "Import products",
-    "intro": "Upload your price list as CSV or Excel (.xlsx). Existing products are updated by code (SKU); new ones are added.",
+    "intro": "Upload your price list as CSV or Excel. Products are matched by code (SKU).",
     "template": "Download the template",
     "stepFile": "File",
     "stepMapping": "Columns",
@@ -1052,7 +1052,7 @@
     "chooseFile": "Choose a file",
     "parsing": "Reading…",
     "validCategories": "Categories that exist in 202:",
-    "validCategoriesHint": "A category in the file must match one of these (case, extra spaces and common synonyms don't matter). For a new category, contact 202 support.",
+    "validCategoriesHint": "A category in the file must match one of these. For a new one, contact 202 support.",
     "fileErrors": {
       "too_large": "The file is too large (60 MB at most). Reduce the size of the photos and try again.",
       "unsupported": "Upload a .csv or .xlsx file.",
@@ -1105,25 +1105,24 @@
     },
     "photos": {
       "found": "Photos found in the file: {count}. Without a photo: {missing}.",
-      "skipped": "Photos we couldn't use: {count} (not PNG, JPEG or WebP, or several photos in one row and we use the first).",
+      "skipped": "Photos we couldn't use: {count} (wrong format, or extra photos in a row).",
       "private": "Photos appear only in your own catalog. After adding, you can replace a photo on any product.",
       "uploading": "Uploading photos: {done} / {total}",
       "uploaded": "Photos added: {ok}. Not added: {failed}. Upload the ones that failed from the product page.",
-      "noCode": "A photo is tied to a product by its code, so rows without a code get no photo. Turn on \"Create the code\" or point to a code column."
+      "noCode": "Photos match products by code. Turn on \"Create the code\" or map a code column."
     },
     "fallbacks": {
       "title": "What to do if something is missing from the file",
-      "hint": "This applies only to empty cells. A filled-in category or unit is never changed: if it's wrong, the row shows as an error.",
+      "hint": "Applies only to empty cells. Filled-in values are never changed.",
       "category": "Category, if it's not in the file",
       "categoryError": "Treat as an error",
       "categoryGuess": "Guess from the product name",
       "categoryDefault": "One category for all",
       "pickCategory": "Choose a category",
-      "guessHint": "Only standard categories are guessed; the rest show as errors. The check shows each row's category.",
       "unit": "Unit, if it's not in the file",
       "unitError": "Treat as an error",
       "autoSku": "Create the code (SKU) automatically if it's not in the file",
-      "autoSkuHint": "The code comes from the product name, so uploading the same file again updates products instead of duplicating them. Renaming a product creates a new one."
+      "autoSkuHint": "The code comes from the name, so re-uploading the same file updates products instead of duplicating them."
     },
     "importAll": "Import all",
     "importValid": "Import only the valid rows ({count})",
@@ -1132,7 +1131,7 @@
     "doneTitle": "Import finished",
     "doneBody": "Added: {created} · updated: {updated} · skipped: {skipped}",
     "doneCheckTitle": "Check the products that were added",
-    "doneCheckBody": "We filled in some categories, units and codes automatically. Check the list and open a product to fix anything.",
+    "doneCheckBody": "Some categories, units and codes were filled in automatically. Check the list.",
     "toProducts": "Go to products",
     "another": "Upload another file",
     "startOver": "Start over",
@@ -1166,8 +1165,8 @@
     "title": "Customers",
     "add": "Add a customer",
     "newTitle": "New customer",
-    "intro": "Add businesses you already serve. Each gets a personal link and sees only the products you choose, at their own prices. They can sign in once 202 approves them.",
-    "notActive": "You can invite customers once your account is approved. Until then, you can prepare your catalog and prices.",
+    "intro": "Add businesses you already serve. Each gets a personal link and sees only the products and prices you set.",
+    "notActive": "You can invite customers once approved. Until then, prepare your catalog and prices.",
     "emptyTitle": "You don't have any customers yet",
     "emptyBody": "Add your first customer and send them the invitation link on WhatsApp.",
     "columns": {
@@ -1190,10 +1189,10 @@
       "phone": "Phone (WhatsApp)",
       "email": "Email",
       "priceList": "Price list",
-      "priceListHint": "Which products and prices this customer will see. Without a list, the customer can't see any products.",
+      "priceListHint": "Which products and prices this customer sees. No list, no products.",
       "submit": "Add and create a link",
       "legalId": "Identification code",
-      "legalIdHint": "If the business is already on 202 you can send a request instead of a link. If not, this invitation connects to them when they join."
+      "legalIdHint": "If they're already on 202, send a request instead of a link."
     },
     "invite": {
       "title": "The invitation link is ready",
@@ -1251,7 +1250,7 @@
     "awaitingVerification": "Awaiting 202's verification",
     "invitingBuyers": {
       "title": "Buyers who invited you to 202",
-      "hint": "These buyers already order from you. Once added as customers, they see only what's on your default price list. With no list, they see nothing.",
+      "hint": "These buyers already order from you. Added as customers, they see what's on your default price list.",
       "add": "Add as a customer",
       "adding": "Adding…",
       "added": "Added",
@@ -1288,11 +1287,10 @@
   },
   "regular": {
     "title": "Regular orders",
-    "intro": "Orders you repeat often. We email a reminder on your chosen day, and one button fills your cart at current prices. You send the order yourself.",
+    "intro": "Orders you repeat often. We remind you by email, and one button fills your cart.",
     "emptyTitle": "You don't have any regular orders yet",
     "emptyBody": "Open a sent order and press \"Save as a regular order\".",
     "save": "Save as a regular order",
-    "saveHint": "The order's products and quantities are saved. We'll remind you by email on the day you choose.",
     "saveConfirm": "Save",
     "cancel": "Cancel",
     "saved": "Saved to regular orders",
@@ -1323,11 +1321,11 @@
   },
   "pricing": {
     "title": "Prices",
-    "intro": "A list decides what a customer sees and at what price: only ticked products show. Without a price, the base price applies.",
+    "intro": "A list decides which products a customer sees and at what price. No price set: base price.",
     "newPlaceholder": "New list name, e.g.: Restaurants",
     "create": "Create list",
     "emptyTitle": "You don't have any price lists yet",
-    "emptyBody": "A customer sees no products until you assign a list. Create a list, tick the products and assign it.",
+    "emptyBody": "Customers see no products until you assign a list. Create one, tick products, assign it.",
     "default": "Default",
     "customers": "{count, plural, one {# customer} other {# customers}}",
     "overrides": "{count, plural, one {# product} other {# products}}",
@@ -1338,7 +1336,7 @@
       "unsetDefault": "Remove default",
       "delete": "Delete list",
       "deleteConfirm": "Yes, delete",
-      "deleteHint": "{count, plural, one {# customer} other {# customers}} will no longer see any products until you assign another list.",
+      "deleteHint": "{count, plural, one {# customer} other {# customers}} will see no products until you assign another list.",
       "copy": "Copy list",
       "copyName": "New list name",
       "category": "Category",
@@ -1355,14 +1353,14 @@
       "saved": "Changes saved",
       "noProducts": "You don't have any products yet.",
       "bulkTitle": "Discount on the ticked products",
-      "bulkHint": "The price of the products ticked in the list becomes the base price minus the percentage you enter. Existing prices are replaced.",
+      "bulkHint": "Ticked products get the base price minus this percentage.",
       "bulkPercent": "Discount, %",
       "bulkPreview": "Preview",
       "bulkApply": "Apply to {count, plural, one {# product} other {# products}}",
       "bulkApplied": "Prices updated: {count}",
       "bulkSample": "Examples",
       "importTitle": "Import prices",
-      "importHint": "The file needs a code (SKU) column and a price column. The products listed in the file are ticked in the list at the price given.",
+      "importHint": "The file needs a code (SKU) column and a price column.",
       "inactive": "Disabled",
       "show": {
         "label": "Show",
@@ -1391,13 +1389,13 @@
     },
     "conditions": {
       "title": "Conditions",
-      "intro": "Set how the price changes with payment method and quantity. Customers see the conditions next to your prices and choose how to pay; prices change only after you approve.",
+      "intro": "Set how the price changes with payment method and quantity. You approve each customer's choice.",
       "scope": "Applies to",
       "scopeList": "All products on this list",
       "hasOwn": "own values",
       "scopeListHint": "These values apply to every product on the list, unless a product has its own.",
-      "scopeProductHint": "Own values for this product. A field left empty follows the whole list; quantity rows added here replace the list's.",
-      "howToType": "Type the change in percent: -3 lowers the price 3%, 2 raises it 2%, 0 changes nothing. Leave empty if you don't offer it.",
+      "scopeProductHint": "Own values for this product. Empty fields follow the list.",
+      "howToType": "Percent: -3 is 3% cheaper, 2 is 2% dearer, 0 no change. Leave empty if not offered.",
       "methodTitle": "Payment method",
       "methodHint": "How the customer can pay. A method left empty is not offered.",
       "method": {
@@ -1411,8 +1409,8 @@
       "otherInterval": "Other number of days",
       "add": "Add",
       "qtyTitle": "Quantity discounts",
-      "qtyHint": "Order more of a product, pay less (or more) per unit. The highest row a line reaches applies to that line.",
-      "qtyInherited": "This product follows the list's {count, plural, one {# quantity row} other {# quantity rows}}. Adding a row here replaces them for this product.",
+      "qtyHint": "Order more, pay less (or more) per unit. The highest row reached applies.",
+      "qtyInherited": "Follows the list's {count, plural, one {# quantity row} other {# quantity rows}}. Adding a row here replaces them.",
       "from": "From",
       "qtyLabel": "Quantity",
       "qtyPctLabel": "Price change",
@@ -1431,14 +1429,14 @@
   "invite": {
     "title": "Invitation to 202",
     "heading": "{supplier} invites you",
-    "body": "Once connected, you'll see {supplier}'s catalog with the prices set for you and can send orders.",
+    "body": "Once connected, you'll see {supplier}'s catalog at your prices and can order.",
     "signIn": "Sign in and accept",
-    "signInHint": "Only a business approved by 202 can sign in. If your business hasn't been approved yet, contact us.",
+    "signInHint": "Only businesses approved by 202 can sign in. Not approved yet? Contact us.",
     "acceptAs": "Accept on behalf of {business}",
     "accept": "Accept the invitation",
     "newBuyerTitle": "A few details about your business",
     "newBuyerSubmit": "Connect",
-    "supplierAccount": "This invitation is for buyers. You're signed in as a supplier: sign out and sign in with your buying account.",
+    "supplierAccount": "This invitation is for buyers. Sign out, then sign in with your buying account.",
     "unavailableTitle": "The invitation is no longer valid",
     "unavailableBody": "The link may have expired, been revoked or already been used. Ask the supplier for a new link.",
     "alreadyConnected": "You are already connected to this supplier.",
@@ -1602,7 +1600,7 @@
       "viewLabel": "View",
       "viewProducts": "Loading: by product",
       "viewStops": "Delivery: by address",
-      "hintProducts": "All orders together: take each product once; the split below shows who gets how much. Tick items as they're loaded.",
+      "hintProducts": "All orders together. Take each product once; tick items as they're loaded.",
       "hintStops": "What goes to each address. Load the last stop's goods first.",
       "button": "Loading sheet",
       "cardHint": "Confirmed orders to load: {count}. All products in one place, with each customer's share.",
@@ -1641,9 +1639,8 @@
     "whatsapp": {
       "sendToSupplier": "Send to the supplier on WhatsApp",
       "tellBuyer": "Message the buyer on WhatsApp",
-      "hint": "WhatsApp opens with a message ready. Sending is up to you - 202 doesn't record whether it was sent.",
-      "sendNow": "Send the order on WhatsApp",
-      "sendNowHint": "WhatsApp opens with the order written out: items, total, address and link. Just press send. 202 doesn't record whether it was sent."
+      "hint": "WhatsApp opens with the order ready. You press send; 202 doesn't record whether it was sent.",
+      "sendNow": "Send the order on WhatsApp"
     },
     "terms": {
       "standard": "Standard price",
@@ -1759,7 +1756,7 @@
   },
   "password": {
     "titleFirst": "Create your password",
-    "introFirst": "Only you will know this password. From now on you'll sign in with your email and this password.",
+    "introFirst": "Choose your own password. You'll use it with your email from now on.",
     "titleChange": "Change password",
     "introChange": "Choose a new password.",
     "new": "New password",
@@ -1780,18 +1777,18 @@
   "pending": {
     "title": "Your business is being checked",
     "body": "Thank you, {name}! We are checking your legal ID and will contact you by phone.",
-    "next": "Once approved, you can view suppliers' catalogs and send orders. You can come back to this page at any time."
+    "next": "Once approved, you can view catalogs and send orders."
   },
   "supplierRequest": {
     "signIn": "Sign in",
     "title": "Sell more easily - to your own buyers",
-    "intro": "202 helps suppliers receive orders from restaurants, cafés and hotels in one place - instead of WhatsApp and phone calls.",
+    "intro": "202 helps suppliers receive orders from restaurants, cafés and hotels in one place.",
     "point1": "Free: no commission, no payments.",
     "point2": "Your customers repeat an order at your prices in a few taps.",
     "point3": "Prices stay private: each customer sees only their own prices.",
     "point4": "Import your catalog from Excel, with a separate price list for each customer.",
     "formTitle": "Request to join",
-    "formIntro": "Fill in the short form. We'll check the company, contact you, and after approval you'll receive a sign-in link by email. Sending the form doesn't create an account yet.",
+    "formIntro": "Fill in the short form. We'll check your company and email you a sign-in link once approved.",
     "businessName": "Company name",
     "legalId": "Legal ID",
     "legalIdHint": "9 digits (company) or 11 digits (sole trader).",
@@ -1814,9 +1811,9 @@
     },
     "privacyNote": "By sending the request you agree to the <privacy>Privacy Policy</privacy>. We'll use the data only to contact you.",
     "invitedTitle": "{buyer} invites you to 202",
-    "invitedBody": "{buyer} buys from you and invites you to 202. Fill in the short form: we'll check the business, and after approval you can add {buyer} as your customer.",
+    "invitedBody": "{buyer} buys from you and invites you to 202. Fill in the short form; once approved, you can add {buyer} as a customer.",
     "invitedUnavailable": "This invitation link no longer works, but you can still send a request to join.",
-    "invitedIntro": "202 gives a supplier one place for the catalog, each customer's prices and tidy incoming orders.",
+    "invitedIntro": "202 gives a supplier one place for the catalog, prices and orders.",
     "invitedPoint1": "Catalog and prices in one place: each customer sees only their own prices.",
     "invitedPoint2": "Orders arrive neatly organized, instead of forwarded WhatsApp messages.",
     "invitedPoint3": "Free: no commission, no payments. You decide who sees what."
@@ -2049,7 +2046,7 @@
   },
   "supplierInvite": {
     "title": "Invite a supplier",
-    "intro": "If your supplier isn't on 202 yet, invite them. They send a request to join, we check the business, then they can add you as a customer and open their catalog and prices to you.",
+    "intro": "If your supplier isn't on 202, invite them. Once we approve them, they can add you as a customer.",
     "name": "Supplier's name",
     "phone": "Phone (WhatsApp)",
     "email": "Email",
@@ -2093,7 +2090,7 @@
     "orderFooter": "Receive your next order on 202: your catalog and each customer's prices in one place, and orders neatly organized. It's free. Join: {link}",
     "personal": {
       "title": "Your invitation link",
-      "body": "Write your order on WhatsApp as you always do and add this text at the end. One link works for every supplier.",
+      "body": "Add this text under your WhatsApp order. One link works for every supplier.",
       "share": "Share",
       "copyText": "Copy text",
       "copyLink": "Copy link",
@@ -2104,9 +2101,8 @@
       "error": "The link could not be prepared. Refresh the page."
     },
     "namedTitle": "Invite a specific supplier",
-    "namedIntro": "If you want to tie the link to one supplier and know when they join, enter their name and number.",
     "legalId": "Identification code",
-    "legalIdHint": "If the supplier is already on 202 you can send a request instead of a link. If not, this invitation connects to them when they join."
+    "legalIdHint": "If they're already on 202, send a request instead of a link."
   },
   "authContinue": {
     "title": "Sign in to 202",
@@ -2120,21 +2116,21 @@
       "buyer": "Join as a buyer too",
       "supplier": "Join as a supplier too"
     },
-    "intro": "Your details are already filled in. If the ID matches and your first side is approved, the new side activates at once. Otherwise it waits for approval.",
+    "intro": "Your details are filled in. If the ID matches and your first side is approved, the new side activates at once; otherwise it needs approval.",
     "link": "Go to the page",
     "another": {
       "title": {
         "supplier": "Another supplier company",
         "buyer": "Another buyer company"
       },
-      "intro": "Each legal entity has its own ID, checked separately by the admin. Once approved, you manage both from one account and see their orders together."
+      "intro": "Each legal entity has its own ID, checked by the admin. Once approved, you manage both from one account."
     }
   },
   "connections": {
     "title": "Find a business",
     "hint": {
-      "supplier": "Enter a customer's ID code. If they're on 202, send a connection request: once they approve, they see your catalog with the price list you choose.",
-      "buyer": "Enter a supplier's ID code. If they're on 202, send a connection request: once they approve and give you a price list, you see their catalog."
+      "supplier": "Enter a customer's ID code. If they're on 202, send a connection request.",
+      "buyer": "Enter a supplier's ID code. If they're on 202, send a connection request."
     },
     "codeLabel": "Identification code",
     "codePlaceholder": "9 or 11 digits",
@@ -2170,7 +2166,7 @@
       "sent": "Request sent. {name} will see it in their requests.",
       "connected": "Connected with {name}.",
       "alsoFrom": "Also send a request from my other companies",
-      "alsoHint": "Each company sends its own request and offers its default price list. The customer approves each one separately."
+      "alsoHint": "Each company sends its own request; the customer approves each."
     },
     "incoming": {
       "title": "Requests to connect",
@@ -2194,7 +2190,7 @@
     "findable": {
       "title": "Visibility",
       "label": "Other businesses can find us by our identification code",
-      "hint": "They see only our name and city and can send a connection request. Turn off to be reached only by invitation links.",
+      "hint": "They see only our name and city. Turn off to be reached only by invitation links.",
       "saved": "Saved."
     },
     "errors": {
@@ -2240,7 +2236,7 @@
     "pendingHint": "An invited person joins the company the first time they sign in.",
     "revoke": "Cancel",
     "add": "Add a colleague",
-    "addHint": "Everyone has their own email and password, so you can see who did what. No approval from the 202 team is needed.",
+    "addHint": "Everyone has their own email and password. No 202 approval needed.",
     "email": "Colleague's email",
     "roleLabel": "Role",
     "roleHint": "An owner also manages the team. A member works with orders and the catalog.",
@@ -2249,8 +2245,8 @@
     "ownersOnly": "Only an owner can manage the team.",
     "invited": {
       "sent": "Added. A sign-in link was emailed.",
-      "skipped": "Added. The email could not be sent (no email service connected): your colleague should choose \"Set or reset password\" on the sign-in page.",
-      "failed": "Added, but the email could not be sent. Your colleague should choose \"Set or reset password\" on the sign-in page."
+      "skipped": "Added. No email service is connected: your colleague can use \"Set or reset password\" on the sign-in page.",
+      "failed": "Added, but the email failed. Your colleague can use \"Set or reset password\" on the sign-in page."
     },
     "errors": {
       "invalid_email": "Enter a valid email address.",
@@ -2273,7 +2269,7 @@
     "title": "Waybill data",
     "back": "Order",
     "open": "Waybill data",
-    "notice": "202 prepares the data to copy into RS.ge. It doesn't send the waybill: you create it on RS.ge. The data comes from the order you confirmed.",
+    "notice": "202 prepares the data to copy into RS.ge. It doesn't send the waybill.",
     "copy": "Copy",
     "copied": "Copied",
     "copyAll": "Copy everything",
@@ -2295,7 +2291,6 @@
     "driverId": "Driver's personal number",
     "vehicle": "Vehicle plate",
     "goods": "Goods",
-    "goodsHint": "The copy is a table you can paste into Excel. Quantities and prices use a dot as the decimal separator.",
     "code": "Code",
     "unit": "Unit",
     "qty": "Quantity",
@@ -2311,7 +2306,6 @@
       "title": "RS.ge",
       "notConnected": "RS.ge is not connected. Connect it in Settings (owner only).",
       "settingsLink": "Settings",
-      "readyHint": "The waybill is first saved in RS.ge as a draft: it is not in force yet. Then you check it and activate it.",
       "saveDraft": "Save draft in RS.ge",
       "saving": "Saving…",
       "draftSaved": "The draft is in RS.ge (no. {id}). It is not in force yet.",
@@ -2346,17 +2340,17 @@
       },
       "connect": {
         "title": "Connect RS.ge",
-        "intro": "Enter the service user created on RS.ge. The password is stored encrypted and never shown again. 202 checks that the user belongs to this company.",
+        "intro": "Enter the RS.ge service user. The password is stored encrypted and never shown again.",
         "user": "Service user",
         "password": "Service password",
         "submit": "Connect",
         "connected": "Connected ({date}).",
         "disconnect": "Disconnect",
         "ownerOnly": "Only an owner can connect or disconnect.",
-        "ipNote": "RS.ge ties a service user to one IP address: the user must be created for the address 202 connects to RS.ge from."
+        "ipNote": "RS.ge ties a service user to one IP: create it for the address 202 connects from."
       }
     },
-    "noticeRs": "202 prepares the data and, if RS.ge is connected, saves it in RS.ge as a draft. The waybill only comes into force when you activate it."
+    "noticeRs": "If RS.ge is connected, 202 saves the data there as a draft. It takes effect only when you activate it."
   },
   "palette": {
     "title": "Quick search",
@@ -2396,9 +2390,9 @@
     "testSent": "Test sent. Check this device.",
     "testFailed": "The test could not be delivered. Try turning notifications off and on again.",
     "on": "On for this device",
-    "denied": "Notifications are blocked for this site. Allow them in your browser settings, then come back here.",
+    "denied": "Notifications are blocked. Allow them in your browser settings.",
     "unsupported": "This browser cannot show notifications from a website.",
-    "iosInstall": "On iPhone: tap Share, choose Add to Home Screen, then open 202 from your home screen and turn notifications on there.",
+    "iosInstall": "On iPhone: Share, then Add to Home Screen. Open 202 from there and turn on notifications.",
     "error": "Could not change notifications. Try again.",
     "tooMany": "Notifications are already on for 10 devices. Turn one off first.",
     "notConfigured": "Notifications are not set up on the server yet.",

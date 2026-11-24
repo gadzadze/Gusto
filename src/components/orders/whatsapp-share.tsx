@@ -82,7 +82,7 @@ export async function WhatsappShare({
           {prominentNow ? to("sendNow") : kind === "to_supplier" ? to("sendToSupplier") : to("tellBuyer")}
         </a>
       </Button>
-      <p className="max-w-md text-xs text-muted-foreground">{prominentNow ? to("sendNowHint") : to("hint")}</p>
+      <p className="max-w-md text-xs text-muted-foreground">{to("hint")}</p>
     </div>
   );
 }
