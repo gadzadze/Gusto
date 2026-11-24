@@ -1,0 +1,81 @@
+import { createElement, type ReactElement, type MouseEvent } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it, vi } from "vitest";
+import { Button } from "@/components/ui/button";
+
+const render = (props: object, child: string) => renderToStaticMarkup(createElement(Button, props, child));
+const click = () => ({ preventDefault: vi.fn() }) as unknown as MouseEvent<HTMLButtonElement>;
+// Button is a plain function, so calling it gives the element it would render; its onClick is the guard.
+const guardOf = (props: Parameters<typeof Button>[0]) => (Button(props) as ReactElement<{ onClick: (e: MouseEvent<HTMLButtonElement>) => void }>).props.onClick;
+
+describe("Button", () => {
+  it("renders an ordinary button with no loading markup", () => {
+    const html = render({}, "Save");
+    expect(html).not.toContain("aria-busy");
+    expect(html).not.toContain("aria-disabled");
+    expect(html).not.toContain("animate-spin");
+    expect(html).not.toContain("opacity-0");
+  });
+
+  it("while loading: busy, spinner, content kept (hidden) so the width stays, and still focusable", () => {
+    const html = render({ loading: true }, "Save");
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain('aria-disabled="true"');
+    expect(html).toContain('data-loading="true"');
+    expect(html).toContain("animate-spin");
+    expect(html).toMatch(/<span class="inline-flex items-center justify-center gap-2 opacity-0">Save<\/span>/);
+    // Not a real `disabled` button: it would throw keyboard focus out of the page.
+    expect(html).not.toMatch(/<button[^>]*\sdisabled(=|\s|>)/);
+  });
+
+  it("speaks the loading label to screen readers only while loading", () => {
+    expect(render({ loading: true, loadingLabel: "Working…" }, "Save")).toContain('<span class="sr-only">Working…</span>');
+    expect(render({ loadingLabel: "Working…" }, "Save")).not.toContain("Working…");
+  });
+
+  it("a real disabled button stays disabled", () => {
+    expect(render({ disabled: true }, "Save")).toMatch(/<button[^>]*\sdisabled(=|\s|>)/);
+  });
+
+  it("a second press does nothing while loading, and the click is cancelled so a form is not submitted twice", () => {
+    const onClick = vi.fn();
+    const event = click();
+    guardOf({ loading: true, onClick })(event);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(event.preventDefault).toHaveBeenCalled();
+  });
+
+  it("passes the click through when not loading", () => {
+    const onClick = vi.fn();
+    const event = click();
+    guardOf({ onClick })(event);
+    expect(onClick).toHaveBeenCalledWith(event);
+    expect(event.preventDefault).not.toHaveBeenCalled();
+  });
+
+  it("keeps a larger invisible margin so a pressed (shrunken) button still takes edge taps", () => {
+    expect(render({}, "Save")).toContain("before:-inset-0.5");
+  });
+
+  it("asChild keeps working and carries the busy and disabled state onto its child", () => {
+    const link = (props: object) => renderToStaticMarkup(createElement(Button, { asChild: true, ...props }, createElement("a", { href: "/x" }, "Go")));
+    const plain = link({});
+    expect(plain).toContain('href="/x"');
+    expect(plain).not.toContain("aria-disabled");
+    const loading = link({ loading: true });
+    expect(loading).toContain('aria-busy="true"');
+    expect(loading).toContain('aria-disabled="true"');
+    expect(link({ disabled: true })).toContain('aria-disabled="true"');
+  });
+
+  it("asChild blocks the click while loading or disabled", () => {
+    const onClick = vi.fn();
+    const loading = click();
+    guardOf({ asChild: true, loading: true, onClick })(loading);
+    const disabled = click();
+    guardOf({ asChild: true, disabled: true, onClick })(disabled);
+    expect(onClick).not.toHaveBeenCalled();
+    expect(loading.preventDefault).toHaveBeenCalled();
+    expect(disabled.preventDefault).toHaveBeenCalled();
+  });
+});

@@ -66,7 +66,7 @@ function SidebarLink({ item, area }: { item: NavItem; area: Area }) {
       href={item.href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative isolate flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-[color,background-color,transform] duration-150 active:scale-[0.98] motion-reduce:active:scale-100",
+        "relative isolate flex min-h-10 items-center gap-3 rounded-md px-3 text-sm font-medium transition-[color,background-color,transform] duration-150 before:absolute before:-inset-0.5 before:content-[''] active:scale-[0.98] motion-reduce:active:scale-100",
         active ? "bg-brand-soft text-brand" : "text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
@@ -184,10 +184,11 @@ export function BottomNav(props: Props) {
                     aria-current={active ? "page" : undefined}
                     onClick={() => setOpen(false)}
                     className={cn(
-                      "flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium",
+                      "relative isolate flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium",
                       active ? "bg-brand-soft text-brand" : "text-foreground",
                     )}
                   >
+                    <PendingHighlight className="rounded-md" />
                     <item.icon aria-hidden className="size-5" />
                     {t(item.labelKey)}
                     <Count n={badges[item.href] ?? 0} label={String(badges[item.href] ?? 0)} />
@@ -213,7 +214,7 @@ export function BottomNav(props: Props) {
                   aria-current={active ? "page" : undefined}
                   onClick={() => setOpen(false)}
                   aria-label={count > 0 ? t("withCount", { label: t(item.labelKey), count }) : t(item.labelKey)}
-                  className={cn(slot, "relative isolate transition-transform duration-150 active:scale-95 motion-reduce:active:scale-100", active ? "text-brand" : "text-muted-foreground")}
+                  className={cn(slot, "relative isolate transition-transform duration-150 before:absolute before:-inset-0.5 before:content-[''] active:scale-95 motion-reduce:active:scale-100", active ? "text-brand" : "text-muted-foreground")}
                 >
                   <PendingHighlight />
                   <span className="relative">

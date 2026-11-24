@@ -463,10 +463,16 @@ Black, burgundy and white.
   - A "Skip to content" link leads the shell (`main#main-content`). The theme choice lives in the account menu on a phone (and in
     the sidebar on desktop). Two moments get a `SuccessMark` (a check that draws itself once, still under reduced motion): the
     buyer's order sent, the supplier's order confirmed.
-- **Actions and taps answer at once** (2026-11-21): `Button` takes `loading` (spinner, blocks a second press, stays at full strength:
-  a dimmed button reads as broken); use it on the one button that started the action, never on siblings that merely share `pending`.
-  Buttons and nav links shrink slightly while pressed (off under reduced motion). A nav link shows `PendingHighlight`
-  (`useLinkStatus`) while its page is being prepared, so the tap is acknowledged before the page arrives.
+- **Actions and taps answer at once** (2026-11-21, reworked 2026-11-24 after a review): `Button` takes `loading`: a spinner
+  replaces the content (which keeps its space and its place in the accessibility tree, `opacity-0`, so the button never changes width and keeps its name), a
+  second press does nothing (the click is cancelled, so a form is not submitted twice), and the button stays at full strength
+  (a dimmed button reads as broken). **It is not `disabled`**: it carries `aria-disabled` and `aria-busy`, so keyboard focus
+  stays on it, and `loadingLabel` (`common.working`, or a "saving" string) is read to screen readers. `asChild` buttons get the
+  same guard and attributes. Use `loading` on the one button that started the action, never on siblings that merely share
+  `pending` and never on a button that only opens a form. Buttons and nav links shrink slightly while pressed (off under reduced
+  motion); an invisible 2px margin (`before:-inset-0.5`) keeps the full-size tap area so an edge tap is not lost. Every nav link
+  (sidebar, bottom tabs and the phone "More" list) shows `PendingHighlight` (`useLinkStatus`) while its page is being prepared,
+  so the tap is acknowledged before the page arrives (`tests/unit/button.test.ts` guards the button part).
 - **Everything comes from somewhere** (2026-11-23; the principle from a design post on spatial continuity): panels and
   sheets animate from where they belong, set per dialog with `data-motion` (`sheet`: rises from the bottom on a phone,
   pops in centred above; `side`: the review panel; `top`: the command palette; `menu`: the account menu), in plain CSS
