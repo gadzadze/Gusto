@@ -163,7 +163,7 @@ export function BottomNav(props: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const slot = "flex min-h-[3.25rem] w-full min-w-0 flex-col items-center justify-center gap-1 px-0 text-center text-[0.6875rem] font-medium leading-tight";
+  const slot = "flex min-h-[3.25rem] w-full min-w-0 flex-col items-center justify-center gap-1 px-0 text-center text-[0.6875rem] font-medium leading-tight tracking-tight";
   // Long words carry soft hyphens in `nav.bar.*`, so on a narrow phone they wrap at a syllable instead of being cut.
   // One pill slides under the active tab (a "More" that holds the active page counts as a tab). Every slot has the same width.
   const slots = primary.length + (overflow ? 1 : 0);
@@ -211,18 +211,20 @@ export function BottomNav(props: Props) {
       ) : null}
       <nav
         aria-label={t("menu")}
-        className="[view-transition-name:app-bottom-nav] pointer-events-none fixed inset-x-0 bottom-0 z-30 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden print:hidden"
+        className="[view-transition-name:app-bottom-nav] pointer-events-none fixed inset-x-0 bottom-0 z-30 px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden print:hidden"
       >
-        <ul className="pointer-events-auto relative mx-auto flex max-w-md rounded-2xl border border-border bg-background/85 p-0.5 shadow-lg backdrop-blur-md [transform:translateZ(0)]">
+        <ul className="pointer-events-auto relative mx-auto flex max-w-md rounded-2xl border border-border bg-background/85 shadow-lg backdrop-blur-md [transform:translateZ(0)]">
           <li
             aria-hidden
             data-bar-indicator
             className={cn(
-              "pointer-events-none absolute inset-y-0.5 left-0.5 rounded-xl bg-brand-soft transition-[transform,opacity] duration-200 ease-[var(--ease-out)] motion-reduce:transition-none",
+              "pointer-events-none absolute inset-y-1 left-0 transition-[transform,opacity] duration-200 ease-[var(--ease-out)] motion-reduce:transition-none",
               indicatorIndex < 0 && "opacity-0",
             )}
-            style={{ width: `calc((100% - 0.25rem) / ${slots})`, transform: `translateX(${Math.max(indicatorIndex, 0) * 100}%)` }}
-          />
+            style={{ width: `${100 / slots}%`, transform: `translateX(${Math.max(indicatorIndex, 0) * 100}%)` }}
+          >
+            <span className="mx-1 block h-full rounded-xl bg-brand-soft" />
+          </li>
           {primary.map((item) => {
             const active = isActive(pathname, item.href, props.area);
             const count = badges[item.href] ?? 0;
