@@ -36,7 +36,6 @@
       "inviteBody": "Verified businesses only"
     },
     "tour": {
-      "kicker": "How it works",
       "title": "From scattered chats to one place, in four steps.",
       "aria": "202 tour",
       "tab1": "Catalog",
@@ -62,7 +61,6 @@
       "undo": "Cancel"
     },
     "suppliers": {
-      "kicker": "For suppliers",
       "title": "Your customers, your prices.",
       "body": "Invite the businesses you already serve. Each one gets its own price list.",
       "c1Title": "One-time invitation",
@@ -85,7 +83,6 @@
       "listHotel": "Hotel prices"
     },
     "buyers": {
-      "kicker": "For buyers",
       "title": "The weekly order, in one tap.",
       "body": "Restaurants, cafés, hotels and shops order from the suppliers they already use.",
       "c1Title": "Your prices",
