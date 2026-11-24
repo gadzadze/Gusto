@@ -58,4 +58,13 @@ describe("motion rules", () => {
     // The new-order highlight fades a colour for 1.8 s; it moves nothing.
     expect(slow).toEqual([1800]);
   });
+
+  it("gives rounded surfaces squircle corners only where the browser supports them", () => {
+    const start = css.indexOf("@supports (corner-shape: squircle)");
+    expect(start).toBeGreaterThan(-1);
+    const block = css.slice(start, css.indexOf("\n}\n", start));
+    for (const selector of [".rounded-lg", ".rounded-xl", "dialog"]) expect(block).toContain(selector);
+    expect(block).not.toContain("rounded-full");
+    expect(css.replace(block, "")).not.toContain("corner-shape: squircle;");
+  });
 });
