@@ -157,7 +157,6 @@ export function LandingContent() {
           <div className="wrap">
             <div className="trust">
               <Reveal className="split-text">
-                <p className="kicker">{t("trust.kicker")}</p>
                 <h2 className="h2">{t("trust.title")}</h2>
                 <p className="body">{t("trust.body")}</p>
               </Reveal>
