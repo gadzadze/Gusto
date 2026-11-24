@@ -472,10 +472,16 @@ Black, burgundy and white.
   pops in centred above; `side`: the review panel; `top`: the command palette; `menu`: the account menu), in plain CSS
   (`@starting-style` + `allow-discrete`, in `globals.css`; a browser without them just shows and hides at once). Notices
   (`StatusToast`) enter and leave; counts and an order's status badge pop when they change (`ChangePulse`, not on first
-  render); a row that arrives while the page is open (a new order in the live queue or inbox) gets a colour highlight
-  (`FreshRow`, `PanelRow freshId`, on only after `LiveOrders` has started, so rows present at load never animate); inline
-  questions and the confirm/reject panels rise in; a cart line fades while the server removes it. **One curve, 150 to
-  250 ms, nothing that moves layout, all of it off under reduced motion** (`tests/unit/motion.test.ts` guards this).
+  render; a count going from none to one pops too); a row that arrives while the page is open (a new order in the live
+  queue or inbox) gets a colour highlight (`FreshRow`, `PanelRow freshId`): only rows that first mount in the 8 seconds after
+  `LiveOrders` triggered a refresh (`expectArrivals()`), so rows present at load, navigation between pages and a
+  changed filter or brand toggle never animate, and nothing is recorded on the server; inline
+  questions and the confirm/reject panels rise in; a cart line fades while the server removes it. **One curve
+  (`--ease-out`), 150 to 250 ms, nothing that moves layout, and everything that moves is off under reduced motion**
+  (`tests/unit/motion.test.ts` guards this). The one exception is the new row's 1.8 s colour fade, which moves nothing and
+  stays on, because without it an arriving row would go unnoticed. Closing a dialog animates only where the browser
+  supports `overlay` (`@supports`; Safari closes instantly, only the opening animates), because without it a closing
+  dialog leaves the top layer and jumps. The sheet grabber carries a dismissed sheet off the screen before closing it.
   The sidebar, phone header and bottom bar carry `view-transition-name`s (`app-sidebar`, `app-header`, `app-bottom-nav`) with
   no animation of their own, so a page-to-page view transition (not built yet) only moves the content between them.
 - **Avoid:** gradients, emoji as icons, decorative motion, modals for

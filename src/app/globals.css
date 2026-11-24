@@ -165,11 +165,23 @@ dialog,
 [popover][data-motion="menu"] {
   opacity: 0;
   transform: translateY(0.75rem) scale(0.97);
+  /* Opening: from @starting-style, so only opacity and transform need to transition. */
   transition:
     opacity 180ms var(--ease-out),
-    transform 220ms var(--ease-out),
-    overlay 220ms allow-discrete,
-    display 220ms allow-discrete;
+    transform 220ms var(--ease-out);
+}
+/* Closing keeps the element displayed while it animates out, which needs `overlay` so that it also stays in the top
+   layer (a dialog that is no longer modal loses its fixed positioning and would jump). Where `overlay` is not
+   supported (Safari), closing is instant and only the opening animates. */
+@supports (overlay: auto) {
+  dialog,
+  [popover][data-motion="menu"] {
+    transition:
+      opacity 180ms var(--ease-out),
+      transform 220ms var(--ease-out),
+      overlay 220ms allow-discrete,
+      display 220ms allow-discrete;
+  }
 }
 dialog[data-motion="top"] {
   transform: translateY(-0.5rem) scale(0.98);
@@ -224,10 +236,15 @@ dialog[open][data-motion],
 }
 dialog::backdrop {
   opacity: 0;
-  transition:
-    opacity 200ms ease-out,
-    overlay 200ms allow-discrete,
-    display 200ms allow-discrete;
+  transition: opacity 200ms var(--ease-out);
+}
+@supports (overlay: auto) {
+  dialog::backdrop {
+    transition:
+      opacity 200ms var(--ease-out),
+      overlay 200ms allow-discrete,
+      display 200ms allow-discrete;
+  }
 }
 dialog[open]::backdrop {
   opacity: 1;
@@ -302,13 +319,15 @@ dialog[open]::backdrop {
   animation: toast-in 200ms var(--ease-out) backwards;
 }
 .animate-toast-out {
-  animation: toast-out 150ms ease-in forwards;
+  animation: toast-out 150ms var(--ease-out) forwards;
 }
+/* The one thing that stays on under reduced motion: a new row's colour fades from the brand tint (nothing moves),
+   because without it a row arriving in the queue would go unnoticed. */
 .animate-row-in {
-  animation: row-in 1800ms ease-out backwards;
+  animation: row-in 1800ms var(--ease-out) backwards;
 }
 [data-cart-line] {
-  transition: opacity 160ms ease-out;
+  transition: opacity 160ms var(--ease-out);
 }
 [data-cart-line][data-removing] {
   opacity: 0.25;
