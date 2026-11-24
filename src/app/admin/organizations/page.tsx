@@ -1,14 +1,12 @@
 import { Building2 } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { SupplierStatusBadge } from "@/components/admin/supplier-status-badge";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { Pagination } from "@/components/app-shell/pagination";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { requireAdmin } from "@/server/auth/guards";
@@ -21,9 +19,7 @@ export default async function AdminOrganizationsPage({ searchParams }: PageProps
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <Organizations searchParams={searchParams} />
-      </Suspense>
+      <Organizations searchParams={searchParams} />
     </>
   );
 }

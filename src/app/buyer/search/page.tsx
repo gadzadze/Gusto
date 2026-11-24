@@ -1,13 +1,11 @@
 import { ChevronRight, PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductCard } from "@/components/buyer/product-card";
 import { toProductViews } from "@/components/buyer/product-view";
 import { BuyerSearchForm } from "@/components/buyer/search-form";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
 import { searchConnectedCatalogs } from "@/server/domain/buyer/catalog";
 import { cartQuantities } from "@/server/domain/orders/cart";
@@ -17,9 +15,7 @@ export default async function BuyerSearchPage({ searchParams }: PageProps<"/buye
   return (
     <>
       <PageHeader title={t("searchTitle")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <Results searchParams={searchParams} />
-      </Suspense>
+      <Results searchParams={searchParams} />
     </>
   );
 }

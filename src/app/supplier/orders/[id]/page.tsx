@@ -3,12 +3,10 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { FileText } from "lucide-react";
 import { OrderView } from "@/components/orders/order-view";
 import { WhatsappShare } from "@/components/orders/whatsapp-share";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { availableActions } from "@/lib/orders/transitions";
 import { addDays, MAX_DELIVERY_DAYS_AHEAD, todayIn } from "@/lib/dates";
 import { requireSupplier } from "@/server/auth/guards";
@@ -27,9 +25,7 @@ export default async function SupplierOrderPage(props: PageProps<"/supplier/orde
           {t("title")}
         </Link>
       </Button>
-      <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
-        <Order {...props} />
-      </Suspense>
+      <Order {...props} />
     </PageSlide>
   );
 }

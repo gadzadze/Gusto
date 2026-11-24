@@ -1,12 +1,10 @@
 import { BadgePercent, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { CreatePriceList } from "@/components/pricing/create-price-list";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireSupplier } from "@/server/auth/guards";
 import { listPriceLists } from "@/server/domain/pricing/price-lists";
 
@@ -15,9 +13,7 @@ export default async function PricingPage() {
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <PriceLists />
-      </Suspense>
+      <PriceLists />
     </>
   );
 }

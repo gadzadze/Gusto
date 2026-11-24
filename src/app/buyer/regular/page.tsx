@@ -1,11 +1,9 @@
 import { CalendarClock } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { RegularOrderButtons } from "@/components/orders/regular-order-controls";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
 import { listRegularOrders } from "@/server/domain/orders/regular";
 
@@ -14,9 +12,7 @@ export default async function RegularOrdersPage() {
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <RegularOrders />
-      </Suspense>
+      <RegularOrders />
     </>
   );
 }

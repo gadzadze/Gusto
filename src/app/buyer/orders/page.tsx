@@ -1,11 +1,9 @@
 import { ClipboardList } from "lucide-react";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { OrderList } from "@/components/orders/order-list";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
 import { listBuyerOrders } from "@/server/domain/orders/queries";
 
@@ -14,9 +12,7 @@ export default async function BuyerOrdersPage({ searchParams }: PageProps<"/buye
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <Orders searchParams={searchParams} />
-      </Suspense>
+      <Orders searchParams={searchParams} />
     </>
   );
 }

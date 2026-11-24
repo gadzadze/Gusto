@@ -3,12 +3,10 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { TotalsBlock } from "@/components/orders/totals-block";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireBuyer } from "@/server/auth/guards";
 import { addDays, MAX_DELIVERY_DAYS_AHEAD, todayIn } from "@/lib/dates";
@@ -30,9 +28,7 @@ export default async function CheckoutPage(props: PageProps<"/buyer/checkout/[su
         </Link>
       </Button>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
-        <Checkout {...props} />
-      </Suspense>
+      <Checkout {...props} />
     </>
   );
 }

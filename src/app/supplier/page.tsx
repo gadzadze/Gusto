@@ -1,6 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
-import { DashboardSkeleton } from "@/components/dashboard/skeletons";
 import { PushSettings } from "@/components/push/push-settings";
 import { pushPublicKey } from "@/server/notifications/push";
 import { LiveOrders } from "@/components/orders/live-orders";
@@ -12,9 +10,7 @@ import { getOrderValueSeries, getPendingPulse, getSetupProgress, getSupplierCloc
 
 export default function SupplierDashboardPage() {
   return (
-    <Suspense fallback={<DashboardSkeleton />}>
-      <Dashboard />
-    </Suspense>
+    <Dashboard />
   );
 }
 

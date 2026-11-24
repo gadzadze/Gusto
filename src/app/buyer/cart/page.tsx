@@ -2,7 +2,6 @@ import { UnitPrice } from "@/components/orders/unit-price";
 import { AlertTriangle, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductImage } from "@/components/catalog/product-image";
 import { QuantityStepper } from "@/components/orders/quantity-stepper";
@@ -10,7 +9,6 @@ import { TotalsBlock } from "@/components/orders/totals-block";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { FormAlert } from "@/components/ui/form-alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireBuyer } from "@/server/auth/guards";
 import { getCart, listCarts } from "@/server/domain/orders/cart";
 import { getFormats } from "@/server/i18n/formats";
@@ -20,9 +18,7 @@ export default async function CartPage({ searchParams }: PageProps<"/buyer/cart"
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <Carts searchParams={searchParams} />
-      </Suspense>
+      <Carts searchParams={searchParams} />
     </>
   );
 }

@@ -1,11 +1,9 @@
 import { Tags } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductForm } from "@/components/catalog/product-form";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { NEW_PRODUCT_DEFAULTS } from "@/lib/validation/product";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
@@ -16,9 +14,7 @@ export default async function NewProductPage() {
   return (
     <>
       <PageHeader title={t("newTitle")} />
-      <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
-        <NewProduct />
-      </Suspense>
+      <NewProduct />
     </>
   );
 }

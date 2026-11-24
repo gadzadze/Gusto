@@ -1,14 +1,12 @@
 import { ArrowLeft, Printer } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { PickCheck } from "@/components/orders/pick-check";
 import { PrintButton } from "@/components/orders/print-button";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { parseDateInput, todayIn } from "@/lib/dates";
 import { requireSupplier } from "@/server/auth/guards";
 import { BrandScope } from "@/components/orders/brand-scope";
@@ -30,9 +28,7 @@ export default async function PickPage({ searchParams }: PageProps<"/supplier/or
         </Link>
       </Button>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full" />}>
-        <Pick searchParams={searchParams} />
-      </Suspense>
+      <Pick searchParams={searchParams} />
     </>
   );
 }

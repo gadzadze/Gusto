@@ -2,10 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { OrderView } from "@/components/orders/order-view";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireAdmin } from "@/server/auth/guards";
 import { viewOrderForAdmin } from "@/server/domain/admin/orders";
 import { NotFoundError } from "@/server/domain/errors";
@@ -20,9 +18,7 @@ export default async function AdminOrderPage(props: PageProps<"/admin/orders/[nu
           {t("back")}
         </Link>
       </Button>
-      <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
-        <Order {...props} />
-      </Suspense>
+      <Order {...props} />
     </>
   );
 }

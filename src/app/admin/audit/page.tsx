@@ -1,6 +1,5 @@
 import { ScrollText } from "lucide-react";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { Pagination } from "@/components/app-shell/pagination";
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TBody, TD, TH, THead, TR } from "@/components/ui/table";
 import { requireAdmin } from "@/server/auth/guards";
 import { listAuditActions, listAuditLog } from "@/server/domain/admin/audit-log";
@@ -18,9 +16,7 @@ export default async function AdminAuditPage({ searchParams }: PageProps<"/admin
   return (
     <>
       <PageHeader title={t("title")} />
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <Audit searchParams={searchParams} />
-      </Suspense>
+      <Audit searchParams={searchParams} />
     </>
   );
 }

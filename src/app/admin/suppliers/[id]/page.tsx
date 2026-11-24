@@ -2,12 +2,10 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getFormatter, getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { SupplierStatusBadge } from "@/components/admin/supplier-status-badge";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireAdmin } from "@/server/auth/guards";
 import { VerificationCard } from "@/components/admin/verification-card";
 import { getVerificationInfo } from "@/server/domain/admin/organizations";
@@ -27,9 +25,7 @@ export default async function AdminSupplierPage(props: PageProps<"/admin/supplie
           {t("suppliersTitle")}
         </Link>
       </Button>
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <Supplier {...props} />
-      </Suspense>
+      <Supplier {...props} />
     </>
   );
 }

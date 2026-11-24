@@ -443,7 +443,7 @@ Black, burgundy and white.
   (`BAR_LABELS`) that wrap at a syllable on narrow phones; the real name stays as `aria-label`. A
   new nav item with a long label needs a `nav.bar.*` entry; `tests/e2e/bottom-nav.spec.ts` fails if
   any label is cut off at 360px or 320px.
-- **States:** every list has empty, loading (skeleton) and error states.
+- **States:** every list has empty and error states; loading is the shell skeleton on a hard load and, when moving between dashboard pages, the old page staying put (see "Cache Components" below). Inline loading inside a page (a panel that loads after an action) still uses `Skeleton`.
   **Moving between pages should feel seamless** (2026-11-21, `globals.css`): the `Skeleton` primitive stays invisible for
   the first 150 ms and then fades in (a wait shorter than that shows no skeleton at all), and anything that is a direct
   child of the shell's `<main>` fades in over 180 ms when it arrives, except the page title (`data-page-header`) and
@@ -567,9 +567,13 @@ What this codebase relies on:
   stream in. Landing and legal pages are therefore not prerendered.
   - Reading cookies, headers or `searchParams` outside a `<Suspense>`
     boundary is a build error.
-  - Pages render a static header and put the session-dependent part in an
-    async child component inside `<Suspense>` with a skeleton fallback.
-  - Area layouts do the same around the shell.
+  - **Dashboard pages (`buyer/`, `supplier/`, `admin/`) have no `<Suspense>` of their own and no `loading.tsx`** (2026-11-25;
+    `tests/unit/no-page-suspense.test.ts` guards it). The area layout's one boundary (fallback `AppShellSkeleton`) covers every
+    page: on a hard load that shell skeleton shows, and on a client navigation that boundary is already revealed, so React keeps the
+    old page on screen until the next one is ready (the tab you pressed highlights at once via `PendingHighlight`), then the new page
+    fades in. A page-level boundary is a *new* boundary on every navigation and brings a skeleton flash back. Public pages
+    (login, invite, onboarding) still use their own boundaries.
+  - Area layouts put one `<Suspense>` with the shell skeleton around the shell.
 - **`await connection()` comes before any Supabase client.**
   - `createSupabaseServerClient()` calls it before anything else, because
     the Supabase client reads the clock, which is forbidden during

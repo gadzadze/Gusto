@@ -2,7 +2,6 @@ import { ArrowLeft, PackageSearch, Phone, Search } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { PaymentTerms } from "@/components/buyer/payment-terms";
@@ -11,7 +10,6 @@ import { toProductViews } from "@/components/buyer/product-view";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { formatPhone } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { requireBuyer } from "@/server/auth/guards";
@@ -34,9 +32,7 @@ export default async function SupplierCatalogPage(props: PageProps<"/buyer/suppl
           {t("suppliersTitle")}
         </Link>
       </Button>
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <Catalog {...props} />
-      </Suspense>
+      <Catalog {...props} />
     </>
   );
 }

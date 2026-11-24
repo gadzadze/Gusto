@@ -1,7 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireAdmin } from "@/server/auth/guards";
 import { listAllCategories } from "@/server/domain/catalog/categories";
 import { CategoriesFromFile } from "./categories-from-file";
@@ -12,9 +10,7 @@ export default async function AdminCategoriesPage() {
   return (
     <>
       <PageHeader title={t("categoriesTitle")} />
-      <Suspense fallback={<Skeleton className="h-64 w-full max-w-3xl" />}>
-        <Categories />
-      </Suspense>
+      <Categories />
     </>
   );
 }

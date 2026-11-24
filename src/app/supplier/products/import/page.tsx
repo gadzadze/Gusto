@@ -2,11 +2,9 @@ import { ArrowLeft, Tags } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
 import { getSavedImportMapping } from "@/server/domain/catalog/import";
@@ -23,9 +21,7 @@ export default async function ImportPage() {
         </Link>
       </Button>
       <PageHeader title={t("import.title")} />
-      <Suspense fallback={<Skeleton className="h-48 w-full max-w-4xl" />}>
-        <Import />
-      </Suspense>
+      <Import />
     </>
   );
 }

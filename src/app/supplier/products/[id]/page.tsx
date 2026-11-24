@@ -2,7 +2,6 @@ import { PageSlide } from "@/components/motion/page-slide";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductDelete } from "@/components/catalog/product-delete";
 import { ProductActiveToggle } from "@/components/catalog/product-active-toggle";
@@ -12,7 +11,6 @@ import { StockPanel } from "@/components/catalog/stock-panel";
 import { ProductStatusBadge } from "@/components/catalog/product-status-badge";
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import { minorToInput } from "@/lib/money";
 import type { ProductInput } from "@/lib/validation/product";
 import { requireSupplier } from "@/server/auth/guards";
@@ -33,9 +31,7 @@ export default async function EditProductPage(props: PageProps<"/supplier/produc
           {t("title")}
         </Link>
       </Button>
-      <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
-        <EditProduct {...props} />
-      </Suspense>
+      <EditProduct {...props} />
     </PageSlide>
   );
 }

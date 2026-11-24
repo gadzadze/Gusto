@@ -2,10 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { requireSupplier } from "@/server/auth/guards";
 import { listPriceLists } from "@/server/domain/pricing/price-lists";
 import { CustomerForm } from "./customer-form";
@@ -21,9 +19,7 @@ export default async function NewCustomerPage() {
         </Link>
       </Button>
       <PageHeader title={t("newTitle")} />
-      <Suspense fallback={<Skeleton className="h-80 w-full max-w-2xl" />}>
-        <NewCustomer />
-      </Suspense>
+      <NewCustomer />
     </>
   );
 }

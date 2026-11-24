@@ -2,7 +2,6 @@ import { ArrowLeft, Search } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Suspense } from "react";
 import { Pagination } from "@/components/app-shell/pagination";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { BulkDiscount } from "@/components/pricing/bulk-discount";
@@ -15,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { requireSupplier } from "@/server/auth/guards";
 import { listActiveCategories } from "@/server/domain/catalog/categories";
@@ -35,9 +33,7 @@ export default async function PriceListPage(props: PageProps<"/supplier/pricing/
           {t("title")}
         </Link>
       </Button>
-      <Suspense fallback={<Skeleton className="h-96 w-full" />}>
-        <PriceList {...props} />
-      </Suspense>
+      <PriceList {...props} />
     </>
   );
 }
