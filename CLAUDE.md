@@ -695,6 +695,10 @@ and the delivery row is marked `skipped`, not `sent`.
 
 - **Never** run `drizzle-kit push` against a shared or production database.
   Always `generate`, read the SQL, commit it, then `migrate`.
+  **Production is migrated through Supabase's migration list** (`apply_migration` with the same SQL), not
+  `drizzle-kit migrate`: Drizzle's own log in production stops at 0029, so `db:migrate` there would fail on "already
+  exists". How it works, and the statement that would bring the log up to date, is in
+  [`docs/production-migrations.md`](docs/production-migrations.md) (read it before touching production migrations).
 - Extensions (`pg_trgm`), RLS enablement, sequences and other hand-written SQL
   go in custom migrations (`drizzle-kit generate --custom`), committed like
   any other.
