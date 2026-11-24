@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 
 const render = (props: object, child: string) => renderToStaticMarkup(createElement(Button, props, child));
 const click = () => ({ preventDefault: vi.fn() }) as unknown as MouseEvent<HTMLButtonElement>;
-// Button is a plain function, so calling it gives the element it would render; its onClick is the guard.
-const guardOf = (props: Parameters<typeof Button>[0]) => (Button(props) as ReactElement<{ onClick: (e: MouseEvent<HTMLButtonElement>) => void }>).props.onClick;
+// Button is a plain function, so calling it gives the element it would render and the props it hands down.
+type Handed = { onClick?: (e: MouseEvent<HTMLButtonElement>) => void };
+const handedDown = (props: Parameters<typeof Button>[0]) => (Button(props) as ReactElement<Handed>).props;
 
 describe("Button", () => {
   it("renders an ordinary button with no loading markup", () => {
@@ -40,17 +41,25 @@ describe("Button", () => {
   it("a second press does nothing while loading, and the click is cancelled so a form is not submitted twice", () => {
     const onClick = vi.fn();
     const event = click();
-    guardOf({ loading: true, onClick })(event);
+    handedDown({ loading: true, onClick }).onClick?.(event);
     expect(onClick).not.toHaveBeenCalled();
     expect(event.preventDefault).toHaveBeenCalled();
   });
 
-  it("passes the click through when not loading", () => {
+  it("hands the caller's own handler straight through when not loading", () => {
     const onClick = vi.fn();
-    const event = click();
-    guardOf({ onClick })(event);
-    expect(onClick).toHaveBeenCalledWith(event);
-    expect(event.preventDefault).not.toHaveBeenCalled();
+    expect(handedDown({ onClick }).onClick).toBe(onClick);
+  });
+
+  // Pages render Button on the server too, and a server component may not pass a function to an element
+  // ("Event handlers cannot be passed to Client Component props"): that broke every page once. A button with no
+  // handler of its own must therefore carry none, in every shape it is used in.
+  it("creates no event handler unless it is needed", () => {
+    expect(handedDown({}).onClick).toBeUndefined();
+    expect(handedDown({ disabled: true }).onClick).toBeUndefined();
+    expect(handedDown({ asChild: true }).onClick).toBeUndefined();
+    expect(handedDown({ asChild: true, disabled: true }).onClick).toBeUndefined();
+    expect(handedDown({ loading: true }).onClick).toBeTypeOf("function"); // loading only happens in client code
   });
 
   it("keeps a larger invisible margin so a pressed (shrunken) button still takes edge taps", () => {
@@ -65,15 +74,18 @@ describe("Button", () => {
     const loading = link({ loading: true });
     expect(loading).toContain('aria-busy="true"');
     expect(loading).toContain('aria-disabled="true"');
-    expect(link({ disabled: true })).toContain('aria-disabled="true"');
+    const disabled = link({ disabled: true });
+    expect(disabled).toContain('aria-disabled="true"');
+    expect(disabled).toContain('data-disabled="true"');
+    expect(disabled).toContain('tabindex="-1"'); // out of the keyboard tab order
   });
 
-  it("asChild blocks the click while loading or disabled", () => {
+  it("asChild blocks a click handler it was given while loading or disabled", () => {
     const onClick = vi.fn();
     const loading = click();
-    guardOf({ asChild: true, loading: true, onClick })(loading);
+    handedDown({ asChild: true, loading: true, onClick }).onClick?.(loading);
     const disabled = click();
-    guardOf({ asChild: true, disabled: true, onClick })(disabled);
+    handedDown({ asChild: true, disabled: true, onClick }).onClick?.(disabled);
     expect(onClick).not.toHaveBeenCalled();
     expect(loading.preventDefault).toHaveBeenCalled();
     expect(disabled.preventDefault).toHaveBeenCalled();

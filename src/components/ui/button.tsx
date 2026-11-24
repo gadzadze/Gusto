@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 // `before:` is an invisible 2px margin around the button: a pressed button shrinks (`active:scale`), and without it a
 // tap right at the edge could end up outside the shrunken box and not count as a click.
 const buttonVariants = cva(
-  "relative inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 text-sm font-medium transition-[color,background-color,border-color,opacity,transform] duration-150 ease-out before:absolute before:-inset-0.5 before:content-[''] active:scale-[0.97] motion-reduce:transition-colors motion-reduce:active:scale-100 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "relative inline-flex min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 text-sm font-medium transition-[color,background-color,border-color,opacity,transform] duration-150 ease-out before:absolute before:-inset-0.5 before:content-[''] active:scale-[0.97] motion-reduce:transition-colors motion-reduce:active:scale-100 disabled:pointer-events-none disabled:opacity-50 disabled:active:scale-100 data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -55,24 +55,24 @@ export function Button({
   ...props
 }: ButtonProps) {
   const classes = cn(buttonVariants({ variant, size, className }), loading && "cursor-progress");
-  // A real <button disabled> cannot be clicked; anything else (a loading button, or a link made into a button) is guarded here.
-  const guard = (blocked: boolean) => (event: React.MouseEvent<HTMLButtonElement>) => {
-    if (blocked) {
-      event.preventDefault();
-      return;
-    }
-    onClick?.(event);
-  };
+  // Pages render this component on the server too, and a server component may not hand a function to an element. So a
+  // handler exists only when it is needed: while loading (which only ever happens in client code: it swallows the
+  // click, so nothing is pressed or submitted twice), or when the caller passed one. A disabled link made into a
+  // button (asChild) is blocked with CSS and by leaving the tab order instead, not with a handler.
+  const swallow = (event: React.MouseEvent<HTMLButtonElement>) => event.preventDefault();
+  const handler = loading ? swallow : onClick;
   if (asChild) {
     const blocked = loading || Boolean(disabled);
     return (
       <Slot
         data-slot="button"
         data-loading={loading || undefined}
+        data-disabled={disabled || undefined}
         aria-busy={loading || undefined}
         aria-disabled={blocked || undefined}
+        tabIndex={disabled ? -1 : undefined}
         className={classes}
-        onClick={guard(blocked)}
+        onClick={disabled && onClick ? swallow : handler}
         {...props}
       >
         {children}
@@ -87,7 +87,7 @@ export function Button({
       aria-disabled={loading || undefined}
       disabled={disabled}
       className={classes}
-      onClick={guard(loading)}
+      onClick={handler}
       {...props}
     >
       {/* The content keeps its space (so the width never changes) and its place in the accessibility tree (so the button

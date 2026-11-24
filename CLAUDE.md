@@ -468,7 +468,7 @@ Black, burgundy and white.
   second press does nothing (the click is cancelled, so a form is not submitted twice), and the button stays at full strength
   (a dimmed button reads as broken). **It is not `disabled`**: it carries `aria-disabled` and `aria-busy`, so keyboard focus
   stays on it, and `loadingLabel` (`common.working`, or a "saving" string) is read to screen readers. `asChild` buttons get the
-  same guard and attributes. Use `loading` on the one button that started the action, never on siblings that merely share
+  same guard and attributes (a disabled link also leaves the tab order). **A `Button` carries no event handler of its own unless it is loading or the caller passes one**: pages render it on the server, where a function prop is an error (this broke every page once). Use `loading` on the one button that started the action, never on siblings that merely share
   `pending` and never on a button that only opens a form. Buttons and nav links shrink slightly while pressed (off under reduced
   motion); an invisible 2px margin (`before:-inset-0.5`) keeps the full-size tap area so an edge tap is not lost. Every nav link
   (sidebar, bottom tabs and the phone "More" list) shows `PendingHighlight` (`useLinkStatus`) while its page is being prepared,
