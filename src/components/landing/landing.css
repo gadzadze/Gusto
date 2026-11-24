@@ -16,7 +16,6 @@
   --font: var(--font-landing), var(--font-noto-georgian), system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 }
-.lp ::selection { background: var(--brand); color: #fff; }
 .lp a { color: inherit; }
 .lp img { display: block; }
 .lp { background: var(--bg); color: var(--ink); font-family: var(--font); line-height: 1.5; overflow-x: clip; font-variant-numeric: tabular-nums; }

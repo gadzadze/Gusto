@@ -492,6 +492,7 @@ Black, burgundy and white.
   no animation of their own, so page-to-page view transitions only move the content between them.
   **Directional page slides** (2026-11-24, `components/motion/page-slide.tsx`, React `<ViewTransition>`, no config in Next 16): a link that goes deeper has `transitionTypes={["nav-forward"]}`, the back link on a detail page `["nav-back"]`; the page is wrapped in `PageSlide` in `page.tsx` (never a layout, which persists), 24px and about 200 ms on `--ease-out`, off under reduced motion. Without a type (browser back, refresh) nothing animates. Wired so far: supplier orders, products and customers (list and detail) and the buyer's order page. A new drill-down needs the wrapper on both pages and a type on each link. Not built: shared-element morphs of a row into its page, and a skeleton-to-content crossfade (the existing fade-in covers it).
 - **Squircle corners** (2026-11-24, `globals.css`): `corner-shape: squircle` on `rounded-md/lg/xl/2xl`, dialogs and popovers, inside `@supports`, so a browser without it keeps the plain radius (Chromium today). Never on `rounded-full`, never outside the `@supports` block (`motion.test.ts` guards both). The landing page does not use it.
+- **Selected text keeps the browser's default highlight** (decided 2026-11-25): no `::selection` rule anywhere (`tests/unit/selection.test.ts`).
 - **Avoid:** gradients, emoji as icons, decorative motion, modals for
   multi-step flows (use pages or sheets).
 
