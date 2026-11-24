@@ -5,23 +5,38 @@ import { adminWithCategory, onboardBuyer, onboardSupplier } from "./flows";
 
 const SHOTS = process.env.NAV_SHOTS_DIR;
 
-// The phone's bottom bar: nothing cut off or wider than the screen, at 360px and 320px.
+// The phone's bottom bar: only the open tab shows its name (the others are icons), so a label is cut off when the open tab's
+// text is wider than its box or wraps past two lines. Nothing may be wider than the screen, at 360px and 320px.
+async function labelProblems(page: Page) {
+  const bar = page.getByRole("navigation", { name: "ნავიგაცია" });
+  return bar.evaluate((nav) => {
+    const labels = [...nav.querySelectorAll('a[aria-current="page"] > span:last-child, button[aria-expanded="true"] > span:last-child')] as HTMLElement[];
+    const cut = labels
+      .filter((el) => el.scrollWidth > el.clientWidth + 1 || el.getBoundingClientRect().height > parseFloat(getComputedStyle(el).lineHeight) * 2 + 1)
+      .map((el) => el.textContent);
+    return { cut, pageOverflow: document.documentElement.scrollWidth > window.innerWidth };
+  });
+}
+
 async function checkBar(page: Page, name: string) {
   for (const width of [360, 320]) {
     await page.setViewportSize({ width, height: 740 });
-    await page.waitForTimeout(200);
-    const bar = page.getByRole("navigation", { name: "ნავიგაცია" });
-    const result = await bar.evaluate((nav) => {
-      // A label is cut off when its text is wider than its slot, or wraps to more than two lines.
-      const labels = [...nav.querySelectorAll("a > span:last-child, button > span:last-child")] as HTMLElement[];
-      const cut = labels
-        .filter((el) => el.scrollWidth > el.clientWidth + 1 || el.getBoundingClientRect().height > parseFloat(getComputedStyle(el).lineHeight) * 2 + 1)
-        .map((el) => el.textContent);
-      return { cut, pageOverflow: document.documentElement.scrollWidth > window.innerWidth };
-    });
+    await page.waitForTimeout(300);
+    const result = await labelProblems(page);
     expect(result.cut, `${name} labels cut off at ${width}px`).toEqual([]);
     expect(result.pageOverflow, `${name} page wider than ${width}px`).toBe(false);
     if (SHOTS) await page.screenshot({ path: `${SHOTS}/nav-${name}-${width}.png` });
+  }
+  // At the narrowest width, open every tab in turn: each name must fit in the open tab's pill.
+  const bar = page.getByRole("navigation", { name: "ნავიგაცია" });
+  const hrefs = await bar.locator("a").evaluateAll((links) => links.map((a) => a.getAttribute("href")));
+  for (const href of hrefs) {
+    if (!href) continue;
+    await page.goto(href);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(300);
+    const result = await labelProblems(page);
+    expect(result.cut, `${name} tab ${href} label cut off at 320px`).toEqual([]);
   }
 }
 
