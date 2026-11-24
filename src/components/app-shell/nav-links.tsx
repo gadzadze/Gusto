@@ -163,8 +163,22 @@ export function BottomNav(props: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const slot = "flex min-h-14 w-full min-w-0 flex-col items-center justify-center gap-1 px-0 text-center text-[0.6875rem] font-medium leading-tight";
-  // Long words carry soft hyphens in `nav.bar.*`, so on a narrow phone they wrap at a syllable instead of being cut.
+  // Only the open tab shows its name (next to its icon, in a pill that grows); the others are icons, with the name kept as
+  // their accessible name. The active tab is three times as wide as the rest, which also leaves room for the longest word.
+  const tabItem = (active: boolean) =>
+    cn("min-w-0 p-1 transition-[flex-grow] duration-200 ease-[var(--ease-out)] motion-reduce:transition-none", active ? "flex-[3]" : "flex-1");
+  const tab = (active: boolean) =>
+    cn(
+      "relative isolate flex min-h-11 w-full min-w-0 items-center justify-center gap-1.5 rounded-full px-1 text-[0.6875rem] font-medium leading-tight tracking-tight",
+      "transition-[color,background-color,transform] duration-150 before:absolute before:-inset-0.5 before:content-[''] active:scale-95 motion-reduce:active:scale-100",
+      active ? "bg-brand-soft text-brand" : "text-muted-foreground",
+    );
+  // Tapping the tab you are already on goes back to the top of the page instead of reloading it.
+  const toTop = (event: React.MouseEvent, href: string) => {
+    if (pathname !== href) return;
+    event.preventDefault();
+    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
   const barLabel = (key: NavItem["labelKey"]) => ((BAR_LABELS as readonly string[]).includes(key) ? t(`bar.${key as (typeof BAR_LABELS)[number]}`) : t(key));
   return (
     <>
@@ -173,7 +187,7 @@ export function BottomNav(props: Props) {
           <button type="button" aria-label={t("closeMore")} className="fixed inset-0 z-20 cursor-default md:hidden print:hidden" onClick={() => setOpen(false)} />
           <ul
             id="bottom-nav-more"
-            className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background p-2 shadow-lg md:hidden print:hidden"
+            className="fixed inset-x-2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 rounded-3xl border border-border bg-background p-2 shadow-lg md:hidden print:hidden"
           >
             {rest.map((item) => {
               const active = isActive(pathname, item.href, props.area);
@@ -201,24 +215,27 @@ export function BottomNav(props: Props) {
       ) : null}
       <nav
         aria-label={t("menu")}
-        className="[view-transition-name:app-bottom-nav] fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] [transform:translateZ(0)] md:hidden print:hidden"
+        className="[view-transition-name:app-bottom-nav] pointer-events-none fixed inset-x-0 bottom-0 z-30 px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden print:hidden"
       >
-        <ul className="mx-auto flex max-w-md">
+        <ul className="pointer-events-auto relative mx-auto flex max-w-md rounded-full border border-border bg-background/85 shadow-lg backdrop-blur-md [transform:translateZ(0)]">
           {primary.map((item) => {
             const active = isActive(pathname, item.href, props.area);
             const count = badges[item.href] ?? 0;
             return (
-              <li key={item.href + item.labelKey} className="min-w-0 flex-1">
+              <li key={item.href + item.labelKey} className={tabItem(active)}>
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  onClick={() => setOpen(false)}
+                  onClick={(event) => {
+                    setOpen(false);
+                    toTop(event, item.href);
+                  }}
                   aria-label={count > 0 ? t("withCount", { label: t(item.labelKey), count }) : t(item.labelKey)}
-                  className={cn(slot, "relative isolate transition-transform duration-150 before:absolute before:-inset-0.5 before:content-[''] active:scale-95 motion-reduce:active:scale-100", active ? "text-brand" : "text-muted-foreground")}
+                  className={tab(active)}
                 >
                   <PendingHighlight />
                   <span className="relative">
-                    <item.icon aria-hidden className="size-5" />
+                    <item.icon aria-hidden strokeWidth={active ? 2.4 : 2} className="size-5" />
                     <ChangePulse value={count} className="absolute -right-3 -top-1.5">
                       {count > 0 ? (
                         <span
@@ -230,25 +247,26 @@ export function BottomNav(props: Props) {
                       ) : null}
                     </ChangePulse>
                   </span>
-                  <span className="w-full [hyphens:manual]">{barLabel(item.labelKey)}</span>
+                  {active ? <span className="min-w-0 animate-in-soft [hyphens:manual]">{barLabel(item.labelKey)}</span> : null}
                 </Link>
               </li>
             );
           })}
           {overflow ? (
-            <li className="min-w-0 flex-1">
+            <li className={tabItem(restActive || open)}>
               <button
                 type="button"
+                aria-label={t("more")}
                 aria-expanded={open}
                 aria-controls="bottom-nav-more"
                 onClick={() => setOpen((v) => !v)}
-                className={cn(slot, restActive || open ? "text-brand" : "text-muted-foreground")}
+                className={tab(restActive || open)}
               >
                 <span className="relative">
                   <Ellipsis aria-hidden className="size-5" />
                   {restBadge ? <span aria-hidden className="absolute -right-1.5 -top-1 size-2.5 rounded-full bg-brand" /> : null}
                 </span>
-                <span className="w-full">{t("more")}</span>
+                {restActive || open ? <span className="min-w-0 animate-in-soft">{t("more")}</span> : null}
               </button>
             </li>
           ) : null}

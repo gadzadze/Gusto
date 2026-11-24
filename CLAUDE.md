@@ -432,7 +432,7 @@ Black, burgundy and white.
     compete with the brand or with errors.
 - **Layout:** sidebar on desktop, bottom navigation on mobile. No horizontal
   scroll at 360px width. Touch targets ≥44px.
-  The phone bottom bar (`BottomNav` in `components/app-shell/nav-links.tsx`) has five slots: with more
+  The phone bottom bar (`BottomNav` in `components/app-shell/nav-links.tsx`) is a **floating fully rounded bar** (a pill, like Instagram's; the open tab is a pill inside it) (2026-11-24: inset 8px from the screen edges, frosted `bg-background/85` + blur, shadow, above the safe area; page bottom padding is `pb-28`) **only the open tab shows its name**: it is a soft burgundy pill, three times as wide as the others (`flex-[3]` vs `flex-1`, the width grows over 200 ms on `--ease-out`, no transition under reduced motion), with icon and name side by side; the other tabs are icons whose name stays as their `aria-label` (so screen readers and the e2e role queries still find them, and a "More" that holds the active page counts as the open tab). The active icon has a heavier stroke, and **tapping the tab you are already on scrolls to the top** instead of reloading. It has five slots: with more
   than five items the first four show and the rest sit behind "More" (`nav.more`). A buyer and a supplier have exactly five
   (a supplier's Settings and a platform admin's Administration link carry `inAccountMenuOnPhone` and sit in the phone account
   menu instead); only the admin area still has a "More". Tabs show a **count badge** (`NavBadgesProvider`, `nav-badges.tsx`): a
