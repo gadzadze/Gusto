@@ -1,3 +1,4 @@
+import { PageSlide } from "@/components/motion/page-slide";
 import { ClipboardList, Truck } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -19,12 +20,12 @@ import { countSupplierOrders, listSupplierOrders, SUPPLIER_TABS, type SupplierTa
 export default async function SupplierOrdersPage({ searchParams }: PageProps<"/supplier/orders">) {
   const t = await getTranslations("orders");
   return (
-    <>
+    <PageSlide>
       <PageHeader title={t("title")} />
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         <Inbox searchParams={searchParams} />
       </Suspense>
-    </>
+    </PageSlide>
   );
 }
 

@@ -1,3 +1,4 @@
+import { PageSlide } from "@/components/motion/page-slide";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -19,9 +20,9 @@ import { getFormats } from "@/server/i18n/formats";
 export default async function SupplierOrderPage(props: PageProps<"/supplier/orders/[id]">) {
   const t = await getTranslations("orders");
   return (
-    <>
+    <PageSlide>
       <Button asChild variant="ghost" size="sm" className="mb-2 -ml-3 text-muted-foreground print:hidden">
-        <Link href="/supplier/orders">
+        <Link href="/supplier/orders" transitionTypes={["nav-back"]}>
           <ArrowLeft />
           {t("title")}
         </Link>
@@ -29,7 +30,7 @@ export default async function SupplierOrderPage(props: PageProps<"/supplier/orde
       <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
         <Order {...props} />
       </Suspense>
-    </>
+    </PageSlide>
   );
 }
 

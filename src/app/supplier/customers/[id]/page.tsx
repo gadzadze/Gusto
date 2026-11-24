@@ -1,3 +1,4 @@
+import { PageSlide } from "@/components/motion/page-slide";
 import { ArrowLeft, Ban, PackageSearch } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -26,9 +27,9 @@ import { getFormats } from "@/server/i18n/formats";
 export default async function CustomerPage(props: PageProps<"/supplier/customers/[id]">) {
   const t = await getTranslations("customers");
   return (
-    <>
+    <PageSlide>
       <Button asChild variant="ghost" size="sm" className="mb-2 -ml-3 text-muted-foreground">
-        <Link href="/supplier/customers">
+        <Link href="/supplier/customers" transitionTypes={["nav-back"]}>
           <ArrowLeft />
           {t("title")}
         </Link>
@@ -36,7 +37,7 @@ export default async function CustomerPage(props: PageProps<"/supplier/customers
       <Suspense fallback={<Skeleton className="h-80 w-full max-w-3xl" />}>
         <Customer {...props} />
       </Suspense>
-    </>
+    </PageSlide>
   );
 }
 

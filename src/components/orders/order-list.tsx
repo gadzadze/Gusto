@@ -18,7 +18,7 @@ export async function OrderList({ orders, viewer, allBrands = false }: { orders:
     <ul className="divide-y divide-border rounded-xl border border-border">
       {orders.map((o) => (
         <FreshRow as="li" key={o.id} id={o.id}>
-          <Link href={allBrands ? `/o/${o.number}` : `/${viewer}/orders/${o.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
+          <Link transitionTypes={["nav-forward"]} href={allBrands ? `/o/${o.number}` : `/${viewer}/orders/${o.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
                 <span className="font-medium tabular-nums">{t("number", { number: o.number })}</span>

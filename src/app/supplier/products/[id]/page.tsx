@@ -1,3 +1,4 @@
+import { PageSlide } from "@/components/motion/page-slide";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -25,9 +26,9 @@ import { getFormats } from "@/server/i18n/formats";
 export default async function EditProductPage(props: PageProps<"/supplier/products/[id]">) {
   const t = await getTranslations("products");
   return (
-    <>
+    <PageSlide>
       <Button asChild variant="ghost" size="sm" className="mb-2 -ml-3 text-muted-foreground">
-        <Link href="/supplier/products">
+        <Link href="/supplier/products" transitionTypes={["nav-back"]}>
           <ArrowLeft />
           {t("title")}
         </Link>
@@ -35,7 +36,7 @@ export default async function EditProductPage(props: PageProps<"/supplier/produc
       <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
         <EditProduct {...props} />
       </Suspense>
-    </>
+    </PageSlide>
   );
 }
 
