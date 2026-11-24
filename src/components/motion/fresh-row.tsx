@@ -1,18 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type * as React from "react";
 import { cn } from "@/lib/utils";
 
-// Rows that arrived while the page was already open (a new order in the live queue) get a short highlight, so they
-// are noticed instead of silently shifting the list. Rows that were there when the page loaded never animate:
-// `live` turns on only once the page's live poller has started, and ids are remembered for the page's lifetime.
+// A row that arrives while a supplier has the page open (a new order in the live queue) gets a short highlight, so it
+// is noticed instead of silently shifting the list. Only the live poller can say that something arrived:
+// `expectArrivals()` is called right before it refreshes the page, and rows that mount in the next few seconds and
+// were not seen before are the new ones. Rows that load with the page, navigation to another page, and a changed
+// filter or brand toggle never fall in that window, so they never animate. Browser only: nothing is recorded
+// or highlighted while rendering on the server.
+const ARRIVAL_WINDOW_MS = 8_000;
+const MAX_REMEMBERED = 500;
 const seen = new Set<string>();
-let live = false;
+let arrivalsUntil = 0;
 
-export function setRowsLive(value: boolean) {
-  live = value;
-  if (!value) seen.clear();
+/** Called by the live poller just before it refreshes the page: unseen rows that mount now are new arrivals. */
+export function expectArrivals(now = Date.now()) {
+  arrivalsUntil = now + ARRIVAL_WINDOW_MS;
+}
+
+/** Forget everything (the live page was left). */
+export function resetRows() {
+  seen.clear();
+  arrivalsUntil = 0;
+}
+
+export function isFreshRow(id: string, now = Date.now()) {
+  return now < arrivalsUntil && !seen.has(id);
+}
+
+export function rememberRow(id: string) {
+  if (seen.size >= MAX_REMEMBERED) seen.clear(); // bounded: only ever needed for rows on the open page
+  seen.add(id);
 }
 
 export function FreshRow({
@@ -26,10 +46,10 @@ export function FreshRow({
   className?: string;
   children: React.ReactNode;
 }) {
-  const [fresh] = useState(() => {
-    const isNew = live && !seen.has(id);
-    seen.add(id);
-    return isNew;
-  });
+  // Decided once, when the row first mounts in the browser (never on the server, where there is no page to watch).
+  const [fresh] = useState(() => typeof window !== "undefined" && isFreshRow(id));
+  useEffect(() => {
+    rememberRow(id);
+  }, [id]);
   return <Tag className={cn(className, fresh && "animate-row-in")}>{children}</Tag>;
 }

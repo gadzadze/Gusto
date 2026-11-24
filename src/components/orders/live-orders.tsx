@@ -4,7 +4,7 @@ import { BellRing } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
-import { setRowsLive } from "@/components/motion/fresh-row";
+import { expectArrivals, resetRows } from "@/components/motion/fresh-row";
 import { StatusToast } from "@/components/ui/status-toast";
 
 const VISIBLE_MS = 20_000;
@@ -24,13 +24,11 @@ export function LiveOrders({ signature, pending }: { signature: string; pending:
   const seen = useRef(signature);
   const seenPending = useRef(pending);
   const baseTitle = useRef<string | null>(null);
-  const [notice, setNotice] = useState(false);
+  // A counter, not a flag: each new order is its own notice, so one that arrives while the previous is closing is kept.
+  const [notice, setNotice] = useState<number | null>(null);
 
-  // From here on, rows that appear are new ones (they get a highlight); rows already on the page never animate.
-  useEffect(() => {
-    setRowsLive(true);
-    return () => setRowsLive(false);
-  }, []);
+  // Leaving the page forgets which rows were on it.
+  useEffect(() => resetRows, []);
 
   // The page re-rendered with fresh data: that is the new baseline.
   useEffect(() => {
@@ -57,10 +55,11 @@ export function LiveOrders({ signature, pending }: { signature: string; pending:
         failures = 0;
         if (data.signature !== seen.current && !document.querySelector("dialog[open]")) {
           if (data.pending > seenPending.current) {
-            setNotice(true); // stays until the person closes it
+            setNotice((n) => (n ?? 0) + 1); // stays until the person closes it
           }
           seen.current = data.signature;
           seenPending.current = data.pending;
+          expectArrivals(); // rows that appear because of this refresh are new ones
           router.refresh();
         }
         setTitle(data.pending);
@@ -91,9 +90,9 @@ export function LiveOrders({ signature, pending }: { signature: string; pending:
     };
   }, [router]);
 
-  if (!notice) return null;
+  if (notice === null) return null;
   return (
-    <StatusToast icon={<BellRing className="size-4 shrink-0 text-brand" aria-hidden />} onDismiss={() => setNotice(false)}>
+    <StatusToast key={notice} icon={<BellRing className="size-4 shrink-0 text-brand" aria-hidden />} onDismiss={() => setNotice(null)}>
       {t("newOrder")}
     </StatusToast>
   );

@@ -1,41 +1,74 @@
 import { createElement, type ComponentType, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ChangePulse } from "@/components/motion/change-pulse";
-import { FreshRow, setRowsLive } from "@/components/motion/fresh-row";
+import { FreshRow, expectArrivals, isFreshRow, rememberRow, resetRows } from "@/components/motion/fresh-row";
 
 // createElement with the child as an argument (what the lint rule wants), typed loosely for these tests.
 const el = (type: ComponentType<never>, props: object, child: string): ReactElement => createElement(type as ComponentType<object>, props, child);
-
 const row = (id: string) => renderToStaticMarkup(el(FreshRow, { id, as: "li" }, "x"));
 
-afterEach(() => setRowsLive(false));
+afterEach(() => {
+  resetRows();
+  vi.unstubAllGlobals();
+});
+
+describe("which rows count as new", () => {
+  it("nothing is new until the live poller says something arrived", () => {
+    expect(isFreshRow("a")).toBe(false);
+  });
+
+  it("an unseen row is new inside the arrival window, a remembered one is not", () => {
+    rememberRow("known");
+    expectArrivals();
+    expect(isFreshRow("brand-new")).toBe(true);
+    expect(isFreshRow("known")).toBe(false);
+  });
+
+  it("the window closes after 8 seconds, so navigation and filter changes later never highlight", () => {
+    expectArrivals(1_000);
+    expect(isFreshRow("a", 1_000 + 7_999)).toBe(true);
+    expect(isFreshRow("a", 1_000 + 8_000)).toBe(false);
+  });
+
+  it("forgets everything when the live page is left", () => {
+    rememberRow("a");
+    expectArrivals();
+    resetRows();
+    expect(isFreshRow("a")).toBe(false); // the window is gone too
+    expectArrivals();
+    expect(isFreshRow("a")).toBe(true); // and so is the memory of what was seen
+  });
+
+  it("remembers a bounded number of rows", () => {
+    for (let i = 0; i < 600; i += 1) rememberRow(`r${i}`);
+    expectArrivals();
+    expect(isFreshRow("r599")).toBe(false);
+    expect(isFreshRow("r0")).toBe(true); // dropped when the set was cleared at its limit
+  });
+});
 
 describe("FreshRow", () => {
-  it("never animates rows rendered before the live poller has started", () => {
+  it("never highlights while rendering on the server, even inside the window", () => {
+    expectArrivals();
+    expect(typeof window).toBe("undefined");
     expect(row("a")).not.toContain("animate-row-in");
-    expect(row("b")).not.toContain("animate-row-in");
   });
 
-  it("animates only rows that first appear once the page is live", () => {
-    // Present at load: remembered, so a later refresh that still has them does not animate them.
-    row("a");
-    setRowsLive(true);
-    expect(row("a")).not.toContain("animate-row-in");
-    // Arrived while the page was open.
-    const fresh = row("new-order");
-    expect(fresh).toContain("animate-row-in");
-    expect(fresh.startsWith("<li")).toBe(true);
+  it("highlights an unseen row that mounts in the browser inside the window", () => {
+    vi.stubGlobal("window", {});
+    expectArrivals();
+    const html = row("new-order");
+    expect(html).toContain("animate-row-in");
+    expect(html.startsWith("<li")).toBe(true);
   });
 
-  it("forgets the rows when the page stops being live, so a return visit starts clean", () => {
-    setRowsLive(true);
-    expect(row("z")).toContain("animate-row-in");
-    setRowsLive(false);
-    expect(row("z")).not.toContain("animate-row-in");
-    setRowsLive(true);
-    // z was seen while not live, so it counts as present at load now.
-    expect(row("z")).not.toContain("animate-row-in");
+  it("does not highlight rows that mount outside the window, or ones already seen", () => {
+    vi.stubGlobal("window", {});
+    expect(row("loaded-with-the-page")).not.toContain("animate-row-in");
+    rememberRow("known");
+    expectArrivals();
+    expect(row("known")).not.toContain("animate-row-in");
   });
 });
 

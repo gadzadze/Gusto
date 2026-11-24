@@ -37,6 +37,21 @@ describe("motion rules", () => {
     }
   });
 
+  it("uses the shared easing curve for everything in the block", () => {
+    const block = css.slice(css.indexOf("/* Everything comes from somewhere"), css.indexOf("/* Phone type scale"));
+    // `var(--ease-out)` is fine; a bare keyword curve is not.
+    expect(block.match(/(?<![-\w])ease(-in|-out|-in-out)?\b/g) ?? []).toEqual([]);
+  });
+
+  it("only animates a dialog out where `overlay` is supported", () => {
+    const block = css.slice(css.indexOf("/* Everything comes from somewhere"), css.indexOf("/* Phone type scale"));
+    // Every `overlay`/`display` transition sits inside an @supports (overlay: auto) block.
+    const outside = block.replace(/@supports \(overlay: auto\) \{[\s\S]*?\n\}\n/g, "");
+    expect(outside).not.toMatch(/\boverlay\b[^;]*allow-discrete/);
+    expect(outside).not.toMatch(/\bdisplay \d+ms allow-discrete/);
+    expect(block).toContain("@supports (overlay: auto)");
+  });
+
   it("keeps every motion within 250 ms", () => {
     const block = css.slice(css.indexOf("/* Everything comes from somewhere"), css.indexOf("/* Phone type scale"));
     const slow = [...block.matchAll(/(\d+)ms/g)].map((m) => Number(m[1])).filter((ms) => ms > 250);

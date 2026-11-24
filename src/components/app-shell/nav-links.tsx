@@ -41,15 +41,17 @@ function PendingHighlight({ className }: { className?: string }) {
 }
 
 function Count({ n, label }: { n: number; label: string }) {
-  if (n <= 0) return null;
+  // The wrapper stays mounted while the count is zero, so a count going from none to one pops like any other change.
   return (
     <ChangePulse value={n} className="ml-auto">
-      <span
-        aria-label={label}
-        className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold leading-5 text-brand-foreground tabular-nums"
-      >
-        {n > 99 ? "99+" : n}
-      </span>
+      {n > 0 ? (
+        <span
+          aria-label={label}
+          className="inline-flex min-w-5 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-semibold leading-5 text-brand-foreground tabular-nums"
+        >
+          {n > 99 ? "99+" : n}
+        </span>
+      ) : null}
     </ChangePulse>
   );
 }
@@ -216,16 +218,16 @@ export function BottomNav(props: Props) {
                   <PendingHighlight />
                   <span className="relative">
                     <item.icon aria-hidden className="size-5" />
-                    {count > 0 ? (
-                      <ChangePulse value={count} className="absolute -right-3 -top-1.5">
+                    <ChangePulse value={count} className="absolute -right-3 -top-1.5">
+                      {count > 0 ? (
                         <span
                           aria-hidden
                           className="inline-flex min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[0.6875rem] font-semibold leading-4 text-brand-foreground tabular-nums"
                         >
                           {count > 99 ? "99+" : count}
                         </span>
-                      </ChangePulse>
-                    ) : null}
+                      ) : null}
+                    </ChangePulse>
                   </span>
                   <span className="w-full [hyphens:manual]">{barLabel(item.labelKey)}</span>
                 </Link>
