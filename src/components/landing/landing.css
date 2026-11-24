@@ -65,10 +65,6 @@
 /* Secondary: same size as the primary, outline only. */
 .lp .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line2); }
 .lp .btn.ghost:hover { background: #fff; color: var(--brand); border-color: var(--brand); }
-.lp .more { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 16px; font-weight: 700; color: var(--brand); text-decoration: none; }
-.lp .more::after { content: "→"; transition: transform 0.3s var(--ease); }
-.lp .more:hover::after { transform: translateX(4px); }
-.lp .night .more { color: #F0A9B8; }
 /* Type */
 .lp .kicker { margin: 0; font-size: 16px; font-weight: 700; color: var(--brand); }
 .lp .night .kicker { color: #F0A9B8; }
@@ -244,6 +240,7 @@
 .lp .close-side { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px; padding-top: 12px; }
 .lp .close-side div { border-top: 1px solid var(--line); padding-top: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
 .lp .close-side p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--text); }
+.lp .close-side .btn { margin-top: 8px; }
 /* Footer */
 .lp .foot { border-top: 1px solid var(--line); padding: 56px 0 64px; }
 .lp .foot-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px 40px; font-size: 14px; color: var(--muted); }
