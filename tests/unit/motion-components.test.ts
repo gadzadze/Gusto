@@ -1,10 +1,13 @@
-import { createElement } from "react";
+import { createElement, type ComponentType, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it } from "vitest";
 import { ChangePulse } from "@/components/motion/change-pulse";
 import { FreshRow, setRowsLive } from "@/components/motion/fresh-row";
 
-const row = (id: string) => renderToStaticMarkup(createElement(FreshRow, { id, as: "li" }, "x"));
+// createElement with the child as an argument (what the lint rule wants), typed loosely for these tests.
+const el = (type: ComponentType<never>, props: object, child: string): ReactElement => createElement(type as ComponentType<object>, props, child);
+
+const row = (id: string) => renderToStaticMarkup(el(FreshRow, { id, as: "li" }, "x"));
 
 afterEach(() => setRowsLive(false));
 
@@ -38,7 +41,7 @@ describe("FreshRow", () => {
 
 describe("ChangePulse", () => {
   it("does not pop on first render, and keeps the class it is given", () => {
-    const html = renderToStaticMarkup(createElement(ChangePulse, { value: 3, className: "ml-auto" }, "3"));
+    const html = renderToStaticMarkup(el(ChangePulse, { value: 3, className: "ml-auto" }, "3"));
     expect(html).not.toContain("animate-pop");
     expect(html).toContain("ml-auto");
     expect(html).toContain(">3<");
