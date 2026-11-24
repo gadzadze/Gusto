@@ -149,7 +149,6 @@ function RsPanel({ rs, transport, vatNote }: { rs: NonNullable<SheetProps["rs"]>
       ) : null}
       {rs.state === "ready" ? (
         <>
-          <p className="text-sm text-muted-foreground">{t("readyHint")}</p>
           {vatNote ? <p className="text-xs text-muted-foreground">{t("vatNote")}</p> : null}
           <Button type="button" disabled={pending} onClick={() => run(() => saveWaybillDraftAction(rs.orderId, transport))}>
             {pending ? t("saving") : t("saveDraft")}
@@ -312,7 +311,6 @@ export function WaybillSheet(props: SheetProps) {
             <CopyButton text={goodsTsv} label={t("copyGoods")} />
           </span>
         </div>
-        <p className="text-xs text-muted-foreground print:hidden">{t("goodsHint")}</p>
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full min-w-[34rem] text-sm">
             <thead className="bg-surface-2 text-left text-xs text-muted-foreground">

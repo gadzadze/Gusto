@@ -39,7 +39,6 @@ async function Invite() {
           <PersonalInviteLink initial={url ? { url, text: tText("orderFooter", { link: url }) } : null} />
           <section className="space-y-3">
             <h2 className="font-semibold">{t("namedTitle")}</h2>
-            <p className="max-w-xl text-sm text-muted-foreground">{t("namedIntro")}</p>
             <InviteSupplierForm />
           </section>
         </>

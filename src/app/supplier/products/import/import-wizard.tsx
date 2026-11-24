@@ -235,7 +235,6 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
                     ))}
                   </Select>
                 ) : null}
-                {fallbacks.categoryMode === "guess" ? <p className="text-xs text-muted-foreground">{t("fallbacks.guessHint")}</p> : null}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="fb-unit">{t("fallbacks.unit")}</Label>
