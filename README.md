@@ -108,9 +108,8 @@ run `npx supabase init` in a scratch folder and copy those settings over.
   fails otherwise.
 - Never use `drizzle-kit push` against a shared or production database.
 - `db:migrate` targets whatever `DATABASE_URL_DIRECT` points at. Check it
-  before running. **Not against production as things stand**: production was migrated through Supabase's
-  migration list and Drizzle's log there is behind; see
-  [docs/production-migrations.md](docs/production-migrations.md).
+  before running. Production is migrated through Supabase's migration list and the log is kept in step by hand;
+  see [docs/production-migrations.md](docs/production-migrations.md) before touching it.
 
 ## Tests
 
