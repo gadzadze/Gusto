@@ -1,3 +1,4 @@
+import { PageSlide } from "@/components/motion/page-slide";
 import { Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -20,12 +21,12 @@ import { InvitingBuyers } from "@/components/customers/inviting-buyers";
 export default async function CustomersPage() {
   const t = await getTranslations("customers");
   return (
-    <>
+    <PageSlide>
       <PageHeader title={t("title")} />
       <Suspense fallback={<Skeleton className="h-64 w-full" />}>
         <Customers />
       </Suspense>
-    </>
+    </PageSlide>
   );
 }
 
@@ -50,7 +51,7 @@ async function Customers() {
           <ul className="space-y-1 text-sm">
             {termsRequests.map((r) => (
               <li key={r.id}>
-                <Link href={`/supplier/customers/${r.customerId}`} className="font-medium text-brand underline-offset-2 hover:underline">{r.buyerName}</Link>
+                <Link transitionTypes={["nav-forward"]} href={`/supplier/customers/${r.customerId}`} className="font-medium text-brand underline-offset-2 hover:underline">{r.buyerName}</Link>
               </li>
             ))}
           </ul>
@@ -85,7 +86,7 @@ async function Customers() {
             {customers.map((c) => (
               <TR key={c.id} className="hover:bg-muted/50">
                 <TD>
-                  <Link href={`/supplier/customers/${c.id}`} className="font-medium hover:underline">
+                  <Link transitionTypes={["nav-forward"]} href={`/supplier/customers/${c.id}`} className="font-medium hover:underline">
                     {c.businessName}
                   </Link>
                   {c.buyerOrgName && c.buyerOrgName !== c.businessName ? (

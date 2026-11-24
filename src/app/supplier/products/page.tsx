@@ -1,3 +1,4 @@
+import { PageSlide } from "@/components/motion/page-slide";
 import { FileUp, PackageSearch, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
@@ -28,12 +29,12 @@ import { getFormats } from "@/server/i18n/formats";
 export default async function ProductsPage({ searchParams }: PageProps<"/supplier/products">) {
   const t = await getTranslations("products");
   return (
-    <>
+    <PageSlide>
       <PageHeader title={t("title")} />
       <Suspense fallback={<Skeleton className="h-96 w-full" />}>
         <ProductList searchParams={searchParams} />
       </Suspense>
-    </>
+    </PageSlide>
   );
 }
 
@@ -169,7 +170,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
                   <TR key={p.id} className="hover:bg-muted/50">
                     {readOnly ? null : <TD className="w-12"><BulkRowCheck id={p.id} name={p.name} /></TD>}
                     <TD>
-                      <Link href={`/supplier/products/${p.id}`} className="flex items-center gap-3 font-medium hover:underline">
+                      <Link transitionTypes={["nav-forward"]} href={`/supplier/products/${p.id}`} className="flex items-center gap-3 font-medium hover:underline">
                         <ProductImage path={p.imagePath} alt="" size={40} />
                         <span className="min-w-0">
                           <span className="block truncate">{p.name}</span>
@@ -210,7 +211,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
             {list.items.map((p) => (
               <li key={p.id} className="flex items-center gap-1 pr-3">
                 {readOnly ? null : <BulkRowCheck id={p.id} name={p.name} />}
-                <Link href={`/supplier/products/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 p-3">
+                <Link transitionTypes={["nav-forward"]} href={`/supplier/products/${p.id}`} className="flex min-w-0 flex-1 items-center gap-3 p-3">
                   <ProductImage path={p.imagePath} alt="" size={48} />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{p.name}</span>

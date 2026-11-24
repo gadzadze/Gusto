@@ -67,4 +67,21 @@ describe("motion rules", () => {
     expect(block).not.toContain("rounded-full");
     expect(css.replace(block, "")).not.toContain("corner-shape: squircle;");
   });
+
+  it("defines a slide for both directions and switches page transitions off under reduced motion", () => {
+    for (const type of ["nav-forward", "nav-back"]) {
+      expect(css).toContain(`::view-transition-old(.${type})`);
+      expect(css).toContain(`::view-transition-new(.${type})`);
+    }
+    const reduced = css.slice(css.lastIndexOf("@media (prefers-reduced-motion: reduce)"));
+    expect(reduced).toContain("::view-transition-new(*)");
+    expect(reduced).toContain("animation-duration: 0s !important");
+    expect(css).toContain("::view-transition {\n  pointer-events: none;");
+  });
+
+  it("only slides pages whose links carry a direction", () => {
+    const sources = sourceFiles(join(process.cwd(), "src")).map((f) => readFileSync(f, "utf8")).join("\n");
+    expect(sources).toContain('transitionTypes={["nav-forward"]}');
+    expect(sources).toContain('transitionTypes={["nav-back"]}');
+  });
 });

@@ -1,3 +1,4 @@
+import { PageSlide } from "@/components/motion/page-slide";
 import { SuccessMark } from "@/components/ui/success-mark";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -19,9 +20,9 @@ import { getOrder } from "@/server/domain/orders/queries";
 export default async function BuyerOrderPage(props: PageProps<"/buyer/orders/[id]">) {
   const t = await getTranslations("orders");
   return (
-    <>
+    <PageSlide>
       <Button asChild variant="ghost" size="sm" className="mb-2 -ml-3 text-muted-foreground">
-        <Link href="/buyer/orders">
+        <Link href="/buyer/orders" transitionTypes={["nav-back"]}>
           <ArrowLeft />
           {t("title")}
         </Link>
@@ -29,7 +30,7 @@ export default async function BuyerOrderPage(props: PageProps<"/buyer/orders/[id
       <Suspense fallback={<Skeleton className="h-96 w-full max-w-3xl" />}>
         <Order {...props} />
       </Suspense>
-    </>
+    </PageSlide>
   );
 }
 

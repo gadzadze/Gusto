@@ -413,3 +413,52 @@ dialog[open]::backdrop {
     corner-shape: squircle;
   }
 }
+
+/* Directional page motion (2026-11-24, `PageSlide`). Going deeper slides the old page out to the left and the new one in
+   from the right; coming back is the mirror. Short, one curve, a small offset (24px) so nothing travels far; the frame
+   (sidebar, header, bottom bar) is named above and stays put. Off under reduced motion. */
+::view-transition {
+  pointer-events: none;
+}
+@keyframes page-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes page-slide {
+  from {
+    translate: var(--slide-offset);
+  }
+}
+::view-transition-old(.nav-forward) {
+  --slide-offset: -24px;
+  animation:
+    120ms var(--ease-out) both page-fade reverse,
+    220ms var(--ease-out) both page-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 24px;
+  animation:
+    180ms var(--ease-out) 90ms both page-fade,
+    220ms var(--ease-out) both page-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide-offset: 24px;
+  animation:
+    120ms var(--ease-out) both page-fade reverse,
+    220ms var(--ease-out) both page-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -24px;
+  animation:
+    180ms var(--ease-out) 90ms both page-fade,
+    220ms var(--ease-out) both page-slide;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
