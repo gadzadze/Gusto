@@ -163,8 +163,18 @@ export function BottomNav(props: Props) {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  const slot = "flex min-h-14 w-full min-w-0 flex-col items-center justify-center gap-1 px-0 text-center text-[0.6875rem] font-medium leading-tight";
+  const slot = "flex min-h-[3.25rem] w-full min-w-0 flex-col items-center justify-center gap-1 px-0 text-center text-[0.6875rem] font-medium leading-tight";
   // Long words carry soft hyphens in `nav.bar.*`, so on a narrow phone they wrap at a syllable instead of being cut.
+  // One pill slides under the active tab (a "More" that holds the active page counts as a tab). Every slot has the same width.
+  const slots = primary.length + (overflow ? 1 : 0);
+  const activeIndex = primary.findIndex((item) => isActive(pathname, item.href, props.area));
+  const indicatorIndex = activeIndex >= 0 ? activeIndex : restActive || open ? primary.length : -1;
+  // Tapping the tab you are already on goes back to the top of the page instead of reloading it.
+  const toTop = (event: React.MouseEvent, href: string) => {
+    if (pathname !== href) return;
+    event.preventDefault();
+    window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  };
   const barLabel = (key: NavItem["labelKey"]) => ((BAR_LABELS as readonly string[]).includes(key) ? t(`bar.${key as (typeof BAR_LABELS)[number]}`) : t(key));
   return (
     <>
@@ -173,7 +183,7 @@ export function BottomNav(props: Props) {
           <button type="button" aria-label={t("closeMore")} className="fixed inset-0 z-20 cursor-default md:hidden print:hidden" onClick={() => setOpen(false)} />
           <ul
             id="bottom-nav-more"
-            className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background p-2 shadow-lg md:hidden print:hidden"
+            className="fixed inset-x-2 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-30 rounded-2xl border border-border bg-background p-2 shadow-lg md:hidden print:hidden"
           >
             {rest.map((item) => {
               const active = isActive(pathname, item.href, props.area);
@@ -201,9 +211,18 @@ export function BottomNav(props: Props) {
       ) : null}
       <nav
         aria-label={t("menu")}
-        className="[view-transition-name:app-bottom-nav] fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] [transform:translateZ(0)] md:hidden print:hidden"
+        className="[view-transition-name:app-bottom-nav] pointer-events-none fixed inset-x-0 bottom-0 z-30 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden print:hidden"
       >
-        <ul className="mx-auto flex max-w-md">
+        <ul className="pointer-events-auto relative mx-auto flex max-w-md rounded-2xl border border-border bg-background/85 p-0.5 shadow-lg backdrop-blur-md [transform:translateZ(0)]">
+          <li
+            aria-hidden
+            data-bar-indicator
+            className={cn(
+              "pointer-events-none absolute inset-y-0.5 left-0.5 rounded-xl bg-brand-soft transition-[transform,opacity] duration-200 ease-[var(--ease-out)] motion-reduce:transition-none",
+              indicatorIndex < 0 && "opacity-0",
+            )}
+            style={{ width: `calc((100% - 0.25rem) / ${slots})`, transform: `translateX(${Math.max(indicatorIndex, 0) * 100}%)` }}
+          />
           {primary.map((item) => {
             const active = isActive(pathname, item.href, props.area);
             const count = badges[item.href] ?? 0;
@@ -212,13 +231,16 @@ export function BottomNav(props: Props) {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  onClick={() => setOpen(false)}
+                  onClick={(event) => {
+                    setOpen(false);
+                    toTop(event, item.href);
+                  }}
                   aria-label={count > 0 ? t("withCount", { label: t(item.labelKey), count }) : t(item.labelKey)}
                   className={cn(slot, "relative isolate transition-transform duration-150 before:absolute before:-inset-0.5 before:content-[''] active:scale-95 motion-reduce:active:scale-100", active ? "text-brand" : "text-muted-foreground")}
                 >
                   <PendingHighlight />
                   <span className="relative">
-                    <item.icon aria-hidden className="size-5" />
+                    <item.icon aria-hidden strokeWidth={active ? 2.4 : 2} className="size-5" />
                     <ChangePulse value={count} className="absolute -right-3 -top-1.5">
                       {count > 0 ? (
                         <span

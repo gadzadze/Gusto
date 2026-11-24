@@ -432,7 +432,7 @@ Black, burgundy and white.
     compete with the brand or with errors.
 - **Layout:** sidebar on desktop, bottom navigation on mobile. No horizontal
   scroll at 360px width. Touch targets ≥44px.
-  The phone bottom bar (`BottomNav` in `components/app-shell/nav-links.tsx`) has five slots: with more
+  The phone bottom bar (`BottomNav` in `components/app-shell/nav-links.tsx`) is a **floating rounded bar** (2026-11-24: inset 8px from the screen edges, frosted `bg-background/85` + blur, shadow, above the safe area; page bottom padding is `pb-28`) with one **pill that slides under the active tab** (`data-bar-indicator`, 200 ms on `--ease-out`, no transition under reduced motion; a "More" that holds the active page counts as a tab), a heavier icon stroke on the active tab, and **tapping the tab you are already on scrolls to the top** instead of reloading. It has five slots: with more
   than five items the first four show and the rest sit behind "More" (`nav.more`). A buyer and a supplier have exactly five
   (a supplier's Settings and a platform admin's Administration link carry `inAccountMenuOnPhone` and sit in the phone account
   menu instead); only the admin area still has a "More". Tabs show a **count badge** (`NavBadgesProvider`, `nav-badges.tsx`): a

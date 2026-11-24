@@ -119,7 +119,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
             <SideSwitch sides={sides} compact />
           </div>
         ) : null}
-        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 outline-none px-4 pb-24 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
+        <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 outline-none px-4 pb-28 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
           {children}
         </main>
       </div>
