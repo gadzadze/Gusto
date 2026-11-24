@@ -97,9 +97,13 @@
 .lp .hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; }
 .lp .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
 .lp .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
-/* The hero's two buttons stack at the same width (the wider one sets it). */
-.lp .hero-copy .hero-cta { flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; gap: 12px; }
-.lp .hero-copy .hero-cta .btn { width: 100%; }
+/* The hero's two buttons sit side by side; on a narrow phone they stack at the same width. */
+.lp .hero-copy .hero-cta { gap: 12px; }
+.lp .hero-copy .hero-cta .btn { padding: 0 20px; white-space: nowrap; }
+@media (max-width: 560px) {
+  .lp .hero-copy .hero-cta { flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; }
+  .lp .hero-copy .hero-cta .btn { width: 100%; }
+}
 .lp .composite { position: relative; height: 560px; }
 /* Dashboard window */
 .lp .dash { position: absolute; right: -40px; top: 0; width: 680px; height: 470px; background: #fff; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; box-shadow: 0 30px 60px -40px rgba(11, 18, 32, 0.35); display: grid; grid-template-columns: 150px minmax(0, 1fr); grid-template-rows: 48px minmax(0, 1fr); }

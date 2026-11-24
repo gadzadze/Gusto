@@ -117,7 +117,7 @@ export function LandingContent() {
                     </li>
                   ))}
                 </ul>
-                <Link className="btn ghost" href="/suppliers">
+                <Link className="btn" href="/suppliers">
                   {t("suppliers.cta")}
                 </Link>
               </Reveal>
