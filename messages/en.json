@@ -1639,7 +1639,7 @@
     "whatsapp": {
       "sendToSupplier": "Send to the supplier on WhatsApp",
       "tellBuyer": "Message the buyer on WhatsApp",
-      "hint": "WhatsApp opens with the order ready. You press send; 202 doesn't record it.",
+      "hint": "WhatsApp opens with the order ready. You press send; 202 doesn't record whether it was sent.",
       "sendNow": "Send the order on WhatsApp"
     },
     "terms": {
