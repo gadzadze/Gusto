@@ -262,6 +262,7 @@ export function LiveTest({ catalog, configured }: { catalog: string; configured:
         <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-2">
           <div aria-live="polite">
             <h3 className="text-sm font-medium">{t("live.conversation")}</h3>
+            <p className="text-xs text-muted-foreground">{t("live.transcriptNote")}</p>
             <ul className="mt-1 space-y-2">
               {turns.map((turn, i) => (
                 <li key={i} className={turn.who === "you" ? "rounded-lg border border-border bg-card p-3 text-sm" : "rounded-lg bg-brand-soft p-3 text-sm"}>

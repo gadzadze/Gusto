@@ -855,7 +855,8 @@
         "orderEmpty": "Nothing yet.",
         "startFailed": "Could not start live mode.",
         "connectionLost": "The connection was lost.",
-        "testNote": "Test: nothing is sent."
+        "testNote": "Test: nothing is sent.",
+        "transcriptNote": "The text is approximate: the assistant hears your voice directly."
       },
       "supplier": "Supplier: {name}"
     }

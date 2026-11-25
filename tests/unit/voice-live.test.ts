@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { parseCatalog } from "@/lib/voice/order-parse";
-import { applySetOrder, buildLiveSetup, liveSystemInstruction, LIVE_MODEL, SET_ORDER } from "@/lib/voice/live";
+import { applySetOrder, buildLiveSetup, liveSystemInstruction, liveVocabulary, LIVE_MODEL, SET_ORDER } from "@/lib/voice/live";
 
 const items = [
   { id: "p04", name: "კარაქი", unit: "kg" },
@@ -77,5 +77,28 @@ describe("Georgian instructions", () => {
     expect(text).toContain("EVERY line with its quantity");
     expect(text).toContain("ორნახევარი"); // listening notes
     expect(text).toContain("Never guess a number or a product");
+  });
+});
+
+describe("transcript hints", () => {
+  const suppliers = parseCatalog("@sa | Supplier A\np1 | კარაქი | kg\n@sb | Supplier B\nq1 | კარაქი | kg\nq2 | ნაღები | l").items;
+
+  it("asks for Georgian and biases recognition toward product and supplier names, once each", () => {
+    const { setup } = buildLiveSetup(suppliers, LIVE_MODEL);
+    expect(setup.inputAudioTranscription.languageCodes).toEqual(["ka-GE"]);
+    const words = setup.inputAudioTranscription.customVocabulary;
+    expect(words).toContain("ნაღები");
+    expect(words).toContain("Supplier B");
+    expect(words.filter((w) => w === "კარაქი")).toHaveLength(1);
+    expect(words).toContain("ვამთავრებ");
+  });
+
+  it("keeps the vocabulary short", () => {
+    const many = parseCatalog(Array.from({ length: 150 }, (_, i) => `p${i} | პროდუქტი ${i} | kg`).join("\n")).items;
+    expect(liveVocabulary(many).length).toBeLessThanOrEqual(80);
+  });
+
+  it("tells the assistant to stay quiet after the read-back", () => {
+    expect(liveSystemInstruction(suppliers)).toContain("No small talk and no goodbyes");
   });
 });

@@ -49,6 +49,7 @@ export function liveSystemInstruction(items: CatalogItem[]): string {
     `If the tool answer lists needs_attention, ask the buyer about each item in one short sentence, then call ${SET_ORDER} again with the corrected order.`,
     "If you hear no clear speech, only noise, music or a tone, say nothing and do not change the order. Never invent an order.",
     "If the buyer asks for something that is not in the catalogue (for example lemonade when only lemons exist), say you do not have it and ask whether they meant the closest product. Never swap a product silently.",
+    "After the read-back, stay silent unless the buyer changes the order or asks about it. No small talk and no goodbyes.",
     "You cannot send the order, and you do not know what the screen looks like. When the buyer says they are done, do the read-back from the patterns above and say nothing else about the screen.",
     "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way.",
     "",
@@ -81,6 +82,21 @@ export const SET_ORDER_DECLARATION = {
   },
 } as const;
 
+/**
+ * Words that bias the speech-to-text of what the buyer says (the on-screen transcript): product and supplier names, units and the
+ * few action words. Without a language hint and these, short answers came out as "exhibir" or "I want to". The assistant itself hears
+ * the audio directly, so this only affects the transcript the tester reads.
+ */
+export function liveVocabulary(items: CatalogItem[]): string[] {
+  const words = new Set<string>();
+  for (const item of items) {
+    words.add(item.name);
+    if (item.supplierName) words.add(item.supplierName);
+  }
+  for (const w of ["კილო", "კგ", "გრამი", "ლიტრი", "ცალი", "ყუთი", "კოლოფი", "შეკვრა", "ბოთლი", "ნახევარი", "კილონახევარი", "მინდა", "აღარ მინდა", "ვამთავრებ", "მომწოდებელი"]) words.add(w);
+  return [...words].slice(0, 80);
+}
+
 /** The first message after the socket opens. Kept on the server so the instructions are built next to the rules. */
 export function buildLiveSetup(items: CatalogItem[], model: string) {
   return {
@@ -89,7 +105,7 @@ export function buildLiveSetup(items: CatalogItem[], model: string) {
       generationConfig: { responseModalities: ["AUDIO"] },
       systemInstruction: { parts: [{ text: liveSystemInstruction(items) }] },
       tools: [{ functionDeclarations: [SET_ORDER_DECLARATION] }],
-      inputAudioTranscription: {},
+      inputAudioTranscription: { languageCodes: ["ka-GE"], customVocabulary: liveVocabulary(items) },
       outputAudioTranscription: {},
     },
   };
