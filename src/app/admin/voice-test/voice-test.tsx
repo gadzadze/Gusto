@@ -6,6 +6,7 @@ import { Mic, Square, Upload, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { encodeWav, VOICE_SAMPLE_RATE } from "@/lib/voice/wav";
+import { LiveTest } from "./live-test";
 import { parseVoiceOrderAction, type VoiceTestResult } from "./actions";
 
 const MAX_RECORD_SECONDS = 60;
@@ -157,6 +158,8 @@ export function VoiceTest({ configured, sampleCatalog }: { configured: boolean; 
       </section>
 
       {result ? <Result result={result} /> : null}
+
+      <LiveTest catalog={catalog} configured={configured} />
     </div>
   );
 }

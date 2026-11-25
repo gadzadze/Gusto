@@ -703,7 +703,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (**secret**), `VAPID_SUBJECT`: Web Push, optional (see Dashboards > Web Push).
 - `CRON_SECRET`
-- `GEMINI_API_KEY`, `GEMINI_MODEL` (secret key; model defaults to `gemini-3.5-flash`, fallback `gemini-3.7-flash`; `gemini-2.5-flash` is retired for new keys (404) and the newest models answered 503 "high demand" on 2026-11-25, so check the key's model list (`GET /v1beta/models`) before changing it): the voice-order experiment only, off without a key (see "Voice order experiment").
+- `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_LIVE_MODEL` (secret key; model defaults to `gemini-3.5-flash`, fallback `gemini-3.7-flash`; `gemini-2.5-flash` is retired for new keys (404) and the newest models answered 503 "high demand" on 2026-11-25, so check the key's model list (`GET /v1beta/models`) before changing it): the voice-order experiment only, off without a key (see "Voice order experiment").
 - `NEXT_PUBLIC_SENTRY_DSN` (public, build time), `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (build-only, **secret**): see Operations.
 - `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build). `LEGAL_CONTACT_EMAIL` alone is also the contact line on the sign-in "not accepted" message.
 
@@ -1137,6 +1137,16 @@ clean-up; pure and unit-tested), `lib/voice/wav.ts`, `server/voice/gemini.ts`.
 - **Units are settled in code, not by the model** (`reconcileUnit`, `lib/voice/order-parse.ts`, using the import's `parseUnit`): same unit is fine, g to kg and ml to l convert, no unit said assumes the catalogue's, anything else (pieces for a product sold in litres) is flagged `mismatch` and shown as a warning, never guessed.
 - **It never reads a real catalogue** (admins never see catalogues or price lists). Everything the model returns is re-checked
   (`normalizeResult`: ids must be in the pasted list, quantities range-checked, `*_milli`).
+- **Live mode** (2026-11-25, same page, `live-test.tsx`, `lib/voice/live.ts`, `public/voice-capture-worklet.js`): the browser opens a WebSocket to
+  Google's live audio endpoint itself and talks with the assistant (model `gemini-3.8-live`, override `GEMINI_LIVE_MODEL`). The real key never leaves
+  the server: `startLiveSessionAction` (admin, 10 sessions/h, `RATE_LIMITS.voiceLive`) mints a **one-use ephemeral token** (starts one session within a
+  minute, dies after 11 minutes) and returns the opening message built by `buildLiveSetup`. The assistant's only tool is `set_order` (the complete
+  current order each time); **its arguments are never trusted**: `applySetOrder` drops unknown ids, range-checks numbers and settles units with
+  `reconcileUnit` (the model is told to pass the unit exactly as spoken and once converted pieces to litres by itself), and the tool answer tells the
+  model what needs a question. It cannot send anything. A session ends by itself after 10 minutes (live audio is billed while open) and when the page closes.
+  **CSP**: `connect-src` gained `wss://generativelanguage.googleapis.com` site-wide (headers are static), the only websocket host (asserted in
+  `security-headers.test.ts`). Verified from the sandbox against the real service with a recorded Georgian order: transcription, tool call and a
+  Georgian spoken answer in about 1 s after the speech ended. Not verified: a real browser run, noisy rooms, iPhone audio.
 - 30 calls per hour per admin (`RATE_LIMITS.voiceTest`). `Permissions-Policy` now allows the microphone for this origin only
   (`microphone=(self)`), a site-wide header change.
 - **Before this becomes a buyer feature:** the buyer must confirm every proposed cart (the model may only *propose*; `submitOrder`

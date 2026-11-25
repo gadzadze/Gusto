@@ -39,6 +39,8 @@ function contentSecurityPolicy(): string {
       // The background remover's model file (MIT, pinned and hash-checked), downloaded once per device.
       "https://huggingface.co",
       "https://*.hf.co",
+      // The live voice test page (admin only) talks to Google's live audio endpoint with a one-use token from the server.
+      "wss://generativelanguage.googleapis.com",
       ...(dev ? ["ws:", "wss:"] : []),
     ],
     "frame-ancestors": ["'none'"],
