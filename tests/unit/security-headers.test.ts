@@ -18,6 +18,8 @@ describe("security headers (next.config)", () => {
     expect(h.get("X-Content-Type-Options")).toBe("nosniff");
     expect(h.get("Strict-Transport-Security")).toMatch(/max-age=\d+/);
     expect(h.get("Permissions-Policy")).toContain("camera=()");
+    // The microphone is allowed for this app only (the voice-order experiment), never for embedded frames.
+    expect(h.get("Permissions-Policy")).toContain("microphone=(self)");
   });
 
   it("CSP allows only this app, Supabase and fonts, and forbids framing, plugins and foreign forms", async () => {

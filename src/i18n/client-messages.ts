@@ -8,6 +8,7 @@ export const CLIENT_NAMESPACES = [
   "admin.categories",
   "admin.requests",
   "admin.reviewErrors",
+  "admin.voiceTest",
   "authContinue",
   "buyer",
   "cart",

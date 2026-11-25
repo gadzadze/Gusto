@@ -794,6 +794,48 @@
       "clear": "Everything is on time",
       "clearHint": "No requests, nothing to verify, and notifications are going out on time.",
       "goalSuppliers": "Pilot goal: 3 to 5 suppliers"
+    },
+    "voiceTest": {
+      "title": "Voice order (test)",
+      "intro": "Experiment: record or upload an order spoken in Georgian and see what Gemini makes of it. It only uses the made-up products listed below; no cart or order is touched.",
+      "notConfigured": "GEMINI_API_KEY is not set, so the test is off.",
+      "catalogLabel": "Test products",
+      "catalogHint": "One line per product: id | name | unit. Made-up data.",
+      "record": "Record",
+      "stop": "Stop",
+      "upload": "Upload a file",
+      "recordingNow": "Recording... (up to {seconds} seconds)",
+      "readyRecording": "Recording ready.",
+      "readyFile": "File ready: {name}",
+      "analyze": "Analyze",
+      "analyzing": "Working",
+      "heard": "What it heard",
+      "nothingHeard": "Nothing heard.",
+      "proposed": "Proposed lines",
+      "noLines": "No products recognized.",
+      "noMatch": "No match in the catalogue",
+      "noQuantity": "No quantity heard",
+      "said": "Said: {text}",
+      "maybe": "Maybe: {names}",
+      "catalogUnit": "catalogue: {unit}",
+      "confidence": "{percent}% sure",
+      "delivery": "Delivery day: {day}",
+      "questions": "Questions",
+      "stats": "{model} · {seconds} s · {input} in, {output} out tokens",
+      "problems": {
+        "mic_denied": "Microphone access was not allowed. Allow it in the browser settings.",
+        "bad_audio": "We could not read that audio. Try another recording."
+      },
+      "errors": {
+        "invalid": "The data is not valid.",
+        "not_configured": "GEMINI_API_KEY is not set.",
+        "rate_limited": "Too many tries. Try again later.",
+        "too_large": "The recording is too long.",
+        "bad_audio": "We could not read the audio.",
+        "bad_catalog": "The test product list is not valid: one line each as id | name | unit, ids all different.",
+        "upstream": "Gemini did not return an answer. Try again.",
+        "unknown": "Something went wrong."
+      }
     }
   },
   "notFound": {

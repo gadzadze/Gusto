@@ -703,6 +703,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (**secret**), `VAPID_SUBJECT`: Web Push, optional (see Dashboards > Web Push).
 - `CRON_SECRET`
+- `GEMINI_API_KEY`, `GEMINI_MODEL` (secret key; model defaults to `gemini-2.5-flash`): the voice-order experiment only, off without a key (see "Voice order experiment").
 - `NEXT_PUBLIC_SENTRY_DSN` (public, build time), `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (build-only, **secret**): see Operations.
 - `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build). `LEGAL_CONTACT_EMAIL` alone is also the contact line on the sign-in "not accepted" message.
 
@@ -1122,6 +1123,25 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   falls back to `openWindow`. **iPhone only receives web push from an installed web app**, so the card explains "Add to Home
   Screen" there (`app/manifest.ts`, icons from `npm run brand:icons`). The privacy text lists the push services as processors.
 - Planned next, not built: nothing queued.
+
+## Voice order experiment (2026-11-25, test only)
+
+The owner asked to try a voice assistant for ordering. This is **only a test page**, not a product feature: `/admin/voice-test`
+(platform admin, not in the nav), `src/app/admin/voice-test/`, `lib/voice/order-parse.ts` (catalogue text, prompt, response schema,
+clean-up; pure and unit-tested), `lib/voice/wav.ts`, `server/voice/gemini.ts`.
+
+- The tester records (or uploads) a spoken Georgian order; the browser converts it to 16 kHz mono WAV (speech APIs differ in what
+  they accept) and the server action sends it, with a **pasted made-up catalogue**, to Gemini (`GEMINI_API_KEY`, plain `fetch`
+  with a 30 s deadline, JSON schema answer). The result (transcript, proposed lines, questions) is shown and **nothing is stored**:
+  no cart, no order, no audio, no log of the content.
+- **It never reads a real catalogue** (admins never see catalogues or price lists). Everything the model returns is re-checked
+  (`normalizeResult`: ids must be in the pasted list, quantities range-checked, `*_milli`).
+- 30 calls per hour per admin (`RATE_LIMITS.voiceTest`). `Permissions-Policy` now allows the microphone for this origin only
+  (`microphone=(self)`), a site-wide header change.
+- **Before this becomes a buyer feature:** the buyer must confirm every proposed cart (the model may only *propose*; `submitOrder`
+  stays the only way an order is created), the model sees only that buyer's orderable products, and Google must be added to the
+  privacy text as a processor of voice audio (with `LEGAL_UPDATED`). "AI parsing of WhatsApp orders" in the out-of-scope list is
+  still a separate thing. Georgian accuracy is unproven: run the phrase list through the page before deciding anything.
 
 ## Photo background remover
 
