@@ -30,6 +30,8 @@ function contentSecurityPolicy(): string {
     "style-src": ["'self'", "'unsafe-inline'"],
     "img-src": ["'self'", "data:", "blob:", ...(supabaseOrigin ? [supabaseOrigin] : [])],
     "font-src": ["'self'", "data:"],
+    // The voice test page plays back the recording it just made, a local blob (no media-src meant it fell back to 'self' and failed).
+    "media-src": ["'self'", "blob:"],
     "connect-src": [
       "'self'",
       ...(supabaseOrigin ? [supabaseOrigin] : []),
