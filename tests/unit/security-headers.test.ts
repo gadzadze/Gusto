@@ -32,6 +32,7 @@ describe("security headers (next.config)", () => {
     expect(directive("base-uri")).toBe("base-uri 'self'");
     expect(directive("form-action")).toBe("form-action 'self'");
     expect(directive("font-src")).toContain("'self'");
+    expect(directive("media-src")).toBe("media-src 'self' blob:"); // local playback of a recording, nothing remote
     // No wildcard sources anywhere, and no third-party hosts other than the Supabase project.
     expect(csp).not.toMatch(/(^|\s)\*(\s|;|$)/);
     expect(csp).not.toContain("http:");

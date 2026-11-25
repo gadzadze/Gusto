@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Mic, Square, Upload, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,9 @@ export function VoiceTest({ configured, sampleCatalog }: { configured: boolean; 
   const [problem, setProblem] = useState<"mic_denied" | "bad_audio" | null>(null);
   const [result, setResult] = useState<VoiceTestResult | null>(null);
   const [pending, startTransition] = useTransition();
+  // One object URL per recording, released when it is replaced or the page closes (it used to be made on every render).
+  const audioUrl = useMemo(() => (wav ? URL.createObjectURL(wav) : null), [wav]);
+  useEffect(() => () => (audioUrl ? URL.revokeObjectURL(audioUrl) : undefined), [audioUrl]);
   const recorder = useRef<MediaRecorder | null>(null);
   const stopTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -143,7 +146,7 @@ export function VoiceTest({ configured, sampleCatalog }: { configured: boolean; 
         {wav && !recording ? (
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">{fileName ? t("readyFile", { name: fileName }) : t("readyRecording")}</p>
-            <audio controls src={URL.createObjectURL(wav)} className="w-full max-w-md" />
+            <audio controls src={audioUrl ?? undefined} className="w-full max-w-md" />
           </div>
         ) : null}
         {problem ? <p role="alert" className="text-sm text-danger">{t(`problems.${problem}`)}</p> : null}
