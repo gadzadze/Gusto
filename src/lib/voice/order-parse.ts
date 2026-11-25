@@ -1,0 +1,164 @@
+// Pure helpers for the voice-order experiment: the catalogue text a tester pastes, the instructions and
+// response schema sent to the model, and the clean-up of what comes back. No I/O here, so it is unit tested.
+
+export type CatalogItem = { id: string; name: string; unit: string };
+
+export const MAX_CATALOG_LINES = 100;
+export const MAX_CATALOG_CHARS = 6000;
+
+/** One product per line: `id | name | unit`. Blank lines and `#` comments are skipped; bad lines are reported. */
+export function parseCatalog(text: string): { items: CatalogItem[]; badLines: number[] } {
+  const items: CatalogItem[] = [];
+  const badLines: number[] = [];
+  const seen = new Set<string>();
+  text.split(/\r?\n/).forEach((raw, index) => {
+    const line = raw.trim();
+    if (!line || line.startsWith("#")) return;
+    const parts = line.split("|").map((p) => p.trim());
+    const [id, name, unit] = parts;
+    if (parts.length !== 3 || !id || !name || !unit || seen.has(id) || !/^[A-Za-z0-9_-]{1,20}$/.test(id)) {
+      badLines.push(index + 1);
+      return;
+    }
+    seen.add(id);
+    items.push({ id, name: name.slice(0, 120), unit: unit.slice(0, 20) });
+  });
+  return { items, badLines };
+}
+
+export const SYSTEM_INSTRUCTION = [
+  "You turn a short spoken Georgian wholesale order into structured order lines.",
+  "The speaker is a restaurant or cafe buyer ordering from ONE supplier. The audio is in Georgian (sometimes with Latin brand names).",
+  "Use ONLY the products in the catalogue list given in the user message. Never invent a product or an id.",
+  "transcript: write what was said, in Georgian script, as accurately as you can.",
+  "For each product the speaker orders, add one line: spoken (the words used), productId (a catalogue id, or null when nothing matches),",
+  "candidates (catalogue ids it could be, only when you are unsure), quantity (a number, in the unit the speaker used), unit (kg, g, l, ml, piece, box, pack, bottle, ... as spoken),",
+  "confidence (0 to 1, how sure you are about product AND quantity).",
+  "If the speaker corrects themselves (for example 'five kilos... no, six kilos'), keep only the final value.",
+  "If a spoken name fits several catalogue products (for example just 'cheese' when there are two cheeses), set productId to null, list them in candidates and add a short question in English.",
+  "If the order refers to history ('same as last week') you cannot know it: add a question instead of guessing.",
+  "deliveryDay: the day or date the speaker asked for, as spoken (for example 'tomorrow', 'Friday'), or null.",
+  "questions: short English questions for anything unclear. Empty when everything is clear.",
+  "Answer with JSON only.",
+].join("\n");
+
+export function catalogPrompt(items: CatalogItem[]): string {
+  const lines = items.map((i) => `${i.id} | ${i.name} | ${i.unit}`);
+  return `Catalogue (id | name | unit):\n${lines.join("\n")}\n\nThe order is in the audio.`;
+}
+
+/** Gemini `responseSchema` (OpenAPI subset). */
+export const RESPONSE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    transcript: { type: "STRING" },
+    lines: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          spoken: { type: "STRING" },
+          productId: { type: "STRING", nullable: true },
+          candidates: { type: "ARRAY", items: { type: "STRING" } },
+          quantity: { type: "NUMBER", nullable: true },
+          unit: { type: "STRING", nullable: true },
+          confidence: { type: "NUMBER" },
+        },
+        required: ["spoken", "productId", "candidates", "quantity", "unit", "confidence"],
+      },
+    },
+    deliveryDay: { type: "STRING", nullable: true },
+    questions: { type: "ARRAY", items: { type: "STRING" } },
+  },
+  required: ["transcript", "lines", "deliveryDay", "questions"],
+} as const;
+
+export type ParsedLine = {
+  spoken: string;
+  productId: string | null;
+  productName: string | null;
+  candidates: { id: string; name: string }[];
+  /** Thousandths of the unit, like every quantity in 202. Null when no usable number was heard. */
+  quantityMilli: number | null;
+  unit: string | null;
+  catalogUnit: string | null;
+  confidence: number;
+};
+
+export type ParsedOrder = {
+  transcript: string;
+  lines: ParsedLine[];
+  deliveryDay: string | null;
+  questions: string[];
+};
+
+const MAX_LINES = 50;
+
+function text(value: unknown, max: number): string {
+  return typeof value === "string" ? value.trim().slice(0, max) : "";
+}
+
+/** Never trusts the model: ids not in the catalogue become null, numbers are range-checked. */
+export function normalizeResult(raw: unknown, items: CatalogItem[]): ParsedOrder {
+  const byId = new Map(items.map((i) => [i.id, i]));
+  const obj = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+  const rawLines = Array.isArray(obj.lines) ? obj.lines.slice(0, MAX_LINES) : [];
+  const lines: ParsedLine[] = rawLines.map((entry) => {
+    const l = entry && typeof entry === "object" ? (entry as Record<string, unknown>) : {};
+    const product = typeof l.productId === "string" ? byId.get(l.productId) : undefined;
+    const candidates = (Array.isArray(l.candidates) ? l.candidates : [])
+      .filter((c): c is string => typeof c === "string" && byId.has(c))
+      .slice(0, 5)
+      .map((id) => ({ id, name: byId.get(id)!.name }));
+    const q = typeof l.quantity === "number" && Number.isFinite(l.quantity) ? l.quantity : null;
+    const quantityMilli = q !== null && q > 0 && q <= 100_000 ? Math.round(q * 1000) : null;
+    const confidence = typeof l.confidence === "number" && Number.isFinite(l.confidence) ? Math.min(1, Math.max(0, l.confidence)) : 0;
+    return {
+      spoken: text(l.spoken, 200),
+      productId: product?.id ?? null,
+      productName: product?.name ?? null,
+      candidates,
+      quantityMilli,
+      unit: text(l.unit, 20) || null,
+      catalogUnit: product?.unit ?? null,
+      confidence,
+    };
+  });
+  const questions = (Array.isArray(obj.questions) ? obj.questions : [])
+    .map((q) => text(q, 200))
+    .filter(Boolean)
+    .slice(0, 10);
+  return { transcript: text(obj.transcript, 2000), lines, deliveryDay: text(obj.deliveryDay, 80) || null, questions };
+}
+
+/** Starting list for the test page: fictional products, two cheeses on purpose so "cheese" is ambiguous. */
+export const SAMPLE_CATALOG = [
+  "# id | name | unit   (made-up products, nothing real)",
+  "p01 | სულგუნი | kg",
+  "p02 | იმერული ყველი | kg",
+  "p03 | რძე 3.2% | l",
+  "p04 | კარაქი | kg",
+  "p05 | პომიდორი | kg",
+  "p06 | კიტრი | kg",
+  "p07 | ქათმის ფილე | box",
+  "p08 | კარტოფილი | kg",
+  "p09 | ხახვი | kg",
+  "p10 | ფქვილი | kg",
+  "p11 | შაქარი | kg",
+  "p12 | მზესუმზირის ზეთი | l",
+  "p13 | მინერალური წყალი | bottle",
+  "p14 | ლუდი | box",
+  "p15 | ძროხის ხორცი | kg",
+  "p16 | ნაღები | l",
+  "p17 | ზეთისხილი | kg",
+  "p18 | მოცარელა | kg",
+  "p19 | პარმეზანი | kg",
+  "p20 | ლიმონი | box",
+  "p21 | ფორთოხალი | box",
+  "p22 | ფეტა | kg",
+  "p23 | კოკა-კოლა | bottle",
+  "p24 | სპრაიტი | bottle",
+  "p25 | ჩედარი | kg",
+  "p26 | ზეითუნის ზეთი, ექსტრა ვირჯინ | box",
+  "p27 | კვერცხი | piece",
+].join("\n");
