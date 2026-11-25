@@ -63,6 +63,20 @@ export function catalogueText(items: CatalogItem[]): string {
   return out.join("\n");
 }
 
+/**
+ * How buyers really speak Georgian, for the model's ears. Shared by the one-shot and the live instructions.
+ * (The spoken-number and unit forms follow the project's import dictionary, `lib/catalog/units.ts`.)
+ */
+export const GEORGIAN_LISTENING = [
+  "How buyers really speak (understand all of this, answer only in Georgian):",
+  "- Numbers come as digits or words: ერთი, ორი, სამი, ოთხი, ხუთი, ექვსი, შვიდი, რვა, ცხრა, ათი, თორმეტი, თხუთმეტი, ოცი, ოცდაათი, ორმოცდაათი, ასი, ორასი. Halves: ნახევარი, ერთნახევარი, ორნახევარი, 'ორი კილონახევარი' (= 2.5 kg), '2 და ნახევარი'.",
+  "- Units: კილო / კგ / კილოგრამი, გრამი / გრ, ლიტრი / ლ, ცალი, ყუთი / კოლოფი, შეკვრა / პაკეტი, ბოთლი. Pass the unit exactly as said.",
+  "- Product names arrive in any case and with small slips: 'ყველს', 'ყველის', 'ქათმის ფილეს', 'პომიდორს', 'პომიდვრის', 'ლუდის', 'კოკოკოლა', 'კათმისი ფილე'. Match them to the closest catalogue name by its stem, and ask if two products are close.",
+  "- Request words: მინდა, მომიტანეთ, ჩამიწერეთ, დამიმატეთ, ასევე, ესეც (add); ამოშალეთ, ამოიღეთ, აღარ მინდა (remove); შეცვალეთ, გამოასწორეთ, 'არა, ... იყოს' (change).",
+  "- Buyers sometimes mix in Russian, Turkish or English words ('eksi 4'lü', 'коробка'). Understand them, but answer in Georgian.",
+  "- If you are not sure what you heard, repeat the part you understood and ask the buyer to confirm. Never guess a number or a product.",
+].join("\n");
+
 export const SYSTEM_INSTRUCTION = [
   "You turn a short spoken Georgian wholesale order into structured order lines.",
   "The speaker is a restaurant or cafe buyer ordering from ONE supplier. The audio is in Georgian (sometimes with Latin brand names).",
@@ -80,7 +94,7 @@ export const SYSTEM_INSTRUCTION = [
   "deliveryDay: the day or date the speaker asked for, as spoken (for example 'tomorrow', 'Friday'), or null.",
   "questions: short English questions for anything unclear. Empty when everything is clear.",
   "Answer with JSON only.",
-].join("\n");
+].join("\n") + "\n\n" + GEORGIAN_LISTENING;
 
 export function catalogPrompt(items: CatalogItem[]): string {
   return `Catalogue (id | name | unit):\n${catalogueText(items)}\n\nThe order is in the audio.`;

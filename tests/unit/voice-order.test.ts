@@ -160,3 +160,10 @@ describe("suppliers in the one-shot answer", () => {
     expect(SYSTEM_INSTRUCTION).toContain("asking which supplier");
   });
 });
+
+describe("one-shot instructions", () => {
+  it("include the spoken forms buyers use, so the transcript and quantities are read the way they are said", () => {
+    expect(SYSTEM_INSTRUCTION).toContain("კილონახევარი");
+    expect(SYSTEM_INSTRUCTION).toContain("კოლოფი");
+  });
+});
