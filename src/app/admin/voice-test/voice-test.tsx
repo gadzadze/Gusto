@@ -192,9 +192,10 @@ function Result({ result }: { result: VoiceTestResult }) {
               <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 p-3">
                 <div className="min-w-0 flex-[1_1_12rem]">
                   <p className="font-medium">{line.productName ?? t("noMatch")}</p>
+                  {line.supplierName ? <p className="text-xs text-brand">{t("supplier", { name: line.supplierName })}</p> : null}
                   <p className="text-xs text-muted-foreground">
                     {t("said", { text: line.spoken })}
-                    {line.candidates.length > 0 ? ` · ${t("maybe", { names: line.candidates.map((c) => c.name).join(", ") })}` : ""}
+                    {line.candidates.length > 0 ? ` · ${t("maybe", { names: line.candidates.map((c) => (c.supplierName ? `${c.name} (${c.supplierName})` : c.name)).join(", ") })}` : ""}
                   </p>
                 </div>
                 <p className="tabular-nums">

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { parseCatalog } from "@/lib/voice/order-parse";
 import { applySetOrder, buildLiveSetup, liveSystemInstruction, LIVE_MODEL, SET_ORDER } from "@/lib/voice/live";
 
 const items = [
@@ -22,7 +23,10 @@ describe("buildLiveSetup", () => {
     expect(text).toContain("never converted");
     expect(text).toContain("cannot send the order");
     // A real test run: the assistant told the tester a send button was on the screen when there was none.
-    expect(text).toContain("Never describe the screen");
+    // Scripted sentences work where a general ban did not: the model kept telling testers to press a send button.
+    expect(text).toContain("შეკვეთა ეკრანზეა, გთხოვთ, გადაამოწმოთ.");
+    expect(text).toContain("ეს ტესტია, არაფერი იგზავნება.");
+    expect(text).toContain("Never mention sending, buttons or pressing");
     expect(text).toContain("Never swap a product silently");
   });
 });
@@ -46,5 +50,21 @@ describe("applySetOrder", () => {
     expect(applySetOrder(undefined, items).lines).toEqual([]);
     expect(applySetOrder({ lines: "x" }, items).feedback.lines).toBe(0);
     expect(applySetOrder({ lines: [], deliveryDay: "ხვალ" }, items).deliveryDay).toBe("ხვალ");
+  });
+});
+
+describe("two suppliers", () => {
+  const items = parseCatalog("@sa | Supplier A\np1 | Cheese | kg\n@sb | Supplier B\nq1 | Cheese | kg\nq2 | Eggs | piece").items;
+
+  it("puts each supplier's catalogue under its name and tells the assistant to ask which supplier", () => {
+    const text = liveSystemInstruction(items);
+    expect(text).toContain("Supplier: Supplier A\np1 | Cheese | kg");
+    expect(text).toContain("Supplier: Supplier B\nq1 | Cheese | kg");
+    expect(text).toContain("ask which supplier BEFORE calling the tool");
+  });
+
+  it("keeps each order line on the supplier of its product id", () => {
+    const out = applySetOrder({ lines: [{ productId: "p1", quantity: 2, spokenUnit: "kg" }, { productId: "q2", quantity: 12 }] }, items);
+    expect(out.lines.map((l) => [l.productId, l.supplierName])).toEqual([["p1", "Supplier A"], ["q2", "Supplier B"]]);
   });
 });

@@ -3,29 +3,64 @@ import { parseUnit, type ProductUnit } from "@/lib/catalog/units";
 // Pure helpers for the voice-order experiment: the catalogue text a tester pastes, the instructions and
 // response schema sent to the model, and the clean-up of what comes back. No I/O here, so it is unit tested.
 
-export type CatalogItem = { id: string; name: string; unit: string };
+export type CatalogItem = { id: string; name: string; unit: string; supplierId?: string; supplierName?: string };
+export type CatalogSupplier = { id: string; name: string };
 
 export const MAX_CATALOG_LINES = 100;
 export const MAX_CATALOG_CHARS = 6000;
 
-/** One product per line: `id | name | unit`. Blank lines and `#` comments are skipped; bad lines are reported. */
-export function parseCatalog(text: string): { items: CatalogItem[]; badLines: number[] } {
+const ID_PATTERN = /^[A-Za-z0-9_-]{1,20}$/;
+
+/**
+ * One product per line: `id | name | unit`. A line starting with `@` starts a supplier (`@id | name`) and the products below it
+ * belong to that supplier. Blank lines and `#` comments are skipped; bad lines are reported. Product ids are unique across suppliers.
+ */
+export function parseCatalog(text: string): { items: CatalogItem[]; suppliers: CatalogSupplier[]; badLines: number[] } {
   const items: CatalogItem[] = [];
+  const suppliers: CatalogSupplier[] = [];
   const badLines: number[] = [];
   const seen = new Set<string>();
+  const seenSuppliers = new Set<string>();
+  let current: CatalogSupplier | null = null;
   text.split(/\r?\n/).forEach((raw, index) => {
     const line = raw.trim();
     if (!line || line.startsWith("#")) return;
+    if (line.startsWith("@")) {
+      const [id, name, ...rest] = line.slice(1).split("|").map((p) => p.trim());
+      if (rest.length > 0 || !id || !name || !ID_PATTERN.test(id) || seenSuppliers.has(id)) {
+        badLines.push(index + 1);
+        return;
+      }
+      seenSuppliers.add(id);
+      current = { id, name: name.slice(0, 80) };
+      suppliers.push(current);
+      return;
+    }
     const parts = line.split("|").map((p) => p.trim());
     const [id, name, unit] = parts;
-    if (parts.length !== 3 || !id || !name || !unit || seen.has(id) || !/^[A-Za-z0-9_-]{1,20}$/.test(id)) {
+    if (parts.length !== 3 || !id || !name || !unit || seen.has(id) || !ID_PATTERN.test(id)) {
       badLines.push(index + 1);
       return;
     }
     seen.add(id);
-    items.push({ id, name: name.slice(0, 120), unit: unit.slice(0, 20) });
+    items.push({ id, name: name.slice(0, 120), unit: unit.slice(0, 20), ...(current ? { supplierId: current.id, supplierName: current.name } : {}) });
   });
-  return { items, badLines };
+  return { items, suppliers, badLines };
+}
+
+/** The catalogue as text for a model: grouped under each supplier when there are several. */
+export function catalogueText(items: CatalogItem[]): string {
+  const groups = new Map<string, CatalogItem[]>();
+  for (const item of items) {
+    const key = item.supplierName ?? "";
+    groups.set(key, [...(groups.get(key) ?? []), item]);
+  }
+  const out: string[] = [];
+  for (const [name, list] of groups) {
+    if (groups.size > 1 || name) out.push(name ? `Supplier: ${name}` : "Supplier: (not named)");
+    for (const i of list) out.push(`${i.id} | ${i.name} | ${i.unit}`);
+  }
+  return out.join("\n");
 }
 
 export const SYSTEM_INSTRUCTION = [
@@ -38,7 +73,9 @@ export const SYSTEM_INSTRUCTION = [
   "candidates (catalogue ids it could be, only when you are unsure), quantity (a number, in the unit the speaker used), unit (kg, g, l, ml, piece, box, pack, bottle, ... as spoken),",
   "confidence (0 to 1, how sure you are about product AND quantity).",
   "If the speaker corrects themselves (for example 'five kilos... no, six kilos'), keep only the final value.",
-  "If a spoken name fits several catalogue products (for example just 'cheese' when there are two cheeses), set productId to null, list them in candidates and add a short question in English.",
+  "The catalogue may list several suppliers, and the same product can be sold by more than one. If the speaker names a supplier, use that supplier's product ids. If they do not and several suppliers sell the product, set productId to null, list the candidates and add a short question asking which supplier.",
+  "The catalogue may list several suppliers, and the same product can be sold by more than one. If the speaker names a supplier, use that supplier's product ids. If they do not and several suppliers sell the product, set productId to null, list the candidates and add a short question asking which supplier.",
+  "If a name fits several catalogue products (for example just 'cheese' when there are two cheeses), set productId to null, list them in candidates and add a short question in English.",
   "If the order refers to history ('same as last week') you cannot know it: add a question instead of guessing.",
   "deliveryDay: the day or date the speaker asked for, as spoken (for example 'tomorrow', 'Friday'), or null.",
   "questions: short English questions for anything unclear. Empty when everything is clear.",
@@ -46,8 +83,7 @@ export const SYSTEM_INSTRUCTION = [
 ].join("\n");
 
 export function catalogPrompt(items: CatalogItem[]): string {
-  const lines = items.map((i) => `${i.id} | ${i.name} | ${i.unit}`);
-  return `Catalogue (id | name | unit):\n${lines.join("\n")}\n\nThe order is in the audio.`;
+  return `Catalogue (id | name | unit):\n${catalogueText(items)}\n\nThe order is in the audio.`;
 }
 
 /** Gemini `responseSchema` (OpenAPI subset). */
@@ -87,7 +123,9 @@ export type ParsedLine = {
   spoken: string;
   productId: string | null;
   productName: string | null;
-  candidates: { id: string; name: string }[];
+  /** The supplier the matched product belongs to, when the catalogue has several. */
+  supplierName: string | null;
+  candidates: { id: string; name: string; supplierName: string | null }[];
   /** Thousandths of the unit, like every quantity in 202. Null when no usable number was heard. */
   quantityMilli: number | null;
   /** The unit the quantity is in: the catalogue's after `ok`, `assumed` or `converted`, what was said on a `mismatch`. */
@@ -153,7 +191,7 @@ export function normalizeResult(raw: unknown, items: CatalogItem[]): ParsedOrder
     const candidates = (Array.isArray(l.candidates) ? l.candidates : [])
       .filter((c): c is string => typeof c === "string" && byId.has(c))
       .slice(0, 5)
-      .map((id) => ({ id, name: byId.get(id)!.name }));
+      .map((id) => ({ id, name: byId.get(id)!.name, supplierName: byId.get(id)!.supplierName ?? null }));
     const q = typeof l.quantity === "number" && Number.isFinite(l.quantity) ? l.quantity : null;
     const confidence = typeof l.confidence === "number" && Number.isFinite(l.confidence) ? Math.min(1, Math.max(0, l.confidence)) : 0;
     const spokenUnit = text(l.unit, 20) || null;
@@ -162,6 +200,7 @@ export function normalizeResult(raw: unknown, items: CatalogItem[]): ParsedOrder
       spoken: text(l.spoken, 200),
       productId: product?.id ?? null,
       productName: product?.name ?? null,
+      supplierName: product?.supplierName ?? null,
       candidates,
       quantityMilli: settled.quantityMilli,
       unit: settled.unit,
@@ -178,34 +217,39 @@ export function normalizeResult(raw: unknown, items: CatalogItem[]): ParsedOrder
   return { transcript: text(obj.transcript, 2000), lines, deliveryDay: text(obj.deliveryDay, 80) || null, questions };
 }
 
-/** Starting list for the test page: fictional products, two cheeses on purpose so "cheese" is ambiguous. */
+/**
+ * Starting list for the test page: two made-up suppliers that both sell some of the same products (cheese, milk, butter, tomatoes),
+ * and each with products the other does not have. Two cheeses at the first supplier keep "cheese" ambiguous on purpose.
+ */
 export const SAMPLE_CATALOG = [
-  "# id | name | unit   (made-up products, nothing real)",
+  "# id | name | unit. A line starting with @ starts a supplier: @id | name. Made-up data, nothing real.",
+  "@sa | [TEST] მომწოდებელი ა",
   "p01 | სულგუნი | kg",
   "p02 | იმერული ყველი | kg",
   "p03 | რძე 3.2% | l",
   "p04 | კარაქი | kg",
   "p05 | პომიდორი | kg",
   "p06 | კიტრი | kg",
-  "p07 | ქათმის ფილე | box",
   "p08 | კარტოფილი | kg",
   "p09 | ხახვი | kg",
-  "p10 | ფქვილი | kg",
-  "p11 | შაქარი | kg",
-  "p12 | მზესუმზირის ზეთი | l",
   "p13 | მინერალური წყალი | bottle",
   "p14 | ლუდი | box",
-  "p15 | ძროხის ხორცი | kg",
-  "p16 | ნაღები | l",
-  "p17 | ზეთისხილი | kg",
-  "p18 | მოცარელა | kg",
-  "p19 | პარმეზანი | kg",
   "p20 | ლიმონი | box",
-  "p21 | ფორთოხალი | box",
-  "p22 | ფეტა | kg",
   "p23 | კოკა-კოლა | bottle",
   "p24 | სპრაიტი | bottle",
-  "p25 | ჩედარი | kg",
-  "p26 | ზეითუნის ზეთი, ექსტრა ვირჯინ | box",
-  "p27 | კვერცხი | piece",
+  "@sb | [TEST] მომწოდებელი ბ",
+  "q01 | სულგუნი | kg",
+  "q03 | რძე 3.2% | l",
+  "q04 | კარაქი | kg",
+  "q05 | პომიდორი | kg",
+  "q07 | ქათმის ფილე | box",
+  "q10 | ფქვილი | kg",
+  "q11 | შაქარი | kg",
+  "q12 | მზესუმზირის ზეთი | l",
+  "q15 | ძროხის ხორცი | kg",
+  "q16 | ნაღები | l",
+  "q18 | მოცარელა | kg",
+  "q19 | პარმეზანი | kg",
+  "q22 | ფეტა | kg",
+  "q27 | კვერცხი | piece",
 ].join("\n");

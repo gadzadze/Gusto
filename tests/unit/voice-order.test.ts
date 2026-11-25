@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeResult, parseCatalog, reconcileUnit, SAMPLE_CATALOG, SYSTEM_INSTRUCTION } from "@/lib/voice/order-parse";
+import { catalogueText, normalizeResult, parseCatalog, reconcileUnit, SAMPLE_CATALOG, SYSTEM_INSTRUCTION } from "@/lib/voice/order-parse";
 import { encodeWav, looksLikeWav, VOICE_SAMPLE_RATE } from "@/lib/voice/wav";
 
 describe("parseCatalog", () => {
@@ -13,6 +13,42 @@ describe("parseCatalog", () => {
     const { items, badLines } = parseCatalog("# note\n\na | Milk | l\nb | Cheese\na | Again | kg\nc d | Bad id | kg");
     expect(items.map((i) => i.id)).toEqual(["a"]);
     expect(badLines).toEqual([4, 5, 6]);
+  });
+});
+
+describe("parseCatalog with suppliers", () => {
+  const text = ["# note", "@sa | Supplier A", "p1 | Milk | l", "p2 | Cheese | kg", "@sb | Supplier B", "q1 | Milk | l", "q2 | Eggs | piece"].join("\n");
+
+  it("attaches each product to the supplier above it and lists the suppliers", () => {
+    const { items, suppliers, badLines } = parseCatalog(text);
+    expect(badLines).toEqual([]);
+    expect(suppliers).toEqual([{ id: "sa", name: "Supplier A" }, { id: "sb", name: "Supplier B" }]);
+    expect(items.map((i) => [i.id, i.supplierName])).toEqual([["p1", "Supplier A"], ["p2", "Supplier A"], ["q1", "Supplier B"], ["q2", "Supplier B"]]);
+  });
+
+  it("reports a repeated supplier id, a nameless supplier and a product id used twice across suppliers", () => {
+    const bad = parseCatalog(["@sa | A", "p1 | Milk | l", "@sa | A again", "@sb |", "@sc | C", "p1 | Milk | l"].join("\n"));
+    expect(bad.badLines).toEqual([3, 4, 6]);
+  });
+
+  it("keeps the old single-list format working: no suppliers, no supplier on items", () => {
+    const { items, suppliers } = parseCatalog("p1 | Milk | l");
+    expect(suppliers).toEqual([]);
+    expect(items[0].supplierName).toBeUndefined();
+  });
+
+  it("the bundled sample has two suppliers that share some products", () => {
+    const { items, suppliers, badLines } = parseCatalog(SAMPLE_CATALOG);
+    expect(badLines).toEqual([]);
+    expect(suppliers.length).toBe(2);
+    const names = (id: string) => items.filter((i) => i.supplierId === id).map((i) => i.name);
+    const shared = names("sa").filter((n) => names("sb").includes(n));
+    expect(shared.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it("groups the catalogue text by supplier for the model, and says nothing about suppliers for a plain list", () => {
+    expect(catalogueText(parseCatalog(text).items)).toContain("Supplier: Supplier B\nq1 | Milk | l");
+    expect(catalogueText(parseCatalog("p1 | Milk | l").items)).toBe("p1 | Milk | l");
   });
 });
 
@@ -51,7 +87,7 @@ describe("normalizeResult", () => {
     );
     expect(out.transcript).toBe("");
     expect(out.lines[0]).toMatchObject({ productId: null, quantityMilli: null, confidence: 1 });
-    expect(out.lines[0].candidates).toEqual([{ id: "p1", name: "Milk" }]);
+    expect(out.lines[0].candidates).toEqual([{ id: "p1", name: "Milk", supplierName: null }]);
     expect(out.lines[1]).toMatchObject({ productId: "p1", quantityMilli: null, confidence: 0 });
     expect(out.questions).toEqual(["Which one?"]);
   });
@@ -110,5 +146,17 @@ describe("reconcileUnit", () => {
     expect(reconcileUnit(null, "kg", "kg").quantityMilli).toBeNull();
     expect(reconcileUnit(-1, "kg", "kg").quantityMilli).toBeNull();
     expect(reconcileUnit(1e9, "kg", "kg").quantityMilli).toBeNull();
+  });
+});
+
+describe("suppliers in the one-shot answer", () => {
+  it("names the supplier of a matched product and of each candidate", () => {
+    const items = parseCatalog("@sa | A\np1 | Cheese | kg\n@sb | B\nq1 | Cheese | kg").items;
+    const out = normalizeResult({ transcript: "x", lines: [{ spoken: "cheese", productId: null, candidates: ["p1", "q1"], quantity: 2, unit: "kg", confidence: 0.6 }, { spoken: "cheese from B", productId: "q1", candidates: [], quantity: 1, unit: "kg", confidence: 0.9 }], deliveryDay: null, questions: [] }, items);
+    expect(out.lines[0].candidates).toEqual([{ id: "p1", name: "Cheese", supplierName: "A" }, { id: "q1", name: "Cheese", supplierName: "B" }]);
+    expect(out.lines[1].supplierName).toBe("B");
+  });
+  it("tells the model to ask which supplier when several sell the product", () => {
+    expect(SYSTEM_INSTRUCTION).toContain("asking which supplier");
   });
 });

@@ -797,7 +797,7 @@
       "intro": "Experiment: record or upload an order spoken in Georgian and see what Gemini makes of it. It only uses the made-up products listed below; no cart or order is touched.",
       "notConfigured": "GEMINI_API_KEY is not set, so the test is off.",
       "catalogLabel": "Test products",
-      "catalogHint": "One line per product: id | name | unit. Made-up data.",
+      "catalogHint": "One line per product: id | name | unit. A line starting with @ starts a supplier: @id | name. Made-up data.",
       "record": "Record",
       "stop": "Stop",
       "upload": "Upload a file",
@@ -856,7 +856,8 @@
         "startFailed": "Could not start live mode.",
         "connectionLost": "The connection was lost.",
         "testNote": "Test: nothing is sent."
-      }
+      },
+      "supplier": "Supplier: {name}"
     }
   },
   "notFound": {
