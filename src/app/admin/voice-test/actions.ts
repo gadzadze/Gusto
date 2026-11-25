@@ -8,7 +8,8 @@ import { looksLikeWav, MAX_WAV_BYTES } from "@/lib/voice/wav";
 import { StateError } from "@/server/domain/errors";
 import { getFormats } from "@/server/i18n/formats";
 import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
-import { callGeminiForOrder, geminiConfigured } from "@/server/voice/gemini";
+import { buildLiveSetup, LIVE_MAX_SECONDS, LIVE_MODEL } from "@/lib/voice/live";
+import { callGeminiForOrder, geminiConfigured, mintLiveToken } from "@/server/voice/gemini";
 
 export type VoiceTestError = "not_configured" | "rate_limited" | "too_large" | "bad_audio" | "bad_catalog" | "upstream" | "model_not_found" | "key_rejected" | "quota" | "busy";
 
@@ -62,5 +63,28 @@ export async function parseVoiceOrderAction(formData: FormData): Promise<VoiceTe
       promptTokens: call.usage.promptTokens,
       outputTokens: call.usage.outputTokens,
     };
+  });
+}
+
+export type LiveSessionResult =
+  | { ok: true; token: string; setup: ReturnType<typeof buildLiveSetup>; items: { id: string; name: string; unit: string }[]; maxSeconds: number }
+  | ActionError<VoiceTestError>;
+
+/**
+ * Live voice experiment: hands the admin's browser a one-use token and the opening message for Google's live endpoint. The real key
+ * stays here. Admin only, 10 sessions per hour, made-up catalogue only.
+ */
+export async function startLiveSessionAction(catalogText: unknown): Promise<LiveSessionResult> {
+  const ctx = await requireAdmin();
+  const catalog = catalogSchema.safeParse(catalogText);
+  if (!catalog.success) return { ok: false, error: "invalid" };
+  return runAction<LiveSessionResult, VoiceTestError>("startLiveSession", async () => {
+    if (!geminiConfigured()) throw new StateError<VoiceTestError>("not_configured");
+    const { items, badLines } = parseCatalog(catalog.data);
+    if (items.length === 0 || items.length > MAX_CATALOG_LINES || badLines.length > 0) throw new StateError<VoiceTestError>("bad_catalog");
+    await consumeRateLimit(RATE_LIMITS.voiceLive, ctx.userId);
+    const model = process.env.GEMINI_LIVE_MODEL || LIVE_MODEL;
+    const token = await mintLiveToken(LIVE_MAX_SECONDS + 60);
+    return { ok: true as const, token, setup: buildLiveSetup(items, model), items, maxSeconds: LIVE_MAX_SECONDS };
   });
 }

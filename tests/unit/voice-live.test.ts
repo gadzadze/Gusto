@@ -1,0 +1,47 @@
+import { describe, expect, it } from "vitest";
+import { applySetOrder, buildLiveSetup, liveSystemInstruction, LIVE_MODEL, SET_ORDER } from "@/lib/voice/live";
+
+const items = [
+  { id: "p04", name: "კარაქი", unit: "kg" },
+  { id: "p16", name: "ნაღები", unit: "l" },
+  { id: "p07", name: "ქათმის ფილე", unit: "box" },
+];
+
+describe("buildLiveSetup", () => {
+  it("asks for audio answers, transcripts and exactly one tool, with the catalogue in the instructions", () => {
+    const { setup } = buildLiveSetup(items, LIVE_MODEL);
+    expect(setup.model).toBe(`models/${LIVE_MODEL}`);
+    expect(setup.generationConfig.responseModalities).toEqual(["AUDIO"]);
+    expect(setup.tools[0].functionDeclarations.map((f) => f.name)).toEqual([SET_ORDER]);
+    expect(setup.systemInstruction.parts[0].text).toContain("p16 | ნაღები | l");
+  });
+
+  it("tells the model not to invent orders, not to convert units and not to send the order", () => {
+    const text = liveSystemInstruction(items);
+    expect(text).toContain("Never invent an order");
+    expect(text).toContain("never converted");
+    expect(text).toContain("cannot send the order");
+  });
+});
+
+describe("applySetOrder", () => {
+  it("settles units in code and reports a mismatch back to the model", () => {
+    const out = applySetOrder({ lines: [{ productId: "p16", quantity: 3, spokenUnit: "ცალი" }, { productId: "p04", quantity: 200, spokenUnit: "გრამი" }] }, items);
+    expect(out.lines.find((l) => l.productId === "p16")).toMatchObject({ unitCheck: "mismatch", quantityMilli: 3000 });
+    expect(out.lines.find((l) => l.productId === "p04")).toMatchObject({ unitCheck: "converted", quantityMilli: 200, unit: "kg" });
+    expect(out.feedback.needs_attention).toEqual([{ product: "ნაღები", problem: "unit_mismatch", said: "ცალი", sold_in: "l" }]);
+  });
+
+  it("drops unknown ids, keeps the last line per product, and ignores nonsense", () => {
+    const out = applySetOrder({ lines: [{ productId: "zzz", quantity: 1 }, { productId: "p04", quantity: 2 }, { productId: "p04", quantity: 5 }, null, { productId: "p07", quantity: -1 }] }, items);
+    expect(out.feedback.unknown_ids).toEqual(["zzz"]);
+    expect(out.lines.map((l) => [l.productId, l.quantityMilli])).toEqual([["p04", 5000], ["p07", null]]);
+    expect(out.feedback.needs_attention).toContainEqual({ product: "ქათმის ფილე", problem: "bad_quantity" });
+  });
+
+  it("copes with a missing or malformed argument object", () => {
+    expect(applySetOrder(undefined, items).lines).toEqual([]);
+    expect(applySetOrder({ lines: "x" }, items).feedback.lines).toBe(0);
+    expect(applySetOrder({ lines: [], deliveryDay: "ხვალ" }, items).deliveryDay).toBe("ხვალ");
+  });
+});

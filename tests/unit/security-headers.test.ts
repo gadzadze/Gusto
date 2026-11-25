@@ -42,6 +42,8 @@ describe("security headers (next.config)", () => {
       // model file (pinned and hash-checked) is downloaded once per device.
       expect(hosts, d).toEqual(d === "connect-src" ? ["https://huggingface.co", "https://*.hf.co"] : []);
     }
+    // The one websocket host: the live voice test talks to Google's live endpoint (admin page, one-use token).
+    expect(directive("connect-src").split(" ").filter((v) => v.startsWith("wss://"))).toEqual(["wss://generativelanguage.googleapis.com"]);
     expect(directive("script-src")).toContain("'wasm-unsafe-eval'"); // WebAssembly only, not string eval
     expect(directive("script-src")).not.toContain("'unsafe-eval'"); // only development needs it
   });

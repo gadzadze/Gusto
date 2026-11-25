@@ -839,7 +839,23 @@
       },
       "unitMismatch": "Unit does not match: you said {said}, the catalogue sells it in {catalogue}. Please check.",
       "unitConverted": "Converted from {from} to {to}",
-      "unitAssumed": "No unit said, using the catalogue unit: {unit}"
+      "unitAssumed": "No unit said, using the catalogue unit: {unit}",
+      "live": {
+        "title": "Live mode (experiment)",
+        "intro": "Talk to the assistant like on a phone call: it answers by voice and fills in the order as you speak. Headphones work best. The same made-up products are used.",
+        "start": "Start talking",
+        "stop": "End",
+        "connecting": "Connecting...",
+        "listening": "Listening",
+        "limit": "Ends by itself after {minutes} minutes.",
+        "conversation": "Conversation",
+        "you": "You",
+        "assistant": "Assistant",
+        "orderTitle": "Current order",
+        "orderEmpty": "Nothing yet.",
+        "startFailed": "Could not start live mode.",
+        "connectionLost": "The connection was lost."
+      }
     }
   },
   "notFound": {

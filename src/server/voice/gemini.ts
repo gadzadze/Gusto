@@ -95,3 +95,31 @@ export async function callGeminiForOrder(wav: Uint8Array, items: CatalogItem[]):
     usage: { promptTokens: last.body.usageMetadata?.promptTokenCount ?? null, outputTokens: last.body.usageMetadata?.candidatesTokenCount ?? null },
   };
 }
+
+const TOKEN_DEADLINE_MS = 15_000;
+
+/**
+ * A one-use token for the live connection (experiment). The browser talks to Google's live endpoint itself, so it must not hold the
+ * real key: this token starts ONE session within a minute and stops working after `ttlSeconds`.
+ */
+export async function mintLiveToken(ttlSeconds: number): Promise<string> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new StateError("not_configured");
+  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/auth_tokens", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-goog-api-key": key },
+    signal: AbortSignal.timeout(TOKEN_DEADLINE_MS),
+    body: JSON.stringify({
+      uses: 1,
+      expireTime: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
+      newSessionExpireTime: new Date(Date.now() + 60_000).toISOString(),
+    }),
+  });
+  if (!response.ok) {
+    console.error("[voice] live token returned", response.status);
+    throw new StateError(response.status === 401 || response.status === 403 ? "key_rejected" : "upstream");
+  }
+  const body = (await response.json()) as { name?: string };
+  if (!body.name) throw new StateError("upstream");
+  return body.name;
+}
