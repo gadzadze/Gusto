@@ -1,3 +1,5 @@
+import { parseUnit, type ProductUnit } from "@/lib/catalog/units";
+
 // Pure helpers for the voice-order experiment: the catalogue text a tester pastes, the instructions and
 // response schema sent to the model, and the clean-up of what comes back. No I/O here, so it is unit tested.
 
@@ -74,6 +76,13 @@ export const RESPONSE_SCHEMA = {
   required: ["transcript", "lines", "deliveryDay", "questions"],
 } as const;
 
+/**
+ * How the spoken unit relates to the catalogue's: `ok` same unit, `assumed` nothing was said so the catalogue's is used,
+ * `converted` grams to kilos or millilitres to litres (the quantity was converted), `mismatch` anything else (pieces for a
+ * product sold in litres, an unknown word): a person must settle it, nothing is guessed. `none` = no product matched.
+ */
+export type UnitCheck = "none" | "ok" | "assumed" | "converted" | "mismatch";
+
 export type ParsedLine = {
   spoken: string;
   productId: string | null;
@@ -81,8 +90,12 @@ export type ParsedLine = {
   candidates: { id: string; name: string }[];
   /** Thousandths of the unit, like every quantity in 202. Null when no usable number was heard. */
   quantityMilli: number | null;
+  /** The unit the quantity is in: the catalogue's after `ok`, `assumed` or `converted`, what was said on a `mismatch`. */
   unit: string | null;
+  /** What the speaker said, as the model wrote it. */
+  spokenUnit: string | null;
   catalogUnit: string | null;
+  unitCheck: UnitCheck;
   confidence: number;
 };
 
@@ -94,6 +107,36 @@ export type ParsedOrder = {
 };
 
 const MAX_LINES = 50;
+
+// Only these pairs convert, each with the factor from the spoken unit to the catalogue's.
+const CONVERSIONS: Partial<Record<ProductUnit, Partial<Record<ProductUnit, number>>>> = {
+  g: { kg: 1 / 1000 },
+  kg: { g: 1000 },
+  ml: { l: 1 / 1000 },
+  l: { ml: 1000 },
+};
+
+/** Settles the unit of one line. Pure: the quantity comes in as a plain number of the spoken unit. */
+export function reconcileUnit(
+  quantity: number | null,
+  spokenUnit: string | null,
+  catalogUnit: string | null,
+): { quantityMilli: number | null; unit: string | null; unitCheck: UnitCheck } {
+  const toMilli = (q: number | null) => (q !== null && q > 0 && q <= 100_000 ? Math.round(q * 1000) : null);
+  if (catalogUnit === null) return { quantityMilli: toMilli(quantity), unit: spokenUnit, unitCheck: "none" };
+  if (!spokenUnit) return { quantityMilli: toMilli(quantity), unit: catalogUnit, unitCheck: "assumed" };
+  const said = parseUnit(spokenUnit);
+  const sold = parseUnit(catalogUnit);
+  const sameWord = spokenUnit.trim().toLowerCase() === catalogUnit.trim().toLowerCase();
+  if ((said !== null && said === sold) || (said === null && sold === null && sameWord)) {
+    return { quantityMilli: toMilli(quantity), unit: catalogUnit, unitCheck: "ok" };
+  }
+  const factor = said && sold ? CONVERSIONS[said]?.[sold] : undefined;
+  if (factor !== undefined && quantity !== null) {
+    return { quantityMilli: toMilli(quantity * factor), unit: catalogUnit, unitCheck: "converted" };
+  }
+  return { quantityMilli: toMilli(quantity), unit: spokenUnit, unitCheck: "mismatch" };
+}
 
 function text(value: unknown, max: number): string {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
@@ -112,16 +155,19 @@ export function normalizeResult(raw: unknown, items: CatalogItem[]): ParsedOrder
       .slice(0, 5)
       .map((id) => ({ id, name: byId.get(id)!.name }));
     const q = typeof l.quantity === "number" && Number.isFinite(l.quantity) ? l.quantity : null;
-    const quantityMilli = q !== null && q > 0 && q <= 100_000 ? Math.round(q * 1000) : null;
     const confidence = typeof l.confidence === "number" && Number.isFinite(l.confidence) ? Math.min(1, Math.max(0, l.confidence)) : 0;
+    const spokenUnit = text(l.unit, 20) || null;
+    const settled = reconcileUnit(q, spokenUnit, product?.unit ?? null);
     return {
       spoken: text(l.spoken, 200),
       productId: product?.id ?? null,
       productName: product?.name ?? null,
       candidates,
-      quantityMilli,
-      unit: text(l.unit, 20) || null,
+      quantityMilli: settled.quantityMilli,
+      unit: settled.unit,
+      spokenUnit,
       catalogUnit: product?.unit ?? null,
+      unitCheck: settled.unitCheck,
       confidence,
     };
   });

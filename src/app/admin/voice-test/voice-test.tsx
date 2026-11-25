@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { Mic, Square, Upload, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { encodeWav, VOICE_SAMPLE_RATE } from "@/lib/voice/wav";
 import { parseVoiceOrderAction, type VoiceTestResult } from "./actions";
 
@@ -162,6 +163,8 @@ export function VoiceTest({ configured, sampleCatalog }: { configured: boolean; 
 
 function Result({ result }: { result: VoiceTestResult }) {
   const t = useTranslations("admin.voiceTest");
+  const tu = useTranslations("unitNames");
+  const unitLabel = (code: string | null) => (code && (PRODUCT_UNITS as readonly string[]).includes(code) ? tu(code as ProductUnit) : (code ?? ""));
   if (!result.ok) {
     return (
       <p role="alert" className="flex items-start gap-2 text-sm text-danger">
@@ -192,10 +195,21 @@ function Result({ result }: { result: VoiceTestResult }) {
                   </p>
                 </div>
                 <p className="tabular-nums">
-                  {line.qtyText ?? t("noQuantity")} {line.unit ?? ""}
-                  {line.catalogUnit && line.unit && line.catalogUnit !== line.unit ? ` (${t("catalogUnit", { unit: line.catalogUnit })})` : ""}
+                  {line.qtyText ?? t("noQuantity")} {unitLabel(line.unit)}
                 </p>
                 <p className="text-xs text-muted-foreground">{t("confidence", { percent: Math.round(line.confidence * 100) })}</p>
+                {line.unitCheck === "mismatch" ? (
+                  <p role="alert" className="flex basis-full items-start gap-2 text-sm text-danger">
+                    <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+                    {t("unitMismatch", { said: line.spokenUnit ?? "", catalogue: unitLabel(line.catalogUnit) })}
+                  </p>
+                ) : null}
+                {line.unitCheck === "converted" ? (
+                  <p className="basis-full text-xs text-muted-foreground">{t("unitConverted", { from: line.spokenUnit ?? "", to: unitLabel(line.unit) })}</p>
+                ) : null}
+                {line.unitCheck === "assumed" ? (
+                  <p className="basis-full text-xs text-muted-foreground">{t("unitAssumed", { unit: unitLabel(line.unit) })}</p>
+                ) : null}
               </li>
             ))}
           </ul>

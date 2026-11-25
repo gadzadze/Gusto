@@ -836,7 +836,10 @@
         "key_rejected": "Gemini rejected the key. Check GEMINI_API_KEY.",
         "quota": "Gemini's limit was reached. Try again later.",
         "busy": "Gemini is busy right now. Try again in a few minutes."
-      }
+      },
+      "unitMismatch": "Unit does not match: you said {said}, the catalogue sells it in {catalogue}. Please check.",
+      "unitConverted": "Converted from {from} to {to}",
+      "unitAssumed": "No unit said, using the catalogue unit: {unit}"
     }
   },
   "notFound": {
