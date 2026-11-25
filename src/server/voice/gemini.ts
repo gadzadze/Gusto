@@ -5,7 +5,8 @@ import { StateError } from "@/server/domain/errors";
 // Voice-order experiment: one call to Gemini with the audio and the catalogue, JSON back.
 // The key is server-only; with no GEMINI_API_KEY the experiment is simply off.
 
-const DEFAULT_MODEL = "gemini-2.5-flash";
+// An alias that always points at Google's current Flash model: a pinned name (gemini-2.5-flash) returned 404 once retired.
+const DEFAULT_MODEL = "gemini-flash-latest";
 const DEADLINE_MS = 30_000;
 
 export type GeminiOrderCall = { raw: unknown; model: string; ms: number; usage: { promptTokens: number | null; outputTokens: number | null } };
@@ -37,7 +38,10 @@ export async function callGeminiForOrder(wav: Uint8Array, items: CatalogItem[]):
   });
   if (!response.ok) {
     // Status only: the body can echo the request, which holds the audio and the key's project.
-    console.error("[voice] gemini returned", response.status);
+    console.error("[voice] gemini returned", response.status, "for model", model);
+    if (response.status === 404) throw new StateError("model_not_found");
+    if (response.status === 401 || response.status === 403) throw new StateError("key_rejected");
+    if (response.status === 429) throw new StateError("quota");
     throw new StateError("upstream");
   }
   const body = (await response.json()) as {

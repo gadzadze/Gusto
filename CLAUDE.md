@@ -703,7 +703,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (**secret**), `VAPID_SUBJECT`: Web Push, optional (see Dashboards > Web Push).
 - `CRON_SECRET`
-- `GEMINI_API_KEY`, `GEMINI_MODEL` (secret key; model defaults to `gemini-2.5-flash`): the voice-order experiment only, off without a key (see "Voice order experiment").
+- `GEMINI_API_KEY`, `GEMINI_MODEL` (secret key; model defaults to the alias `gemini-flash-latest`; a pinned `gemini-2.5-flash` returned 404 once retired): the voice-order experiment only, off without a key (see "Voice order experiment").
 - `NEXT_PUBLIC_SENTRY_DSN` (public, build time), `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (build-only, **secret**): see Operations.
 - `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build). `LEGAL_CONTACT_EMAIL` alone is also the contact line on the sign-in "not accepted" message.
 
