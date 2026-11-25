@@ -68,3 +68,14 @@ describe("two suppliers", () => {
     expect(out.lines.map((l) => [l.productId, l.supplierName])).toEqual([["p1", "Supplier A"], ["q2", "Supplier B"]]);
   });
 });
+
+describe("Georgian instructions", () => {
+  it("teach the assistant the speaking patterns and the way buyers really talk", () => {
+    const text = liveSystemInstruction(items);
+    expect(text).toContain("the noun stays singular");
+    expect(text).toContain("დავამატე: ორი კილო სულგუნი");
+    expect(text).toContain("EVERY line with its quantity");
+    expect(text).toContain("ორნახევარი"); // listening notes
+    expect(text).toContain("Never guess a number or a product");
+  });
+});
