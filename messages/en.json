@@ -831,7 +831,10 @@
         "bad_audio": "We could not read the audio.",
         "bad_catalog": "The test product list is not valid: one line each as id | name | unit, ids all different.",
         "upstream": "Gemini did not return an answer. Try again.",
-        "unknown": "Something went wrong."
+        "unknown": "Something went wrong.",
+        "model_not_found": "Gemini does not know this model (404). Set GEMINI_MODEL to a valid name.",
+        "key_rejected": "Gemini rejected the key. Check GEMINI_API_KEY.",
+        "quota": "Gemini's limit was reached. Try again later."
       }
     }
   },

@@ -10,7 +10,7 @@ import { getFormats } from "@/server/i18n/formats";
 import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 import { callGeminiForOrder, geminiConfigured } from "@/server/voice/gemini";
 
-export type VoiceTestError = "not_configured" | "rate_limited" | "too_large" | "bad_audio" | "bad_catalog" | "upstream";
+export type VoiceTestError = "not_configured" | "rate_limited" | "too_large" | "bad_audio" | "bad_catalog" | "upstream" | "model_not_found" | "key_rejected" | "quota";
 
 export type VoiceTestLine = ParsedLine & { qtyText: string | null };
 
