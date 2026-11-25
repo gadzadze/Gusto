@@ -1132,7 +1132,7 @@ clean-up; pure and unit-tested), `lib/voice/wav.ts`, `server/voice/gemini.ts`.
 
 - The tester records (or uploads) a spoken Georgian order; the browser converts it to 16 kHz mono WAV (speech APIs differ in what
   they accept) and the server action sends it, with a **pasted made-up catalogue**, to Gemini (`GEMINI_API_KEY`, plain `fetch`
-  with a 30 s deadline, JSON schema answer). The result (transcript, proposed lines, questions) is shown and **nothing is stored**:
+  with a 30 s deadline per try, one retry and then a lighter fallback model on 429/5xx, JSON schema answer). The result (transcript, proposed lines, questions) is shown and **nothing is stored**:
   no cart, no order, no audio, no log of the content.
 - **It never reads a real catalogue** (admins never see catalogues or price lists). Everything the model returns is re-checked
   (`normalizeResult`: ids must be in the pasted list, quantities range-checked, `*_milli`).
