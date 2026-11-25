@@ -288,6 +288,7 @@ export function LiveTest({ catalog, configured }: { catalog: string; configured:
               </ul>
             )}
             {deliveryDay ? <p className="mt-2 text-sm">{t("delivery", { day: deliveryDay })}</p> : null}
+            <p className="mt-2 text-xs text-muted-foreground">{t("live.testNote")}</p>
           </div>
         </div>
       ) : null}
