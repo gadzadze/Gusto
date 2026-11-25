@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeResult, parseCatalog, SAMPLE_CATALOG } from "@/lib/voice/order-parse";
+import { normalizeResult, parseCatalog, SAMPLE_CATALOG, SYSTEM_INSTRUCTION } from "@/lib/voice/order-parse";
 import { encodeWav, looksLikeWav, VOICE_SAMPLE_RATE } from "@/lib/voice/wav";
 
 describe("parseCatalog", () => {
@@ -76,5 +76,11 @@ describe("encodeWav", () => {
   it("rejects bytes that are not a WAV file", () => {
     expect(looksLikeWav(new Uint8Array(100))).toBe(false);
     expect(looksLikeWav(new Uint8Array([1, 2, 3]))).toBe(false);
+  });
+});
+
+describe("instructions", () => {
+  it("tell the model not to invent an order when nothing was said (a bare tone once came back as 'two kilos of cheese')", () => {
+    expect(SYSTEM_INSTRUCTION).toContain("Never invent an order");
   });
 });

@@ -703,7 +703,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (**secret**), `VAPID_SUBJECT`: Web Push, optional (see Dashboards > Web Push).
 - `CRON_SECRET`
-- `GEMINI_API_KEY`, `GEMINI_MODEL` (secret key; model defaults to the alias `gemini-flash-latest`; a pinned `gemini-2.5-flash` returned 404 once retired): the voice-order experiment only, off without a key (see "Voice order experiment").
+- `GEMINI_API_KEY`, `GEMINI_MODEL` (secret key; model defaults to `gemini-3.5-flash`, fallback `gemini-3.7-flash`; `gemini-2.5-flash` is retired for new keys (404) and the newest models answered 503 "high demand" on 2026-11-25, so check the key's model list (`GET /v1beta/models`) before changing it): the voice-order experiment only, off without a key (see "Voice order experiment").
 - `NEXT_PUBLIC_SENTRY_DSN` (public, build time), `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (build-only, **secret**): see Operations.
 - `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build). `LEGAL_CONTACT_EMAIL` alone is also the contact line on the sign-in "not accepted" message.
 
@@ -1132,7 +1132,7 @@ clean-up; pure and unit-tested), `lib/voice/wav.ts`, `server/voice/gemini.ts`.
 
 - The tester records (or uploads) a spoken Georgian order; the browser converts it to 16 kHz mono WAV (speech APIs differ in what
   they accept) and the server action sends it, with a **pasted made-up catalogue**, to Gemini (`GEMINI_API_KEY`, plain `fetch`
-  with a 30 s deadline per try, one retry and then a lighter fallback model on 429/5xx, JSON schema answer). The result (transcript, proposed lines, questions) is shown and **nothing is stored**:
+  with a 40 s deadline per try (calls took 8 to 27 s), one retry and then a lighter fallback model on 429/5xx, JSON schema answer). The result (transcript, proposed lines, questions) is shown and **nothing is stored**:
   no cart, no order, no audio, no log of the content.
 - **It never reads a real catalogue** (admins never see catalogues or price lists). Everything the model returns is re-checked
   (`normalizeResult`: ids must be in the pasted list, quantities range-checked, `*_milli`).
