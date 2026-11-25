@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { runAction, type ActionError } from "@/server/actions/result";
 import { requireAdmin } from "@/server/auth/guards";
-import { MAX_CATALOG_CHARS, MAX_CATALOG_LINES, normalizeResult, parseCatalog, type ParsedLine } from "@/lib/voice/order-parse";
+import { MAX_CATALOG_CHARS, MAX_CATALOG_LINES, normalizeResult, parseCatalog, type CatalogItem, type ParsedLine } from "@/lib/voice/order-parse";
 import { looksLikeWav, MAX_WAV_BYTES } from "@/lib/voice/wav";
 import { StateError } from "@/server/domain/errors";
 import { getFormats } from "@/server/i18n/formats";
@@ -67,7 +67,7 @@ export async function parseVoiceOrderAction(formData: FormData): Promise<VoiceTe
 }
 
 export type LiveSessionResult =
-  | { ok: true; token: string; setup: ReturnType<typeof buildLiveSetup>; items: { id: string; name: string; unit: string }[]; maxSeconds: number }
+  | { ok: true; token: string; setup: ReturnType<typeof buildLiveSetup>; items: CatalogItem[]; maxSeconds: number }
   | ActionError<VoiceTestError>;
 
 /**

@@ -1,4 +1,4 @@
-import { reconcileUnit, type CatalogItem, type UnitCheck } from "@/lib/voice/order-parse";
+import { catalogueText, reconcileUnit, type CatalogItem, type UnitCheck } from "@/lib/voice/order-parse";
 
 // Live voice mode (experiment): pure pieces. The instructions and the one tool the assistant may call, and the clean-up of
 // what the model sends back. The model only ever proposes the order; units are settled by `reconcileUnit`, never by the model.
@@ -12,18 +12,21 @@ export const LIVE_MAX_SECONDS = 600;
 export const SET_ORDER = "set_order";
 
 export function liveSystemInstruction(items: CatalogItem[]): string {
-  const catalogue = items.map((i) => `${i.id} | ${i.name} | ${i.unit}`).join("\n");
+  const catalogue = catalogueText(items);
   return [
     "You are a voice assistant inside a wholesale ordering app in Georgia. The person talking is a restaurant or cafe buyer ordering from ONE supplier.",
     "Speak Georgian, politely (the formal 'თქვენ' form), in short sentences. One or two sentences per answer.",
     "Use ONLY the products in the catalogue below. Never invent a product, an id or a price (you do not know any prices).",
+    "The catalogue may list several suppliers, and the same product can be sold by more than one (each with its own id). If the buyer names a supplier ('from supplier A'), use that supplier's ids. If they do not and several suppliers sell the product, ask which supplier BEFORE calling the tool. The order is kept separately for each supplier; never mix suppliers in one sentence of yours without saying which.",
     `Whenever the order changes (a product added, removed, or a quantity corrected), call ${SET_ORDER} with the COMPLETE current order, not only the change.`,
     "In each line, productId is a catalogue id and quantity is the number said. spokenUnit is the unit exactly as the buyer said it (for example 'კილო', 'ცალი', 'ყუთი', 'გრამი'), never converted or corrected. Leave it out if no unit was said.",
     "If the buyer corrects themselves ('five kilos... no, six'), use the final value.",
     "If a name fits several products (for example just 'cheese' when there are two cheeses), ask which one BEFORE calling the tool. Do not guess.",
     `If the tool answer lists needs_attention, ask the buyer about each item in one short sentence, then call ${SET_ORDER} again with the corrected order.`,
     "If you hear no clear speech, only noise, music or a tone, say nothing and do not change the order. Never invent an order.",
-    "You cannot send the order. When the buyer says they are done, read the order back briefly and tell them to check it on the screen and press send themselves.",
+    "If the buyer asks for something that is not in the catalogue (for example lemonade when only lemons exist), say you do not have it and ask whether they meant the closest product. Never swap a product silently.",
+    "You cannot send the order, and you do not know what the screen looks like. When the buyer says they are done, read the order back in one short sentence, then say exactly: «შეკვეთა ეკრანზეა, გთხოვთ, გადაამოწმოთ.» and nothing else about the screen.",
+    "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way.",
     "",
     "Catalogue (id | name | unit):",
     catalogue,
@@ -71,6 +74,7 @@ export function buildLiveSetup(items: CatalogItem[], model: string) {
 export type LiveOrderLine = {
   productId: string;
   productName: string;
+  supplierName: string | null;
   /** Thousandths of the unit, null when the number was unusable. */
   quantityMilli: number | null;
   /** The unit the quantity is in (the catalogue's, unless it was a mismatch). */
@@ -117,6 +121,7 @@ export function applySetOrder(
     lines.set(product.id, {
       productId: product.id,
       productName: product.name,
+      supplierName: product.supplierName ?? null,
       quantityMilli: settled.quantityMilli,
       unit: settled.unit,
       spokenUnit,

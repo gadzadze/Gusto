@@ -222,6 +222,14 @@ export function LiveTest({ catalog, configured }: { catalog: string; configured:
     setPhase("idle");
   }
 
+  // The order is kept separately for each supplier (one cart per supplier in the real app).
+  const groups: { name: string | null; lines: LiveOrderLine[] }[] = [];
+  for (const line of order) {
+    const group = groups.find((g) => g.name === line.supplierName);
+    if (group) group.lines.push(line);
+    else groups.push({ name: line.supplierName, lines: [line] });
+  }
+
   return (
     <section className="space-y-4 border-t border-border pt-6" aria-labelledby="live-title">
       <div>
@@ -268,26 +276,34 @@ export function LiveTest({ catalog, configured }: { catalog: string; configured:
             {order.length === 0 ? (
               <p className="mt-1 text-sm text-muted-foreground">{t("live.orderEmpty")}</p>
             ) : (
-              <ul className="mt-1 divide-y divide-border rounded-lg border border-border bg-card">
-                {order.map((line) => (
-                  <li key={line.productId} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 p-3">
-                    <p className="min-w-0 flex-[1_1_10rem] font-medium">{line.productName}</p>
-                    <p className="tabular-nums">
-                      {line.quantityMilli === null ? t("noQuantity") : milliToInput(line.quantityMilli, separator)} {unitLabel(line.unit)}
-                    </p>
-                    {line.unitCheck === "mismatch" ? (
-                      <p role="alert" className="flex basis-full items-start gap-2 text-sm text-danger">
-                        <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-                        {t("unitMismatch", { said: line.spokenUnit ?? "", catalogue: unitLabel(line.catalogUnit) })}
-                      </p>
-                    ) : null}
-                    {line.unitCheck === "converted" ? <p className="basis-full text-xs text-muted-foreground">{t("unitConverted", { from: line.spokenUnit ?? "", to: unitLabel(line.unit) })}</p> : null}
-                    {line.unitCheck === "assumed" ? <p className="basis-full text-xs text-muted-foreground">{t("unitAssumed", { unit: unitLabel(line.unit) })}</p> : null}
-                  </li>
+              <div className="mt-1 space-y-4">
+                {groups.map((group) => (
+                  <div key={group.name ?? ""}>
+                    {group.name ? <h4 className="mb-1 text-sm font-medium text-brand">{t("supplier", { name: group.name })}</h4> : null}
+                    <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+                      {group.lines.map((line) => (
+                        <li key={line.productId} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 p-3">
+                          <p className="min-w-0 flex-[1_1_10rem] font-medium">{line.productName}</p>
+                          <p className="tabular-nums">
+                            {line.quantityMilli === null ? t("noQuantity") : milliToInput(line.quantityMilli, separator)} {unitLabel(line.unit)}
+                          </p>
+                          {line.unitCheck === "mismatch" ? (
+                            <p role="alert" className="flex basis-full items-start gap-2 text-sm text-danger">
+                              <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+                              {t("unitMismatch", { said: line.spokenUnit ?? "", catalogue: unitLabel(line.catalogUnit) })}
+                            </p>
+                          ) : null}
+                          {line.unitCheck === "converted" ? <p className="basis-full text-xs text-muted-foreground">{t("unitConverted", { from: line.spokenUnit ?? "", to: unitLabel(line.unit) })}</p> : null}
+                          {line.unitCheck === "assumed" ? <p className="basis-full text-xs text-muted-foreground">{t("unitAssumed", { unit: unitLabel(line.unit) })}</p> : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 ))}
-              </ul>
+              </div>
             )}
             {deliveryDay ? <p className="mt-2 text-sm">{t("delivery", { day: deliveryDay })}</p> : null}
+            <p className="mt-2 text-xs text-muted-foreground">{t("live.testNote")}</p>
           </div>
         </div>
       ) : null}
