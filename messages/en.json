@@ -854,7 +854,8 @@
         "orderTitle": "Current order",
         "orderEmpty": "Nothing yet.",
         "startFailed": "Could not start live mode.",
-        "connectionLost": "The connection was lost."
+        "connectionLost": "The connection was lost.",
+        "testNote": "Test: nothing is sent."
       }
     }
   },

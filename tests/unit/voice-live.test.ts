@@ -21,6 +21,9 @@ describe("buildLiveSetup", () => {
     expect(text).toContain("Never invent an order");
     expect(text).toContain("never converted");
     expect(text).toContain("cannot send the order");
+    // A real test run: the assistant told the tester a send button was on the screen when there was none.
+    expect(text).toContain("Never describe the screen");
+    expect(text).toContain("Never swap a product silently");
   });
 });
 
