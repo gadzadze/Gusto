@@ -92,7 +92,6 @@ export function LandingContent() {
         <section className="section" id="product">
           <div className="wrap">
             <Reveal className="sec-head">
-              <p className="kicker">{t("tour.kicker")}</p>
               <h2 className="h2">{t("tour.title")}</h2>
             </Reveal>
             <Reveal className="tour-wrap" delay={120}>
@@ -106,7 +105,6 @@ export function LandingContent() {
           <div className="wrap">
             <div className="split">
               <Reveal className="split-text">
-                <p className="kicker">{t("suppliers.kicker")}</p>
                 <h2 className="h2">{t("suppliers.title")}</h2>
                 <p className="body">{t("suppliers.body")}</p>
                 <ul className="checks">
@@ -133,7 +131,6 @@ export function LandingContent() {
           <div className="wrap">
             <div className="split rev">
               <Reveal className="split-text">
-                <p className="kicker">{t("buyers.kicker")}</p>
                 <h2 className="h2">{t("buyers.title")}</h2>
                 <p className="body">{t("buyers.body")}</p>
                 <ul className="checks">
