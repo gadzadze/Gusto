@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeResult, parseCatalog, SAMPLE_CATALOG, SYSTEM_INSTRUCTION } from "@/lib/voice/order-parse";
+import { normalizeResult, parseCatalog, reconcileUnit, SAMPLE_CATALOG, SYSTEM_INSTRUCTION } from "@/lib/voice/order-parse";
 import { encodeWav, looksLikeWav, VOICE_SAMPLE_RATE } from "@/lib/voice/wav";
 
 describe("parseCatalog", () => {
@@ -82,5 +82,33 @@ describe("encodeWav", () => {
 describe("instructions", () => {
   it("tell the model not to invent an order when nothing was said (a bare tone once came back as 'two kilos of cheese')", () => {
     expect(SYSTEM_INSTRUCTION).toContain("Never invent an order");
+  });
+});
+
+describe("reconcileUnit", () => {
+  it("accepts the same unit in any spelling", () => {
+    expect(reconcileUnit(3, "კილო", "kg")).toEqual({ quantityMilli: 3000, unit: "kg", unitCheck: "ok" });
+    expect(reconcileUnit(2, "ყუთი", "box")).toMatchObject({ unitCheck: "ok", quantityMilli: 2000 });
+  });
+
+  it("converts grams to kilos and millilitres to litres", () => {
+    expect(reconcileUnit(500, "გრამი", "kg")).toEqual({ quantityMilli: 500, unit: "kg", unitCheck: "converted" });
+    expect(reconcileUnit(1500, "ml", "l")).toEqual({ quantityMilli: 1500, unit: "l", unitCheck: "converted" });
+  });
+
+  it("flags pieces for a product sold in litres instead of guessing", () => {
+    expect(reconcileUnit(3, "ცალი", "l")).toEqual({ quantityMilli: 3000, unit: "ცალი", unitCheck: "mismatch" });
+    expect(reconcileUnit(3, "ბეღელი", "kg")).toMatchObject({ unitCheck: "mismatch" });
+  });
+
+  it("assumes the catalogue's unit when none was said, and says nothing about a missing product", () => {
+    expect(reconcileUnit(4, null, "kg")).toEqual({ quantityMilli: 4000, unit: "kg", unitCheck: "assumed" });
+    expect(reconcileUnit(4, "kg", null)).toEqual({ quantityMilli: 4000, unit: "kg", unitCheck: "none" });
+  });
+
+  it("rejects a quantity that is missing or out of range", () => {
+    expect(reconcileUnit(null, "kg", "kg").quantityMilli).toBeNull();
+    expect(reconcileUnit(-1, "kg", "kg").quantityMilli).toBeNull();
+    expect(reconcileUnit(1e9, "kg", "kg").quantityMilli).toBeNull();
   });
 });

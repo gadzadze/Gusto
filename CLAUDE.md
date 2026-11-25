@@ -1134,6 +1134,7 @@ clean-up; pure and unit-tested), `lib/voice/wav.ts`, `server/voice/gemini.ts`.
   they accept) and the server action sends it, with a **pasted made-up catalogue**, to Gemini (`GEMINI_API_KEY`, plain `fetch`
   with a 40 s deadline per try (calls took 8 to 27 s), one retry and then a lighter fallback model on 429/5xx, JSON schema answer). The result (transcript, proposed lines, questions) is shown and **nothing is stored**:
   no cart, no order, no audio, no log of the content.
+- **Units are settled in code, not by the model** (`reconcileUnit`, `lib/voice/order-parse.ts`, using the import's `parseUnit`): same unit is fine, g to kg and ml to l convert, no unit said assumes the catalogue's, anything else (pieces for a product sold in litres) is flagged `mismatch` and shown as a warning, never guessed.
 - **It never reads a real catalogue** (admins never see catalogues or price lists). Everything the model returns is re-checked
   (`normalizeResult`: ids must be in the pasted list, quantities range-checked, `*_milli`).
 - 30 calls per hour per admin (`RATE_LIMITS.voiceTest`). `Permissions-Policy` now allows the microphone for this origin only
