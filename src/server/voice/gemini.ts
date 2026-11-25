@@ -5,9 +5,10 @@ import { StateError } from "@/server/domain/errors";
 // Voice-order experiment: one call to Gemini with the audio and the catalogue, JSON back.
 // The key is server-only; with no GEMINI_API_KEY the experiment is simply off.
 
-// An alias that always points at Google's current Flash model: a pinned name (gemini-2.5-flash) returned 404 once retired.
-const DEFAULT_MODEL = "gemini-flash-latest";
-const DEADLINE_MS = 30_000;
+// Checked against Google's model list on 2026-11-25: gemini-2.5-flash is retired for new keys (404), the newest models (3.7, 3.8, and the
+// "-latest" aliases that point at them) answered 503 "high demand", gemini-3.5-flash answered. Override with GEMINI_MODEL.
+const DEFAULT_MODEL = "gemini-3.5-flash";
+const DEADLINE_MS = 40_000;
 
 export type GeminiOrderCall = { raw: unknown; model: string; ms: number; usage: { promptTokens: number | null; outputTokens: number | null } };
 
@@ -15,7 +16,7 @@ export function geminiConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
 }
 
-const FALLBACK_MODEL = "gemini-flash-lite-latest";
+const FALLBACK_MODEL = "gemini-3.7-flash";
 const RETRY_PAUSE_MS = 1500;
 
 type Attempt = { status: number; body?: GeminiBody };

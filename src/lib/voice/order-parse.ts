@@ -30,6 +30,7 @@ export const SYSTEM_INSTRUCTION = [
   "You turn a short spoken Georgian wholesale order into structured order lines.",
   "The speaker is a restaurant or cafe buyer ordering from ONE supplier. The audio is in Georgian (sometimes with Latin brand names).",
   "Use ONLY the products in the catalogue list given in the user message. Never invent a product or an id.",
+  "If the audio has no clear spoken words (silence, noise, music, a tone), set transcript to an empty string and return no lines and no questions. Never invent an order.",
   "transcript: write what was said, in Georgian script, as accurately as you can.",
   "For each product the speaker orders, add one line: spoken (the words used), productId (a catalogue id, or null when nothing matches),",
   "candidates (catalogue ids it could be, only when you are unsure), quantity (a number, in the unit the speaker used), unit (kg, g, l, ml, piece, box, pack, bottle, ... as spoken),",
