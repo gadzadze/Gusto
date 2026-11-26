@@ -11,6 +11,7 @@ import { requireBuyer } from "@/server/auth/guards";
 import { listConnectedSuppliers, listTopOrderedProducts } from "@/server/domain/buyer/catalog";
 import { lastOrderDates, listBuyerOrders, listOpenBuyerOrders } from "@/server/domain/orders/queries";
 import { listRegularOrders } from "@/server/domain/orders/regular";
+import { voiceOrderEnabled } from "@/server/voice/config";
 
 export default async function BuyerDashboardPage() {
   const t = await getTranslations("buyer");
@@ -87,6 +88,13 @@ async function Dashboard() {
       lastOrders={Object.fromEntries(lastOrders)}
       topSection={topSection}
       now={new Date()}
+      voiceSuppliers={voiceOrderEnabled() && ctx.orgStatus === "active" ? voiceSuppliers(suppliers) : undefined}
     />
   );
+}
+
+/** The suppliers voice ordering covers: the connected ones with something the buyer may order. */
+function voiceSuppliers(suppliers: { name: string; productCount: number }[]) {
+  const list = suppliers.filter((s) => s.productCount > 0).map((s) => ({ name: s.name, count: s.productCount }));
+  return list.length > 0 ? list : undefined;
 }

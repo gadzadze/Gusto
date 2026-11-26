@@ -7,8 +7,9 @@ import { toProductViews } from "@/components/buyer/product-view";
 import { BuyerSearchForm } from "@/components/buyer/search-form";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireBuyer } from "@/server/auth/guards";
-import { searchConnectedCatalogs } from "@/server/domain/buyer/catalog";
+import { listConnectedSuppliers, searchConnectedCatalogs } from "@/server/domain/buyer/catalog";
 import { cartQuantities } from "@/server/domain/orders/cart";
+import { voiceOrderEnabled } from "@/server/voice/config";
 
 export default async function BuyerSearchPage({ searchParams }: PageProps<"/buyer/search">) {
   const t = await getTranslations("buyer");
@@ -25,6 +26,7 @@ async function Results({ searchParams }: Pick<PageProps<"/buyer/search">, "searc
   const t = await getTranslations("buyer");
   const { q: raw } = await searchParams;
   const q = (Array.isArray(raw) ? raw[0] : raw)?.trim().slice(0, 100) ?? "";
+  const voice = voiceOrderEnabled() && ctx.orgStatus === "active" ? (await listConnectedSuppliers(ctx)).filter((s) => s.productCount > 0).map((s) => ({ name: s.name, count: s.productCount })) : [];
   const groups = await Promise.all(
     (q ? await searchConnectedCatalogs(ctx, q) : []).map(async (g) => ({
       ...g,
@@ -34,7 +36,7 @@ async function Results({ searchParams }: Pick<PageProps<"/buyer/search">, "searc
 
   return (
     <div className="space-y-6">
-      <BuyerSearchForm defaultValue={q} />
+      <BuyerSearchForm defaultValue={q} voiceSuppliers={voice.length > 0 ? voice : undefined} />
       {!q ? (
         <p className="text-sm text-muted-foreground">{t("searchHint")}</p>
       ) : groups.length === 0 ? (

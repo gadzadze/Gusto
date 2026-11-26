@@ -101,4 +101,13 @@ describe("transcript hints", () => {
   it("tells the assistant to stay quiet after the read-back", () => {
     expect(liveSystemInstruction(suppliers)).toContain("No small talk and no goodbyes");
   });
+
+  it("tells a buyer, not a tester, to check the order on screen before it is sent", () => {
+    const items = [{ id: "p1", name: "სულგუნი", unit: "kg", supplierId: "s1", supplierName: "ა" }];
+    const buyer = liveSystemInstruction(items, "buyer");
+    expect(buyer).not.toContain("ეს ტესტია");
+    expect(buyer).toContain("გაგზავნამდე შეკვეთას ეკრანზე გადაამოწმებთ.");
+    expect(liveSystemInstruction(items, "test")).toContain("ეს ტესტია, არაფერი იგზავნება.");
+    expect(JSON.stringify(buildLiveSetup(items, LIVE_MODEL, "buyer"))).not.toContain("ეს ტესტია");
+  });
 });

@@ -2,6 +2,8 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import type * as React from "react";
 import { BuyerSearchForm } from "@/components/buyer/search-form";
+import type { VoiceSupplier } from "@/components/buyer/voice/voice-assistant";
+import { VoiceLauncher } from "@/components/buyer/voice/voice-launcher";
 import { OrderProgress } from "@/components/dashboard/order-progress";
 import { Panel, PanelRow } from "@/components/dashboard/panel";
 import { ReorderButton } from "@/components/orders/order-buttons";
@@ -25,10 +27,12 @@ export type BuyerHomeProps = {
   /** The "often ordered" product grid, built by the page (it needs the catalog's product views). */
   topSection: React.ReactNode;
   now: Date;
+  /** Given only when voice ordering is available to this buyer: adds the mic in the search field and a card under it. */
+  voiceSuppliers?: VoiceSupplier[];
 };
 
 /** The buyer's home: search, what is due, what is on its way, and the suppliers to order from. */
-export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, topSection, now }: BuyerHomeProps) {
+export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, topSection, now, voiceSuppliers }: BuyerHomeProps) {
   const fmt = await getFormats();
   const t = await getTranslations("buyer");
   const tr = await getTranslations("regular");
@@ -45,7 +49,8 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
   const regularShown = dueToday.length > 0 ? dueToday : regular.slice(0, 3);
   return (
     <div className="space-y-6">
-      <BuyerSearchForm />
+      <BuyerSearchForm voiceSuppliers={voiceSuppliers} />
+      {voiceSuppliers ? <VoiceLauncher variant="card" suppliers={voiceSuppliers} /> : null}
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-5 lg:grid-cols-[1.55fr_1fr]">
         <div className="space-y-5">
           {regular.length > 0 ? (

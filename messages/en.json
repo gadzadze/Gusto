@@ -471,7 +471,74 @@
       "openTotal": "{amount} in total, not yet delivered"
     },
     "emptyFind": "Find a supplier",
-    "emptyInvite": "Invite a supplier"
+    "emptyInvite": "Invite a supplier",
+    "voice": {
+      "open": "Order by voice",
+      "card": {
+        "title": "Order by voice",
+        "body": "Say what you need. You check the order before anything is sent.",
+        "action": "Start"
+      },
+      "title": "What would you like to order?",
+      "lead": "Speak the way you would on the phone. You check the order before anything is sent.",
+      "suppliersTitle": "Your suppliers",
+      "productCount": "{count, plural, one {# product} other {# products}}",
+      "examplesTitle": "For example",
+      "examples": [
+        "“Two kilos of sulguni”",
+        "“Tomatoes, five kilos”",
+        "“No more cream”"
+      ],
+      "privacy": "Your voice is processed by Google's service. We do not store it.",
+      "close": "Close",
+      "speak": "Speak",
+      "listening": "Listening",
+      "connecting": "Connecting",
+      "answering": "Answering",
+      "text": "Type",
+      "finish": "Done",
+      "captured": "Captured · {count, plural, one {# product} other {# products}}",
+      "you": "You",
+      "assistant": "Assistant",
+      "timeLimit": "The session ends in {minutes} minutes.",
+      "review": {
+        "title": "Your order",
+        "meta": "{suppliers, plural, one {# supplier} other {# suppliers}} · {count, plural, one {# product} other {# products}}",
+        "linesOf": "{count, plural, one {# product} other {# products}}",
+        "decrease": "Decrease: {name}",
+        "increase": "Increase: {name}",
+        "remove": "Remove: {name}",
+        "needsQuantity": "Quantity needs checking",
+        "badQuantity": "This quantity can't be ordered",
+        "unitMismatch": "The unit does not match",
+        "fixUnit": "{quantity} {unit}",
+        "empty": "The order is empty",
+        "confirm": "Review orders",
+        "confirmNote": "Each supplier's order is reviewed and sent separately.",
+        "fixFirst": "Fix the marked products first.",
+        "skipped": "Could not add to the cart: {names}.",
+        "toCart": "Go to cart"
+      },
+      "blocked": {
+        "title": "Microphone is off",
+        "body": "The browser has no access to the microphone. Turn it on in the browser settings, or type your order instead.",
+        "step1": "Open the site settings next to the address bar.",
+        "step2": "Choose “Allow” for the microphone.",
+        "step3": "Come back here and tap “Speak”.",
+        "typeInstead": "Type instead",
+        "retry": "Try again"
+      },
+      "errors": {
+        "startFailed": "Could not connect. Try again.",
+        "connectionLost": "The connection dropped. Try again.",
+        "rate_limited": "Too many attempts. Try again later.",
+        "not_configured": "Voice ordering is not available right now.",
+        "no_products": "Voice ordering needs a supplier whose products are available to you.",
+        "pending": "Voice ordering opens once your business is approved.",
+        "invalid": "Something was wrong with the request. Try again.",
+        "unknown": "Something went wrong. Try again."
+      }
+    }
   },
   "admin": {
     "overviewTitle": "Overview",
@@ -2061,6 +2128,7 @@
             "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry).",
             "If you turn on push notifications, your browser's push service (Google, Apple, Mozilla or Microsoft, depending on the browser) delivers them. The messages are encrypted so that only your browser can read them; the service sees that a message was sent to your browser.",
             "When you remove the background from a product photo, your browser downloads a helper model file once from Hugging Face, which therefore sees your IP address. The photo itself is processed on your device and sent nowhere.",
+            "Google (Gemini), when you order by voice: your voice is sent in real time to their service, which processes it and answers. We do not store the audio ourselves; we keep only the products added to your cart. The assistant sees only the names of the products available to you and of your suppliers, without prices.",
             "Public authorities, only in cases required by law."
           ],
           "closing": [

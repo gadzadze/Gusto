@@ -4,6 +4,8 @@ import { parseUnit, type ProductUnit } from "@/lib/catalog/units";
 // response schema sent to the model, and the clean-up of what comes back. No I/O here, so it is unit tested.
 
 export type CatalogItem = { id: string; name: string; unit: string; supplierId?: string; supplierName?: string };
+/** What the browser needs to turn the assistant's short ids back into products, and to let the buyer step quantities. */
+export type VoiceRef = { productId: string; minMilli: number; stepMilli: number };
 export type CatalogSupplier = { id: string; name: string };
 
 export const MAX_CATALOG_LINES = 100;
