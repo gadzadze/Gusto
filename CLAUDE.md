@@ -434,7 +434,7 @@ Black, burgundy and white.
   `brand` (burgundy fill), `outline` (the quiet **tonal** fill `--tonal`, despite the name), `brandTonal`, `danger`, `ghost`, `link`. Corners are 12px
   (`.rounded-btn`, squircle where supported); only `icon` buttons are round. A forward action ends with `ForwardArrow` (nudges 2px on hover, off under
   reduced motion). Pressed = `scale(0.98)`. Text on each fill is contrast-tested (`contrast.test.ts`). The landing page has its own matching buttons
-  (`.lp .btn`, burgundy `--cta`, flat, 12px, `.btn.go` adds the arrow); its two hero buttons always sit side by side (below 560px they share the width and the text may wrap); the hero button has no arrow.
+  (`.lp .btn`, burgundy `--cta`, flat, 12px, `.btn.go` adds the arrow); its two hero buttons always sit side by side (below 560px the hero is centred, with a 30px title and a 15px lead of at most 4 lines, and the buttons share the width); the hero button has no arrow.
 - **Burgundy on black fails contrast** (~2:1). Dark mode uses `#D46A7C`.
 - **Status badges** use muted tones plus a lucide icon:
   - `pending`: amber, clock icon;

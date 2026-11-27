@@ -106,8 +106,15 @@
 .lp .hero-copy .hero-cta { gap: 8px; flex-wrap: nowrap; align-items: stretch; max-width: 100%; }
 .lp .hero-copy .hero-cta .btn { padding: 0 14px; white-space: nowrap; }
 @media (max-width: 560px) {
+  .lp .hero-copy { align-items: center; text-align: center; gap: 22px; width: 100%; min-width: 0; }
+  .lp .hero-grid { grid-template-columns: minmax(0, 1fr); }
+  .lp .hero-copy .h1 { font-size: 30px; line-height: 1.22; }
+  .lp .hero-copy .lead { font-size: 15px; line-height: 1.6; }
   .lp .hero-copy .hero-cta { width: 100%; }
   .lp .hero-copy .hero-cta .btn { flex: 1 1 0; min-width: 0; padding: 0 10px; white-space: normal; text-align: center; line-height: 1.25; font-size: 14px; }
+}
+@media (max-width: 340px) {
+  .lp .hero-copy .lead { font-size: 13.5px; line-height: 1.55; }
 }
 .lp .composite { position: relative; height: 560px; }
 /* Dashboard window */
