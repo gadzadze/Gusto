@@ -11,7 +11,7 @@ import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { isOrderableQuantity, milliToInput, stepDown, stepUp } from "@/lib/quantity";
 import { cn } from "@/lib/utils";
 import { type LiveOrderLine } from "@/lib/voice/live";
-import { useLiveVoice } from "@/lib/voice/use-live-voice";
+import { useLiveVoice, type LiveSession } from "@/lib/voice/use-live-voice";
 import type { VoiceRef } from "@/lib/voice/order-parse";
 
 type Separator = "." | ",";
@@ -21,6 +21,17 @@ export type VoiceSupplier = { name: string; count: number };
 type View = "talk" | "review";
 export type VoiceLine = LiveOrderLine & { qty: number | null; unitOk: boolean };
 
+/**
+ * Where the assistant gets its session and where its lines go. The buyer's own is the default (their orderable products, their carts).
+ * The admin test page passes a made-up catalogue and a "nothing is stored" fill, so the same interface can be tried without a buyer.
+ */
+export type VoiceAdapter = {
+  start: () => Promise<{ ok: true; session: LiveSession; refs: Record<string, VoiceRef> } | { ok: false; error: string }>;
+  fill: (lines: { productId: string; qtyMilli: number }[]) => Promise<{ ok: true; skipped: string[] } | { ok: false; error: string }>;
+  /** After a clean finish, or "to cart": the buyer goes to the cart, the test page just closes. */
+  finish: () => void;
+};
+
 const KNOWN_ERRORS = ["startFailed", "connectionLost", "rate_limited", "not_configured", "no_products", "pending", "invalid"];
 
 /**
@@ -28,7 +39,7 @@ const KNOWN_ERRORS = ["startFailed", "connectionLost", "rate_limited", "not_conf
  * of the proposed order. The assistant only proposes; the lines go into the carts and the buyer sends each one through the normal
  * checkout. Layout rule: one column, one rhythm (8px steps), one accent colour, and the same dock in every state.
  */
-export function VoiceAssistant({ suppliers, onClose }: { suppliers: VoiceSupplier[]; onClose: () => void }) {
+export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: VoiceSupplier[]; onClose: () => void; adapter?: VoiceAdapter }) {
   const tu = useTranslations("unitNames");
   const locale = useLocale();
   const router = useRouter();
@@ -36,11 +47,22 @@ export function VoiceAssistant({ suppliers, onClose }: { suppliers: VoiceSupplie
   const unitLabel = (code: string | null) => (code && (PRODUCT_UNITS as readonly string[]).includes(code) ? tu(code as ProductUnit) : (code ?? ""));
 
   const [refs, setRefs] = useState<Record<string, VoiceRef>>({});
+  const use: VoiceAdapter = adapter ?? {
+    start: async () => {
+      const session = await startBuyerVoiceAction();
+      return session.ok ? { ok: true, session, refs: session.refs } : { ok: false, error: session.error };
+    },
+    fill: (list) => fillCartsFromVoiceAction({ lines: list }),
+    finish: () => {
+      router.push("/buyer/cart");
+      onClose();
+    },
+  };
   const voice = useLiveVoice(async () => {
-    const session = await startBuyerVoiceAction();
-    if (!session.ok) return { ok: false, error: session.error };
-    setRefs(session.refs);
-    return { ok: true, session };
+    const started = await use.start();
+    if (!started.ok) return { ok: false, error: started.error };
+    setRefs(started.refs);
+    return { ok: true, session: started.session };
   });
 
   const [view, setView] = useState<View>("talk");
@@ -67,15 +89,11 @@ export function VoiceAssistant({ suppliers, onClose }: { suppliers: VoiceSupplie
   async function confirm() {
     setBusy(true);
     setFillError(null);
-    const result = await fillCartsFromVoiceAction({
-      lines: lines.filter((l) => l.qty !== null).map((l) => ({ productId: refs[l.productId].productId, qtyMilli: l.qty as number })),
-    });
+    const result = await use.fill(lines.filter((l) => l.qty !== null).map((l) => ({ productId: refs[l.productId].productId, qtyMilli: l.qty as number })));
     setBusy(false);
     if (!result.ok) return setFillError(KNOWN_ERRORS.includes(result.error) ? result.error : "unknown");
-    if (result.skipped.length === 0) {
-      router.push("/buyer/cart");
-      onClose();
-    } else setSkipped(result.skipped);
+    if (result.skipped.length === 0) use.finish();
+    else setSkipped(result.skipped);
   }
 
   if (view === "review") {
@@ -88,10 +106,7 @@ export function VoiceAssistant({ suppliers, onClose }: { suppliers: VoiceSupplie
         skipped={skipped}
         errorKey={fillError}
         onConfirm={() => void confirm()}
-        onToCart={() => {
-          router.push("/buyer/cart");
-          onClose();
-        }}
+        onToCart={use.finish}
         onClose={onClose}
         unitLabel={unitLabel}
         separator={separator}

@@ -599,7 +599,6 @@
     },
     "pendingCount": "Suppliers pending review: {count}",
     "categories": {
-      "intro": "Categories are shared by all suppliers. An archived category can't be chosen for new products; existing ones stay unchanged.",
       "newPlaceholder": "New category",
       "add": "Add",
       "rename": "Rename",
@@ -911,7 +910,7 @@
       "unitAssumed": "No unit said, using the catalogue unit: {unit}",
       "live": {
         "title": "Live mode (experiment)",
-        "intro": "Talk to the assistant like on a phone call: it answers by voice and fills in the order as you speak. Headphones work best. The same made-up products are used.",
+        "intro": "The same full-screen assistant buyers get, fed with the made-up products above. Talk to it like on a phone call, then review the order. Nothing is put in a cart or sent. Headphones work best.",
         "start": "Start talking",
         "stop": "End",
         "connecting": "Connecting...",
@@ -925,7 +924,8 @@
         "startFailed": "Could not start live mode.",
         "connectionLost": "The connection was lost.",
         "testNote": "Test: nothing is sent.",
-        "transcriptNote": "The text is approximate: the assistant hears your voice directly."
+        "transcriptNote": "The text is approximate: the assistant hears your voice directly.",
+        "testSupplier": "Test supplier"
       },
       "supplier": "Supplier: {name}"
     }
