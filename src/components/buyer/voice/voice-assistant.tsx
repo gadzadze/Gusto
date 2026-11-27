@@ -4,7 +4,7 @@ import { ArrowUp, Check, ChevronDown, Keyboard, LoaderCircle, Mic, MicOff, Minus
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fillCartsFromVoiceAction, startBuyerVoiceAction } from "@/app/buyer/voice/actions";
 import { Button, ForwardArrow } from "@/components/ui/button";
 import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
@@ -39,7 +39,10 @@ const KNOWN_ERRORS = ["startFailed", "connectionLost", "rate_limited", "not_conf
  * of the proposed order. The assistant only proposes; the lines go into the carts and the buyer sends each one through the normal
  * checkout. Layout rule: one column, one rhythm (8px steps), one accent colour, and the same dock in every state.
  */
-export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: VoiceSupplier[]; onClose: () => void; adapter?: VoiceAdapter }) {
+/** How the assistant was opened: with a typed or tapped command to start from, or straight into listening. */
+export type VoiceLaunch = { text?: string; mic?: boolean };
+
+export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppliers: VoiceSupplier[]; onClose: () => void; adapter?: VoiceAdapter; launch?: VoiceLaunch }) {
   const tu = useTranslations("unitNames");
   const locale = useLocale();
   const router = useRouter();
@@ -64,6 +67,17 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
     setRefs(started.refs);
     return { ok: true, session: started.session };
   });
+
+  // Opened from the command bar: a typed or tapped command is sent at once (no microphone permission), a mic tap starts listening.
+  const launched = useRef(false);
+  useEffect(() => {
+    if (launched.current || !launch) return;
+    launched.current = true;
+    if (launch.text) {
+      void voice.start({ mic: false });
+      voice.sendText(launch.text);
+    } else if (launch.mic) void voice.start();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [view, setView] = useState<View>("talk");
   const [lines, setLines] = useState<VoiceLine[]>([]);
@@ -168,6 +182,7 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
   const t = useTranslations("buyer.voice");
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState("");
+  const flagged = order.filter((l) => l.unitCheck === "mismatch" || l.quantityMilli === null).length;
   const status = connecting ? t("connecting") : live ? (speaking ? t("answering") : t("listening")) : null;
   const shown = turns.slice(-2);
   const lastIndex = shown.length - 1;
@@ -209,6 +224,12 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
               ))}
             </div>
             <Ledger lines={order} unitLabel={unitLabel} separator={separator} />
+            {flagged > 0 ? (
+              <p role="status" className="mt-3 flex items-start gap-2 rounded-2xl bg-[var(--status-amber-bg)] px-4 py-3 text-sm text-[var(--status-amber-fg)]">
+                <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+                {t("proposalFlagged", { count: flagged })}
+              </p>
+            ) : null}
           </div>
         )}
         {errorKey ? (
@@ -221,6 +242,15 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
 
       {!blocked ? (
         <footer className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
+          {order.length > 0 ? (
+            <div className="mb-3 space-y-2">
+              <Button className="w-full" size="lg" onClick={onFinish}>
+                {t("reviewCart")}
+                <ForwardArrow />
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">{t("proposalNote")}</p>
+            </div>
+          ) : null}
           {typing && onSendText ? (
             <form
               className="mb-3 flex items-center gap-2"
@@ -274,8 +304,8 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
                 {connecting ? <LoaderCircle aria-hidden className="animate-spin motion-reduce:animate-none" /> : <Mic aria-hidden />}
               </button>
             </DockSlot>
-            <DockSlot label={live || order.length > 0 ? t("finish") : ""}>
-              {live || order.length > 0 ? (
+            <DockSlot label={live && order.length === 0 ? t("finish") : ""}>
+              {live && order.length === 0 ? (
                 <button type="button" onClick={onFinish} aria-label={t("finish")} className={ringButton}>
                   <Check aria-hidden />
                 </button>
@@ -398,7 +428,7 @@ function groupBySupplier<T extends { supplierName: string | null }>(items: T[]):
 /** What has been captured so far; folded away by default so the caption keeps the screen. */
 function Ledger({ lines, unitLabel, separator }: { lines: LiveOrderLine[]; unitLabel: (code: string | null) => string; separator: Separator }) {
   const t = useTranslations("buyer.voice");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const groups = useMemo(() => groupBySupplier(lines), [lines]);
   if (lines.length === 0) return null;
   return (

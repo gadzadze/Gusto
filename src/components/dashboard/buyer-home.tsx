@@ -3,7 +3,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import type * as React from "react";
 import { BuyerSearchForm } from "@/components/buyer/search-form";
 import type { VoiceSupplier } from "@/components/buyer/voice/voice-assistant";
-import { VoiceLauncher } from "@/components/buyer/voice/voice-launcher";
+import { VoiceLauncher, type VoiceChip } from "@/components/buyer/voice/voice-launcher";
 import { ListRow, ListSection } from "@/components/dashboard/list-section";
 import { OrderSteps } from "@/components/dashboard/order-progress";
 import Link from "next/link";
@@ -29,10 +29,12 @@ export type BuyerHomeProps = {
   now: Date;
   /** Given only when voice ordering is available to this buyer: adds the mic in the search field and a card under it. */
   voiceSuppliers?: VoiceSupplier[];
+  /** "The usual" shortcuts under the command bar, built from this buyer's own history. */
+  voiceChips?: VoiceChip[];
 };
 
 /** The buyer's home: search, what is due, what is on its way, and the suppliers to order from. */
-export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, topSection, now, voiceSuppliers }: BuyerHomeProps) {
+export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, topSection, now, voiceSuppliers, voiceChips }: BuyerHomeProps) {
   const fmt = await getFormats();
   const t = await getTranslations("buyer");
   const tr = await getTranslations("regular");
@@ -47,8 +49,8 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
   const regularShown = dueToday.length > 0 ? dueToday : regular.slice(0, 3);
   return (
     <div className="space-y-8">
-      <BuyerSearchForm voiceSuppliers={voiceSuppliers} />
-      {voiceSuppliers ? <VoiceLauncher variant="card" suppliers={voiceSuppliers} /> : null}
+      {/* With the assistant on, the command bar is the first thing; plain search is the Search tab. Without it, the search field. */}
+      {voiceSuppliers ? <VoiceLauncher variant="bar" suppliers={voiceSuppliers} chips={voiceChips} /> : <BuyerSearchForm />}
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-[1.55fr_1fr]">
         <div className="space-y-8">
           {regular.length > 0 ? (

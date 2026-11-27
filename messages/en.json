@@ -541,7 +541,13 @@
         "unknown": "Something went wrong. Try again."
       },
       "textPlaceholder": "Type what you need, e.g. 2 kg sulguni",
-      "textSend": "Tell the assistant"
+      "textSend": "Tell the assistant",
+      "barPlaceholder": "Tell me what you need",
+      "usualChip": "The usual: {name}",
+      "reviewCart": "Review cart",
+      "proposalNote": "Nothing is sent until you confirm.",
+      "proposalFlagged": "To check: {count}",
+      "barLabel": "Ask the assistant"
     }
   },
   "admin": {
