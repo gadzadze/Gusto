@@ -401,6 +401,27 @@ dialog[open]::backdrop {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
+  /* Taps answer at once (2026-11-27, from the UI/UX Pro Max guidance "Tap Delay"): touch-action: manipulation drops the
+     double-tap-to-zoom wait on controls, and the browser's own grey tap rectangle is off because every control has its
+     own pressed state (a second, square highlight on top of ours looked like a glitch). Pinch zoom still works. */
+  a,
+  button,
+  summary,
+  label,
+  select,
+  input,
+  textarea,
+  [role="button"],
+  [role="tab"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Headings break into even lines instead of leaving one short word on the last (Georgian words are long). */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
 }
 
 

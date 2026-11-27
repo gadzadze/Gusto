@@ -13,7 +13,10 @@ export async function BuyerSearchForm({ defaultValue = "", voiceSuppliers }: { d
   return (
     <form method="get" action="/buyer/search" role="search" className="relative">
       <label htmlFor="buyer-q" className="sr-only">{tc("search")}</label>
-      <Search aria-hidden className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+      {/* The icon is the submit button: a visible submit for virtual keyboards without a second control beside the field. */}
+      <button type="submit" aria-label={tc("search")} className="absolute left-0.5 top-0.5 inline-flex size-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground [&_svg]:size-5">
+        <Search aria-hidden />
+      </button>
       <Input
         id="buyer-q"
         name="q"
