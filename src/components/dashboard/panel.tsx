@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type * as React from "react";
 import { FreshRow } from "@/components/motion/fresh-row";
@@ -24,32 +25,33 @@ export function Panel({
   className?: string;
   children: React.ReactNode;
 }) {
+  // Light on purpose (2026-11-27): no box around the block, the heading sits on the page, rows are separated by one hairline.
+  // Only the "accent" tone (something due today) keeps a soft fill so it still stands out.
+  const accent = tone === "accent";
   return (
-    <section
-      aria-labelledby={id}
-      className={cn("rounded-xl border bg-card", tone === "accent" ? "border-brand/30 bg-brand-soft" : "border-border", className)}
-    >
-      <header className={cn("flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-4 py-3", tone === "accent" ? "border-brand/20" : "border-border")}>
-        <h2 id={id} className="flex items-center gap-2 text-sm font-semibold">
+    <section aria-labelledby={id} className={cn(accent && "rounded-xl bg-brand-soft px-4 pb-1", className)}>
+      <header className={cn("flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-3", !accent && "px-0")}>
+        <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
           {title}
           {count !== undefined ? (
             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold tabular-nums text-brand">{count}</span>
           ) : null}
         </h2>
         {action ? (
-          <Link href={action.href} className="whitespace-nowrap text-xs font-medium text-brand underline-offset-2 hover:underline">
+          <Link href={action.href} className="inline-flex min-h-11 items-center gap-0.5 whitespace-nowrap text-sm text-muted-foreground transition-colors hover:text-foreground">
             {action.label}
+            <ChevronRight aria-hidden className="size-4" />
           </Link>
         ) : aside ? (
-          <span className="whitespace-nowrap text-xs text-muted-foreground">{aside}</span>
+          <span className="whitespace-nowrap text-sm text-muted-foreground">{aside}</span>
         ) : null}
       </header>
-      {children}
+      <div className={cn("border-t", accent ? "border-brand/20" : "border-border")}>{children}</div>
     </section>
   );
 }
 
-const rowClass = "flex flex-wrap items-center gap-x-3.5 gap-y-2.5 border-b border-border px-4 py-3 last:border-b-0";
+const rowClass = "flex flex-wrap items-center gap-x-3.5 gap-y-2.5 border-b border-border py-3 last:border-b-0";
 
 /** `freshId`: a row that can arrive while the page is open (a new order); it gets a short highlight when it does. */
 export function PanelRow({ className, freshId, children }: { className?: string; freshId?: string; children: React.ReactNode }) {

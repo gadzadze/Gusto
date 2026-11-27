@@ -355,7 +355,7 @@
     },
     "today": {
       "queueTitle": "Waiting for your answer",
-      "queueAll": "All orders",
+      "queueAll": "All",
       "queueEmpty": "No orders are waiting for an answer.",
       "review": "Review",
       "items": "{count, plural, one {# item} other {# items}}",

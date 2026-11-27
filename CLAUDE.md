@@ -1083,8 +1083,10 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   strip, no totals line), recent orders (the reorder is an icon button, `ReorderButton iconOnly`; a status shows only when it is not "delivered"),
   often-ordered products (`ProductCard layout="row"`: small picture, name, price, a round + that becomes the stepper; the supplier name only when the
   buyer has more than one) and suppliers (a row each, whole row is the link). Status in lists is `OrderStatusText` (dot + word), not the coloured
-  `OrderStatusBadge`, which stays on the detail pages. **A new home block should be a `ListSection`, not a `Panel`** (`Panel` is the supplier and
-  admin dashboards' look and has not been calmed yet).
+  `OrderStatusBadge`, which stays on the detail pages. **`Panel` (supplier and admin dashboards) is light in the same way** (2026-11-27, "lightweight"): no box
+  around the block, the heading on the page with a short "All" link and a chevron, one hairline above the rows, rows with no side padding; only
+  `tone="accent"` keeps a soft fill. `StatTile` has no border (a faint fill, 24px number) and `Card` a softer border. Anything placed inside a
+  `Panel` must not add its own horizontal padding.
 - **Admin overview**: "needs attention" (new supplier requests, businesses waiting for verification, stalled notifications
   via `checkHealth`, or an all-clear line), then pilot health (a bar only where there is a real ratio, the reorder rate)
   and the 30-day order split.

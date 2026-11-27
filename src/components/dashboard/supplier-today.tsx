@@ -73,7 +73,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
           <div className="space-y-5">
             <Panel id="queue" title={tt("queueTitle")} count={counts.new} action={{ href: "/supplier/orders", label: tt("queueAll") }}>
               {queue.length === 0 ? (
-                <p className="px-4 py-5 text-sm text-muted-foreground">{tt("queueEmpty")}</p>
+                <p className="py-5 text-sm text-muted-foreground">{tt("queueEmpty")}</p>
               ) : (
                 queue.map((o) => {
                   const late = now.getTime() - o.createdAt.getTime() > LATE_AFTER_MS;
@@ -99,7 +99,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
 
             <Panel id="deliveries" title={tt("deliveriesTitle")}>
               {deliveries.length === 0 ? (
-                <p className="px-4 py-5 text-sm text-muted-foreground">{tt("deliveriesEmpty")}</p>
+                <p className="py-5 text-sm text-muted-foreground">{tt("deliveriesEmpty")}</p>
               ) : (
                 deliveries.map((d) => {
                   const isToday = d.date === clock.today;
@@ -144,8 +144,8 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
           </div>
 
           <div className="space-y-5">
-            <section aria-labelledby="value" className="rounded-xl border border-border bg-card">
-              <div className="space-y-1 border-b border-border px-4 py-4">
+            <section aria-labelledby="value">
+              <div className="space-y-1 border-b border-border py-4">
                 <h2 id="value" className="text-sm text-muted-foreground">{td("value")}</h2>
                 <p className="text-3xl font-semibold tabular-nums tracking-tight">{fmt.money(metrics.orderValue30dMinor, metrics.currency)}</p>
                 <div className="py-2">
@@ -169,7 +169,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                 </details>
               </div>
               <div className="divide-y divide-border">
-                <div className="flex items-center justify-between gap-4 px-4 py-3">
+                <div className="flex items-center justify-between gap-4 py-3">
                   <div className="min-w-0">
                     <h3 className="text-sm">{td("week")}</h3>
                     <p className="text-xs text-muted-foreground">
@@ -178,7 +178,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                   </div>
                   <p className="text-2xl font-semibold tabular-nums">{metrics.ordersThisWeek}</p>
                 </div>
-                <div className="flex items-center justify-between gap-4 px-4 py-3">
+                <div className="flex items-center justify-between gap-4 py-3">
                   <div className="min-w-0">
                     <h3 className="text-sm">{td("repeat")}</h3>
                     <p className="text-xs text-muted-foreground">{td("repeatHint")}</p>
@@ -190,7 +190,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
 
             <Panel id="top" title={td("top")}>
               {metrics.topProducts.length === 0 ? (
-                <p className="px-4 py-5 text-sm text-muted-foreground">{td("topEmpty")}</p>
+                <p className="py-5 text-sm text-muted-foreground">{td("topEmpty")}</p>
               ) : (
                 metrics.topProducts.map((p, i) => (
                   <BarRow
@@ -201,7 +201,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                   />
                 ))
               )}
-              <p className="px-4 pb-3 text-xs text-muted-foreground">{td("topHint")}</p>
+              <p className="pb-3 text-xs text-muted-foreground">{td("topHint")}</p>
             </Panel>
           </div>
         </div>
