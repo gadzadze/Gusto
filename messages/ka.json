@@ -468,7 +468,8 @@
       "neverOrdered": "ჯერ არ შეგიკვეთიათ",
       "catalog": "კატალოგი",
       "findBusiness": "მომწოდებლის პოვნა",
-      "openTotal": "{amount} სულ, ჯერ არ მიტანილა"
+      "openTotal": "{amount} სულ, ჯერ არ მიტანილა",
+      "all": "ყველა"
     },
     "emptyFind": "მომწოდებლის პოვნა",
     "emptyInvite": "მომწოდებლის მოწვევა",

@@ -146,13 +146,25 @@ export function BottomNav(props: Props) {
   const t = useTranslations("nav");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  // The tab you pressed becomes the open one at once, while the page is still being prepared (the old page stays on screen
+  // until the new one is ready). `from` ties the choice to the page it was made on, so it lapses by itself when the route changes.
+  const [tapped, setTapped] = useState<{ href: string; from: string } | null>(null);
   const badges = useNavBadges();
   const all = itemsFor(props.area, props.homeHref, props.showAdminLink).filter((item) => !item.inAccountMenuOnPhone);
   const overflow = all.length > BOTTOM_SLOTS;
   const primary = overflow ? all.slice(0, BOTTOM_SLOTS - 1) : all;
   const rest = overflow ? all.slice(BOTTOM_SLOTS - 1) : [];
-  const restActive = rest.some((item) => isActive(pathname, item.href, props.area));
+  const tappedHref = tapped && tapped.from === pathname ? tapped.href : null;
+  const tabActive = (href: string) => (tappedHref !== null ? href === tappedHref : isActive(pathname, href, props.area));
+  const restActive = rest.some((item) => tabActive(item.href));
   const restBadge = rest.some((item) => (badges[item.href] ?? 0) > 0);
+
+  // A navigation that never arrives (offline, an error) must not leave the pill on a page we are not on.
+  useEffect(() => {
+    if (!tapped) return;
+    const timer = window.setTimeout(() => setTapped(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [tapped]);
 
   useEffect(() => {
     if (!open) return;
@@ -174,6 +186,9 @@ export function BottomNav(props: Props) {
       active ? "bg-brand-soft text-brand" : "text-muted-foreground",
     );
   // Tapping the tab you are already on goes back to the top of the page instead of reloading it.
+  const rememberTap = (href: string) => {
+    if (pathname !== href) setTapped({ href, from: pathname });
+  };
   const toTop = (event: React.MouseEvent, href: string) => {
     if (pathname !== href) return;
     event.preventDefault();
@@ -190,13 +205,16 @@ export function BottomNav(props: Props) {
             className="fixed inset-x-2 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 rounded-3xl border border-border bg-background p-2 shadow-lg md:hidden print:hidden"
           >
             {rest.map((item) => {
-              const active = isActive(pathname, item.href, props.area);
+              const active = tabActive(item.href);
               return (
                 <li key={item.href + item.labelKey}>
                   <Link
                     href={item.href}
                     aria-current={active ? "page" : undefined}
-                    onClick={() => setOpen(false)}
+                    onClick={() => {
+                      setOpen(false);
+                      rememberTap(item.href);
+                    }}
                     className={cn(
                       "relative isolate flex min-h-11 items-center gap-3 rounded-md px-3 text-sm font-medium",
                       active ? "bg-brand-soft text-brand" : "text-foreground",
@@ -219,7 +237,7 @@ export function BottomNav(props: Props) {
       >
         <ul className="pointer-events-auto relative mx-auto flex max-w-md rounded-full border border-border bg-background/85 shadow-lg backdrop-blur-md [transform:translateZ(0)]">
           {primary.map((item) => {
-            const active = isActive(pathname, item.href, props.area);
+            const active = tabActive(item.href);
             const count = badges[item.href] ?? 0;
             return (
               <li key={item.href + item.labelKey} className={tabItem(active)}>
@@ -228,12 +246,12 @@ export function BottomNav(props: Props) {
                   aria-current={active ? "page" : undefined}
                   onClick={(event) => {
                     setOpen(false);
+                    rememberTap(item.href);
                     toTop(event, item.href);
                   }}
                   aria-label={count > 0 ? t("withCount", { label: t(item.labelKey), count }) : t(item.labelKey)}
                   className={tab(active)}
                 >
-                  <PendingHighlight />
                   <span className="relative">
                     <item.icon aria-hidden strokeWidth={active ? 2.4 : 2} className="size-5" />
                     <ChangePulse value={count} className="absolute -right-3 -top-1.5">
@@ -247,7 +265,7 @@ export function BottomNav(props: Props) {
                       ) : null}
                     </ChangePulse>
                   </span>
-                  {active ? <span className="min-w-0 animate-in-soft [hyphens:manual]">{barLabel(item.labelKey)}</span> : null}
+                  {active ? <span className="min-w-0 animate-in-late [hyphens:manual]">{barLabel(item.labelKey)}</span> : null}
                 </Link>
               </li>
             );
@@ -266,7 +284,7 @@ export function BottomNav(props: Props) {
                   <Ellipsis aria-hidden className="size-5" />
                   {restBadge ? <span aria-hidden className="absolute -right-1.5 -top-1 size-2.5 rounded-full bg-brand" /> : null}
                 </span>
-                {restActive || open ? <span className="min-w-0 animate-in-soft">{t("more")}</span> : null}
+                {restActive || open ? <span className="min-w-0 animate-in-late">{t("more")}</span> : null}
               </button>
             </li>
           ) : null}

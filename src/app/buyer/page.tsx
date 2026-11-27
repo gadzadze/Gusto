@@ -1,10 +1,10 @@
 import { Store } from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductCard } from "@/components/buyer/product-card";
 import { toProductViews } from "@/components/buyer/product-view";
 import { BuyerHome } from "@/components/dashboard/buyer-home";
+import { ListSection } from "@/components/dashboard/list-section";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { requireBuyer } from "@/server/auth/guards";
@@ -17,7 +17,8 @@ export default async function BuyerDashboardPage() {
   const t = await getTranslations("buyer");
   return (
     <>
-      <PageHeader title={t("dashboardTitle")} />
+      {/* The company name is in the header and the open tab says "Home", so the page has no title of its own; screen readers still get one. */}
+      <h1 className="sr-only">{t("dashboardTitle")}</h1>
       <Dashboard />
     </>
   );
@@ -62,22 +63,11 @@ async function Dashboard() {
   );
   const topSection =
     topViews.length > 0 ? (
-      <section className="space-y-3" aria-labelledby="top-products">
-        <div>
-          <h2 id="top-products" className="text-sm font-semibold">{td("topTitle")}</h2>
-          <p className="text-xs text-muted-foreground">{td("topHint")}</p>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          {topViews.map(({ view, entry }) => (
-            <div key={view.id} className="space-y-1">
-              <ProductCard product={view} />
-              <p className="px-1 text-xs text-muted-foreground">
-                {td("from", { supplier: entry.supplier.name })} · {td("orderedTimes", { count: entry.orderCount })}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <ListSection id="top-products" title={td("topTitle")}>
+        {topViews.map(({ view, entry }) => (
+          <ProductCard key={view.id} product={view} layout="row" caption={suppliers.length > 1 ? entry.supplier.name : undefined} />
+        ))}
+      </ListSection>
     ) : null;
   return (
     <BuyerHome

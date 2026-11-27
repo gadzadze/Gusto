@@ -470,9 +470,12 @@ Black, burgundy and white.
   stays on it, and `loadingLabel` (`common.working`, or a "saving" string) is read to screen readers. `asChild` buttons get the
   same guard and attributes (a disabled link also leaves the tab order). **A `Button` carries no event handler of its own unless it is loading or the caller passes one**: pages render it on the server, where a function prop is an error (this broke every page once). Use `loading` on the one button that started the action, never on siblings that merely share
   `pending` and never on a button that only opens a form. Buttons and nav links shrink slightly while pressed (off under reduced
-  motion); an invisible 2px margin (`before:-inset-0.5`) keeps the full-size tap area so an edge tap is not lost. Every nav link
-  (sidebar, bottom tabs and the phone "More" list) shows `PendingHighlight` (`useLinkStatus`) while its page is being prepared,
-  so the tap is acknowledged before the page arrives (`tests/unit/button.test.ts` guards the button part).
+  motion); an invisible 2px margin (`before:-inset-0.5`) keeps the full-size tap area so an edge tap is not lost. The sidebar
+  links and the phone "More" list show `PendingHighlight` (`useLinkStatus`) while their page is being prepared; **the bottom tabs do not**: the
+  pressed tab becomes the open one at once (`BottomNav` `tapped`, tied to the page it was pressed on so it lapses when the route changes, 6 s
+  safety timeout), because a highlight drawn inside the pill had no rounded shape (a hard pink square, seen in a recording) and the pill itself
+  only moved when the new page arrived. The open tab's name fades in 90 ms after its pill starts to grow (`.animate-in-late`) so it never wraps
+  while the pill is narrow (`tests/unit/button.test.ts` guards the button part).
 - **Everything comes from somewhere** (2026-11-23; the principle from a design post on spatial continuity): panels and
   sheets animate from where they belong, set per dialog with `data-motion` (`sheet`: rises from the bottom on a phone,
   pops in centred above; `side`: the review panel; `top`: the command palette; `menu`: the account menu), in plain CSS
@@ -1069,9 +1072,15 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   with search, bell and one account button (Popover API) that holds Administration (platform admins), Business settings (suppliers; the nav label `nav.settings`), team,
   change password, the theme choice and sign out; the sidebar still shows them directly. A buyer has no header magnifier: the
   Search tab is their one place to search.
-- **Buyer home**: search, regular orders (accent block when due today), "in progress" orders with a Sent / Confirmed /
-  Delivered strip and the agreed delivery day (with the open total under the list), recent orders with reorder (the ones already in progress are not repeated; on a phone the button sits under the text), often-ordered products, suppliers with the
-  last order date (`lastOrderDates`) and "find a supplier".
+- **Buyer home** (calmed 2026-11-27 after a phone recording: "messy, interface noise"): no page title (the header names the company and the open tab says
+  Home; an `sr-only` h1 remains), one rounded search field (icon inside, no extra button, the mic at its end when voice ordering is on), then
+  **plain list sections** (`components/dashboard/list-section.tsx`: a small heading, an "All" link, hairline-divided rows, no card around the
+  whole and nothing nested in a box): regular orders, in progress (supplier name, then a status dot + word and the number and total; no progress
+  strip, no totals line), recent orders (the reorder is an icon button, `ReorderButton iconOnly`; a status shows only when it is not "delivered"),
+  often-ordered products (`ProductCard layout="row"`: small picture, name, price, a round + that becomes the stepper; the supplier name only when the
+  buyer has more than one) and suppliers (a row each, whole row is the link). Status in lists is `OrderStatusText` (dot + word), not the coloured
+  `OrderStatusBadge`, which stays on the detail pages. **A new home block should be a `ListSection`, not a `Panel`** (`Panel` is the supplier and
+  admin dashboards' look and has not been calmed yet).
 - **Admin overview**: "needs attention" (new supplier requests, businesses waiting for verification, stalled notifications
   via `checkHealth`, or an all-clear line), then pilot health (a bar only where there is a real ratio, the reorder rate)
   and the 30-day order split.

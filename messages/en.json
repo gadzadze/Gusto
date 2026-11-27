@@ -468,7 +468,8 @@
       "neverOrdered": "No orders yet",
       "catalog": "Catalog",
       "findBusiness": "Find a supplier",
-      "openTotal": "{amount} in total, not yet delivered"
+      "openTotal": "{amount} in total, not yet delivered",
+      "all": "All"
     },
     "emptyFind": "Find a supplier",
     "emptyInvite": "Invite a supplier",

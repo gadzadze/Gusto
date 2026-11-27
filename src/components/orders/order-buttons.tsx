@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { cancelOrderAction, reorderAction } from "@/app/buyer/orders/actions";
 
-export function ReorderButton({ orderId, size = "default" }: { orderId: string; size?: "default" | "sm" }) {
+export function ReorderButton({ orderId, size = "default", iconOnly = false }: { orderId: string; size?: "default" | "sm"; iconOnly?: boolean }) {
   const t = useTranslations("orders");
   const tc = useTranslations("common");
   const [pending, startTransition] = useTransition();
@@ -15,8 +15,11 @@ export function ReorderButton({ orderId, size = "default" }: { orderId: string; 
   return (
     <span className="inline-flex flex-col gap-1">
       <Button
-        variant="outline"
-        size={size}
+        variant={iconOnly ? "ghost" : "outline"}
+        size={iconOnly ? "icon" : size}
+        aria-label={iconOnly ? t("orderAgain") : undefined}
+        title={iconOnly ? t("orderAgain") : undefined}
+        className={iconOnly ? "rounded-full text-muted-foreground hover:text-foreground" : undefined}
         loading={pending}
         loadingLabel={tc("working")}
         onClick={() =>
@@ -27,7 +30,7 @@ export function ReorderButton({ orderId, size = "default" }: { orderId: string; 
         }
       >
         <RotateCcw />
-        {t("orderAgain")}
+        {iconOnly ? null : t("orderAgain")}
       </Button>
       {error ? <span className="text-xs text-destructive">{t("errors.unknown")}</span> : null}
     </span>

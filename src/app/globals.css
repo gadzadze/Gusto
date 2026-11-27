@@ -139,6 +139,10 @@
 .animate-in-soft {
   animation: skeleton-in 120ms ease-out backwards;
 }
+/* The open tab's name in the bottom bar: it appears once its pill has started to grow, so it never wraps while the pill is narrow. */
+.animate-in-late {
+  animation: skeleton-in 140ms ease-out 90ms backwards;
+}
 .skeleton {
   animation:
     skeleton-in 200ms ease-out 150ms backwards,
@@ -150,6 +154,7 @@ main > :not([data-page-header]):not([aria-hidden="true"]) {
 @media (prefers-reduced-motion: reduce) {
   .skeleton,
   .animate-in-soft,
+  .animate-in-late,
   main > :not([data-page-header]):not([aria-hidden="true"]) {
     animation: none;
   }
