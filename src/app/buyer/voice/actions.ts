@@ -44,7 +44,7 @@ export async function startBuyerVoiceAction(): Promise<BuyerVoiceSession> {
     await consumeRateLimit(RATE_LIMITS.voiceBuyer, ctx.userId);
     const model = process.env.GEMINI_LIVE_MODEL || LIVE_MODEL;
     const token = await mintLiveToken(LIVE_MAX_SECONDS + 60);
-    return { ok: true as const, token, setup: buildLiveSetup(catalog.items, model, "buyer"), items: catalog.items, refs: catalog.refs, suppliers: catalog.suppliers, maxSeconds: LIVE_MAX_SECONDS };
+    return { ok: true as const, token, setup: buildLiveSetup(catalog.items, model, "buyer", catalog.previous), items: catalog.items, refs: catalog.refs, suppliers: catalog.suppliers, maxSeconds: LIVE_MAX_SECONDS };
   });
 }
 

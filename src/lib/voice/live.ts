@@ -37,7 +37,7 @@ export const GEORGIAN_SPEAKING = [
 
 export type LiveMode = "test" | "buyer";
 
-export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "test"): string {
+export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "test", previous = ""): string {
   const catalogue = catalogueText(items);
   return [
     "You are a voice assistant inside a wholesale ordering app in Georgia. The person talking is a restaurant or cafe buyer ordering from ONE supplier.",
@@ -58,9 +58,13 @@ export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "te
     mode === "test"
       ? "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way."
       : "If the buyer asks about sending, a button, or where to click, answer exactly: «გაგზავნამდე შეკვეთას ეკრანზე გადაამოწმებთ.» Never mention sending, buttons or pressing anything in any other way.",
+    previous
+      ? "When the buyer says 'the usual', 'same as last time' or 'as before', start from the previous order of that supplier listed below (copy its lines into the order), then apply what they change ('but no cream', 'double the tomatoes'). Say in one sentence what you copied. Never invent a previous order that is not listed."
+      : "",
     "",
     "Catalogue (id | name | unit). An 'also said' list after a product is how this buyer usually names it: treat those words as that product.",
     catalogue,
+    previous ? `\nPrevious order per supplier (id quantity unit):\n${previous}` : "",
   ].join("\n");
 }
 
@@ -105,12 +109,12 @@ export function liveVocabulary(items: CatalogItem[]): string[] {
 }
 
 /** The first message after the socket opens. Kept on the server so the instructions are built next to the rules. */
-export function buildLiveSetup(items: CatalogItem[], model: string, mode: LiveMode = "test") {
+export function buildLiveSetup(items: CatalogItem[], model: string, mode: LiveMode = "test", previous = "") {
   return {
     setup: {
       model: `models/${model}`,
       generationConfig: { responseModalities: ["AUDIO"] },
-      systemInstruction: { parts: [{ text: liveSystemInstruction(items, mode) }] },
+      systemInstruction: { parts: [{ text: liveSystemInstruction(items, mode, previous) }] },
       tools: [{ functionDeclarations: [SET_ORDER_DECLARATION] }],
       inputAudioTranscription: { languageCodes: ["ka-GE"], customVocabulary: liveVocabulary(items) },
       outputAudioTranscription: {},

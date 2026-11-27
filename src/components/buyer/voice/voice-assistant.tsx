@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, Keyboard, LoaderCircle, Mic, MicOff, Minus, Plus, TriangleAlert, X } from "lucide-react";
+import { ArrowUp, Check, ChevronDown, Keyboard, LoaderCircle, Mic, MicOff, Minus, Plus, TriangleAlert, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -126,6 +126,11 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
       blocked={blocked}
       errorKey={errorKey}
       onStart={() => void voice.start()}
+      onSendText={(text) => {
+        // Typing needs no microphone: a session started by a typed line asks for no permission.
+        if (voice.phase === "idle") void voice.start({ mic: false });
+        voice.sendText(text);
+      }}
       onRetry={() => {
         voice.clearError();
         void voice.start();
@@ -149,6 +154,8 @@ type TalkProps = {
   blocked: boolean;
   errorKey: string | null;
   onStart: () => void;
+  /** A command typed instead of spoken. Without it the Type button is not shown. */
+  onSendText?: (text: string) => void;
   onRetry: () => void;
   onFinish: () => void;
   onClose: () => void;
@@ -157,8 +164,10 @@ type TalkProps = {
 };
 
 /** The talking view, as plain props so a fixture can render it without a microphone or a socket. */
-export function TalkView({ suppliers, connecting, live, speaking, turns, order, levels, blocked, errorKey, onStart, onRetry, onFinish, onClose, unitLabel, separator }: TalkProps) {
+export function TalkView({ suppliers, connecting, live, speaking, turns, order, levels, blocked, errorKey, onStart, onSendText, onRetry, onFinish, onClose, unitLabel, separator }: TalkProps) {
   const t = useTranslations("buyer.voice");
+  const [typing, setTyping] = useState(false);
+  const [draft, setDraft] = useState("");
   const status = connecting ? t("connecting") : live ? (speaking ? t("answering") : t("listening")) : null;
   const shown = turns.slice(-2);
   const lastIndex = shown.length - 1;
@@ -212,12 +221,43 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
 
       {!blocked ? (
         <footer className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
-          <Wave levels={levels} active={live} />
+          {typing && onSendText ? (
+            <form
+              className="mb-3 flex items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!draft.trim()) return;
+                onSendText(draft);
+                setDraft("");
+              }}
+            >
+              <input
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                maxLength={300}
+                placeholder={t("textPlaceholder")}
+                aria-label={t("textPlaceholder")}
+                className="min-h-12 min-w-0 flex-1 rounded-full border border-input bg-surface px-4 text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+              />
+              <button type="submit" aria-label={t("textSend")} className={cn(ringButton, "size-12 bg-brand text-brand-foreground")}>
+                <ArrowUp aria-hidden />
+              </button>
+            </form>
+          ) : (
+            <Wave levels={levels} active={live} />
+          )}
           <div className="mt-4 grid grid-cols-3 items-start">
             <DockSlot label={t("text")}>
-              <Link href="/buyer/search" onClick={onClose} aria-label={t("text")} className={ringButton}>
-                <Keyboard aria-hidden />
-              </Link>
+              {onSendText ? (
+                <button type="button" onClick={() => setTyping((v) => !v)} aria-label={t("text")} aria-pressed={typing} className={cn(ringButton, typing && "border-brand text-brand")}>
+                  <Keyboard aria-hidden />
+                </button>
+              ) : (
+                <Link href="/buyer/search" onClick={onClose} aria-label={t("text")} className={ringButton}>
+                  <Keyboard aria-hidden />
+                </Link>
+              )}
             </DockSlot>
             <DockSlot label={connecting ? t("connecting") : live ? t("listening") : t("speak")} strong>
               <button

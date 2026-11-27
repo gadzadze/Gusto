@@ -28,6 +28,7 @@ describe("voice catalogue for a buyer", () => {
     expect(names).not.toContain("[TEST] Voice hidden");
     expect(names).not.toContain("[TEST] Voice strangers");
 
+    expect(catalog.previous).toBe(""); // no earlier order yet
     const item = catalog.items.find((i) => i.name === "[TEST] Voice cheese")!;
     expect(item.id).toMatch(/^p\d+$/);
     expect(item.supplierId).toMatch(/^s\d+$/);

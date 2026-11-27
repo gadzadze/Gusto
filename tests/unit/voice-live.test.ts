@@ -85,6 +85,7 @@ describe("Georgian instructions", () => {
     expect(text).toContain("ორი (2) with ოცი (20)");
     expect(text).toContain("Confirm once, out loud, any quantity of 50 or more");
     expect(text).toContain("Say numbers as words, never as digits");
+    expect(text).toContain("Latin letters typed the way it sounds"); // typed commands
   });
 });
 

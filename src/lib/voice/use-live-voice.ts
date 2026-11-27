@@ -16,6 +16,8 @@ export type LiveStartResult = { ok: true; session: LiveSession } | { ok: false; 
 
 /** How many bars the level strip holds. */
 export const LEVEL_BARS = 40;
+/** The longest typed command that is sent. */
+const MAX_TYPED_CHARS = 300;
 
 function base64FromBytes(bytes: Uint8Array): string {
   let s = "";
@@ -45,6 +47,8 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
   const level = useRef(0);
   const closing = useRef(false);
   const live = useRef(false);
+  // Typed lines written before the session is ready are sent the moment it is.
+  const pendingText = useRef<string[]>([]);
 
   function stopPlayback() {
     for (const source of playing.current) {
@@ -62,6 +66,7 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
   function teardown() {
     closing.current = true;
     live.current = false;
+    pendingText.current = [];
     if (stopTimer.current) clearTimeout(stopTimer.current);
     if (meterTimer.current) clearInterval(meterTimer.current);
     stopTimer.current = null;
@@ -119,7 +124,21 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
     };
   }
 
-  async function start(): Promise<LiveSession | null> {
+  /** Writes a command instead of speaking it. Shown as the buyer's own line, answered like a spoken one. */
+  function sendText(raw: string) {
+    const text = raw.trim().slice(0, MAX_TYPED_CHARS);
+    if (!text) return;
+    boundary.current = true;
+    addText("you", text);
+    boundary.current = true;
+    const socket = ws.current;
+    if (live.current && socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ realtimeInput: { text } }));
+    else pendingText.current.push(text);
+  }
+
+  /** `mic: false` starts a session for typing only: no microphone permission is asked. */
+  async function start(options: { mic?: boolean } = {}): Promise<LiveSession | null> {
+    const useMic = options.mic !== false;
     setError(null);
     setTurns([]);
     setOrder([]);
@@ -146,36 +165,39 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
     if (!started.ok) return fail(started.error);
     const session = started.session;
 
-    let media: MediaStream;
-    try {
-      media = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-    } catch {
-      return fail("micDenied");
+    if (useMic) {
+      let media: MediaStream;
+      try {
+        media = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      } catch {
+        return fail("micDenied");
+      }
+      stream.current = media;
+      try {
+        await mic.audioWorklet.addModule("/voice-capture-worklet.js");
+      } catch {
+        return fail("startFailed");
+      }
+      const source = mic.createMediaStreamSource(media);
+      const capture = new AudioWorkletNode(mic, "voice-capture");
+      const mute = mic.createGain();
+      mute.gain.value = 0;
+      source.connect(capture);
+      capture.connect(mute);
+      mute.connect(mic.destination);
+      capture.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
+        const pcm = new Int16Array(event.data);
+        let sum = 0;
+        for (let i = 0; i < pcm.length; i += 4) sum += (pcm[i] / 0x8000) ** 2;
+        level.current = Math.min(1, Math.sqrt(sum / Math.max(1, pcm.length / 4)) * 5);
+        const socket = ws.current;
+        if (!live.current || !socket || socket.readyState !== WebSocket.OPEN) return;
+        socket.send(JSON.stringify({ realtimeInput: { audio: { data: base64FromBytes(new Uint8Array(event.data)), mimeType: "audio/pcm;rate=16000" } } }));
+      };
+      // One bar per tick; the strip scrolls like a tape, so it needs no animation loop.
+      meterTimer.current = setInterval(() => setLevels((prev) => [...prev.slice(1), level.current]), 90);
+
     }
-    stream.current = media;
-    try {
-      await mic.audioWorklet.addModule("/voice-capture-worklet.js");
-    } catch {
-      return fail("startFailed");
-    }
-    const source = mic.createMediaStreamSource(media);
-    const capture = new AudioWorkletNode(mic, "voice-capture");
-    const mute = mic.createGain();
-    mute.gain.value = 0;
-    source.connect(capture);
-    capture.connect(mute);
-    mute.connect(mic.destination);
-    capture.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
-      const pcm = new Int16Array(event.data);
-      let sum = 0;
-      for (let i = 0; i < pcm.length; i += 4) sum += (pcm[i] / 0x8000) ** 2;
-      level.current = Math.min(1, Math.sqrt(sum / Math.max(1, pcm.length / 4)) * 5);
-      const socket = ws.current;
-      if (!live.current || !socket || socket.readyState !== WebSocket.OPEN) return;
-      socket.send(JSON.stringify({ realtimeInput: { audio: { data: base64FromBytes(new Uint8Array(event.data)), mimeType: "audio/pcm;rate=16000" } } }));
-    };
-    // One bar per tick; the strip scrolls like a tape, so it needs no animation loop.
-    meterTimer.current = setInterval(() => setLevels((prev) => [...prev.slice(1), level.current]), 90);
 
     const socket = new WebSocket(`${WS_URL}?access_token=${encodeURIComponent(session.token)}`);
     ws.current = socket;
@@ -204,6 +226,7 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
         if (message.setupComplete) {
           live.current = true;
           setPhase("live");
+          for (const text of pendingText.current.splice(0)) socket.send(JSON.stringify({ realtimeInput: { text } }));
           stopTimer.current = setTimeout(() => {
             teardown();
             setPhase("idle");
@@ -238,5 +261,5 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
     setPhase("idle");
   }
 
-  return { phase, turns, order, deliveryDay, error, speaking, levels, start, stop, clearError: () => setError(null) };
+  return { phase, turns, order, deliveryDay, error, speaking, levels, start, stop, sendText, clearError: () => setError(null) };
 }
