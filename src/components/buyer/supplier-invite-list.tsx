@@ -27,7 +27,7 @@ export function SupplierInviteList({ rows }: { rows: InviteRow[] }) {
     return t(`state.${r.state}`);
   };
   return (
-    <ul className="max-w-xl divide-y divide-border rounded-xl border border-border">
+    <ul className="max-w-xl glass">
       {rows.map((r) => (
         <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <div className="min-w-0">

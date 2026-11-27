@@ -74,7 +74,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
         <div className="min-h-0 flex-1 overflow-y-auto px-3">
           <SidebarNav {...navProps} />
         </div>
-        <div className="border-t border-border p-3">
+        <div className="p-3">
           {email ? <p className="truncate px-3 pb-1 text-xs text-muted-foreground" title={email}>{email}</p> : null}
           <Link href="/account/password" className="block px-3 pb-2 text-xs text-muted-foreground underline-offset-2 hover:underline">
             {t("nav.changePassword")}
@@ -103,7 +103,7 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="[view-transition-name:app-header] flex items-center justify-between gap-3 border-b border-border px-3 py-3 min-[380px]:px-4 md:hidden print:hidden">
+        <header className="[view-transition-name:app-header] flex items-center justify-between gap-3 px-3 py-3 min-[380px]:px-4 md:hidden print:hidden">
           <div className="flex min-w-0 items-center">
             {sides && sides.length > 1 ? <HeaderSideSwitch sides={sides} addCompany={addCompany} /> : <span className="truncate text-base font-semibold">{title ?? roleLabel}</span>}
           </div>

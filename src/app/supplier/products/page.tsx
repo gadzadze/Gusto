@@ -203,7 +203,7 @@ async function ProductList({ searchParams }: Pick<PageProps<"/supplier/products"
             </Table>
           </div>
           {/* Mobile list */}
-          <ul className="divide-y divide-border rounded-xl border border-border md:hidden">
+          <ul className="glass md:hidden">
             {list.items.map((p) => (
               <li key={p.id} className="flex items-center gap-1 pr-3">
                 {readOnly ? null : <BulkRowCheck id={p.id} name={p.name} />}

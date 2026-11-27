@@ -42,7 +42,7 @@ async function Customers() {
         />
       ) : null}
       {termsRequests.length > 0 ? (
-        <section className="space-y-2 rounded-xl border border-brand/30 bg-brand-soft/40 p-4" aria-labelledby="terms-requests">
+        <section className="space-y-2 glass-accent p-4" aria-labelledby="terms-requests">
           <h2 id="terms-requests" className="font-semibold">{t("terms.bannerTitle", { count: termsRequests.length })}</h2>
           <ul className="space-y-1 text-sm">
             {termsRequests.map((r) => (

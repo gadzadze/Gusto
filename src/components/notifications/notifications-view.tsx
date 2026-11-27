@@ -42,7 +42,7 @@ export async function NotificationsView({
           <EmptyState icon={Bell} title={t("empty")} />
         ) : (
           <>
-            <ul className="divide-y divide-border rounded-xl border border-border">
+            <ul className="glass">
               {list.items.map((n) => (
                 <li key={n.id}>
                   <form action={openNotificationAction.bind(null, n.id)}>

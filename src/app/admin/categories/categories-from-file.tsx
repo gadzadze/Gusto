@@ -60,7 +60,7 @@ export function CategoriesFromFile({ existingNames }: { existingNames: string[] 
     });
 
   return (
-    <section className="space-y-3 rounded-xl border border-border p-4">
+    <section className="space-y-3 glass p-4">
       <h2 className="font-semibold">{t("title")}</h2>
       <p className="text-sm text-muted-foreground">{t("hint")}</p>
       {message ? <FormAlert tone={message.tone}>{message.text}</FormAlert> : null}

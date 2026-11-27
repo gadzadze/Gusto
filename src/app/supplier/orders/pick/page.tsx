@@ -89,7 +89,7 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
             list.groups.map((g) => (
               <section key={g.category} className="space-y-1 break-inside-avoid">
                 <h3 className="text-sm font-semibold text-muted-foreground">{g.category || t("otherCategory")}</h3>
-                <ul className="divide-y divide-border rounded-xl border border-border">
+                <ul className="glass">
                   {g.rows.map((r) => (
                     <li key={r.key}>
                       <PickCheck storageKey={`pick:${day}:p:${r.key}`}>
@@ -134,7 +134,7 @@ async function Pick({ searchParams }: Pick<PageProps<"/supplier/orders/pick">, "
                     </span>
                     {o.note ? <span className="block pl-8 text-muted-foreground">{o.note}</span> : null}
                   </div>
-                  <ul className="divide-y divide-border rounded-xl border border-border">
+                  <ul className="glass">
                     {(list.stopLines[o.id] ?? []).map((line) => (
                       <li key={line.key}>
                         <PickCheck storageKey={`pick:${day}:s:${o.id}:${line.key}`}>

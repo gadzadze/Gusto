@@ -29,7 +29,7 @@ async function PriceLists() {
       {lists.length === 0 ? (
         <EmptyState icon={BadgePercent} title={t("emptyTitle")} body={t("emptyBody")} />
       ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border">
+        <ul className="glass">
           {lists.map((l) => (
             <li key={l.id}>
               <Link href={`/supplier/pricing/${l.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">

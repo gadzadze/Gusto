@@ -52,12 +52,12 @@ export function CustomerTerms({
   }
 
   return (
-    <section className="space-y-3 rounded-xl border border-border p-4" aria-labelledby="customer-terms-title">
+    <section className="space-y-3 glass p-4" aria-labelledby="customer-terms-title">
       <h2 id="customer-terms-title" className="font-semibold">{t("title")}</h2>
       <p className="text-sm">{t("current", { terms: label(current.method, current.intervalDays) })}</p>
       {error ? <FormAlert tone="error">{error}</FormAlert> : null}
       {request ? (
-        <div className="space-y-3 rounded-lg border border-brand/30 bg-brand-soft/40 p-4">
+        <div className="space-y-3 glass-accent p-4">
           <p className="font-medium">{t("requestTitle")}</p>
           <p className="text-sm">{t("requestBody", { buyer: buyerName, terms: label(request.method, request.intervalDays) })}</p>
           <p className="text-sm font-semibold">{t("changeLine", { from: formatBp(request.fromBp), to: formatBp(request.toBp) })}</p>

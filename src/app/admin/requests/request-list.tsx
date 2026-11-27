@@ -61,7 +61,7 @@ export function RequestList({ rows }: { rows: RequestRow[] }) {
         {rows.map((r) => {
           const open = r.status === "new" || r.status === "contacted";
           return (
-            <li key={r.id} className="space-y-3 rounded-xl border border-border p-4">
+            <li key={r.id} className="space-y-3 glass p-4">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <p className="font-medium">{r.businessName}</p>

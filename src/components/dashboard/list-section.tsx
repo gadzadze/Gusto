@@ -4,7 +4,7 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A section of a home page as one soft glass pane: a small heading with an optional "all" link, then rows separated by hairlines
+ * A section of a home page as one soft glass pane: a small heading with an optional "all" link, then rows separated by white space
  * (one pane per section, nothing nested in a box).
  */
 export function ListSection({
@@ -31,7 +31,7 @@ export function ListSection({
           </Link>
         ) : null}
       </div>
-      <div className="divide-y divide-border border-t border-border pb-1">{children}</div>
+      <div className="pb-1">{children}</div>
     </section>
   );
 }

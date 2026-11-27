@@ -52,7 +52,7 @@ export function PersonalInviteLink({ initial }: { initial: PersonalLink | null }
   };
 
   return (
-    <section className="max-w-xl space-y-4 rounded-xl border border-brand/30 bg-brand-soft/40 p-5" aria-labelledby="personal-link-heading">
+    <section className="max-w-xl space-y-4 glass-accent p-5" aria-labelledby="personal-link-heading">
       <div>
         <h2 id="personal-link-heading" className="font-semibold">
           {t("title")}

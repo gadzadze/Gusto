@@ -20,7 +20,7 @@ export function RsConnection({ connected, verified, canManage }: { connected: bo
   const fail = (code: string) => t(`errors.${(KNOWN.includes(code) ? code : "unknown") as "unknown"}`);
 
   return (
-    <section aria-labelledby="rs-connect" className="max-w-2xl space-y-3 rounded-xl border border-border p-4">
+    <section aria-labelledby="rs-connect" className="max-w-2xl space-y-3 glass p-4">
       <h2 id="rs-connect" className="font-semibold">{t("connect.title")}</h2>
       <p className="text-sm text-muted-foreground">{t("connect.intro")}</p>
       <p className="text-xs text-muted-foreground">{t("connect.ipNote")}</p>

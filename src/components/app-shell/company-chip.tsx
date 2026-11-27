@@ -62,7 +62,7 @@ export function CompanyChip({ items, navLabel, addHref, addLabel }: { items: Chi
           })}
         </nav>
         {addHref ? (
-          <a href={addHref} className="mt-1 flex min-h-11 items-center gap-3 rounded-xl border-t border-border px-2.5 pt-1 text-sm text-muted-foreground hover:text-foreground">
+          <a href={addHref} className="mt-1 flex min-h-11 items-center gap-3 rounded-xl px-2.5 pt-1 text-sm text-muted-foreground hover:text-foreground">
             <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-muted">
               <Plus className="size-4" />
             </span>

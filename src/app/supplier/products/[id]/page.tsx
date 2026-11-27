@@ -110,11 +110,11 @@ async function EditProduct({ params, searchParams }: PageProps<"/supplier/produc
         disabled={readOnly}
       />
 
-      <section className="border-t border-border pt-6">
+      <section className="pt-4">
         <ProductActiveToggle productId={product.id} isActive={product.isActive} disabled={readOnly} />
       </section>
 
-      <section className="border-t border-border pt-6">
+      <section className="pt-4">
         <ProductDelete productId={product.id} name={product.name} openOrders={usage.openOrders} orderLines={usage.orderLines} disabled={readOnly} />
       </section>
     </div>

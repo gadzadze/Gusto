@@ -206,7 +206,7 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
               </div>
             ))}
           </div>
-          <section className="space-y-4 rounded-xl border border-border p-4">
+          <section className="space-y-4 glass p-4">
             <div>
               <h2 className="font-semibold">{t("fallbacks.title")}</h2>
               <p className="text-sm text-muted-foreground">{t("fallbacks.hint")}</p>
@@ -284,7 +284,7 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
           </p>
           {step.analysis.counts.error > 0 ? <FormAlert tone="error">{t("hasErrorsNote")}</FormAlert> : null}
           {photoData && (photoData.photos.size > 0 || photoData.skipped > 0) ? (
-            <div className="space-y-1 rounded-xl border border-border p-4 text-sm">
+            <div className="space-y-1 glass p-4 text-sm">
               <p className="font-medium">
                 {t("photos.found", {
                   count: photoData.photos.size,
@@ -297,7 +297,7 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
             </div>
           ) : null}
           {step.analysis.rows.some((r) => r.action === "error" && r.errors.some((e) => e.key === "unknown_category")) ? (
-            <div className="space-y-1 rounded-xl border border-border p-4 text-sm">
+            <div className="space-y-1 glass p-4 text-sm">
               <p className="font-medium">{t("validCategories")}</p>
               <p className="text-muted-foreground">{categoryNames.join(", ")}</p>
               <p className="text-muted-foreground">{t("validCategoriesHint")}</p>

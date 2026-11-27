@@ -40,7 +40,7 @@ export function ConnectInstead({
   }
 
   return (
-    <div className="max-w-xl space-y-3 rounded-xl border border-brand/30 bg-brand-soft/40 p-5" role="status">
+    <div className="max-w-xl space-y-3 glass-accent p-5" role="status">
       <p className="font-semibold">{t("instead.title", { name: match.name, city: match.city })}</p>
       {done ? (
         <FormAlert tone="success">{t(done === "sent" ? "send.sent" : "send.connected", { name: match.name })}</FormAlert>

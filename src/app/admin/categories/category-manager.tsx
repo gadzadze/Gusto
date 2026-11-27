@@ -137,12 +137,12 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
       </div>
 
       {active.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">{t("empty")}</p>
+        <p className="glass p-6 text-center text-sm text-muted-foreground">{t("empty")}</p>
       ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border">{active.map(renderRow)}</ul>
+        <ul className="glass">{active.map(renderRow)}</ul>
       )}
       {archived.length > 0 ? (
-        <ul className="divide-y divide-border rounded-xl border border-border bg-surface-2">{archived.map(renderRow)}</ul>
+        <ul className="glass">{archived.map(renderRow)}</ul>
       ) : null}
     </div>
   );

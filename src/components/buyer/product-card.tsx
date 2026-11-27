@@ -91,7 +91,7 @@ export function ProductCard({ product, layout = "card", caption }: { product: Pr
 
   return (
     <>
-      <div className="flex flex-col gap-2 rounded-xl border border-border p-3">
+      <div className="flex flex-col gap-2 glass p-3">
         <button
           type="button"
           onClick={() => dialog.current?.showModal()}

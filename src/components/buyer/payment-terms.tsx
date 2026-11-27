@@ -42,7 +42,7 @@ export function PaymentTerms({ view }: { view: TermsView }) {
   if (view.methods.length === 0 && view.intervals.length === 0 && view.tiers.length === 0) return null;
 
   return (
-    <section className="space-y-3 rounded-xl border border-border p-4" aria-labelledby="terms-title">
+    <section className="space-y-3 glass p-4" aria-labelledby="terms-title">
       <h2 id="terms-title" className="font-semibold">{t("title")}</h2>
       <p className="text-sm text-muted-foreground">{t("intro", { supplier: view.supplierName })}</p>
 

@@ -138,7 +138,7 @@ function RsPanel({ rs, transport, vatNote }: { rs: NonNullable<SheetProps["rs"]>
     });
 
   return (
-    <section aria-labelledby="rs-title" className="space-y-3 rounded-xl border border-border p-4 print:hidden">
+    <section aria-labelledby="rs-title" className="space-y-3 glass p-4 print:hidden">
       <h2 id="rs-title" className="font-semibold">{t("title")}</h2>
       {error ? <FormAlert tone="error">{error}</FormAlert> : null}
       {rs.state === "not_connected" ? (
@@ -233,7 +233,7 @@ export function WaybillSheet(props: SheetProps) {
 
   return (
     <div className="max-w-3xl space-y-6">
-      <p className="rounded-lg border border-border bg-surface-2 p-3 text-sm text-muted-foreground print:hidden">{t(props.rs ? "noticeRs" : "notice")}</p>
+      <p className="glass p-3 text-sm text-muted-foreground print:hidden">{t(props.rs ? "noticeRs" : "notice")}</p>
 
       <div className="flex flex-wrap gap-2 print:hidden">
         <Button
@@ -277,7 +277,7 @@ export function WaybillSheet(props: SheetProps) {
         </div>
       </section>
 
-      <section className="space-y-3 rounded-xl border border-border p-4 print:border-0 print:p-0">
+      <section className="space-y-3 glass p-4 print:border-0 print:p-0">
         <div>
           <h2 className="font-semibold">{t("transport")}</h2>
           <p className="text-sm text-muted-foreground print:hidden">{t("transportHint")}</p>
@@ -311,7 +311,7 @@ export function WaybillSheet(props: SheetProps) {
             <CopyButton text={goodsTsv} label={t("copyGoods")} />
           </span>
         </div>
-        <div className="overflow-x-auto rounded-xl border border-border">
+        <div className="overflow-x-auto glass">
           <table className="w-full min-w-[34rem] text-sm">
             <thead className="bg-surface-2 text-left text-xs text-muted-foreground">
               <tr>

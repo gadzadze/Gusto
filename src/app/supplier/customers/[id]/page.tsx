@@ -116,7 +116,7 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
       ) : null}
 
       {insights.orderCount > 0 ? (
-        <section className="space-y-4 border-t border-border pt-6">
+        <section className="space-y-4 pt-4">
           <h2 className="font-semibold">{t("detail.history")}</h2>
           <div className="grid gap-3 sm:grid-cols-3">
             <StatTile label={t("detail.orders")} value={insights.orderCount} note={insights.lastOrderAt ? t("detail.lastOrder", { date: format.dateTime(insights.lastOrderAt, { dateStyle: "medium" }) }) : undefined} />
@@ -132,7 +132,7 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
               <h3 className="text-sm font-semibold text-muted-foreground">{t("detail.topProducts")}</h3>
               <ul className="text-sm">
                 {insights.topProducts.map((p) => (
-                  <li key={p.name} className="flex justify-between gap-3 border-b border-border py-1.5 last:border-0">
+                  <li key={p.name} className="flex justify-between gap-3 py-1.5">
                     <span>{p.name}</span>
                     <span className="text-muted-foreground">{t("detail.inOrders", { count: p.orderCount })}</span>
                   </li>
@@ -144,7 +144,7 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
             <h3 className="text-sm font-semibold text-muted-foreground">{t("detail.recentOrders")}</h3>
             <ul className="text-sm">
               {insights.recent.map((o) => (
-                <li key={o.id} className="flex items-center justify-between gap-3 border-b border-border py-1.5 last:border-0">
+                <li key={o.id} className="flex items-center justify-between gap-3 py-1.5">
                   <Link href={`/supplier/orders/${o.id}`} className="font-medium tabular-nums hover:underline">GST-{o.number}</Link>
                   <span className="text-muted-foreground">{format.dateTime(o.createdAt, { dateStyle: "medium" })}</span>
                   <span className="tabular-nums">{fmt.money(o.totalMinor, insights.currency ?? "GEL")}</span>
@@ -156,7 +156,7 @@ async function Customer({ params }: PageProps<"/supplier/customers/[id]">) {
         </section>
       ) : null}
 
-      <section className="border-t border-border pt-6">
+      <section className="pt-4">
         <CustomerNote customerId={customer.id} initial={customer.privateNote ?? ""} disabled={ctx.orgStatus === "suspended"} />
       </section>
     </div>

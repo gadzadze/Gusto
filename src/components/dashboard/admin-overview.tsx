@@ -91,9 +91,9 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
         </Panel>
 
         <Panel id="pilot" title={tp("title")}>
-          <p className="border-b border-border py-3 text-xs leading-relaxed text-muted-foreground">{tp("intro")}</p>
+          <p className="pb-3 text-xs leading-relaxed text-muted-foreground">{tp("intro")}</p>
           {metrics.map((m) => (
-            <div key={m.key} className="grid grid-cols-[1fr_auto] items-center gap-4 border-b border-border py-3.5 last:border-b-0">
+            <div key={m.key} className="grid grid-cols-[1fr_auto] items-center gap-4 py-3.5">
               <div className="min-w-0">
                 <p className="text-sm font-semibold">{m.label}</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{m.hint}</p>

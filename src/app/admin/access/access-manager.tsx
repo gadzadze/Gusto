@@ -95,7 +95,7 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
 
       {message ? <FormAlert tone={message.tone}>{message.text}</FormAlert> : null}
 
-      <details className="rounded-xl border border-border px-4 py-3">
+      <details className="glass px-4 py-3">
         <summary className="cursor-pointer text-sm font-medium">{t("bulk.title")}</summary>
         <form
           className="mt-3 space-y-3"
@@ -149,9 +149,9 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
       </details>
 
       {rows.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>
+        <p className="glass px-4 py-8 text-center text-sm text-muted-foreground">{t("empty")}</p>
       ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border">
+        <ul className="glass">
           {rows.map((row) => (
             <li key={row.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
               <div className="min-w-0 flex-1">
@@ -219,7 +219,7 @@ export function AccessManager({ rows }: { rows: AccessRow[] }) {
                 </>
               )}
               {handOver?.id === row.id ? (
-                <div className="w-full space-y-3 rounded-lg border border-brand/30 bg-brand-soft/40 p-4">
+                <div className="w-full space-y-3 glass-accent p-4">
                   <p className="text-sm">{t("link.ready", { email: handOver.email })}</p>
                   <p className="text-xs text-muted-foreground">{t("link.warning")}</p>
                   <div className="flex flex-wrap gap-2">

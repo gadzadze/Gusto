@@ -148,7 +148,7 @@ function ScopeEditor({
       {message ? <FormAlert tone={message.tone}>{message.text}</FormAlert> : null}
       <p className="rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">{t("howToType")}</p>
 
-      <section className="space-y-2 rounded-xl border border-border p-4" aria-labelledby="cond-method">
+      <section className="space-y-2 glass p-4" aria-labelledby="cond-method">
         <h3 id="cond-method" className="font-medium">{t("methodTitle")}</h3>
         <p className="text-sm text-muted-foreground">{t("methodHint")}</p>
         <ul className="space-y-2">
@@ -161,7 +161,7 @@ function ScopeEditor({
         </ul>
       </section>
 
-      <section className="space-y-2 rounded-xl border border-border p-4" aria-labelledby="cond-interval">
+      <section className="space-y-2 glass p-4" aria-labelledby="cond-interval">
         <h3 id="cond-interval" className="font-medium">{t("intervalTitle")}</h3>
         <p className="text-sm text-muted-foreground">{t("intervalHint")}</p>
         <ul className="space-y-2">
@@ -184,7 +184,7 @@ function ScopeEditor({
         </div>
       </section>
 
-      <section className="space-y-2 rounded-xl border border-border p-4" aria-labelledby="cond-qty">
+      <section className="space-y-2 glass p-4" aria-labelledby="cond-qty">
         <h3 id="cond-qty" className="font-medium">{t("qtyTitle")}</h3>
         <p className="text-sm text-muted-foreground">{t("qtyHint")}</p>
         {isProduct && tiers.length === 0 && inheritedTiers.length > 0 ? (

@@ -10,7 +10,7 @@ export async function SupplierCard({ supplier }: { supplier: ConnectedSupplier }
   return (
     <Link
       href={`/buyer/suppliers/${supplier.id}`}
-      className="flex items-center gap-4 rounded-xl border border-border p-4 transition-colors hover:bg-muted/50"
+      className="flex items-center gap-4 glass p-4 transition-colors hover:bg-muted/50"
     >
       <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-brand-soft text-brand">
         <Store aria-hidden className="size-5" />

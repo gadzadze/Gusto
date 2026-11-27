@@ -16,7 +16,7 @@ export function PreferencesForm({ initial }: { initial: { emailNewOrders: boolea
   const [state, setState] = useState<"idle" | "saved" | "error">("idle");
 
   return (
-    <section className="space-y-3 border-t border-border pt-6">
+    <section className="space-y-3 pt-4">
       <h2 className="font-semibold">{t("title")}</h2>
       <p className="text-sm text-muted-foreground">{t("hint")}</p>
       <Checkbox

@@ -42,7 +42,7 @@ async function Inbox({ searchParams }: Pick<PageProps<"/supplier/orders">, "sear
     <div className="space-y-5">
       <LiveOrders signature={pulse.signature} pending={pulse.pending} />
       {brands.length > 1 ? <BrandScope all={all} thisHref="/supplier/orders" allHref="/supplier/orders?brand=all" /> : null}
-      <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2 glass p-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">{counts.confirmed > 0 ? t("pick.cardHint", { count: counts.confirmed }) : t("pick.cardEmpty")}</p>
         <Button asChild className="shrink-0">
           <Link href={all ? "/supplier/orders/pick?brand=all" : "/supplier/orders/pick"}>

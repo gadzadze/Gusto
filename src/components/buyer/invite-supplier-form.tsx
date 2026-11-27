@@ -111,7 +111,7 @@ export function InviteSupplierForm() {
       </form>
 
       {links ? (
-        <div className="max-w-xl space-y-4 rounded-xl border border-brand/30 bg-brand-soft/40 p-5">
+        <div className="max-w-xl space-y-4 glass-accent p-5">
           <div>
             <h2 className="font-semibold">{t("panel.title")}</h2>
             <p className="mt-1 text-sm text-muted-foreground">

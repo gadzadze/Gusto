@@ -21,7 +21,7 @@ export function RouteError({ error, reset }: { error: Error & { digest?: string 
     if (!error.digest) Sentry.captureException(error);
   }, [error]);
   return (
-    <div role="alert" className="mx-auto flex max-w-md flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-14 text-center">
+    <div role="alert" className="mx-auto flex max-w-md flex-col items-center gap-3 glass px-6 py-14 text-center">
       <div className="flex size-11 items-center justify-center rounded-full bg-muted">
         <TriangleAlert aria-hidden className="size-5 text-muted-foreground" />
       </div>
