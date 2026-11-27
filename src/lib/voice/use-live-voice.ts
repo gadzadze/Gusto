@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { applySetOrder, SET_ORDER, type LiveOrderLine } from "@/lib/voice/live";
+import type { Snapshot } from "@/lib/assistant/snapshots";
+import { applySetOrder, LOOKUP_NAMES, SET_ORDER, type LiveOrderLine } from "@/lib/voice/live";
 import type { CatalogItem } from "@/lib/voice/order-parse";
 
 // The browser half of live voice: one WebSocket to Google's live endpoint with a one-use token from the server, microphone capture
@@ -10,7 +11,10 @@ import type { CatalogItem } from "@/lib/voice/order-parse";
 const WS_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained";
 
 export type LivePhase = "idle" | "connecting" | "live";
-export type LiveTurn = { who: "you" | "assistant"; text: string };
+/** A line of the thread: something said, or a snapshot the assistant showed (a card of products, orders, the cart...). */
+export type LiveTurn = { who: "you" | "assistant"; text: string; view?: Snapshot };
+/** Runs one lookup for the assistant. The facts go back to the model; the snapshot, if any, goes into the thread. */
+export type LookupRunner = (name: string, args: unknown) => Promise<{ ok: true; forModel: unknown; view: Snapshot | null } | { ok: false; error: string }>;
 export type LiveSession = { token: string; setup: unknown; items: CatalogItem[]; maxSeconds: number };
 export type LiveStartResult = { ok: true; session: LiveSession } | { ok: false; error: string };
 
@@ -25,7 +29,7 @@ function base64FromBytes(bytes: Uint8Array): string {
   return btoa(s);
 }
 
-export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
+export function useLiveVoice(getSession: () => Promise<LiveStartResult>, runLookup?: LookupRunner) {
   const [phase, setPhase] = useState<LivePhase>("idle");
   const [turns, setTurns] = useState<LiveTurn[]>([]);
   const [order, setOrder] = useState<LiveOrderLine[]>([]);
@@ -94,6 +98,12 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
     else list.push({ who, text });
     boundary.current = false;
     setTurns([...list]);
+  }
+
+  function addView(view: Snapshot) {
+    turnsRef.current.push({ who: "assistant", text: "", view });
+    boundary.current = true;
+    setTurns([...turnsRef.current]);
   }
 
   function play(base64: string, mimeType: string) {
@@ -242,14 +252,24 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
           if (content.turnComplete) boundary.current = true;
         }
         if (message.toolCall) {
-          const responses = (message.toolCall.functionCalls ?? []).map((call: { id: string; name: string; args: unknown }) => {
-            if (call.name !== SET_ORDER) return { id: call.id, name: call.name, response: { error: "unknown_tool" } };
-            const applied = applySetOrder(call.args, session.items);
-            setOrder(applied.lines);
-            if (applied.deliveryDay) setDeliveryDay(applied.deliveryDay);
-            return { id: call.id, name: call.name, response: applied.feedback };
-          });
-          socket.send(JSON.stringify({ toolResponse: { functionResponses: responses } }));
+          const responses = await Promise.all(
+            (message.toolCall.functionCalls ?? []).map(async (call: { id: string; name: string; args: unknown }) => {
+              if (call.name === SET_ORDER) {
+                const applied = applySetOrder(call.args, session.items);
+                setOrder(applied.lines);
+                if (applied.deliveryDay) setDeliveryDay(applied.deliveryDay);
+                return { id: call.id, name: call.name, response: applied.feedback };
+              }
+              if (runLookup && LOOKUP_NAMES.includes(call.name)) {
+                const result = await runLookup(call.name, call.args).catch(() => ({ ok: false as const, error: "failed" }));
+                if (!result.ok) return { id: call.id, name: call.name, response: { error: result.error } };
+                if (result.view) addView(result.view);
+                return { id: call.id, name: call.name, response: { result: result.forModel } };
+              }
+              return { id: call.id, name: call.name, response: { error: "unknown_tool" } };
+            }),
+          );
+          if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ toolResponse: { functionResponses: responses } }));
         }
       });
     };

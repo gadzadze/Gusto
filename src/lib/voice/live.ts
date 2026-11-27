@@ -37,6 +37,17 @@ export const GEORGIAN_SPEAKING = [
 
 export type LiveMode = "test" | "buyer";
 
+/** The lookups a buyer's assistant has (see server/assistant/buyer-tools.ts). They only read: ordering stays with `set_order` and the review. */
+export const LOOKUP_DECLARATIONS = [
+  { name: "search_products", description: "Search the products this buyer can order, with their own prices, across all their suppliers. Use it for any question about a product, its price or its supplier.", parameters: { type: "OBJECT", properties: { query: { type: "STRING", description: "What to look for, in the buyer's words (a product name or part of it)." } }, required: ["query"] } },
+  { name: "list_suppliers", description: "The suppliers this buyer is connected to, with minimum order, delivery area and terms.", parameters: { type: "OBJECT", properties: {} } },
+  { name: "list_orders", description: "The buyer's recent orders with status, total and delivery day. Set open_only for orders still in progress.", parameters: { type: "OBJECT", properties: { open_only: { type: "BOOLEAN" } } } },
+  { name: "get_order", description: "One order of this buyer by its number (the digits after GST-), with its lines, status and delivery day.", parameters: { type: "OBJECT", properties: { number: { type: "NUMBER" } }, required: ["number"] } },
+  { name: "get_cart", description: "What is in this buyer's carts right now, per supplier, with totals.", parameters: { type: "OBJECT", properties: {} } },
+] as const;
+
+export const LOOKUP_NAMES: readonly string[] = LOOKUP_DECLARATIONS.map((d) => d.name);
+
 export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "test", previous = ""): string {
   const catalogue = catalogueText(items);
   return [
@@ -58,6 +69,9 @@ export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "te
     mode === "test"
       ? "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way."
       : "If the buyer asks about sending, a button, or where to click, answer exactly: «გაგზავნამდე შეკვეთას ეკრანზე გადაამოწმებთ.» Never mention sending, buttons or pressing anything in any other way.",
+    mode === "buyer"
+      ? "You can look up anything the buyer could see by hand with these tools: search_products (products and their prices at the buyer's own suppliers), list_suppliers, list_orders, get_order and get_cart. Use a tool for every question about a price, a product, a supplier, an order or the cart: never answer those from memory, and never guess. Answer in one or two short sentences with the facts the tool returned; the app shows the details on screen as a card, so do not read long lists aloud. A product from a search can be ordered with set_order only when it has an id in the catalogue below; otherwise tell the buyer to open it on screen."
+      : "",
     previous
       ? "When the buyer says 'the usual', 'same as last time' or 'as before', start from the previous order of that supplier listed below (copy its lines into the order), then apply what they change ('but no cream', 'double the tomatoes'). Say in one sentence what you copied. Never invent a previous order that is not listed."
       : "",
@@ -115,7 +129,7 @@ export function buildLiveSetup(items: CatalogItem[], model: string, mode: LiveMo
       model: `models/${model}`,
       generationConfig: { responseModalities: ["AUDIO"] },
       systemInstruction: { parts: [{ text: liveSystemInstruction(items, mode, previous) }] },
-      tools: [{ functionDeclarations: [SET_ORDER_DECLARATION] }],
+      tools: [{ functionDeclarations: mode === "buyer" ? [SET_ORDER_DECLARATION, ...LOOKUP_DECLARATIONS] : [SET_ORDER_DECLARATION] }],
       inputAudioTranscription: { languageCodes: ["ka-GE"], customVocabulary: liveVocabulary(items) },
       outputAudioTranscription: {},
     },

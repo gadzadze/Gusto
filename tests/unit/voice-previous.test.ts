@@ -22,3 +22,15 @@ describe("the usual order", () => {
     expect(text).toContain("Never invent a previous order");
   });
 });
+
+describe("lookup tools", () => {
+  it("are declared to a buyer's assistant only, with the rule to use them instead of guessing", async () => {
+    const { buildLiveSetup, LOOKUP_DECLARATIONS } = await import("@/lib/voice/live");
+    const buyer = buildLiveSetup(items, "m", "buyer").setup;
+    const names = buyer.tools[0].functionDeclarations.map((d: { name: string }) => d.name);
+    for (const d of LOOKUP_DECLARATIONS) expect(names).toContain(d.name);
+    expect(names).toContain("set_order");
+    expect(buildLiveSetup(items, "m", "test").setup.tools[0].functionDeclarations.map((d: { name: string }) => d.name)).toEqual(["set_order"]);
+    expect(buyer.systemInstruction.parts[0].text).toContain("never answer those from memory");
+  });
+});

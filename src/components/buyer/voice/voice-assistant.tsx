@@ -5,13 +5,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { runAssistantToolAction } from "@/app/buyer/assistant/actions";
+import { SnapshotCard } from "@/components/buyer/assistant/snapshot-card";
 import { fillCartsFromVoiceAction, startBuyerVoiceAction } from "@/app/buyer/voice/actions";
 import { Button, ForwardArrow } from "@/components/ui/button";
 import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { isOrderableQuantity, milliToInput, stepDown, stepUp } from "@/lib/quantity";
 import { cn } from "@/lib/utils";
 import { type LiveOrderLine } from "@/lib/voice/live";
-import { useLiveVoice, type LiveSession } from "@/lib/voice/use-live-voice";
+import { useLiveVoice, type LiveSession, type LiveTurn, type LookupRunner } from "@/lib/voice/use-live-voice";
 import type { VoiceRef } from "@/lib/voice/order-parse";
 
 type Separator = "." | ",";
@@ -30,6 +32,8 @@ export type VoiceAdapter = {
   fill: (lines: { productId: string; qtyMilli: number; phrase?: string }[]) => Promise<{ ok: true; skipped: string[] } | { ok: false; error: string }>;
   /** After a clean finish, or "to cart": the buyer goes to the cart, the test page just closes. */
   finish: () => void;
+  /** Lookups for the assistant. Without it the assistant has no lookup tools (the admin test page). */
+  lookup?: LookupRunner;
 };
 
 const KNOWN_ERRORS = ["startFailed", "connectionLost", "rate_limited", "not_configured", "no_products", "pending", "invalid"];
@@ -61,12 +65,31 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
       onClose();
     },
   };
+  // The assistant knows products by short ids (`p1`); a lookup returns real ids, so they are swapped for the short ones here and
+  // dropped when the product is not in this session's catalogue (it can then be opened on screen, not ordered by voice).
+  const refsRef = useRef<Record<string, VoiceRef>>({});
+  const buyerLookup: LookupRunner = async (name, args) => {
+    const result = await runAssistantToolAction({ name, args });
+    if (!result.ok) return result;
+    const model = result.forModel as { results?: { uuid?: string; id?: string | null; orderable_by_voice?: boolean }[] };
+    if (Array.isArray(model.results)) {
+      const alias = new Map(Object.entries(refsRef.current).map(([short, ref]) => [ref.productId, short]));
+      for (const r of model.results) {
+        const short = r.uuid ? alias.get(r.uuid) : undefined;
+        delete r.uuid;
+        if (short) r.id = short;
+        else r.orderable_by_voice = false;
+      }
+    }
+    return result;
+  };
   const voice = useLiveVoice(async () => {
     const started = await use.start();
     if (!started.ok) return { ok: false, error: started.error };
     setRefs(started.refs);
+    refsRef.current = started.refs;
     return { ok: true, session: started.session };
-  });
+  }, adapter ? adapter.lookup : buyerLookup);
 
   // Opened from the command bar: a typed or tapped command is sent at once (no microphone permission), a mic tap starts listening.
   const launched = useRef(false);
@@ -162,7 +185,7 @@ type TalkProps = {
   connecting: boolean;
   live: boolean;
   speaking: boolean;
-  turns: { who: "you" | "assistant"; text: string }[];
+  turns: LiveTurn[];
   order: LiveOrderLine[];
   levels: number[];
   blocked: boolean;
@@ -184,8 +207,8 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
   const [draft, setDraft] = useState("");
   const flagged = order.filter((l) => l.unitCheck === "mismatch" || l.quantityMilli === null).length;
   const status = connecting ? t("connecting") : live ? (speaking ? t("answering") : t("listening")) : null;
-  const shown = turns.slice(-2);
-  const lastIndex = shown.length - 1;
+  const shown = turns.slice(-6);
+  const lastIndex = shown.findLastIndex((x) => !x.view);
 
   return (
     <div className="flex h-full flex-col">
@@ -210,7 +233,10 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
           <div className="space-y-8">
             <div aria-live="polite" className="space-y-3">
               {shown.length === 0 ? <p className="text-xl text-muted-foreground">{t("listening")}</p> : null}
-              {shown.map((turn, i) => (
+              {shown.map((turn, i) =>
+                turn.view ? (
+                  <SnapshotCard key={turns.length - shown.length + i} view={turn.view} />
+                ) : (
                 <p
                   key={turns.length - shown.length + i}
                   className={cn(
@@ -221,7 +247,8 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
                 >
                   {turn.text}
                 </p>
-              ))}
+                ),
+              )}
             </div>
             <Ledger lines={order} unitLabel={unitLabel} separator={separator} />
             {flagged > 0 ? (

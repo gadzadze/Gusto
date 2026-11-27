@@ -46,6 +46,7 @@ export const RATE_LIMITS = {
   voiceBuyer: { name: "voice_buyer", limit: 20, windowSeconds: 3600 },
   /** Putting a voice order into the carts: 30 per hour per person. */
   voiceFill: { name: "voice_fill", limit: 30, windowSeconds: 3600 },
+  assistantTool: { name: "assistant_tool", limit: 240, windowSeconds: 3600 },
   /** Command palette lookups: 240 per minute per person (one per pause in typing). */
   palette: { name: "palette", limit: 240, windowSeconds: 60 },
   /** Turning Web Push on or off for a browser: 20 per hour per person. */

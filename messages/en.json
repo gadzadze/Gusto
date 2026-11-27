@@ -548,6 +548,18 @@
       "proposalNote": "Nothing is sent until you confirm.",
       "proposalFlagged": "To check: {count}",
       "barLabel": "Ask the assistant"
+    },
+    "assistant": {
+      "noProducts": "Nothing found for \"{query}\" at your suppliers.",
+      "moreProducts": "{count} matches: see all",
+      "minOrder": "min. order {amount}",
+      "noOrders": "No orders yet.",
+      "allOrders": "All orders",
+      "openOrder": "Open the order",
+      "emptyCart": "Your carts are empty.",
+      "total": "Total",
+      "shortfall": "{amount} short of the minimum order",
+      "openCart": "Open the cart"
     }
   },
   "admin": {
@@ -2135,7 +2147,7 @@
             "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry).",
             "If you turn on push notifications, your browser's push service (Google, Apple, Mozilla or Microsoft, depending on the browser) delivers them. The messages are encrypted so that only your browser can read them; the service sees that a message was sent to your browser.",
             "When you remove the background from a product photo, your browser downloads a helper model file once from Hugging Face, which therefore sees your IP address. The photo itself is processed on your device and sent nowhere.",
-            "Google (Gemini), when you order by voice: your voice is sent in real time to their service, which processes it and answers. We do not store the audio ourselves; we keep only the products added to your cart. The assistant sees only the names of the products available to you and of your suppliers, without prices. It also sees the quantities of your latest order with each supplier (by short product code, without prices or dates) so it can understand \"same as last time\". If you type instead of speaking, what you type goes to the same service.",
+            "Google (Gemini), when you order by voice: your voice is sent in real time to their service, which processes it and answers. We do not store the audio ourselves; we keep only the products added to your cart. The assistant can look up what you could see yourself in the app: your suppliers and their terms, products with the prices you pay, your orders and your carts, only when you ask about them, and only your own organization's data. It also sees the quantities of your latest order with each supplier (by short product code, without prices or dates) so it can understand \"same as last time\". If you type instead of speaking, what you type goes to the same service.",
             "Public authorities, only in cases required by law."
           ],
           "closing": [
