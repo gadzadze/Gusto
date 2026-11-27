@@ -298,26 +298,34 @@ export function TalkView({ suppliers, role = "buyer", connecting, live, speaking
   const t = useTranslations("buyer.voice");
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState("");
+  const scroller = useRef<HTMLDivElement>(null);
+
+  // Whatever the assistant shows is brought into view: a card is scrolled to its top (so it is read from the start, even when it is
+  // tall), plain text and everything else to the bottom. Reduced motion jumps instead of gliding.
+  const lastView = turns[turns.length - 1]?.view ?? turns[turns.length - 2]?.view;
+  useEffect(() => {
+    const el = scroller.current;
+    if (!el) return;
+    const behavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    const bottom = el.scrollHeight - el.clientHeight;
+    const cards = el.querySelectorAll<HTMLElement>("[data-card]");
+    const card = lastView ? cards[cards.length - 1] : undefined;
+    const top = card ? Math.max(0, card.offsetTop - 8) : bottom;
+    el.scrollTo({ top: Math.max(0, Math.min(top, bottom)), behavior });
+  }, [turns, order.length, typing, lastView]);
   const flagged = order.filter((l) => l.unitCheck === "mismatch" || l.quantityMilli === null).length;
-  const status = connecting ? t("connecting") : live ? (speaking ? t("answering") : t("listening")) : null;
   const shown = turns.slice(-14);
   const lastIndex = shown.findLastIndex((x) => !x.view);
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between gap-4 px-6 pt-6">
-        <IconButton label={t("close")} onClick={onClose}>
-          <X aria-hidden />
+      <header className="flex items-center justify-end px-4 pt-3 [padding-top:max(0.75rem,env(safe-area-inset-top))]">
+        <IconButton label={t("collapse")} onClick={onClose}>
+          <ChevronDown aria-hidden />
         </IconButton>
-        {status ? (
-          <p role="status" className="inline-flex min-h-8 items-center gap-2 rounded-full bg-brand-soft px-3 text-sm font-medium text-brand">
-            <span aria-hidden className={cn("size-2 rounded-full bg-brand", live && "animate-pulse motion-reduce:animate-none")} />
-            {status}
-          </p>
-        ) : null}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-6">
+      <div ref={scroller} className="relative min-h-0 flex-1 overflow-y-auto px-5 pb-4 pt-2">
         {blocked ? (
           <Blocked onRetry={onRetry} onTypeInstead={onTypeInstead ? () => { onTypeInstead(); setTyping(true); } : undefined} onClose={onClose} />
         ) : !live && !connecting && turns.length === 0 ? (
@@ -328,7 +336,9 @@ export function TalkView({ suppliers, role = "buyer", connecting, live, speaking
               {shown.length === 0 ? <p className="text-xl text-muted-foreground">{t("listening")}</p> : null}
               {shown.map((turn, i) =>
                 turn.view ? (
-                  <SnapshotCard key={turns.length - shown.length + i} view={turn.view} onChoose={onChoose} onApply={onApply} />
+                  <div key={turns.length - shown.length + i} data-card>
+                    <SnapshotCard view={turn.view} onChoose={onChoose} onApply={onApply} />
+                  </div>
                 ) : (
                 <p
                   key={turns.length - shown.length + i}
@@ -361,7 +371,7 @@ export function TalkView({ suppliers, role = "buyer", connecting, live, speaking
       </div>
 
       {!blocked ? (
-        <footer className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
+        <footer className="px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-2">
           {order.length > 0 ? (
             <div className="mb-3 space-y-2">
               <Button className="w-full" size="lg" onClick={onFinish}>
@@ -373,7 +383,7 @@ export function TalkView({ suppliers, role = "buyer", connecting, live, speaking
           ) : null}
           {typing && onSendText ? (
             <form
-              className="mb-3 flex items-center gap-2"
+              className="mb-2 flex items-center gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
                 if (!draft.trim()) return;
@@ -394,49 +404,38 @@ export function TalkView({ suppliers, role = "buyer", connecting, live, speaking
                 <ArrowUp aria-hidden />
               </button>
             </form>
-          ) : (
-            <Wave levels={levels} active={live} />
-          )}
-          <div className="mt-4 grid grid-cols-3 items-start">
-            <DockSlot label={t("text")}>
-              {onSendText ? (
-                <button type="button" onClick={() => setTyping((v) => !v)} aria-label={t("text")} aria-pressed={typing} className={cn(ringButton, typing && "border-brand text-brand")}>
-                  <Keyboard aria-hidden />
-                </button>
-              ) : (
-                <Link href="/buyer/search" onClick={onClose} aria-label={t("text")} className={ringButton}>
-                  <Keyboard aria-hidden />
-                </Link>
-              )}
-            </DockSlot>
-            <DockSlot label={connecting ? t("connecting") : micOn ? t("listening") : t("speak")} strong>
-              <button
-                type="button"
-                onClick={onStart}
-                disabled={micOn || connecting}
-                aria-label={t("speak")}
-                aria-pressed={micOn}
-                className={cn(
-                  "inline-flex size-[4.75rem] items-center justify-center rounded-full bg-brand text-brand-foreground transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100 disabled:cursor-default [&_svg]:size-7",
-                  micOn && "ring-2 ring-brand ring-offset-4 ring-offset-surface",
-                )}
-              >
-                {connecting ? <LoaderCircle aria-hidden className="animate-spin motion-reduce:animate-none" /> : <Mic aria-hidden />}
+          ) : null}
+          <div className="flex items-center gap-2">
+            {onSendText ? (
+              <button type="button" onClick={() => setTyping((v) => !v)} aria-label={t("text")} aria-pressed={typing} className={cn(ringButton, typing && "border-brand text-brand")}>
+                <Keyboard aria-hidden />
               </button>
-            </DockSlot>
-            <DockSlot label={speaking && onInterrupt ? t("stop") : live && order.length === 0 ? t("finish") : ""}>
-              {speaking && onInterrupt ? (
-                <button type="button" onClick={onInterrupt} aria-label={t("stop")} className={ringButton}>
-                  <Square aria-hidden className="size-5 fill-current" />
-                </button>
-              ) : live && order.length === 0 ? (
-                <button type="button" onClick={onFinish} aria-label={t("finish")} className={ringButton}>
-                  <Check aria-hidden />
-                </button>
-              ) : (
-                <span aria-hidden className="size-14" />
-              )}
-            </DockSlot>
+            ) : (
+              <Link href="/buyer/search" onClick={onClose} aria-label={t("text")} className={ringButton}>
+                <Keyboard aria-hidden />
+              </Link>
+            )}
+            <StatePill
+              levels={levels}
+              connecting={connecting}
+              live={live}
+              micOn={micOn}
+              speaking={speaking}
+              onStart={onStart}
+              label={connecting ? t("connecting") : speaking ? t("answering") : micOn ? t("listening") : live ? t("textOnly") : t("speak")}
+              speakLabel={t("speak")}
+            />
+            {speaking && onInterrupt ? (
+              <button type="button" onClick={onInterrupt} aria-label={t("stop")} className={ringButton}>
+                <Square aria-hidden className="size-5 fill-current" />
+              </button>
+            ) : live && order.length === 0 ? (
+              <button type="button" onClick={onFinish} aria-label={t("finish")} className={ringButton}>
+                <Check aria-hidden />
+              </button>
+            ) : (
+              <span aria-hidden className="size-14 shrink-0" />
+            )}
           </div>
         </footer>
       ) : null}
@@ -455,28 +454,63 @@ function IconButton({ label, onClick, children }: { label: string; onClick: () =
   );
 }
 
-/** A control and its label, on one shared baseline: the label row has a fixed height, so the three never drift apart. */
-function DockSlot({ label, strong, children }: { label: string; strong?: boolean; children: React.ReactNode }) {
+/**
+ * The middle of the bottom bar, like Gemini's: one wide pill that shows what the assistant is doing. Listening draws the level of your
+ * voice, answering draws moving bars, and when nothing is running it is the "speak" button. The state is also read out through its label.
+ */
+function StatePill({
+  levels,
+  connecting,
+  live,
+  micOn,
+  speaking,
+  onStart,
+  label,
+  speakLabel,
+}: {
+  levels: number[];
+  connecting: boolean;
+  live: boolean;
+  micOn: boolean;
+  speaking: boolean;
+  onStart: () => void;
+  label: string;
+  speakLabel: string;
+}) {
+  const bars = levels.slice(-28);
   return (
-    <div className="flex flex-col items-center">
-      <div className="flex h-[4.75rem] items-center justify-center">{children}</div>
-      <p className={cn("mt-2 h-5 text-sm", strong ? "font-medium text-foreground" : "text-muted-foreground")}>{label}</p>
-    </div>
-  );
-}
-
-/** The level strip: a tape of the last few seconds. Quiet is a row of dots, so the screen is never empty. */
-function Wave({ levels, active }: { levels: number[]; active: boolean }) {
-  return (
-    <div aria-hidden className="flex h-10 items-center justify-between">
-      {levels.map((level, i) => (
-        <span
-          key={i}
-          className={cn("w-[3px] rounded-full bg-brand", active ? "opacity-100" : "opacity-40")}
-          style={{ height: `${Math.max(3, Math.round(level * 40))}px` }}
-        />
-      ))}
-    </div>
+    <button
+      type="button"
+      onClick={onStart}
+      disabled={micOn || connecting}
+      aria-label={micOn || connecting ? label : speakLabel}
+      className={cn(
+        "relative flex h-14 min-w-0 flex-1 items-center justify-center gap-3 overflow-hidden rounded-full border px-4 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand disabled:cursor-default",
+        micOn || speaking ? "border-brand/40 bg-brand-soft text-brand" : "border-input bg-brand text-brand-foreground",
+      )}
+    >
+      <span role="status" className="sr-only">{label}</span>
+      {connecting ? (
+        <LoaderCircle aria-hidden className="size-5 animate-spin motion-reduce:animate-none" />
+      ) : speaking ? (
+        <span aria-hidden className="flex h-8 items-center gap-1">
+          {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+            <span key={i} className="w-1 animate-pulse rounded-full bg-brand motion-reduce:animate-none" style={{ height: `${10 + ((i * 7) % 5) * 5}px`, animationDelay: `${i * 90}ms` }} />
+          ))}
+        </span>
+      ) : micOn ? (
+        <span aria-hidden className="flex h-8 w-full items-center justify-between">
+          {bars.map((level, i) => (
+            <span key={i} className="w-[3px] rounded-full bg-brand" style={{ height: `${Math.max(3, Math.round(level * 32))}px` }} />
+          ))}
+        </span>
+      ) : (
+        <>
+          <Mic aria-hidden className="size-5 shrink-0" />
+          <span className="truncate font-semibold">{live ? label : speakLabel}</span>
+        </>
+      )}
+    </button>
   );
 }
 
@@ -698,9 +732,9 @@ export function VoiceReview({
                         >
                           <Minus aria-hidden />
                         </Stepper>
-                        <span className="w-16 text-center font-semibold tabular-nums">
+                        <span className="flex min-w-[4.5rem] flex-col items-center px-1 text-center font-semibold leading-tight tabular-nums">
                           {line.qty === null ? "?" : milliToInput(line.qty, separator)}
-                          <small className="ml-0.5 text-sm font-normal text-muted-foreground">{unitLabel(shownUnit)}</small>
+                          <small className="text-sm font-normal text-muted-foreground">{unitLabel(shownUnit)}</small>
                         </span>
                         <Stepper
                           label={t("review.increase", { name: line.productName })}

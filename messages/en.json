@@ -569,7 +569,8 @@
       "dockLive": "Listening",
       "dockWorking": "Connecting",
       "dockAnswering": "Answering",
-      "collapse": "Minimise"
+      "collapse": "Minimise",
+      "textOnly": "Typing only"
     },
     "assistant": {
       "noProducts": "Nothing found for \"{query}\" at your suppliers.",

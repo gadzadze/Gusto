@@ -569,7 +569,8 @@
       "dockLive": "გისმენთ",
       "dockWorking": "ვუკავშირდები",
       "dockAnswering": "გპასუხობთ",
-      "collapse": "ჩაკეცვა"
+      "collapse": "ჩაკეცვა",
+      "textOnly": "მხოლოდ ტექსტი"
     },
     "assistant": {
       "noProducts": "„{query}“ თქვენს მომწოდებლებთან ვერ მოიძებნა.",
