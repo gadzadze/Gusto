@@ -3,6 +3,7 @@ import { AppShell, AppShellSkeleton } from "@/components/app-shell/app-shell";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { getAccessState, requireSupplier } from "@/server/auth/guards";
 import { getPendingPulse } from "@/server/domain/orders/today";
+import { voiceOrderEnabled } from "@/server/voice/config";
 
 // The guard here picks the shell; it does not protect child pages on its own.
 // Every page and action under /supplier calls requireSupplier() itself.
@@ -28,6 +29,7 @@ async function SupplierShell({ children }: { children: React.ReactNode }) {
       homeHref="/supplier"
       showAdminLink={ctx.isPlatformAdmin}
       navBadges={{ "/supplier/orders": pulse.pending }}
+      assistant={voiceOrderEnabled() && ctx.orgStatus === "active" ? { role: "supplier", suppliers: [] } : undefined}
       sides={sides}
       addSide={missing}
       addCompany={ctx.orgStatus === "active" ? "supplier" : null}

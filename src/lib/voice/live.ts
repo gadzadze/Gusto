@@ -22,6 +22,8 @@ export const GEORGIAN_SPEAKING = [
   "- After a number the noun stays singular and the unit word does not change: ორი ყუთი ლუდი, სამი კილო კარაქი, ხუთი ბოთლი (never plural after a number).",
   "- Use these verbs for order actions and no others: დავამატე (added), წავშალე (removed), გავასწორე (corrected). Name the product in the nominative after the quantity, as in the patterns below.",
   "- If you are unsure of a Georgian form, do not invent one: use a simpler sentence or the list pattern.",
+  "- Say numbers as words, never as digits, and keep them correct: 11 თერთმეტი, 15 თხუთმეტი, 20 ოცი, 25 ოცდახუთი, 40 ორმოცი, 100 ასი, 1,5 ერთნახევარი, 2,5 ორნახევარი.",
+  "- Speak in your own natural spoken Georgian, not in headline style: use a short polite lead-in only when it helps (კარგით, გასაგებია), never repeat the same opening twice in a row, and never praise the buyer.",
   "Patterns (use them as they are when they fit):",
   "- Added: «დავამატე: ორი კილო სულგუნი.»",
   "- Removed: «წავშალე: ნაღები.»",
@@ -35,7 +37,23 @@ export const GEORGIAN_SPEAKING = [
 
 export type LiveMode = "test" | "buyer";
 
-export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "test"): string {
+/** The lookups a buyer's assistant has (see server/assistant/buyer-tools.ts). They only read: ordering stays with `set_order` and the review. */
+export const LOOKUP_DECLARATIONS = [
+  { name: "search_products", description: "Search the products this buyer can order, with their own prices, across all their suppliers. Use it for any question about a product, its price or its supplier.", parameters: { type: "OBJECT", properties: { query: { type: "STRING", description: "What to look for, in the buyer's words (a product name or part of it)." } }, required: ["query"] } },
+  { name: "list_suppliers", description: "The suppliers this buyer is connected to, with minimum order, delivery area and terms.", parameters: { type: "OBJECT", properties: {} } },
+  { name: "list_orders", description: "The buyer's recent orders with status, total and delivery day. Set open_only for orders still in progress.", parameters: { type: "OBJECT", properties: { open_only: { type: "BOOLEAN" } } } },
+  { name: "get_order", description: "One order of this buyer by its number (the digits after GST-), with its lines, status and delivery day.", parameters: { type: "OBJECT", properties: { number: { type: "NUMBER" } }, required: ["number"] } },
+  { name: "get_cart", description: "What is in this buyer's carts right now, per supplier, with totals.", parameters: { type: "OBJECT", properties: {} } },
+  { name: "suggest_reorder", description: "Products this buyer reorders regularly whose usual gap has nearly passed (probably running low).", parameters: { type: "OBJECT", properties: {} } },
+  { name: "propose_cart_change", description: "Propose changing the cart for one product. Nothing changes until the buyer taps the button on the card. mode add adds to what is in the cart, set replaces it, remove takes it out.", parameters: { type: "OBJECT", properties: { product_id: { type: "STRING", description: "The product id from the catalogue or from a search result." }, quantity: { type: "NUMBER" }, mode: { type: "STRING", enum: ["add", "set", "remove"] }, spoken_unit: { type: "STRING", description: "The unit exactly as the buyer said it, if any." } }, required: ["product_id", "quantity"] } },
+  { name: "propose_reorder", description: "Propose putting a previous order of this buyer back in the cart (order again). Nothing changes until the buyer taps the button on the card.", parameters: { type: "OBJECT", properties: { number: { type: "NUMBER", description: "The order number, the digits after GST-." } }, required: ["number"] } },
+  { name: "propose_regular_order", description: "Propose saving a previous order as a regular order with a weekday reminder (1 Monday to 7 Sunday). Nothing changes until the buyer taps the button on the card.", parameters: { type: "OBJECT", properties: { number: { type: "NUMBER" }, weekday: { type: "NUMBER" }, name: { type: "STRING" } }, required: ["number", "weekday"] } },
+  { name: "show_choices", description: "When it is unclear which of two to five things the buyer means, show them as buttons instead of asking aloud. Then wait for the pick.", parameters: { type: "OBJECT", properties: { question: { type: "STRING" }, options: { type: "ARRAY", items: { type: "STRING" } } }, required: ["question", "options"] } },
+] as const;
+
+export const LOOKUP_NAMES: readonly string[] = LOOKUP_DECLARATIONS.map((d) => d.name);
+
+export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "test", previous = ""): string {
   const catalogue = catalogueText(items);
   return [
     "You are a voice assistant inside a wholesale ordering app in Georgia. The person talking is a restaurant or cafe buyer ordering from ONE supplier.",
@@ -45,7 +63,7 @@ export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "te
     "Use ONLY the products in the catalogue below. Never invent a product, an id or a price (you do not know any prices).",
     "The catalogue may list several suppliers, and the same product can be sold by more than one (each with its own id). If the buyer names a supplier ('from supplier A'), use that supplier's ids. If they do not and several suppliers sell the product, ask which supplier BEFORE calling the tool. The order is kept separately for each supplier; never mix suppliers in one sentence of yours without saying which.",
     `Whenever the order changes (a product added, removed, or a quantity corrected), call ${SET_ORDER} with the COMPLETE current order, not only the change.`,
-    "In each line, productId is a catalogue id and quantity is the number said. spokenUnit is the unit exactly as the buyer said it (for example 'კილო', 'ცალი', 'ყუთი', 'გრამი'), never converted or corrected. Leave it out if no unit was said.",
+    "In each line, productId is a catalogue id and quantity is the number said. spokenUnit is the unit exactly as the buyer said it (for example 'კილო', 'ცალი', 'ყუთი', 'გრამი'), never converted or corrected. Leave it out if no unit was said. spokenName is the product name exactly as the buyer said it, without the number or the unit (for example 'ყველი' when they said 'ორი კილო ყველი').",
     "If the buyer corrects themselves ('five kilos... no, six'), use the final value.",
     "If a name fits several products (for example just 'cheese' when there are two cheeses), ask which one BEFORE calling the tool. Do not guess.",
     `If the tool answer lists needs_attention, ask the buyer about each item in one short sentence, then call ${SET_ORDER} again with the corrected order.`,
@@ -56,9 +74,16 @@ export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "te
     mode === "test"
       ? "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way."
       : "If the buyer asks about sending, a button, or where to click, answer exactly: «გაგზავნამდე შეკვეთას ეკრანზე გადაამოწმებთ.» Never mention sending, buttons or pressing anything in any other way.",
+    mode === "buyer"
+      ? "You never change anything yourself. To change the cart, order again or save a regular order, call propose_cart_change, propose_reorder or propose_regular_order: they only show a card, and the buyer taps its button. Say in one short sentence what the card shows and that it needs their tap. When you are not sure which of a few products or orders the buyer means, call show_choices with their names instead of guessing or asking at length. You can also look up anything the buyer could see by hand with these tools: search_products (products and their prices at the buyer's own suppliers), list_suppliers, list_orders, get_order and get_cart. Use a tool for every question about a price, a product, a supplier, an order or the cart: never answer those from memory, and never guess. Answer in one or two short sentences with the facts the tool returned; the app shows the details on screen as a card, so do not read long lists aloud. set_order takes only ids from the catalogue below; for a product from a search that is not in the catalogue, use propose_cart_change with the id the search returned."
+      : "",
+    previous
+      ? "When the buyer says 'the usual', 'same as last time' or 'as before', start from the usual order of that supplier listed below (copy its lines into the order), then apply what they change ('but no cream', 'double the tomatoes'). Say in one sentence what you copied. Never invent a usual order that is not listed."
+      : "",
     "",
-    "Catalogue (id | name | unit):",
+    "Catalogue (id | name | unit). An 'also said' list after a product is how this buyer usually names it: treat those words as that product.",
     catalogue,
+    previous ? `\nUsual order per supplier (id quantity unit):\n${previous}` : "",
   ].join("\n");
 }
 
@@ -76,6 +101,7 @@ export const SET_ORDER_DECLARATION = {
             productId: { type: "STRING", description: "A catalogue id." },
             quantity: { type: "NUMBER", description: "The number said, in the unit said." },
             spokenUnit: { type: "STRING", description: "The unit exactly as the buyer said it. Omit when none was said." },
+            spokenName: { type: "STRING", description: "The product name exactly as the buyer said it (the words, without the number or the unit). Omit when unsure." },
           },
           required: ["productId", "quantity"],
         },
@@ -102,13 +128,13 @@ export function liveVocabulary(items: CatalogItem[]): string[] {
 }
 
 /** The first message after the socket opens. Kept on the server so the instructions are built next to the rules. */
-export function buildLiveSetup(items: CatalogItem[], model: string, mode: LiveMode = "test") {
+export function buildLiveSetup(items: CatalogItem[], model: string, mode: LiveMode = "test", previous = "") {
   return {
     setup: {
       model: `models/${model}`,
       generationConfig: { responseModalities: ["AUDIO"] },
-      systemInstruction: { parts: [{ text: liveSystemInstruction(items, mode) }] },
-      tools: [{ functionDeclarations: [SET_ORDER_DECLARATION] }],
+      systemInstruction: { parts: [{ text: liveSystemInstruction(items, mode, previous) }] },
+      tools: [{ functionDeclarations: mode === "buyer" ? [SET_ORDER_DECLARATION, ...LOOKUP_DECLARATIONS] : [SET_ORDER_DECLARATION] }],
       inputAudioTranscription: { languageCodes: ["ka-GE"], customVocabulary: liveVocabulary(items) },
       outputAudioTranscription: {},
     },
@@ -124,6 +150,8 @@ export type LiveOrderLine = {
   /** The unit the quantity is in (the catalogue's, unless it was a mismatch). */
   unit: string | null;
   spokenUnit: string | null;
+  /** The product name as the buyer said it, so the app can remember how this buyer names things. */
+  spokenName: string | null;
   catalogUnit: string;
   unitCheck: UnitCheck;
 };
@@ -158,6 +186,7 @@ export function applySetOrder(
     }
     const q = typeof l.quantity === "number" && Number.isFinite(l.quantity) ? l.quantity : null;
     const spokenUnit = typeof l.spokenUnit === "string" && l.spokenUnit.trim() ? l.spokenUnit.trim().slice(0, 20) : null;
+    const spokenName = typeof l.spokenName === "string" && l.spokenName.trim() ? l.spokenName.trim().slice(0, 60) : null;
     const settled = reconcileUnit(q, spokenUnit, product.unit);
     if (settled.quantityMilli === null) attention.push({ product: product.name, problem: "bad_quantity" });
     if (settled.unitCheck === "mismatch") attention.push({ product: product.name, problem: "unit_mismatch", said: spokenUnit ?? "", sold_in: product.unit });
@@ -169,6 +198,7 @@ export function applySetOrder(
       quantityMilli: settled.quantityMilli,
       unit: settled.unit,
       spokenUnit,
+      spokenName,
       catalogUnit: product.unit,
       unitCheck: settled.unitCheck,
     });

@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/app-shell/page-header";
 import { BarRow, SparkBars } from "@/components/dashboard/bars";
 import { GetStarted, type SetupProgress } from "@/components/dashboard/get-started";
 import { Panel, PanelRow } from "@/components/dashboard/panel";
+import { VoiceLauncher, type VoiceChip } from "@/components/buyer/voice/voice-launcher";
 import { ReviewSheet } from "@/components/orders/review-sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Notice } from "@/components/ui/notice";
@@ -29,10 +30,12 @@ export type SupplierTodayProps = {
   now: Date;
   /** What the company has prepared; only read while it has no orders at all (the "get started" checklist). */
   setup?: SetupProgress;
+  /** Starting points for the assistant, when it is on. */
+  assistantChips?: VoiceChip[];
 };
 
 /** The supplier's home: what needs an answer, what goes out next, and the shape of the last 30 days. */
-export async function SupplierToday({ title, orgStatus, counts, metrics, queue, deliveries, series, clock, now, setup }: SupplierTodayProps) {
+export async function SupplierToday({ title, orgStatus, counts, metrics, queue, deliveries, series, clock, now, setup, assistantChips }: SupplierTodayProps) {
   const fmt = await getFormats();
   const format = await getFormatter();
   const t = await getTranslations("supplier");
@@ -51,6 +54,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
         title={title}
         subtitle={format.dateTime(now, { dateStyle: "full", timeZone: clock.timezone })}
       />
+      {assistantChips && assistantChips.length > 0 ? <VoiceLauncher variant="chips" role="supplier" chips={assistantChips} /> : null}
       {orgStatus === "pending_review" ? (
         <Notice icon={Clock} tone="amber" title={t("pendingTitle")}>
           {t("pendingBody")}

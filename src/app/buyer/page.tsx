@@ -69,6 +69,18 @@ async function Dashboard() {
         ))}
       </ListSection>
     ) : null;
+  const voiceOn = voiceOrderEnabled() && ctx.orgStatus === "active" && voiceSuppliers(suppliers) !== undefined;
+  // "The usual" for the two suppliers this buyer ordered from most recently. The label follows the page language; the command that is
+  // sent to the assistant is always Georgian, which is what it listens for.
+  const tv = await getTranslations("buyer.voice");
+  const tvKa = await getTranslations({ locale: "ka", namespace: "buyer.voice" });
+  const voiceChips = voiceOn
+    ? suppliers
+        .filter((s) => s.productCount > 0 && lastOrders.has(s.id))
+        .sort((a, b) => (lastOrders.get(b.id)?.getTime() ?? 0) - (lastOrders.get(a.id)?.getTime() ?? 0))
+        .slice(0, 2)
+        .map((s) => ({ label: tv("usualChip", { name: s.name }), command: tvKa("usualChip", { name: s.name }) }))
+    : [];
   return (
     <BuyerHome
       suppliers={suppliers}
@@ -78,7 +90,8 @@ async function Dashboard() {
       lastOrders={Object.fromEntries(lastOrders)}
       topSection={topSection}
       now={new Date()}
-      voiceSuppliers={voiceOrderEnabled() && ctx.orgStatus === "active" ? voiceSuppliers(suppliers) : undefined}
+      voiceSuppliers={voiceOn ? voiceSuppliers(suppliers) : undefined}
+      voiceChips={voiceChips}
     />
   );
 }

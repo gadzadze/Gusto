@@ -3,7 +3,7 @@ import { parseUnit, type ProductUnit } from "@/lib/catalog/units";
 // Pure helpers for the voice-order experiment: the catalogue text a tester pastes, the instructions and
 // response schema sent to the model, and the clean-up of what comes back. No I/O here, so it is unit tested.
 
-export type CatalogItem = { id: string; name: string; unit: string; supplierId?: string; supplierName?: string };
+export type CatalogItem = { id: string; name: string; unit: string; supplierId?: string; supplierName?: string; /** How this buyer says the product (remembered from earlier orders). */ aliases?: string[] };
 /** What the browser needs to turn the assistant's short ids back into products, and to let the buyer step quantities. */
 export type VoiceRef = { productId: string; minMilli: number; stepMilli: number };
 export type CatalogSupplier = { id: string; name: string };
@@ -60,7 +60,7 @@ export function catalogueText(items: CatalogItem[]): string {
   const out: string[] = [];
   for (const [name, list] of groups) {
     if (groups.size > 1 || name) out.push(name ? `Supplier: ${name}` : "Supplier: (not named)");
-    for (const i of list) out.push(`${i.id} | ${i.name} | ${i.unit}`);
+    for (const i of list) out.push(`${i.id} | ${i.name} | ${i.unit}${i.aliases?.length ? ` | also said: ${i.aliases.join("; ")}` : ""}`);
   }
   return out.join("\n");
 }
@@ -71,7 +71,10 @@ export function catalogueText(items: CatalogItem[]): string {
  */
 export const GEORGIAN_LISTENING = [
   "How buyers really speak (understand all of this, answer only in Georgian):",
-  "- Numbers come as digits or words: ერთი, ორი, სამი, ოთხი, ხუთი, ექვსი, შვიდი, რვა, ცხრა, ათი, თორმეტი, თხუთმეტი, ოცი, ოცდაათი, ორმოცდაათი, ასი, ორასი. Halves: ნახევარი, ერთნახევარი, ორნახევარი, 'ორი კილონახევარი' (= 2.5 kg), '2 და ნახევარი'.",
+  "- Numbers come as digits or words. Georgian counts in twenties, so build compound numbers by adding: 11 თერთმეტი, 12 თორმეტი, 13 ცამეტი, 14 თოთხმეტი, 15 თხუთმეტი, 16 თექვსმეტი, 17 ჩვიდმეტი, 18 თვრამეტი, 19 ცხრამეტი; 20 ოცი, 21 ოცდაერთი, 25 ოცდახუთი, 30 ოცდაათი, 35 ოცდათხუთმეტი, 40 ორმოცი, 45 ორმოცდახუთი, 50 ორმოცდაათი, 60 სამოცი, 70 სამოცდაათი, 80 ოთხმოცი, 90 ოთხმოცდაათი, 99 ოთხმოცდაცხრამეტი; 100 ასი, 120 ას ოცი, 150 ას ორმოცდაათი, 200 ორასი, 300 სამასი, 500 ხუთასი, 900 ცხრაასი, 1000 ათასი, 1500 ათას ხუთასი. Do not mix up ორი (2) with ოცი (20), ოთხი (4) with ორმოცი (40), ათი (10) with ათასი (1000), ცხრა (9) with ცხრამეტი (19).",
+  "- Fractions: ნახევარი (0.5), ერთნახევარი / 'ერთი და ნახევარი' (1.5), ორნახევარი / 'ორი კილონახევარი' / '2 და ნახევარი' (2.5), მეოთხედი (0.25), 'სამი მეოთხედი' (0.75), 'ორი მთელი ხუთი' (2.5), 'ნახევარი ლიტრი' (0.5 l). 'ასი გრამი' is 100 g, 'ორასი გრამი' is 200 g, 'ნახევარი კილო' is 0.5 kg.",
+  "- Check numbers before you act: say the number back in your head with its unit and ask whether the amount is believable for this product. Confirm once, out loud, any quantity of 50 or more, and any quantity where the word could be two numbers (ორი or ოცი, ხუთი or ორმოცდახუთი). Never guess.",
+  "- The buyer may also TYPE instead of speaking. Typed text can be Georgian script or Latin letters typed the way it sounds ('2 kg qveli', 'nagebi 3 l', 'sulguni'), with digits and short forms. Understand it the same way, answer in Georgian, and do not wait for speech.",
   "- Units: კილო / კგ / კილოგრამი, გრამი / გრ, ლიტრი / ლ, ცალი, ყუთი / კოლოფი, შეკვრა / პაკეტი, ბოთლი. Pass the unit exactly as said.",
   "- Product names arrive in any case and with small slips: 'ყველს', 'ყველის', 'ქათმის ფილეს', 'პომიდორს', 'პომიდვრის', 'ლუდის', 'კოკოკოლა', 'კათმისი ფილე'. Match them to the closest catalogue name by its stem, and ask if two products are close.",
   "- Request words: მინდა, მომიტანეთ, ჩამიწერეთ, დამიმატეთ, ასევე, ესეც (add); ამოშალეთ, ამოიღეთ, აღარ მინდა (remove); შეცვალეთ, გამოასწორეთ, 'არა, ... იყოს' (change).",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { Snapshot } from "@/lib/assistant/snapshots";
 import { applySetOrder, SET_ORDER, type LiveOrderLine } from "@/lib/voice/live";
 import type { CatalogItem } from "@/lib/voice/order-parse";
 
@@ -10,12 +11,17 @@ import type { CatalogItem } from "@/lib/voice/order-parse";
 const WS_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContentConstrained";
 
 export type LivePhase = "idle" | "connecting" | "live";
-export type LiveTurn = { who: "you" | "assistant"; text: string };
+/** A line of the thread: something said, or a snapshot the assistant showed (a card of products, orders, the cart...). */
+export type LiveTurn = { who: "you" | "assistant"; text: string; view?: Snapshot };
+/** Runs one lookup for the assistant. The facts go back to the model; the snapshot, if any, goes into the thread. */
+export type LookupRunner = (name: string, args: unknown) => Promise<{ ok: true; forModel: unknown; view: Snapshot | null } | { ok: false; error: string }>;
 export type LiveSession = { token: string; setup: unknown; items: CatalogItem[]; maxSeconds: number };
 export type LiveStartResult = { ok: true; session: LiveSession } | { ok: false; error: string };
 
 /** How many bars the level strip holds. */
 export const LEVEL_BARS = 40;
+/** The longest typed command that is sent. */
+const MAX_TYPED_CHARS = 300;
 
 function base64FromBytes(bytes: Uint8Array): string {
   let s = "";
@@ -23,7 +29,7 @@ function base64FromBytes(bytes: Uint8Array): string {
   return btoa(s);
 }
 
-export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
+export function useLiveVoice(getSession: () => Promise<LiveStartResult>, runLookup?: LookupRunner) {
   const [phase, setPhase] = useState<LivePhase>("idle");
   const [turns, setTurns] = useState<LiveTurn[]>([]);
   const [order, setOrder] = useState<LiveOrderLine[]>([]);
@@ -45,6 +51,8 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
   const level = useRef(0);
   const closing = useRef(false);
   const live = useRef(false);
+  // Typed lines written before the session is ready are sent the moment it is.
+  const pendingText = useRef<string[]>([]);
 
   function stopPlayback() {
     for (const source of playing.current) {
@@ -62,6 +70,7 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
   function teardown() {
     closing.current = true;
     live.current = false;
+    pendingText.current = [];
     if (stopTimer.current) clearTimeout(stopTimer.current);
     if (meterTimer.current) clearInterval(meterTimer.current);
     stopTimer.current = null;
@@ -89,6 +98,12 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
     else list.push({ who, text });
     boundary.current = false;
     setTurns([...list]);
+  }
+
+  function addView(view: Snapshot) {
+    turnsRef.current.push({ who: "assistant", text: "", view });
+    boundary.current = true;
+    setTurns([...turnsRef.current]);
   }
 
   function play(base64: string, mimeType: string) {
@@ -119,12 +134,29 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
     };
   }
 
-  async function start(): Promise<LiveSession | null> {
+  /** Writes a command instead of speaking it. Shown as the buyer's own line, answered like a spoken one. */
+  function sendText(raw: string) {
+    const text = raw.trim().slice(0, MAX_TYPED_CHARS);
+    if (!text) return;
+    boundary.current = true;
+    addText("you", text);
+    boundary.current = true;
+    const socket = ws.current;
+    if (live.current && socket && socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ realtimeInput: { text } }));
+    else pendingText.current.push(text);
+  }
+
+  /** `mic: false` starts a session for typing only: no microphone permission is asked. */
+  async function start(options: { mic?: boolean; fresh?: boolean } = {}): Promise<LiveSession | null> {
+    const useMic = options.mic !== false;
     setError(null);
-    setTurns([]);
+    // The thread outlives a session (it is the conversation on screen); only `fresh` empties it.
+    if (options.fresh) {
+      setTurns([]);
+      turnsRef.current = [];
+    }
     setOrder([]);
     setDeliveryDay(null);
-    turnsRef.current = [];
     boundary.current = true;
     closing.current = false;
     setPhase("connecting");
@@ -145,37 +177,47 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
     const started = await getSession();
     if (!started.ok) return fail(started.error);
     const session = started.session;
+    // A new session knows nothing of the earlier one: hand it the last lines of the thread as context so it can carry on.
+    const earlier = turnsRef.current.filter((t) => t.text).slice(-8).map((t) => `${t.who === "you" ? "User" : "Assistant"}: ${t.text}`).join("\n");
+    if (earlier) {
+      const setup = session.setup as { setup?: { systemInstruction?: { parts?: { text: string }[] } } };
+      const part = setup.setup?.systemInstruction?.parts?.[0];
+      if (part) part.text += `\n\nEarlier in this conversation (context only, do not repeat it; the user may refer to it):\n${earlier}`;
+    }
 
-    let media: MediaStream;
-    try {
-      media = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
-    } catch {
-      return fail("micDenied");
+    if (useMic) {
+      let media: MediaStream;
+      try {
+        media = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+      } catch {
+        return fail("micDenied");
+      }
+      stream.current = media;
+      try {
+        await mic.audioWorklet.addModule("/voice-capture-worklet.js");
+      } catch {
+        return fail("startFailed");
+      }
+      const source = mic.createMediaStreamSource(media);
+      const capture = new AudioWorkletNode(mic, "voice-capture");
+      const mute = mic.createGain();
+      mute.gain.value = 0;
+      source.connect(capture);
+      capture.connect(mute);
+      mute.connect(mic.destination);
+      capture.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
+        const pcm = new Int16Array(event.data);
+        let sum = 0;
+        for (let i = 0; i < pcm.length; i += 4) sum += (pcm[i] / 0x8000) ** 2;
+        level.current = Math.min(1, Math.sqrt(sum / Math.max(1, pcm.length / 4)) * 5);
+        const socket = ws.current;
+        if (!live.current || !socket || socket.readyState !== WebSocket.OPEN) return;
+        socket.send(JSON.stringify({ realtimeInput: { audio: { data: base64FromBytes(new Uint8Array(event.data)), mimeType: "audio/pcm;rate=16000" } } }));
+      };
+      // One bar per tick; the strip scrolls like a tape, so it needs no animation loop.
+      meterTimer.current = setInterval(() => setLevels((prev) => [...prev.slice(1), level.current]), 90);
+
     }
-    stream.current = media;
-    try {
-      await mic.audioWorklet.addModule("/voice-capture-worklet.js");
-    } catch {
-      return fail("startFailed");
-    }
-    const source = mic.createMediaStreamSource(media);
-    const capture = new AudioWorkletNode(mic, "voice-capture");
-    const mute = mic.createGain();
-    mute.gain.value = 0;
-    source.connect(capture);
-    capture.connect(mute);
-    mute.connect(mic.destination);
-    capture.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
-      const pcm = new Int16Array(event.data);
-      let sum = 0;
-      for (let i = 0; i < pcm.length; i += 4) sum += (pcm[i] / 0x8000) ** 2;
-      level.current = Math.min(1, Math.sqrt(sum / Math.max(1, pcm.length / 4)) * 5);
-      const socket = ws.current;
-      if (!live.current || !socket || socket.readyState !== WebSocket.OPEN) return;
-      socket.send(JSON.stringify({ realtimeInput: { audio: { data: base64FromBytes(new Uint8Array(event.data)), mimeType: "audio/pcm;rate=16000" } } }));
-    };
-    // One bar per tick; the strip scrolls like a tape, so it needs no animation loop.
-    meterTimer.current = setInterval(() => setLevels((prev) => [...prev.slice(1), level.current]), 90);
 
     const socket = new WebSocket(`${WS_URL}?access_token=${encodeURIComponent(session.token)}`);
     ws.current = socket;
@@ -204,6 +246,7 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
         if (message.setupComplete) {
           live.current = true;
           setPhase("live");
+          for (const text of pendingText.current.splice(0)) socket.send(JSON.stringify({ realtimeInput: { text } }));
           stopTimer.current = setTimeout(() => {
             teardown();
             setPhase("idle");
@@ -219,14 +262,24 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
           if (content.turnComplete) boundary.current = true;
         }
         if (message.toolCall) {
-          const responses = (message.toolCall.functionCalls ?? []).map((call: { id: string; name: string; args: unknown }) => {
-            if (call.name !== SET_ORDER) return { id: call.id, name: call.name, response: { error: "unknown_tool" } };
-            const applied = applySetOrder(call.args, session.items);
-            setOrder(applied.lines);
-            if (applied.deliveryDay) setDeliveryDay(applied.deliveryDay);
-            return { id: call.id, name: call.name, response: applied.feedback };
-          });
-          socket.send(JSON.stringify({ toolResponse: { functionResponses: responses } }));
+          const responses = await Promise.all(
+            (message.toolCall.functionCalls ?? []).map(async (call: { id: string; name: string; args: unknown }) => {
+              if (call.name === SET_ORDER) {
+                const applied = applySetOrder(call.args, session.items);
+                setOrder(applied.lines);
+                if (applied.deliveryDay) setDeliveryDay(applied.deliveryDay);
+                return { id: call.id, name: call.name, response: applied.feedback };
+              }
+              if (runLookup) {
+                const result = await runLookup(call.name, call.args).catch(() => ({ ok: false as const, error: "failed" }));
+                if (!result.ok) return { id: call.id, name: call.name, response: { error: result.error } };
+                if (result.view) addView(result.view);
+                return { id: call.id, name: call.name, response: { result: result.forModel } };
+              }
+              return { id: call.id, name: call.name, response: { error: "unknown_tool" } };
+            }),
+          );
+          if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ toolResponse: { functionResponses: responses } }));
         }
       });
     };
@@ -238,5 +291,17 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>) {
     setPhase("idle");
   }
 
-  return { phase, turns, order, deliveryDay, error, speaking, levels, start, stop, clearError: () => setError(null) };
+  /** Cuts the assistant off mid-answer: the audio stops at once and the next thing said is a new turn. */
+  function interrupt() {
+    stopPlayback();
+    boundary.current = true;
+  }
+
+  function clearThread() {
+    turnsRef.current = [];
+    boundary.current = true;
+    setTurns([]);
+  }
+
+  return { phase, turns, order, deliveryDay, error, speaking, levels, start, stop, interrupt, clearThread, sendText, clearError: () => setError(null) };
 }

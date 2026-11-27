@@ -1,17 +1,20 @@
 "use client";
 
-import { Check, ChevronDown, Keyboard, LoaderCircle, Mic, MicOff, Minus, Plus, TriangleAlert, X } from "lucide-react";
+import { ArrowUp, Check, ChevronDown, Keyboard, LoaderCircle, Mic, MicOff, Minus, Plus, Square, TriangleAlert, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { applyAssistantActionAction, runAssistantToolAction } from "@/app/buyer/assistant/actions";
+import { SnapshotCard } from "@/components/buyer/assistant/snapshot-card";
+import type { ApplyResult, ProposalAction } from "@/lib/assistant/snapshots";
 import { fillCartsFromVoiceAction, startBuyerVoiceAction } from "@/app/buyer/voice/actions";
 import { Button, ForwardArrow } from "@/components/ui/button";
 import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { isOrderableQuantity, milliToInput, stepDown, stepUp } from "@/lib/quantity";
 import { cn } from "@/lib/utils";
 import { type LiveOrderLine } from "@/lib/voice/live";
-import { useLiveVoice, type LiveSession } from "@/lib/voice/use-live-voice";
+import { useLiveVoice, type LiveSession, type LiveTurn, type LookupRunner } from "@/lib/voice/use-live-voice";
 import type { VoiceRef } from "@/lib/voice/order-parse";
 
 type Separator = "." | ",";
@@ -27,9 +30,13 @@ export type VoiceLine = LiveOrderLine & { qty: number | null; unitOk: boolean };
  */
 export type VoiceAdapter = {
   start: () => Promise<{ ok: true; session: LiveSession; refs: Record<string, VoiceRef> } | { ok: false; error: string }>;
-  fill: (lines: { productId: string; qtyMilli: number }[]) => Promise<{ ok: true; skipped: string[] } | { ok: false; error: string }>;
+  fill: (lines: { productId: string; qtyMilli: number; phrase?: string }[]) => Promise<{ ok: true; skipped: string[] } | { ok: false; error: string }>;
   /** After a clean finish, or "to cart": the buyer goes to the cart, the test page just closes. */
   finish: () => void;
+  /** Lookups for the assistant. Without it the assistant has no lookup tools (the admin test page). */
+  lookup?: LookupRunner;
+  /** Confirm on a proposal card. Without it the buyer's own is used when there is no adapter, and cards cannot be confirmed otherwise. */
+  apply?: (action: ProposalAction) => Promise<ApplyResult>;
 };
 
 const KNOWN_ERRORS = ["startFailed", "connectionLost", "rate_limited", "not_configured", "no_products", "pending", "invalid"];
@@ -39,7 +46,30 @@ const KNOWN_ERRORS = ["startFailed", "connectionLost", "rate_limited", "not_conf
  * of the proposed order. The assistant only proposes; the lines go into the carts and the buyer sends each one through the normal
  * checkout. Layout rule: one column, one rhythm (8px steps), one accent colour, and the same dock in every state.
  */
-export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: VoiceSupplier[]; onClose: () => void; adapter?: VoiceAdapter }) {
+/** How the assistant was opened: with a typed or tapped command to start from, or straight into listening. */
+export type VoiceLaunch = { text?: string; mic?: boolean };
+
+/** A command from outside (the dock, the command bar, a chip). A new `id` is a new command, even with the same words. */
+export type AssistantCommand = VoiceLaunch & { id: number };
+export type AssistantStatus = { phase: "idle" | "connecting" | "live"; speaking: boolean };
+
+export function VoiceAssistant({
+  suppliers,
+  onClose,
+  adapter,
+  launch,
+  command,
+  onStatus,
+  role = "buyer",
+}: {
+  suppliers: VoiceSupplier[];
+  onClose: () => void;
+  adapter?: VoiceAdapter;
+  launch?: VoiceLaunch;
+  command?: AssistantCommand | null;
+  onStatus?: (status: AssistantStatus) => void;
+  role?: "buyer" | "supplier";
+}) {
   const tu = useTranslations("unitNames");
   const locale = useLocale();
   const router = useRouter();
@@ -58,12 +88,75 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
       onClose();
     },
   };
+  // The assistant knows products by short ids (`p1`); a lookup returns real ids, so they are swapped for the short ones here and
+  // dropped when the product is not in this session's catalogue (it can then be opened on screen, not ordered by voice).
+  const refsRef = useRef<Record<string, VoiceRef>>({});
+  const buyerLookup: LookupRunner = async (name, args) => {
+    // A change proposal names its product by the short id; the server wants the real one.
+    if (name === "propose_cart_change" && args && typeof args === "object") {
+      const given = (args as { product_id?: unknown }).product_id;
+      const real = typeof given === "string" ? refsRef.current[given]?.productId : undefined;
+      if (real) args = { ...(args as object), product_id: real };
+    }
+    const result = await runAssistantToolAction({ name, args });
+    if (!result.ok) return result;
+    const model = result.forModel as { results?: { uuid?: string; id?: string | null; orderable_by_voice?: boolean }[] };
+    if (Array.isArray(model.results)) {
+      const alias = new Map(Object.entries(refsRef.current).map(([short, ref]) => [ref.productId, short]));
+      for (const r of model.results) {
+        // In the catalogue: its short id (also valid for set_order). Otherwise the real id, which only the propose tools accept.
+        r.id = (r.uuid ? alias.get(r.uuid) : undefined) ?? r.uuid ?? null;
+        delete r.uuid;
+      }
+    }
+    return result;
+  };
   const voice = useLiveVoice(async () => {
     const started = await use.start();
     if (!started.ok) return { ok: false, error: started.error };
     setRefs(started.refs);
+    refsRef.current = started.refs;
     return { ok: true, session: started.session };
-  });
+  }, adapter ? adapter.lookup : buyerLookup);
+
+  // Opened from the command bar: a typed or tapped command is sent at once (no microphone permission), a mic tap starts listening.
+  const launched = useRef(false);
+  useEffect(() => {
+    if (launched.current || !launch) return;
+    launched.current = true;
+    if (launch.text) {
+      micOn.current = false;
+      void voice.start({ mic: false });
+      voice.sendText(launch.text);
+    } else if (launch.mic) void voice.start();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A command from the dock or a chip while the assistant is already mounted (its session and thread outlive the panel).
+  const micOn = useRef(true);
+  const lastCommand = useRef<number | null>(null);
+  useEffect(() => {
+    if (!command || lastCommand.current === command.id) return;
+    lastCommand.current = command.id;
+    if (command.text) {
+      if (voice.phase === "idle") {
+        micOn.current = false;
+        void voice.start({ mic: false });
+      }
+      voice.sendText(command.text);
+    } else if (command.mic) startMic();
+  }, [command?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    onStatus?.({ phase: voice.phase === "live" ? "live" : voice.phase === "connecting" ? "connecting" : "idle", speaking: voice.speaking });
+  }, [voice.phase, voice.speaking]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** The microphone on. A session opened by typing has none, so it is closed and a listening one takes its place (the thread stays). */
+  function startMic() {
+    if (voice.phase === "live" && !micOn.current) voice.stop();
+    if (voice.phase === "live" && micOn.current) return;
+    micOn.current = true;
+    void voice.start();
+  }
 
   const [view, setView] = useState<View>("talk");
   const [lines, setLines] = useState<VoiceLine[]>([]);
@@ -89,11 +182,18 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
   async function confirm() {
     setBusy(true);
     setFillError(null);
-    const result = await use.fill(lines.filter((l) => l.qty !== null).map((l) => ({ productId: refs[l.productId].productId, qtyMilli: l.qty as number })));
+    const result = await use.fill(lines.filter((l) => l.qty !== null).map((l) => ({ productId: refs[l.productId].productId, qtyMilli: l.qty as number, phrase: l.spokenName ?? undefined })));
     setBusy(false);
     if (!result.ok) return setFillError(KNOWN_ERRORS.includes(result.error) ? result.error : "unknown");
-    if (result.skipped.length === 0) use.finish();
+    if (result.skipped.length === 0) done();
     else setSkipped(result.skipped);
+  }
+
+  /** After the lines went into the carts: go where the adapter says, and leave the review behind (the thread stays). */
+  function done() {
+    use.finish();
+    setView("talk");
+    setLines([]);
   }
 
   if (view === "review") {
@@ -106,7 +206,7 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
         skipped={skipped}
         errorKey={fillError}
         onConfirm={() => void confirm()}
-        onToCart={use.finish}
+        onToCart={done}
         onClose={onClose}
         unitLabel={unitLabel}
         separator={separator}
@@ -117,6 +217,7 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
   return (
     <TalkView
       suppliers={suppliers}
+      role={role}
       connecting={connecting}
       live={live}
       speaking={voice.speaking}
@@ -125,10 +226,33 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
       levels={voice.levels}
       blocked={blocked}
       errorKey={errorKey}
-      onStart={() => void voice.start()}
+      onStart={startMic}
+      micOn={live && micOn.current}
+      onInterrupt={voice.interrupt}
+      onTypeInstead={() => {
+        voice.clearError();
+        micOn.current = false;
+        void voice.start({ mic: false });
+      }}
+      onChoose={(label) => {
+        if (voice.phase === "idle") {
+          micOn.current = false;
+          void voice.start({ mic: false });
+        }
+        voice.sendText(label);
+      }}
+      onApply={adapter ? adapter.apply : applyAssistantActionAction}
+      onSendText={(text) => {
+        // Typing needs no microphone: a session started by a typed line asks for no permission.
+        if (voice.phase === "idle") {
+          micOn.current = false;
+          void voice.start({ mic: false });
+        }
+        voice.sendText(text);
+      }}
       onRetry={() => {
         voice.clearError();
-        void voice.start();
+        startMic();
       }}
       onFinish={finish}
       onClose={onClose}
@@ -140,15 +264,28 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
 
 type TalkProps = {
   suppliers: VoiceSupplier[];
+  role?: "buyer" | "supplier";
   connecting: boolean;
   live: boolean;
   speaking: boolean;
-  turns: { who: "you" | "assistant"; text: string }[];
+  turns: LiveTurn[];
   order: LiveOrderLine[];
   levels: number[];
   blocked: boolean;
   errorKey: string | null;
   onStart: () => void;
+  /** The microphone is in use (a typing-only session does not count): the speak button is then off. */
+  micOn?: boolean;
+  /** Cuts the assistant off while it is speaking. */
+  onInterrupt?: () => void;
+  /** From the "microphone is off" screen: carry on by typing instead. */
+  onTypeInstead?: () => void;
+  /** A command typed instead of spoken. Without it the Type button is not shown. */
+  onSendText?: (text: string) => void;
+  /** A button on a "choices" card was tapped: the label goes to the assistant as what the buyer said. */
+  onChoose?: (label: string) => void;
+  /** Confirm on a proposal card. Without it proposal cards cannot be confirmed (the admin test page has none). */
+  onApply?: (action: ProposalAction) => Promise<ApplyResult>;
   onRetry: () => void;
   onFinish: () => void;
   onClose: () => void;
@@ -157,11 +294,14 @@ type TalkProps = {
 };
 
 /** The talking view, as plain props so a fixture can render it without a microphone or a socket. */
-export function TalkView({ suppliers, connecting, live, speaking, turns, order, levels, blocked, errorKey, onStart, onRetry, onFinish, onClose, unitLabel, separator }: TalkProps) {
+export function TalkView({ suppliers, role = "buyer", connecting, live, speaking, turns, order, levels, blocked, errorKey, onStart, micOn = live, onInterrupt, onTypeInstead, onSendText, onChoose, onApply, onRetry, onFinish, onClose, unitLabel, separator }: TalkProps) {
   const t = useTranslations("buyer.voice");
+  const [typing, setTyping] = useState(false);
+  const [draft, setDraft] = useState("");
+  const flagged = order.filter((l) => l.unitCheck === "mismatch" || l.quantityMilli === null).length;
   const status = connecting ? t("connecting") : live ? (speaking ? t("answering") : t("listening")) : null;
-  const shown = turns.slice(-2);
-  const lastIndex = shown.length - 1;
+  const shown = turns.slice(-14);
+  const lastIndex = shown.findLastIndex((x) => !x.view);
 
   return (
     <div className="flex h-full flex-col">
@@ -179,14 +319,17 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-6">
         {blocked ? (
-          <Blocked onRetry={onRetry} onClose={onClose} />
+          <Blocked onRetry={onRetry} onTypeInstead={onTypeInstead ? () => { onTypeInstead(); setTyping(true); } : undefined} onClose={onClose} />
         ) : !live && !connecting && turns.length === 0 ? (
-          <Intro suppliers={suppliers} />
+          <Intro suppliers={suppliers} role={role} />
         ) : (
           <div className="space-y-8">
             <div aria-live="polite" className="space-y-3">
               {shown.length === 0 ? <p className="text-xl text-muted-foreground">{t("listening")}</p> : null}
-              {shown.map((turn, i) => (
+              {shown.map((turn, i) =>
+                turn.view ? (
+                  <SnapshotCard key={turns.length - shown.length + i} view={turn.view} onChoose={onChoose} onApply={onApply} />
+                ) : (
                 <p
                   key={turns.length - shown.length + i}
                   className={cn(
@@ -197,9 +340,16 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
                 >
                   {turn.text}
                 </p>
-              ))}
+                ),
+              )}
             </div>
             <Ledger lines={order} unitLabel={unitLabel} separator={separator} />
+            {flagged > 0 ? (
+              <p role="status" className="mt-3 flex items-start gap-2 rounded-2xl bg-[var(--status-amber-bg)] px-4 py-3 text-sm text-[var(--status-amber-fg)]">
+                <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+                {t("proposalFlagged", { count: flagged })}
+              </p>
+            ) : null}
           </div>
         )}
         {errorKey ? (
@@ -212,30 +362,74 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
 
       {!blocked ? (
         <footer className="px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
-          <Wave levels={levels} active={live} />
+          {order.length > 0 ? (
+            <div className="mb-3 space-y-2">
+              <Button className="w-full" size="lg" onClick={onFinish}>
+                {t("reviewCart")}
+                <ForwardArrow />
+              </Button>
+              <p className="text-center text-sm text-muted-foreground">{t("proposalNote")}</p>
+            </div>
+          ) : null}
+          {typing && onSendText ? (
+            <form
+              className="mb-3 flex items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!draft.trim()) return;
+                onSendText(draft);
+                setDraft("");
+              }}
+            >
+              <input
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                maxLength={300}
+                placeholder={t("textPlaceholder")}
+                aria-label={t("textPlaceholder")}
+                className="min-h-12 min-w-0 flex-1 rounded-full border border-input bg-surface px-4 text-base outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+              />
+              <button type="submit" aria-label={t("textSend")} className={cn(ringButton, "size-12 bg-brand text-brand-foreground")}>
+                <ArrowUp aria-hidden />
+              </button>
+            </form>
+          ) : (
+            <Wave levels={levels} active={live} />
+          )}
           <div className="mt-4 grid grid-cols-3 items-start">
             <DockSlot label={t("text")}>
-              <Link href="/buyer/search" onClick={onClose} aria-label={t("text")} className={ringButton}>
-                <Keyboard aria-hidden />
-              </Link>
+              {onSendText ? (
+                <button type="button" onClick={() => setTyping((v) => !v)} aria-label={t("text")} aria-pressed={typing} className={cn(ringButton, typing && "border-brand text-brand")}>
+                  <Keyboard aria-hidden />
+                </button>
+              ) : (
+                <Link href="/buyer/search" onClick={onClose} aria-label={t("text")} className={ringButton}>
+                  <Keyboard aria-hidden />
+                </Link>
+              )}
             </DockSlot>
-            <DockSlot label={connecting ? t("connecting") : live ? t("listening") : t("speak")} strong>
+            <DockSlot label={connecting ? t("connecting") : micOn ? t("listening") : t("speak")} strong>
               <button
                 type="button"
                 onClick={onStart}
-                disabled={live}
+                disabled={micOn || connecting}
                 aria-label={t("speak")}
-                aria-pressed={live}
+                aria-pressed={micOn}
                 className={cn(
                   "inline-flex size-[4.75rem] items-center justify-center rounded-full bg-brand text-brand-foreground transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100 disabled:cursor-default [&_svg]:size-7",
-                  live && "ring-2 ring-brand ring-offset-4 ring-offset-surface",
+                  micOn && "ring-2 ring-brand ring-offset-4 ring-offset-surface",
                 )}
               >
                 {connecting ? <LoaderCircle aria-hidden className="animate-spin motion-reduce:animate-none" /> : <Mic aria-hidden />}
               </button>
             </DockSlot>
-            <DockSlot label={live || order.length > 0 ? t("finish") : ""}>
-              {live || order.length > 0 ? (
+            <DockSlot label={speaking && onInterrupt ? t("stop") : live && order.length === 0 ? t("finish") : ""}>
+              {speaking && onInterrupt ? (
+                <button type="button" onClick={onInterrupt} aria-label={t("stop")} className={ringButton}>
+                  <Square aria-hidden className="size-5 fill-current" />
+                </button>
+              ) : live && order.length === 0 ? (
                 <button type="button" onClick={onFinish} aria-label={t("finish")} className={ringButton}>
                   <Check aria-hidden />
                 </button>
@@ -286,16 +480,16 @@ function Wave({ levels, active }: { levels: number[]; active: boolean }) {
   );
 }
 
-function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
+function Intro({ suppliers, role }: { suppliers: VoiceSupplier[]; role: "buyer" | "supplier" }) {
   const t = useTranslations("buyer.voice");
-  const examples = t.raw("examples") as string[];
+  const examples = t.raw(role === "supplier" ? "supplierExamples" : "examples") as string[];
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h2 className="text-balance text-[1.75rem] font-semibold leading-tight">{t("title")}</h2>
-        <p className="text-base text-muted-foreground">{t("lead")}</p>
+        <h2 className="text-balance text-[1.75rem] font-semibold leading-tight">{role === "supplier" ? t("supplierTitle") : t("title")}</h2>
+        <p className="text-base text-muted-foreground">{role === "supplier" ? t("supplierLead") : t("lead")}</p>
       </div>
-      <section aria-labelledby="voice-suppliers" className="glass px-4 py-1">
+      {role === "buyer" ? <section aria-labelledby="voice-suppliers" className="glass px-4 py-1">
         <h3 id="voice-suppliers" className="sr-only">{t("suppliersTitle")}</h3>
         <ul>
           {suppliers.map((s) => (
@@ -305,7 +499,7 @@ function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
             </li>
           ))}
         </ul>
-      </section>
+      </section> : null}
       <section aria-labelledby="voice-examples" className="glass px-4 py-1">
         <h3 id="voice-examples" className="sr-only">{t("examplesTitle")}</h3>
         <ul>
@@ -319,7 +513,7 @@ function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
   );
 }
 
-function Blocked({ onRetry, onClose }: { onRetry: () => void; onClose: () => void }) {
+function Blocked({ onRetry, onTypeInstead, onClose }: { onRetry: () => void; onTypeInstead?: () => void; onClose: () => void }) {
   const t = useTranslations("buyer.voice");
   return (
     <div className="space-y-8">
@@ -337,9 +531,15 @@ function Blocked({ onRetry, onClose }: { onRetry: () => void; onClose: () => voi
         <Button type="button" size="lg" className="w-full" onClick={onRetry}>
           {t("blocked.retry")}
         </Button>
-        <Button asChild variant="outline" size="lg" className="w-full">
-          <Link href="/buyer/search" onClick={onClose}>{t("blocked.typeInstead")}</Link>
-        </Button>
+        {onTypeInstead ? (
+          <Button type="button" variant="outline" size="lg" className="w-full" onClick={onTypeInstead}>
+            {t("blocked.typeInstead")}
+          </Button>
+        ) : (
+          <Button asChild variant="outline" size="lg" className="w-full">
+            <Link href="/buyer/search" onClick={onClose}>{t("blocked.typeInstead")}</Link>
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -358,7 +558,7 @@ function groupBySupplier<T extends { supplierName: string | null }>(items: T[]):
 /** What has been captured so far; folded away by default so the caption keeps the screen. */
 function Ledger({ lines, unitLabel, separator }: { lines: LiveOrderLine[]; unitLabel: (code: string | null) => string; separator: Separator }) {
   const t = useTranslations("buyer.voice");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const groups = useMemo(() => groupBySupplier(lines), [lines]);
   if (lines.length === 0) return null;
   return (

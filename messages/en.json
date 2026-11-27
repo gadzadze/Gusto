@@ -539,7 +539,85 @@
         "pending": "Voice ordering opens once your business is approved.",
         "invalid": "Something was wrong with the request. Try again.",
         "unknown": "Something went wrong. Try again."
-      }
+      },
+      "textPlaceholder": "Type what you need, e.g. 2 kg sulguni",
+      "textSend": "Tell the assistant",
+      "barPlaceholder": "Tell me what you need",
+      "usualChip": "The usual: {name}",
+      "reviewCart": "Review cart",
+      "proposalNote": "Nothing is sent until you confirm.",
+      "proposalFlagged": "To check: {count}",
+      "barLabel": "Ask the assistant",
+      "supplierTitle": "Run your orders by voice",
+      "supplierLead": "Ask what is waiting, or tell it what to do. You check every change on a card before it happens.",
+      "supplierExamples": [
+        "“What is waiting for me?”",
+        "“Confirm all new orders”",
+        "“What do I load tomorrow?”",
+        "“Hide everything that is out of stock”"
+      ],
+      "supplierBarPlaceholder": "Tell me what to do",
+      "supplierBarLabel": "A command for the assistant",
+      "supplierChipWaiting": "What is waiting?",
+      "supplierChipTomorrow": "Tomorrow's loading",
+      "supplierChipRestock": "What needs restocking?",
+      "stop": "Stop",
+      "dockPlaceholder": "Tell me what you need",
+      "dockPlaceholderSupplier": "Tell me what to do",
+      "dockEnd": "End the conversation",
+      "dockOpen": "Open the assistant",
+      "dockLive": "Listening",
+      "dockWorking": "Connecting",
+      "dockAnswering": "Answering",
+      "collapse": "Minimise"
+    },
+    "assistant": {
+      "noProducts": "Nothing found for \"{query}\" at your suppliers.",
+      "moreProducts": "{count} matches: see all",
+      "minOrder": "min. order {amount}",
+      "noOrders": "No orders yet.",
+      "allOrders": "All orders",
+      "openOrder": "Open the order",
+      "emptyCart": "Your carts are empty.",
+      "total": "Total",
+      "shortfall": "{amount} short of the minimum order",
+      "openCart": "Open the cart",
+      "applied": {
+        "cartSet": "Cart updated.",
+        "cartRemoved": "Removed from the cart.",
+        "reorder": "{added, plural, one {# product} other {# products}} added to the cart.",
+        "reorderSkipped": "{added} added to the cart. Not available now: {skipped}.",
+        "regular": "Saved as a regular order. You will get a reminder on that day."
+      },
+      "proposal": {
+        "cartTitle": "Change the cart",
+        "cartRemoveTitle": "Remove from the cart",
+        "cartConfirm": "Update the cart",
+        "cartRemoveConfirm": "Remove",
+        "reorderTitle": "Order again: {number}, {supplier}",
+        "reorderNote": "Goes into the cart at today's prices. Nothing is sent.",
+        "reorderConfirm": "Add to the cart",
+        "regularTitle": "Save as a regular order",
+        "regularNote": "A reminder and a one-tap cart fill. It never orders by itself.",
+        "regularConfirm": "Save"
+      },
+      "dueHint": "usually every {every} days, last ordered {since} days ago",
+      "cancel": "Cancel",
+      "cancelled": "Cancelled.",
+      "working": "Working...",
+      "openPage": "Open the page",
+      "errors": {
+        "invalid": "That did not work. Try again.",
+        "not_found": "Not found.",
+        "failed": "Something went wrong. Try again.",
+        "product_unavailable": "This product is not available now.",
+        "invalid_quantity": "That quantity is not allowed for this product.",
+        "limit_reached": "You already have the maximum number of regular orders.",
+        "empty": "That order has nothing to save.",
+        "rate_limited": "Too many requests. Try again in a moment.",
+        "not_available": "Not available."
+      },
+      "nothingFound": "Nothing found."
     }
   },
   "admin": {
@@ -2101,7 +2179,8 @@
             "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202.",
             "Team members: when a company owner adds a colleague, we keep the colleague's email address and the role given (owner or member) so they can sign in and join that company. Everyone in the same company can see the names, email addresses and roles of its team members, and the company's owners can also see open invitations. Removing a person from a company ends their access to it; the audit log keeps a record of who added and removed whom.",
             "Waybill data: for a confirmed order, 202 prepares the details a waybill needs (seller, buyer and their identification codes, delivery address and date, goods) for the supplier to copy into RS.ge. 202 does not send anything to RS.ge. The driver and vehicle details the supplier types are kept in the supplier's own browser only. A supplier you are connected with also sees your business's identification code on the order and on the waybill data prepared from it, because a waybill has to name the buyer.",
-            "RS.ge waybills (only if a supplier turns this on): the supplier's RS.ge service user is stored encrypted and is never shown again. At the supplier's request, 202 sends the details a waybill needs (seller and buyer with their identification codes, delivery address and date, goods, quantities, prices, driver and vehicle) to the Revenue Service (RS.ge) to create the waybill. Calls may pass through a relay server run by 202 that only forwards them."
+            "RS.ge waybills (only if a supplier turns this on): the supplier's RS.ge service user is stored encrypted and is never shown again. At the supplier's request, 202 sends the details a waybill needs (seller and buyer with their identification codes, delivery address and date, goods, quantities, prices, driver and vehicle) to the Revenue Service (RS.ge) to create the waybill. Calls may pass through a relay server run by 202 that only forwards them.",
+            "Voice ordering (only if a buyer uses it): the words your organization uses for a product (for example \"cheese\" for one specific product), as text and only from lines you kept in the cart. We do not keep audio or a recording of the conversation. These words belong to your organization, are not shown to any other business, and are used only to make the assistant work better for you."
           ]
         },
         {
@@ -2126,7 +2205,7 @@
             "Service providers that process data on our behalf: the database, sign-in and file storage (Supabase), hosting (Vercel), email sending (Resend), error monitoring (Sentry).",
             "If you turn on push notifications, your browser's push service (Google, Apple, Mozilla or Microsoft, depending on the browser) delivers them. The messages are encrypted so that only your browser can read them; the service sees that a message was sent to your browser.",
             "When you remove the background from a product photo, your browser downloads a helper model file once from Hugging Face, which therefore sees your IP address. The photo itself is processed on your device and sent nowhere.",
-            "Google (Gemini), when you order by voice: your voice is sent in real time to their service, which processes it and answers. We do not store the audio ourselves; we keep only the products added to your cart. The assistant sees only the names of the products available to you and of your suppliers, without prices.",
+            "Google (Gemini), when you order by voice: your voice is sent in real time to their service, which processes it and answers. We do not store the audio ourselves; we keep only the products added to your cart. The assistant can look up what you could see yourself in the app: your suppliers and their terms, products with the prices you pay, your orders and your carts, only when you ask about them, and only your own organization's data. It also sees the quantities of your latest order with each supplier (by short product code, without prices or dates) so it can understand \"same as last time\". Suppliers use the same assistant: it can look up your own company's orders, customers, products with their stock and prices, and the loading sheet, only when you ask, and it can propose changes (confirming orders, hiding products, changing a price) that happen only after you tap Confirm on a card. If you type instead of speaking, what you type goes to the same service. The latest lines of the conversation stay on your screen while you move between pages and are sent again to the service if a new session has to start; we do not store them.",
             "Public authorities, only in cases required by law."
           ],
           "closing": [
@@ -2139,7 +2218,8 @@
             "We keep your account and organization while you use the service. We deactivate organizations and products rather than delete them, so that order history isn't lost.",
             "Orders and their history are kept as a business record for both sides.",
             "We keep encrypted backups for a limited time, about 14 days.",
-            "Technical records for protection against abuse are deleted after about a day."
+            "Technical records for protection against abuse are deleted after about a day.",
+            "The words remembered for voice ordering are kept with your organization's account, at most 200 of them, and the least recently used go first. You can ask us to delete them."
           ]
         },
         {
@@ -2529,5 +2609,45 @@
     "nudgeTitle": "Get new orders on your phone",
     "nudgeBody": "Turn on notifications and a new order reaches you even when 202 is closed.",
     "nudgeLater": "Not now"
+  },
+  "supplierAssistant": {
+    "stockUntracked": "stock not tracked",
+    "hidden": "hidden",
+    "proposal": {
+      "pending": "Waiting",
+      "confirmed": "Confirmed",
+      "rejected": "Rejected",
+      "delivered": "Delivered",
+      "visible": "Visible",
+      "hiddenState": "Hidden",
+      "reason": "Reason",
+      "confirmTitle": "Confirm {count, plural, one {# order} other {# orders}}",
+      "confirmNote": "Confirmed as ordered, with no agreed delivery day. Buyers are notified. To change quantities, open the order.",
+      "confirmButton": "Confirm {count, plural, one {# order} other {# orders}}",
+      "rejectTitle": "Reject {number}",
+      "rejectNote": "The buyer is told the reason. This cannot be undone.",
+      "rejectButton": "Reject the order",
+      "deliverTitle": "Mark {count, plural, one {# order} other {# orders}} delivered",
+      "deliverNote": "Buyers are notified. This cannot be undone.",
+      "deliverButton": "Mark {count, plural, one {# order} other {# orders}} delivered",
+      "hideTitle": "Hide {count, plural, one {# product} other {# products}}",
+      "hideNote": "Buyers will not see them. Open orders are not affected.",
+      "hideButton": "Hide {count, plural, one {# product} other {# products}}",
+      "showTitle": "Show {count, plural, one {# product} other {# products}}",
+      "showNote": "Customers whose list includes them will see them again.",
+      "showButton": "Show {count, plural, one {# product} other {# products}}",
+      "priceTitle": "Change the price",
+      "priceNote": "This is the base price. Prices set on customer lists stay as they are.",
+      "priceButton": "Change the price"
+    },
+    "applied": {
+      "confirmed": "{count, plural, one {# order} other {# orders}} confirmed.",
+      "delivered": "{count, plural, one {# order} other {# orders}} marked delivered.",
+      "rejected": "Order rejected.",
+      "hidden": "{count, plural, one {# product} other {# products}} hidden.",
+      "shown": "{count, plural, one {# product} other {# products}} shown.",
+      "price": "Price changed.",
+      "skipped": "{count} already answered and skipped."
+    }
   }
 }

@@ -1,10 +1,14 @@
 import "server-only";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { MAX_CATALOG_LINES, type CatalogItem, type VoiceRef } from "@/lib/voice/order-parse";
+import { previousOrdersText, type PreviousOrder } from "@/lib/voice/previous";
 import { getDb } from "@/server/db/client";
 import { organizations, products, supplierCustomers } from "@/server/db/schema";
+import { loadOrderHistory } from "@/server/assistant/history";
+import { typicalOrder } from "@/lib/assistant/history";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError } from "@/server/domain/errors";
+import { voicePhrasesByProduct } from "@/server/domain/buyer/voice-phrases";
 import { availableToBuyerSql } from "@/server/domain/pricing/resolve";
 
 export type VoiceCatalog = {
@@ -12,6 +16,8 @@ export type VoiceCatalog = {
   items: CatalogItem[];
   refs: Record<string, VoiceRef>;
   suppliers: { name: string; count: number }[];
+  /** The buyer's usual order per supplier as short-id lines, for "the usual". Empty when there is none. */
+  previous: string;
 };
 
 /**
@@ -47,6 +53,12 @@ export async function loadVoiceCatalog(ctx: OrgCtx): Promise<VoiceCatalog> {
     .orderBy(desc(sql`"ordered"`), asc(products.name))
     .limit(MAX_CATALOG_LINES);
 
+  // How this buyer has named these products before (their own earlier, confirmed orders), as "also said" hints.
+  // An enhancement: if it cannot be read, the assistant still works from the plain catalogue.
+  const remembered = await voicePhrasesByProduct(ctx, rows.map((r) => r.id)).catch((error: unknown) => {
+    console.error("voicePhrasesByProduct failed:", error instanceof Error ? error.message : "unknown");
+    return new Map<string, string[]>();
+  });
   const items: CatalogItem[] = [];
   const refs: Record<string, VoiceRef> = {};
   const supplierAlias = new Map<string, string>();
@@ -54,11 +66,36 @@ export async function loadVoiceCatalog(ctx: OrgCtx): Promise<VoiceCatalog> {
   rows.forEach((row, index) => {
     const alias = `p${index + 1}`;
     if (!supplierAlias.has(row.supplierId)) supplierAlias.set(row.supplierId, `s${supplierAlias.size + 1}`);
-    items.push({ id: alias, name: row.name.slice(0, 120), unit: row.unit, supplierId: supplierAlias.get(row.supplierId), supplierName: row.supplierName });
+    items.push({ id: alias, name: row.name.slice(0, 120), unit: row.unit, supplierId: supplierAlias.get(row.supplierId), supplierName: row.supplierName, aliases: remembered.get(row.id) });
     refs[alias] = { productId: row.id, minMilli: row.minMilli, stepMilli: row.stepMilli };
     const entry = counts.get(row.supplierId) ?? { name: row.supplierName, count: 0 };
     entry.count += 1;
     counts.set(row.supplierId, entry);
   });
-  return { items, refs, suppliers: [...counts.values()].sort((a, b) => a.name.localeCompare(b.name)) };
+  // "The usual": the latest order per supplier (not cancelled or rejected), only lines whose product is in this catalogue.
+  const aliasOf = new Map(Object.entries(refs).map(([alias, ref]) => [ref.productId, alias]));
+  const unitOf = new Map(items.map((i) => [i.id, i.unit]));
+  const previous = await usualPerSupplier(ctx, aliasOf, unitOf, supplierNames(rows)).catch((error: unknown) => {
+    console.error("usualPerSupplier failed:", error instanceof Error ? error.message : "unknown");
+    return "";
+  });
+  return { items, refs, suppliers: [...counts.values()].sort((a, b) => a.name.localeCompare(b.name)), previous };
+}
+
+function supplierNames(rows: { supplierId: string; supplierName: string }[]): Map<string, string> {
+  return new Map(rows.map((r) => [r.supplierId, r.supplierName]));
+}
+
+/** "The usual" per supplier: the typical order from the buyer's own recent orders (the latest one when there are fewer than three). */
+async function usualPerSupplier(ctx: OrgCtx, aliasOf: Map<string, string>, unitOf: Map<string, string>, names: Map<string, string>): Promise<string> {
+  if (aliasOf.size === 0) return "";
+  const history = await loadOrderHistory(ctx);
+  const groups: PreviousOrder[] = [...names.entries()].map(([supplierId, supplierName]) => ({
+    supplierName,
+    lines: typicalOrder(history.get(supplierId) ?? []).flatMap((l) => {
+      const id = aliasOf.get(l.productId);
+      return id ? [{ id, qtyMilli: l.qtyMilli, unit: unitOf.get(id) ?? "" }] : [];
+    }),
+  }));
+  return previousOrdersText(groups);
 }
