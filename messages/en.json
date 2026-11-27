@@ -569,7 +569,8 @@
       "dockLive": "Listening",
       "dockWorking": "Connecting",
       "dockAnswering": "Answering",
-      "collapse": "Minimise"
+      "collapse": "Minimise",
+      "textOnly": "Typing only"
     },
     "assistant": {
       "noProducts": "Nothing found for \"{query}\" at your suppliers.",
@@ -1697,7 +1698,10 @@
       "invalid_quantity": "The quantity doesn't fit the minimum or step.",
       "unknown": "Could not be changed. Try again.",
       "rate_limited": "Too many attempts. Try again in a while."
-    }
+    },
+    "undo": "Undo",
+    "removedNotice": "Removed: {name}",
+    "undoFailed": "Could not put it back"
   },
   "checkout": {
     "title": "Check out",

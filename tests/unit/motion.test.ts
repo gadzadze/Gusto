@@ -31,6 +31,15 @@ describe("motion rules", () => {
     }
   });
 
+  it("staggers list rows, closes a removed row and lets the assistant bar travel, all off under reduced motion", () => {
+    expect(css).toContain("[data-stagger] > :nth-child(2)");
+    expect(css).toContain("[data-cart-line][data-removing]");
+    expect(css).toContain("::view-transition-group(assistant-bar)");
+    const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce) {\n  dialog,"));
+    expect(reduced).toContain("[data-stagger] > *");
+    expect(reduced).toContain("[data-cart-line]");
+  });
+
   it("keeps the app frame out of page transitions", () => {
     for (const name of ["app-sidebar", "app-header", "app-bottom-nav"]) {
       expect(css).toContain(`::view-transition-group(${name})`);

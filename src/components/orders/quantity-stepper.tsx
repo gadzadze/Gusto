@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { milliToInput, stepDown, stepUp } from "@/lib/quantity";
 import { cn } from "@/lib/utils";
 import { setCartQuantityAction } from "@/app/buyer/cart/actions";
+import { CART_REMOVED, type CartRemoved } from "@/components/orders/cart-undo";
 
 /**
  * Add-to-cart / quantity control. Steps respect the product's minimum and
@@ -49,12 +50,21 @@ export function QuantityStepper({
     setQty(next);
     setError(null);
     // Removing a cart line: it fades while the server removes it, instead of vanishing on the refresh.
-    const line = next === 0 ? root.current?.closest("[data-cart-line]") : null;
-    line?.setAttribute("data-removing", "");
+    const line = next === 0 ? (root.current?.closest("[data-cart-line]") as HTMLElement | null | undefined) : null;
+    if (line) {
+      // Fix the height first so it can close smoothly (the rows below then slide up into the gap).
+      line.style.height = `${line.offsetHeight}px`;
+      void line.offsetHeight;
+      line.setAttribute("data-removing", "");
+    }
     startTransition(async () => {
       const result = await setCartQuantityAction({ supplierOrgId, productId, qtyMilli: next });
+      if (result.ok && next === 0 && previous > 0) {
+        window.dispatchEvent(new CustomEvent(CART_REMOVED, { detail: { supplierOrgId, productId, qtyMilli: previous, name: productName } satisfies CartRemoved }));
+      }
       if (!result.ok) {
         line?.removeAttribute("data-removing");
+        if (line) line.style.height = "";
         setQty(previous);
         setError(
           result.error === "product_unavailable" || result.error === "invalid_quantity"

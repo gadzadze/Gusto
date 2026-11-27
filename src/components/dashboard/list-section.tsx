@@ -31,7 +31,7 @@ export function ListSection({
           </Link>
         ) : null}
       </div>
-      <div className="pb-1">{children}</div>
+      <div data-stagger className="pb-1">{children}</div>
     </section>
   );
 }
