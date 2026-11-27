@@ -14,7 +14,7 @@ export function InvitePanel({ links }: { links: InviteLinks }) {
   const [copied, setCopied] = useState(false);
 
   return (
-    <div className="space-y-4 rounded-xl border border-brand/30 bg-brand-soft/40 p-5">
+    <div className="space-y-4 glass-accent p-5">
       <div>
         <h2 className="font-semibold">{t("title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">

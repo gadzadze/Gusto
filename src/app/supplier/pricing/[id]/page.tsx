@@ -149,17 +149,17 @@ async function PriceList({ params, searchParams }: PageProps<"/supplier/pricing/
         )}
       </section>
 
-      <section className="space-y-3 border-t border-border pt-6" id="conditions">
+      <section className="space-y-3 pt-4" id="conditions">
         <h2 className="font-semibold">{t("conditions.title")}</h2>
         <PriceConditions priceListId={list.id} rules={rules} products={included} disabled={disabled} />
       </section>
 
-      <section className="space-y-3 border-t border-border pt-6">
+      <section className="space-y-3 pt-4">
         <h2 className="font-semibold">{t("detail.bulkTitle")}</h2>
         <BulkDiscount priceListId={list.id} disabled={disabled} />
       </section>
 
-      <section className="space-y-3 border-t border-border pt-6">
+      <section className="space-y-3 pt-4">
         <h2 className="font-semibold">{t("detail.importTitle")}</h2>
         <PriceImport priceListId={list.id} disabled={disabled} />
       </section>

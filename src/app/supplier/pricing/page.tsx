@@ -24,12 +24,11 @@ async function PriceLists() {
   const lists = await listPriceLists(ctx);
   return (
     <div className="space-y-5">
-      <p className="max-w-2xl text-sm text-muted-foreground">{t("intro")}</p>
       <CreatePriceList disabled={ctx.orgStatus === "suspended"} />
       {lists.length === 0 ? (
         <EmptyState icon={BadgePercent} title={t("emptyTitle")} body={t("emptyBody")} />
       ) : (
-        <ul className="divide-y divide-border rounded-xl border border-border">
+        <ul className="glass">
           {lists.map((l) => (
             <li key={l.id}>
               <Link href={`/supplier/pricing/${l.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">

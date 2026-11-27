@@ -77,7 +77,7 @@ export function LegalView({
           <p className="mt-3 text-sm text-muted-foreground">{t("common.updated", { date: updated })}</p>
           <p className="mt-6 text-base leading-7">{doc === "terms" ? t("terms.intro") : t("privacy.intro")}</p>
 
-          <nav aria-label={t("common.toc")} className="mt-8 rounded-xl border border-border p-4 sm:p-5">
+          <nav aria-label={t("common.toc")} className="mt-8 glass p-4 sm:p-5">
             <p className="text-sm font-semibold">{t("common.toc")}</p>
             <ol className="mt-3 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
               {sections.map((section, index) => (
@@ -124,7 +124,7 @@ export function LegalView({
           </div>
 
           {operatorRows.length > 0 && (
-            <section aria-labelledby="operator-title" className="mt-10 rounded-xl border border-border bg-muted/40 p-5 sm:p-6">
+            <section aria-labelledby="operator-title" className="mt-10 glass p-5 sm:p-6">
               <h2 id="operator-title" className="text-lg font-semibold">
                 {t("common.operatorTitle")}
               </h2>

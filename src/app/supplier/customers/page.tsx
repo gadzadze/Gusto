@@ -35,14 +35,23 @@ async function Customers() {
 
   return (
     <div className="space-y-5">
-      <p className="max-w-2xl text-sm text-muted-foreground">{t("intro")}</p>
+      {canInvite ? (
+        <div className="flex justify-end">
+          <Button asChild>
+            <Link href="/supplier/customers/new">
+              <Plus />
+              {t("add")}
+            </Link>
+          </Button>
+        </div>
+      ) : null}
       {canInvite ? (
         <InvitingBuyers
           rows={invitingBuyers.map((b) => ({ inviteId: b.inviteId, buyerName: b.buyerName, invitedAt: format.dateTime(b.invitedAt, { dateStyle: "medium" }) }))}
         />
       ) : null}
       {termsRequests.length > 0 ? (
-        <section className="space-y-2 rounded-xl border border-brand/30 bg-brand-soft/40 p-4" aria-labelledby="terms-requests">
+        <section className="space-y-2 glass-accent p-4" aria-labelledby="terms-requests">
           <h2 id="terms-requests" className="font-semibold">{t("terms.bannerTitle", { count: termsRequests.length })}</h2>
           <ul className="space-y-1 text-sm">
             {termsRequests.map((r) => (
@@ -55,14 +64,6 @@ async function Customers() {
       ) : null}
       <ConnectionsSection ctx={ctx} inviteHref="/supplier/customers/new" />
       {ctx.orgStatus === "pending_review" ? <Notice icon={Users} tone="amber" title={t("notActive")} /> : null}
-      {canInvite ? (
-        <Button asChild>
-          <Link href="/supplier/customers/new">
-            <Plus />
-            {t("add")}
-          </Link>
-        </Button>
-      ) : null}
 
       {customers.length === 0 ? (
         <EmptyState icon={Users} title={t("emptyTitle")} body={t("emptyBody")} />

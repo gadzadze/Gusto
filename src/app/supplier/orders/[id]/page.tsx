@@ -55,7 +55,7 @@ async function Order({ params }: PageProps<"/supplier/orders/[id]">) {
           </Link>
         </Button>
       ) : null}
-      <div className="border-t border-border pt-6">
+      <div className="pt-4">
         <SupplierOrderActions
           orderId={detail.order.id}
           actions={actions}

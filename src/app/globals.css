@@ -484,6 +484,13 @@ dialog[open]::backdrop {
   .glass-strong {
     background: var(--glass-strong);
   }
+  /* The same pane tinted soft burgundy: the one call-out style (an invitation, a request waiting for an answer). */
+  .glass-accent {
+    background: color-mix(in srgb, var(--brand-soft) 60%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--brand) 22%, transparent);
+    border-radius: 22px;
+    box-shadow: var(--glass-shadow);
+  }
   /* The button corner: 12px (a full circle for icon buttons, set where they are made). */
   .rounded-btn {
     border-radius: 12px;
@@ -515,6 +522,7 @@ dialog[open]::backdrop {
   .rounded-2xl,
   .rounded-btn,
   .glass,
+  .glass-accent,
   dialog,
   [popover] {
     corner-shape: squircle;

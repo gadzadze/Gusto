@@ -46,12 +46,12 @@ export function Panel({
           <span className="whitespace-nowrap text-sm text-muted-foreground">{aside}</span>
         ) : null}
       </header>
-      <div className={cn("border-t", accent ? "border-brand/20" : "border-border")}>{children}</div>
+      <div>{children}</div>
     </section>
   );
 }
 
-const rowClass = "flex flex-wrap items-center gap-x-3.5 gap-y-2.5 border-b border-border py-3 last:border-b-0";
+const rowClass = "flex flex-wrap items-center gap-x-3.5 gap-y-2.5 py-3";
 
 /** `freshId`: a row that can arrive while the page is open (a new order); it gets a short highlight when it does. */
 export function PanelRow({ className, freshId, children }: { className?: string; freshId?: string; children: React.ReactNode }) {

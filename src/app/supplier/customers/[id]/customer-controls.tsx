@@ -103,7 +103,7 @@ export function CustomerControls(props: Props) {
       ) : null}
 
       {!props.readOnly ? (
-        <section className="space-y-2 border-t border-border pt-6">
+        <section className="space-y-2 pt-4">
           {props.status === "blocked" ? (
             <Button variant="outline" disabled={pending} onClick={() => run(() => setCustomerBlockedAction(props.customerId, false))}>
               <RotateCcw />

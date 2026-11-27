@@ -127,7 +127,7 @@ export function PushSettings({ publicKey, variant = "card" }: { publicKey: strin
     ) : null;
 
   return (
-    <section className={variant === "nudge" ? "rounded-xl border border-border bg-surface-2 p-4" : "space-y-3 border-t border-border pt-6"} aria-labelledby={`push-title-${variant}`}>
+    <section className={variant === "nudge" ? "glass p-4" : "space-y-3 pt-4"} aria-labelledby={`push-title-${variant}`}>
       <div className="flex items-start gap-3">
         <BellRing aria-hidden className="mt-0.5 size-5 shrink-0 text-brand" />
         <div className="min-w-0 flex-1 space-y-1">

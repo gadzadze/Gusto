@@ -16,7 +16,7 @@ export function InvitingBuyers({ rows, disabled }: { rows: InvitingBuyerRow[]; d
   const [error, setError] = useState<string | null>(null);
   if (rows.length === 0) return null;
   return (
-    <section className="max-w-3xl space-y-3 rounded-xl border border-brand/30 bg-brand-soft/40 p-5">
+    <section className="max-w-3xl space-y-3 glass-accent p-5">
       <div className="flex items-start gap-3">
         <Handshake aria-hidden className="mt-0.5 size-5 shrink-0 text-brand" />
         <div>
@@ -25,7 +25,7 @@ export function InvitingBuyers({ rows, disabled }: { rows: InvitingBuyerRow[]; d
         </div>
       </div>
       {error ? <FormAlert tone="error">{error}</FormAlert> : null}
-      <ul className="divide-y divide-border rounded-lg border border-border bg-background">
+      <ul className="glass">
         {rows.map((r) => (
           <li key={r.inviteId} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
             <div className="min-w-0">

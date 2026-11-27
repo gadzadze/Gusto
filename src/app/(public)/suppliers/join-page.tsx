@@ -54,7 +54,7 @@ export function JoinPage({ invite }: { invite?: JoinInvite }) {
             ))}
           </ul>
         </section>
-        <section className="rounded-xl border border-border p-5 sm:p-8" aria-labelledby="request-heading">
+        <section className="glass p-5 sm:p-8" aria-labelledby="request-heading">
           <h2 id="request-heading" className="text-xl font-semibold">{t("formTitle")}</h2>
           <p className="mb-6 mt-2 text-sm text-muted-foreground">{valid ? t("invitedBody", { buyer: valid.buyerName }) : t("formIntro")}</p>
           <RequestForm inviteToken={valid?.token} defaultBusinessName={valid?.supplierName} />

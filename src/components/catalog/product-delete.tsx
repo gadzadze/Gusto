@@ -40,7 +40,7 @@ export function ProductDelete({
     );
   }
   return (
-    <div className="animate-rise-in space-y-3 rounded-xl border border-border p-4" role="alertdialog" aria-labelledby="delete-title" aria-describedby="delete-body">
+    <div className="animate-rise-in space-y-3 glass p-4" role="alertdialog" aria-labelledby="delete-title" aria-describedby="delete-body">
       <p id="delete-title" className="font-semibold">{t("title", { name })}</p>
       <div id="delete-body" className="space-y-1 text-sm text-muted-foreground">
         <p>{t("effects")}</p>

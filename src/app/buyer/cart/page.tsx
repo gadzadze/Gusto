@@ -53,14 +53,14 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
         <>
           {carts.length > 1 ? <p className="text-sm text-muted-foreground">{t("separateNote")}</p> : null}
           {carts.map((cart) => (
-            <section key={cart.supplier.id} id={cart.supplier.id} className="space-y-4 rounded-xl border border-border p-4 sm:p-5">
+            <section key={cart.supplier.id} id={cart.supplier.id} className="space-y-4 glass p-4 sm:p-5">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="font-semibold">
                   <Link href={`/buyer/suppliers/${cart.supplier.id}`} className="hover:underline">{cart.supplier.name}</Link>
                 </h2>
                 <span className="text-sm text-muted-foreground">{t("items", { count: cart.lines.length })}</span>
               </div>
-              <ul className="divide-y divide-border">
+              <ul>
                 {cart.lines.map((line) => (
                   // Phone: picture and name on top, then the quantity control and the line total on one row (one flex row
                   // left the name a few letters wide). From sm up it is the single row it always was.

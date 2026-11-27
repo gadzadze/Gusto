@@ -31,7 +31,7 @@ export function SaveRegularOrder({ orderId, defaultName, defaultWeekday }: { ord
   }
   return (
     <form
-      className="w-full max-w-md space-y-3 rounded-xl border border-border p-4"
+      className="w-full max-w-md space-y-3 glass p-4"
       onSubmit={(e) => {
         e.preventDefault();
         setMessage(null);

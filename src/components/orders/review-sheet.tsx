@@ -53,7 +53,7 @@ export function ReviewBody({
           {t("detail.placedAt", { date: data.placedAt })}
         </div>
       </dl>
-      <ul className="divide-y divide-border rounded-xl border border-border">
+      <ul className="glass">
         {data.lines.map((line) => (
           <li
             key={line.id}
@@ -165,7 +165,7 @@ export function ReviewSheet({
         }}
         className="m-0 ml-auto h-dvh max-h-none w-full max-w-lg overflow-y-auto border-l border-border bg-surface p-0 text-foreground shadow-xl backdrop:bg-black/40 max-sm:mt-auto max-sm:ml-0 max-sm:h-auto max-sm:max-h-[92dvh] max-sm:max-w-none max-sm:rounded-t-2xl max-sm:border-l-0 max-sm:border-t"
       >
-        <div className="sticky top-0 z-10 border-b border-border bg-surface">
+        <div className="sticky top-0 z-10 bg-surface">
         <SheetGrabber dialogRef={dialog} />
         <div className="flex items-center justify-between gap-3 px-5 py-3 max-sm:pt-0">
           <div className="min-w-0">

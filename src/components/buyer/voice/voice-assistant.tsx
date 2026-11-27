@@ -282,7 +282,7 @@ function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
       </div>
       <section aria-labelledby="voice-suppliers" className="glass px-4 py-1">
         <h3 id="voice-suppliers" className="sr-only">{t("suppliersTitle")}</h3>
-        <ul className="divide-y divide-border">
+        <ul>
           {suppliers.map((s) => (
             <li key={s.name} className="flex items-baseline justify-between gap-4 py-3">
               <span className="min-w-0 font-semibold">{s.name}</span>
@@ -293,7 +293,7 @@ function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
       </section>
       <section aria-labelledby="voice-examples" className="glass px-4 py-1">
         <h3 id="voice-examples" className="sr-only">{t("examplesTitle")}</h3>
-        <ul className="divide-y divide-border">
+        <ul>
           {examples.map((e) => (
             <li key={e} className="py-2.5 text-muted-foreground">{e}</li>
           ))}
@@ -362,7 +362,7 @@ function Ledger({ lines, unitLabel, separator }: { lines: LiveOrderLine[]; unitL
           {groups.map((g) => (
             <div key={g.name ?? ""}>
               {g.name ? <p className="text-sm text-muted-foreground">{g.name}</p> : null}
-              <ul className="divide-y divide-border">
+              <ul>
                 {g.items.map((l) => (
                   <li key={l.productId} className="flex items-baseline justify-between gap-4 py-2">
                     <span className="min-w-0">{l.productName}</span>
@@ -459,11 +459,11 @@ export function VoiceReview({
         {lines.length === 0 ? <p className="text-muted-foreground">{t("review.empty")}</p> : null}
         {groups.map((g) => (
           <section key={g.name ?? ""} aria-label={g.name ?? undefined} className="glass overflow-hidden">
-            <div className="flex items-baseline justify-between gap-4 border-b border-border px-4 py-3">
+            <div className="flex items-baseline justify-between gap-4 px-4 py-3">
               <h3 className="min-w-0 font-semibold">{g.name}</h3>
               <p className="shrink-0 text-sm tabular-nums text-muted-foreground">{t("review.linesOf", { count: g.items.length })}</p>
             </div>
-            <ul className="divide-y divide-border">
+            <ul>
               {g.items.map((line) => {
                 const ref = refs[line.productId];
                 const issue = issueOf(line);

@@ -25,7 +25,7 @@ async function RegularOrders() {
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">{t("intro")}</p>
-      <ul className="divide-y divide-border rounded-xl border border-border">
+      <ul className="glass">
         {list.map((r) => (
           <li key={r.id} className="space-y-2 px-4 py-3">
             <div className="flex flex-wrap items-center gap-2">

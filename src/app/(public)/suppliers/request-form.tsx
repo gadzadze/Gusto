@@ -15,7 +15,7 @@ export function RequestForm({ inviteToken, defaultBusinessName }: { inviteToken?
 
   if (state.status === "sent") {
     return (
-      <div className="space-y-3 rounded-xl border border-border p-6" role="status">
+      <div className="space-y-3 glass p-6" role="status">
         <div className="flex size-11 items-center justify-center rounded-full bg-brand-soft text-brand">
           <Check aria-hidden className="size-5" />
         </div>

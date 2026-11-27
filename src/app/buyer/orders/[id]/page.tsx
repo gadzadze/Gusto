@@ -55,7 +55,7 @@ async function Order({ params, searchParams }: PageProps<"/buyer/orders/[id]">) 
       {query.placed && detail.order.status === "pending" ? <WhatsappShare detail={detail} kind="to_supplier" prominent /> : null}
       <OrderView detail={detail} viewer="buyer" />
       {!query.placed && detail.order.status === "pending" ? <WhatsappShare detail={detail} kind="to_supplier" /> : null}
-      <div className="flex flex-wrap items-start gap-3 border-t border-border pt-6">
+      <div className="flex flex-wrap items-start gap-3 pt-4">
         <ReorderButton orderId={id} />
         {detail.order.status !== "rejected" && detail.order.status !== "cancelled" ? (
           <SaveRegularOrder orderId={id} defaultName={detail.order.supplierName} defaultWeekday={isoWeekdayIn(detail.supplierTimezone, detail.order.createdAt)} />

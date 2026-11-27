@@ -106,7 +106,7 @@ export async function OrderView({ detail, viewer }: { detail: OrderDetail; viewe
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-muted-foreground">{t("detail.lines")}</h2>
         {/* Phone: one card-like row per line (a five-column table leaves the product name a few letters wide). */}
-        <ul className="divide-y divide-border rounded-xl border border-border sm:hidden">
+        <ul className="glass sm:hidden">
           {items.map((item) => {
             const changed = item.confirmedQtyMilli !== null && item.confirmedQtyMilli !== item.orderedQtyMilli;
             return (

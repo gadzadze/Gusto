@@ -15,7 +15,7 @@ export async function OrderList({ orders, viewer, allBrands = false }: { orders:
   const t = await getTranslations("orders");
   const format = await getFormatter();
   return (
-    <ul className="divide-y divide-border rounded-xl border border-border">
+    <ul className="glass">
       {orders.map((o) => (
         <FreshRow as="li" key={o.id} id={o.id}>
           <Link transitionTypes={["nav-forward"]} href={allBrands ? `/o/${o.number}` : `/${viewer}/orders/${o.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">

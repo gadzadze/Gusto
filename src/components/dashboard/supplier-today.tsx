@@ -164,7 +164,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                 </summary>
                 <p className="pb-2 leading-relaxed">{td("valueWhy")}</p>
               </details>
-              <div className="mt-2 grid grid-cols-2 divide-x divide-border border-t border-border pt-3">
+              <div className="mt-2 grid grid-cols-2 pt-3">
                 <div className="pr-4">
                   <p className="text-2xl font-semibold tabular-nums">
                     {metrics.ordersThisWeek}

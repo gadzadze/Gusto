@@ -82,7 +82,7 @@ export function SupplierOrderActions({
       ) : null}
 
       {mode === "confirm" ? (
-        <div className="animate-rise-in space-y-4 rounded-xl border border-border p-4">
+        <div className="animate-rise-in space-y-4 glass p-4">
           <p className="font-semibold">{t("actions.confirmTitle")}</p>
           <p className="text-sm text-muted-foreground">{t("actions.confirmHint")}</p>
           <ul className="space-y-2">
@@ -139,7 +139,7 @@ export function SupplierOrderActions({
       ) : null}
 
       {mode === "reject" || mode === "cancel" ? (
-        <div className="animate-rise-in space-y-3 rounded-xl border border-border p-4">
+        <div className="animate-rise-in space-y-3 glass p-4">
           <Label htmlFor="reason">{mode === "reject" ? t("actions.rejectReason") : t("actions.cancelReason")}</Label>
           <Textarea id="reason" rows={2} value={text} onChange={(e) => setText(e.target.value)} />
           <div className="flex gap-2">

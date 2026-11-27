@@ -37,7 +37,7 @@ export function LiveTest({ catalog, configured }: { catalog: string; configured:
   }
 
   return (
-    <section className="space-y-4 border-t border-border pt-6" aria-labelledby="live-title">
+    <section className="space-y-4 pt-4" aria-labelledby="live-title">
       <div>
         <h2 id="live-title" className="text-base font-semibold">{t("live.title")}</h2>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("live.intro")}</p>
@@ -71,7 +71,7 @@ export function LiveTest({ catalog, configured }: { catalog: string; configured:
             <p className="text-xs text-muted-foreground">{t("live.transcriptNote")}</p>
             <ul className="mt-1 space-y-2">
               {turns.map((turn, i) => (
-                <li key={i} className={turn.who === "you" ? "rounded-lg border border-border bg-card p-3 text-sm" : "rounded-lg bg-brand-soft p-3 text-sm"}>
+                <li key={i} className={turn.who === "you" ? "glass p-3 text-sm" : "rounded-lg bg-brand-soft p-3 text-sm"}>
                   <span className="block text-xs text-muted-foreground">{turn.who === "you" ? t("live.you") : t("live.assistant")}</span>
                   {turn.text}
                 </li>
@@ -87,7 +87,7 @@ export function LiveTest({ catalog, configured }: { catalog: string; configured:
                 {groups.map((group) => (
                   <div key={group.name ?? ""}>
                     {group.name ? <h4 className="mb-1 text-sm font-medium text-brand">{t("supplier", { name: group.name })}</h4> : null}
-                    <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+                    <ul className="glass">
                       {group.lines.map((line) => (
                         <li key={line.productId} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 p-3">
                           <p className="min-w-0 flex-[1_1_10rem] font-medium">{line.productName}</p>

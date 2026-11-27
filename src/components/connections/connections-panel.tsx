@@ -66,7 +66,7 @@ export function ConnectionsPanel({ role, findable, incoming, outgoing, priceList
 function Incoming({ rows, role, priceLists, errorText }: { rows: RequestView[]; role: "supplier" | "buyer"; priceLists: Props["priceLists"]; errorText: (c: string) => string }) {
   const t = useTranslations("connections.incoming");
   return (
-    <section id="requests" className="scroll-mt-20 space-y-3 rounded-xl border border-brand/30 bg-brand-soft/40 p-4" aria-labelledby="incoming-title">
+    <section id="requests" className="scroll-mt-20 space-y-3 glass-accent p-4" aria-labelledby="incoming-title">
       <h2 id="incoming-title" className="font-semibold">{t("title")} ({rows.length})</h2>
       <ul className="space-y-3">
         {rows.map((row) => (
@@ -143,7 +143,7 @@ function Finder({ role, priceLists, inviteHref, otherBrands, errorText }: { role
   }
 
   return (
-    <section className="space-y-3 rounded-xl border border-border p-4" aria-labelledby="finder-title">
+    <section className="space-y-3 glass p-4" aria-labelledby="finder-title">
       <h2 id="finder-title" className="font-semibold">{t("title")}</h2>
       <p className="text-sm text-muted-foreground">{t(`hint.${role}`)}</p>
       <form onSubmit={search} className="flex max-w-md items-end gap-2">
@@ -182,7 +182,7 @@ function Result({ role, result, priceLists, inviteHref, otherBrands, errorText }
   if (result.state === "self") return <FormAlert tone="warning">{t("self")}</FormAlert>;
   if (result.state === "not_found") {
     return (
-      <div className="space-y-2 rounded-lg border border-border bg-muted/40 p-4">
+      <div className="space-y-2 glass p-4">
         <p className="font-medium">{t("notFound.title")}</p>
         <p className="text-sm text-muted-foreground">{t("notFound.body")}</p>
         <Button asChild variant="outline" size="sm">
@@ -206,7 +206,7 @@ function Result({ role, result, priceLists, inviteHref, otherBrands, errorText }
   }
 
   return (
-    <div className="space-y-3 rounded-lg border border-border p-4">
+    <div className="space-y-3 glass p-4">
       <div>
         <p className="font-medium">{result.name}</p>
         <p className="text-sm text-muted-foreground">{result.city} · {t("found.approved")}</p>
@@ -268,9 +268,9 @@ function Result({ role, result, priceLists, inviteHref, otherBrands, errorText }
 function Outgoing({ rows, errorText }: { rows: RequestView[]; errorText: (c: string) => string }) {
   const t = useTranslations("connections.outgoing");
   return (
-    <section className="space-y-2 rounded-xl border border-border p-4" aria-labelledby="outgoing-title">
+    <section className="space-y-2 glass p-4" aria-labelledby="outgoing-title">
       <h2 id="outgoing-title" className="font-semibold">{t("title")}</h2>
-      <ul className="divide-y divide-border">
+      <ul>
         {rows.map((row) => (
           <OutgoingRow key={row.id} row={row} errorText={errorText} t={t} />
         ))}
@@ -312,7 +312,7 @@ function FindableSwitch({ initial, errorText }: { initial: boolean; errorText: (
   const [pending, startTransition] = useTransition();
   const [note, setNote] = useState<Note>(null);
   return (
-    <section className="space-y-2 rounded-xl border border-border p-4" aria-labelledby="findable-title">
+    <section className="space-y-2 glass p-4" aria-labelledby="findable-title">
       <h2 id="findable-title" className="font-semibold">{t("title")}</h2>
       {note ? <FormAlert tone={note.tone}>{note.text}</FormAlert> : null}
       <label className="flex min-h-11 cursor-pointer items-start gap-3">

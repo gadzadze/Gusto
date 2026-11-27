@@ -15,7 +15,7 @@ test("desktop sidebar does not scroll with the page", async ({ browser }) => {
   await admin.mouse.move(700, 300);
   await admin.mouse.wheel(0, 2000);
   await admin.waitForTimeout(300);
-  expect(await admin.evaluate(() => window.scrollY)).toBeGreaterThan(100); // the page did scroll
+  expect(await admin.evaluate(() => window.scrollY)).toBeGreaterThan(50); // the page did scroll (by any real amount; its exact height changes with the layout)
   const after = await signOut.boundingBox();
   expect(after!.y).toBeCloseTo(before!.y, 0); // and the sidebar footer did not move
   expect(after!.y + after!.height).toBeLessThanOrEqual(600);

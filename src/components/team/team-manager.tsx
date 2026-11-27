@@ -74,7 +74,7 @@ export function TeamManager({
 
       <section aria-labelledby="team-members" className="space-y-2">
         <h2 id="team-members" className="font-semibold">{t("members")} ({members.length})</h2>
-        <ul className="divide-y divide-border rounded-xl border border-border">
+        <ul className="glass">
           {members.map((m) => (
             <li key={m.userId} className="flex flex-wrap items-center gap-3 px-4 py-3">
               <span className="min-w-0 flex-1">
@@ -106,7 +106,7 @@ export function TeamManager({
       {canManage && invites.length > 0 ? (
         <section aria-labelledby="team-invites" className="space-y-2">
           <h2 id="team-invites" className="font-semibold">{t("pending")} ({invites.length})</h2>
-          <ul className="divide-y divide-border rounded-xl border border-border">
+          <ul className="glass">
             {invites.map((i) => (
               <li key={i.id} className="flex items-center gap-3 px-4 py-3">
                 <span className="min-w-0 flex-1">
@@ -124,7 +124,7 @@ export function TeamManager({
       ) : null}
 
       {canManage ? (
-        <section aria-labelledby="team-add" className="space-y-3 rounded-xl border border-border p-4">
+        <section aria-labelledby="team-add" className="space-y-3 glass p-4">
           <h2 id="team-add" className="font-semibold">{t("add")}</h2>
           <p className="text-sm text-muted-foreground">{t("addHint")}</p>
           <form onSubmit={invite} className="space-y-4">

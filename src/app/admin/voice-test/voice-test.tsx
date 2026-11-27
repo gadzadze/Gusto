@@ -97,7 +97,7 @@ export function VoiceTest({ configured, sampleCatalog }: { configured: boolean; 
   return (
     <div className="max-w-3xl space-y-6">
       {!configured ? (
-        <p role="status" className="flex items-start gap-2 rounded-lg border border-border bg-card p-3 text-sm">
+        <p role="status" className="flex items-start gap-2 glass p-3 text-sm">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
           {t("notConfigured")}
         </p>
@@ -180,14 +180,14 @@ function Result({ result }: { result: VoiceTestResult }) {
     <section className="space-y-4" aria-live="polite">
       <div>
         <h2 className="text-sm font-medium">{t("heard")}</h2>
-        <p className="mt-1 rounded-lg border border-border bg-card p-3 text-base">{result.transcript || t("nothingHeard")}</p>
+        <p className="mt-1 glass p-3 text-base">{result.transcript || t("nothingHeard")}</p>
       </div>
       <div>
         <h2 className="text-sm font-medium">{t("proposed")}</h2>
         {result.lines.length === 0 ? (
           <p className="mt-1 text-sm text-muted-foreground">{t("noLines")}</p>
         ) : (
-          <ul className="mt-1 divide-y divide-border rounded-lg border border-border bg-card">
+          <ul className="mt-1 glass">
             {result.lines.map((line, i) => (
               <li key={i} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 p-3">
                 <div className="min-w-0 flex-[1_1_12rem]">

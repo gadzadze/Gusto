@@ -88,7 +88,7 @@ export function BackgroundRemover({ file, onUse, disabled }: { file: File | null
   const poor = result ? result.coverage < 0.03 || result.coverage > 0.97 : false;
 
   return (
-    <div className="space-y-3 rounded-xl border border-border p-4">
+    <div className="space-y-3 glass p-4">
       {error ? <FormAlert tone="error">{error}</FormAlert> : null}
 
       {result ? (

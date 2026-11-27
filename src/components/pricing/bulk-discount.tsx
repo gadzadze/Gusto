@@ -49,7 +49,7 @@ export function BulkDiscount({ priceListId, disabled }: { priceListId: string; d
         </Button>
       </div>
       {preview ? (
-        <div className="space-y-3 rounded-xl border border-border p-4">
+        <div className="space-y-3 glass p-4">
           <p className="text-sm font-medium">{t("detail.bulkSample")}</p>
           <ul className="space-y-1 text-sm">
             {preview.preview.sample.map((s) => (
