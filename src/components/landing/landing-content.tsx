@@ -180,7 +180,7 @@ export function LandingContent() {
                 <h2 className="h2">{t("close.title")}</h2>
                 <p className="body">{t("close.body")}</p>
                 <div className="hero-cta">
-                  <Link className="btn" href="/suppliers">
+                  <Link className="btn go" href="/suppliers">
                     {t("close.cta")}
                   </Link>
                   <Link className="btn ghost" href="/start">

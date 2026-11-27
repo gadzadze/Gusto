@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 import { fillCartsFromVoiceAction, startBuyerVoiceAction } from "@/app/buyer/voice/actions";
-import { Button } from "@/components/ui/button";
+import { Button, ForwardArrow } from "@/components/ui/button";
 import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
 import { isOrderableQuantity, milliToInput, stepDown, stepUp } from "@/lib/quantity";
 import { cn } from "@/lib/utils";
@@ -531,15 +531,16 @@ export function VoiceReview({
               <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
               {t("review.skipped", { names: skipped.join(", ") })}
             </p>
-            <Button type="button" size="lg" className="w-full rounded-full" onClick={onToCart}>
+            <Button type="button" size="lg" className="w-full" onClick={onToCart}>
               {t("review.toCart")}
             </Button>
           </div>
         ) : (
           <>
-            <Button type="button" size="lg" className="w-full rounded-full" loading={busy} onClick={onConfirm} disabled={lines.length === 0 || open > 0}>
+            <Button type="button" size="lg" className="w-full" loading={busy} onClick={onConfirm} disabled={lines.length === 0 || open > 0}>
               {t("review.confirm")}
               {open === 0 && lines.length > 0 ? <span className="font-normal opacity-70">· {lines.length}</span> : null}
+              <ForwardArrow />
             </Button>
             <p className="text-center text-sm text-muted-foreground">{open > 0 ? t("review.fixFirst") : t("review.confirmNote")}</p>
           </>

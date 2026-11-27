@@ -428,8 +428,13 @@ Black, burgundy and white.
   (`.lp`) has its own fixed light palette and does not follow the theme. Never use
   `prefers-color-scheme` in components: use the tokens or `dark:`.
 - **Black is the primary action color.** Burgundy is the accent. Destructive
-  or negative actions (reject, cancel) are outlined buttons with an icon, never
+  or negative actions (reject, cancel) are the `danger` button (a pale red tonal fill, text `--danger-fg`) with an icon, never
   burgundy-filled, so "Confirm" and "Reject" cannot be confused.
+- **Flat tonal buttons** (2026-11-27, `components/ui/button.tsx`, tokens in `globals.css`): no border, shadow or glow. Variants: `default` (ink fill),
+  `brand` (burgundy fill), `outline` (the quiet **tonal** fill `--tonal`, despite the name), `brandTonal`, `danger`, `ghost`, `link`. Corners are 12px
+  (`.rounded-btn`, squircle where supported); only `icon` buttons are round. A forward action ends with `ForwardArrow` (nudges 2px on hover, off under
+  reduced motion). Pressed = `scale(0.98)`. Text on each fill is contrast-tested (`contrast.test.ts`). The landing page has its own matching buttons
+  (`.lp .btn`, burgundy `--cta`, flat, 12px, `.btn.go` adds the arrow); its two hero buttons always sit side by side (below 560px the hero is centred, with a 30px title and a 15px lead of at most 4 lines, and the buttons share the width); the hero button has no arrow.
 - **Burgundy on black fails contrast** (~2:1). Dark mode uses `#D46A7C`.
 - **Status badges** use muted tones plus a lucide icon:
   - `pending`: amber, clock icon;
