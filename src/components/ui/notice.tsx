@@ -20,10 +20,10 @@ export function Notice({
     <div
       role="status"
       className={cn(
-        "flex gap-3 rounded-xl border p-4",
+        "flex gap-3 p-4",
         tone === "amber"
-          ? "border-[var(--status-amber-fg)]/20 bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]"
-          : "border-border bg-muted",
+          ? "rounded-[22px] border border-[var(--status-amber-fg)]/20 bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)]"
+          : "glass",
         className,
       )}
     >
