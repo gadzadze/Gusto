@@ -3,7 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { toProductViews } from "@/components/buyer/product-view";
-import { dueProducts, typicalOrder } from "@/lib/assistant/history";
+import { dueProducts } from "@/lib/assistant/history";
 import { isOrderableQuantity } from "@/lib/quantity";
 import { reconcileUnit } from "@/lib/voice/order-parse";
 import type { OrderSnap, ToolResult } from "@/lib/assistant/snapshots";
