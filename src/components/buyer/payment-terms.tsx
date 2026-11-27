@@ -44,7 +44,6 @@ export function PaymentTerms({ view }: { view: TermsView }) {
   return (
     <section className="space-y-3 glass p-4" aria-labelledby="terms-title">
       <h2 id="terms-title" className="font-semibold">{t("title")}</h2>
-      <p className="text-sm text-muted-foreground">{t("intro", { supplier: view.supplierName })}</p>
 
       {view.tiers.length > 0 ? (
         <div className="text-sm">

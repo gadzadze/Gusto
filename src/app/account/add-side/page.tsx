@@ -59,7 +59,6 @@ async function AddSideGate({ searchParams }: Pick<PageProps<"/account/add-side">
   return (
     <>
       <h1 className="mt-8 text-2xl font-semibold">{t(`title.${missing}`)}</h1>
-      <p className="mt-2 text-muted-foreground">{t("intro")}</p>
       <div className="mt-8">
         <OnboardingForm
           lockedKind={missing}

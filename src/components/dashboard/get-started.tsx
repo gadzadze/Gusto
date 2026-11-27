@@ -23,7 +23,6 @@ export async function GetStarted({ progress, canInvite }: { progress: SetupProgr
     <section aria-labelledby="get-started" className="glass">
       <header className="px-4 py-4">
         <h2 id="get-started" className="font-semibold">{t("title")}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("intro")}</p>
       </header>
       <ol>
         {steps.map((step, i) => (

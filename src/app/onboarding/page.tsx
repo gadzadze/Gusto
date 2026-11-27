@@ -18,7 +18,6 @@ export default async function OnboardingPage() {
         <LocaleSwitch />
       </div>
       <h1 className="mt-8 text-2xl font-semibold">{t("title")}</h1>
-      <p className="mt-2 text-muted-foreground">{t("subtitle")}</p>
       <div className="mt-8">
         <Suspense fallback={<FormSkeleton />}>
           <OnboardingGate />

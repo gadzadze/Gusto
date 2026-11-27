@@ -36,7 +36,6 @@ async function Lookup({ searchParams }: Pick<PageProps<"/admin/orders">, "search
   }
   return (
     <div className="max-w-xl space-y-4">
-      <p className="text-sm text-muted-foreground">{t("intro")}</p>
       {invalid ? <FormAlert tone="error">{t("invalid")}</FormAlert> : null}
       <form className="flex items-end gap-2" role="search">
         <div className="flex-1 space-y-2">
