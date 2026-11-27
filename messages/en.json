@@ -405,7 +405,6 @@
     "showMore": "All results ({count})",
     "productCount": "{count, plural, one {# product} other {# products}}",
     "minOrder": "Minimum order: {amount}",
-    "noMinOrder": "No minimum order",
     "deliveryArea": "Delivery: {area}",
     "cutoff": "Order cut-off: {note}",
     "contact": "Contact",
@@ -1299,7 +1298,6 @@
     "title": "Customers",
     "add": "Add a customer",
     "newTitle": "New customer",
-    "intro": "Add businesses you already serve. Each gets a personal link and sees only the products and prices you set.",
     "notActive": "You can invite customers once approved. Until then, prepare your catalog and prices.",
     "emptyTitle": "You don't have any customers yet",
     "emptyBody": "Add your first customer and send them the invitation link on WhatsApp.",
@@ -1455,7 +1453,6 @@
   },
   "pricing": {
     "title": "Prices",
-    "intro": "A list decides which products a customer sees and at what price. No price set: base price.",
     "newPlaceholder": "New list name, e.g.: Restaurants",
     "create": "Create list",
     "emptyTitle": "You don't have any price lists yet",
@@ -1736,9 +1733,7 @@
       "viewStops": "Delivery: by address",
       "hintProducts": "All orders together. Take each product once; tick items as they're loaded.",
       "hintStops": "What goes to each address. Load the last stop's goods first.",
-      "button": "Loading sheet",
-      "cardHint": "Confirmed orders to load: {count}. All products in one place, with each customer's share.",
-      "cardEmpty": "Confirm orders and agree a delivery day, then load them from one sheet."
+      "button": "Loading sheet"
     },
     "actions": {
       "confirm": "Confirm",

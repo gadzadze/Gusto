@@ -18,10 +18,8 @@ export async function SupplierCard({ supplier }: { supplier: ConnectedSupplier }
       <span className="min-w-0 flex-1">
         <span className="block truncate font-medium">{supplier.name}</span>
         <span className="block text-sm text-muted-foreground">
-          {t("productCount", { count: supplier.productCount })} ·{" "}
-          {supplier.minOrderMinor > 0
-            ? t("minOrder", { amount: fmt.money(supplier.minOrderMinor, supplier.currency) })
-            : t("noMinOrder")}
+          {t("productCount", { count: supplier.productCount })}
+          {supplier.minOrderMinor > 0 ? ` · ${t("minOrder", { amount: fmt.money(supplier.minOrderMinor, supplier.currency) })}` : ""}
         </span>
       </span>
       <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />

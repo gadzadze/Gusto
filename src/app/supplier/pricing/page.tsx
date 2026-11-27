@@ -24,7 +24,6 @@ async function PriceLists() {
   const lists = await listPriceLists(ctx);
   return (
     <div className="space-y-5">
-      <p className="max-w-2xl text-sm text-muted-foreground">{t("intro")}</p>
       <CreatePriceList disabled={ctx.orgStatus === "suspended"} />
       {lists.length === 0 ? (
         <EmptyState icon={BadgePercent} title={t("emptyTitle")} body={t("emptyBody")} />

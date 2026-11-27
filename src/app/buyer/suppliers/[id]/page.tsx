@@ -85,10 +85,7 @@ async function Catalog({ params, searchParams }: PageProps<"/buyer/suppliers/[id
         <PageHeader title={supplier.name} />
         <div className="-mt-3 space-y-1 text-sm text-muted-foreground">
           <p>
-            {supplier.minOrderMinor > 0
-              ? t("minOrder", { amount: fmt.money(supplier.minOrderMinor, supplier.currency) })
-              : t("noMinOrder")}
-            {" · "}
+            {supplier.minOrderMinor > 0 ? `${t("minOrder", { amount: fmt.money(supplier.minOrderMinor, supplier.currency) })} · ` : null}
             {supplier.pricesIncludeVat ? t("vatIncluded") : t("vatExcluded")}
           </p>
           {supplier.deliveryArea ? <p>{t("deliveryArea", { area: supplier.deliveryArea })}</p> : null}

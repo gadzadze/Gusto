@@ -35,7 +35,16 @@ async function Customers() {
 
   return (
     <div className="space-y-5">
-      <p className="max-w-2xl text-sm text-muted-foreground">{t("intro")}</p>
+      {canInvite ? (
+        <div className="flex justify-end">
+          <Button asChild>
+            <Link href="/supplier/customers/new">
+              <Plus />
+              {t("add")}
+            </Link>
+          </Button>
+        </div>
+      ) : null}
       {canInvite ? (
         <InvitingBuyers
           rows={invitingBuyers.map((b) => ({ inviteId: b.inviteId, buyerName: b.buyerName, invitedAt: format.dateTime(b.invitedAt, { dateStyle: "medium" }) }))}
@@ -55,14 +64,6 @@ async function Customers() {
       ) : null}
       <ConnectionsSection ctx={ctx} inviteHref="/supplier/customers/new" />
       {ctx.orgStatus === "pending_review" ? <Notice icon={Users} tone="amber" title={t("notActive")} /> : null}
-      {canInvite ? (
-        <Button asChild>
-          <Link href="/supplier/customers/new">
-            <Plus />
-            {t("add")}
-          </Link>
-        </Button>
-      ) : null}
 
       {customers.length === 0 ? (
         <EmptyState icon={Users} title={t("emptyTitle")} body={t("emptyBody")} />
