@@ -46,7 +46,7 @@ export function Panel({
           <span className="whitespace-nowrap text-sm text-muted-foreground">{aside}</span>
         ) : null}
       </header>
-      <div>{children}</div>
+      <div data-stagger>{children}</div>
     </section>
   );
 }

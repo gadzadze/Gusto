@@ -375,12 +375,41 @@ dialog[open]::backdrop {
 .animate-row-in {
   animation: row-in 1800ms var(--ease-out) backwards;
 }
+/* Removing a row (2026-11-28, from a motion-design tip): the row fades, then the rows below it slide up into its place (its height
+   closes), so the list never teleports. The component sets the row's height in pixels first, so there is something to animate from. */
 [data-cart-line] {
-  transition: opacity 160ms var(--ease-out);
+  transition:
+    opacity 160ms var(--ease-out),
+    height 200ms var(--ease-out) 60ms,
+    padding 200ms var(--ease-out) 60ms;
 }
 [data-cart-line][data-removing] {
-  opacity: 0.25;
+  opacity: 0;
+  height: 0 !important;
+  padding-block: 0;
+  overflow: hidden;
   pointer-events: none;
+}
+/* Rows of a list arrive one after another with a short gap (the first eight; the rest come with the eighth). */
+[data-stagger] > * {
+  animation: rise-in 170ms var(--ease-out) backwards;
+}
+[data-stagger] > :nth-child(2) { animation-delay: 30ms; }
+[data-stagger] > :nth-child(3) { animation-delay: 60ms; }
+[data-stagger] > :nth-child(4) { animation-delay: 90ms; }
+[data-stagger] > :nth-child(5) { animation-delay: 120ms; }
+[data-stagger] > :nth-child(6) { animation-delay: 150ms; }
+[data-stagger] > :nth-child(7) { animation-delay: 180ms; }
+[data-stagger] > :nth-child(n + 8) { animation-delay: 210ms; }
+/* The assistant's bar travels: the dock and the panel's bottom bar share a name, so opening or closing moves one object between the
+   two places instead of fading one screen into another. The page behind stays still while it does. */
+::view-transition-group(assistant-bar) {
+  animation-duration: 220ms;
+  animation-timing-function: var(--ease-out);
+}
+html[data-vt="assistant"]::view-transition-old(root),
+html[data-vt="assistant"]::view-transition-new(root) {
+  animation: none;
 }
 @media (prefers-reduced-motion: reduce) {
   dialog,
@@ -392,7 +421,8 @@ dialog[open]::backdrop {
   .animate-rise-in,
   .animate-pop,
   .animate-toast-in,
-  .animate-toast-out {
+  .animate-toast-out,
+  [data-stagger] > * {
     animation: none;
   }
 }

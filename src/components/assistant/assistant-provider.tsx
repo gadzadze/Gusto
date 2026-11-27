@@ -3,6 +3,7 @@
 import { ArrowUp, ChevronDown, Mic } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { applySupplierActionAction, runSupplierToolAction, startSupplierAssistantAction } from "@/app/supplier/assistant/actions";
 import { VoiceAssistant, type AssistantCommand, type AssistantStatus, type VoiceAdapter, type VoiceSupplier } from "@/components/buyer/voice/voice-assistant";
 import { cn } from "@/lib/utils";
@@ -21,6 +22,20 @@ const AssistantContext = createContext<Ctx | null>(null);
 /** Null when the area has no assistant (voice off, business not approved): launchers then draw nothing. */
 export function useAssistant() {
   return useContext(AssistantContext);
+}
+
+/**
+ * Runs a state change as a view transition, so the dock and the panel's bottom bar (both named `assistant-bar`) travel into each other
+ * instead of one screen fading into the other. Without the API, or with reduced motion, the change is simply made.
+ */
+function travel(update: () => void) {
+  const doc = document as Document & { startViewTransition?: (callback: () => void) => { finished: Promise<unknown> } };
+  if (!doc.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return update();
+  document.documentElement.dataset.vt = "assistant";
+  const transition = doc.startViewTransition(() => flushSync(update));
+  void transition.finished.finally(() => {
+    delete document.documentElement.dataset.vt;
+  });
 }
 
 const supplierAdapter = (onClose: () => void): VoiceAdapter => ({
@@ -44,22 +59,25 @@ export function AssistantProvider({ role, suppliers, children }: { role: "buyer"
   const panel = useRef<HTMLElement>(null);
 
   const openWith = useCallback((next?: { text?: string; mic?: boolean }) => {
-    setMounted(true);
-    setOpen(true);
-    if (next) setCommand({ ...next, id: ++counter.current });
+    travel(() => {
+      setMounted(true);
+      setOpen(true);
+      if (next) setCommand({ ...next, id: ++counter.current });
+    });
   }, []);
+  const close = useCallback(() => travel(() => setOpen(false)), []);
 
   useEffect(() => {
     if (!open) return;
     panel.current?.focus();
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") close();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, close]);
 
-  const adapter = role === "supplier" ? supplierAdapter(() => setOpen(false)) : undefined;
+  const adapter = role === "supplier" ? supplierAdapter(close) : undefined;
 
   return (
     <AssistantContext.Provider value={{ role, open: openWith, status }}>
@@ -73,7 +91,7 @@ export function AssistantProvider({ role, suppliers, children }: { role: "buyer"
           hidden={!open}
           className="fixed inset-0 z-50 overflow-hidden bg-surface text-foreground outline-none sm:inset-y-4 sm:left-auto sm:right-4 sm:w-[26rem] sm:rounded-3xl sm:shadow-2xl print:hidden"
         >
-          <VoiceAssistant suppliers={suppliers} role={role} adapter={adapter} command={command} onStatus={setStatus} onClose={() => setOpen(false)} />
+          <VoiceAssistant suppliers={suppliers} role={role} adapter={adapter} command={command} onStatus={setStatus} onClose={close} />
         </section>
       ) : null}
       {!open ? <Dock role={role} status={status} onOpen={openWith} /> : null}
@@ -89,7 +107,7 @@ function Dock({ role, status, onOpen }: { role: "buyer" | "supplier"; status: As
   const label = status.phase === "connecting" ? t("dockWorking") : status.speaking ? t("dockAnswering") : t("dockLive");
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-20 px-3 md:bottom-4 md:left-[15rem] print:hidden">
-      <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-2 rounded-full glass glass-strong p-1.5">
+      <div style={{ viewTransitionName: "assistant-bar" }} className="pointer-events-auto mx-auto flex max-w-xl items-center gap-2 rounded-full glass glass-strong p-1.5">
         {live ? (
           <button type="button" onClick={() => onOpen({})} className="flex min-h-11 min-w-0 flex-1 items-center gap-2 rounded-full px-3 text-left">
             <span aria-hidden className={cn("size-2.5 shrink-0 rounded-full bg-brand", !status.speaking && "animate-pulse motion-reduce:animate-none")} />

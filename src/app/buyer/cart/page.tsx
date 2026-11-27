@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProductImage } from "@/components/catalog/product-image";
+import { CartUndoHost } from "@/components/orders/cart-undo";
 import { QuantityStepper } from "@/components/orders/quantity-stepper";
 import { TotalsBlock } from "@/components/orders/totals-block";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ async function Carts({ searchParams }: Pick<PageProps<"/buyer/cart">, "searchPar
 
   return (
     <div className="space-y-6">
+      <CartUndoHost />
       {params.reordered ? <FormAlert tone="success">{t("reordered")}</FormAlert> : null}
       {skipped.length ? <FormAlert tone="error">{t("skipped", { names: skipped.join(", ") })}</FormAlert> : null}
 

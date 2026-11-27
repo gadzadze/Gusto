@@ -405,7 +405,7 @@ export function TalkView({ suppliers, role = "buyer", connecting, live, speaking
               </button>
             </form>
           ) : null}
-          <div className="flex items-center gap-2">
+          <div style={{ viewTransitionName: "assistant-bar" }} className="flex items-center gap-2">
             {onSendText ? (
               <button type="button" onClick={() => setTyping((v) => !v)} aria-label={t("text")} aria-pressed={typing} className={cn(ringButton, typing && "border-brand text-brand")}>
                 <Keyboard aria-hidden />
