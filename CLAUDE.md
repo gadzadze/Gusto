@@ -1089,7 +1089,7 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
 - **Buyer home** (calmed 2026-11-27 after a phone recording: "messy, interface noise"): no page title (the header names the company and the open tab says
   Home; an `sr-only` h1 remains), one rounded search field (icon inside, no extra button, the mic at its end when voice ordering is on), then
   **glass sections** (`components/dashboard/list-section.tsx`: one pane each, a small heading, an "All" link, hairline-divided rows): regular orders, then
-  **one "Orders" pane** (an order in progress: supplier name, a status dot + word under it, the total and the delivery day on the right and a slim
+  **one "Orders" pane** (an order in progress: supplier name, a status dot + word and the order number under it, the total and the delivery day on the right and a slim
   three-step bar, `OrderSteps`; then recent orders with the reorder as an icon button, `ReorderButton iconOnly`, and a status only when it is not
   "delivered"),
   often-ordered products (`ProductCard layout="row"`: small picture, name, price, a round + that becomes the stepper; the supplier name only when the

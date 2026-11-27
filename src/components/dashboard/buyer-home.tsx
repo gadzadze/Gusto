@@ -74,7 +74,10 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
                 <span className="flex items-start gap-3">
                   <span className="min-w-0 flex-1">
                     <span className="block font-medium leading-snug">{o.supplierName}</span>
-                    <OrderStatusText status={o.status} className="mt-0.5" />
+                    <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-muted-foreground">
+                      <OrderStatusText status={o.status} />
+                      <span className="tabular-nums">{to("number", { number: o.number })}</span>
+                    </span>
                   </span>
                   <span className="shrink-0 text-right">
                     <span className="block font-semibold tabular-nums">{fmt.money(o.totalMinor, o.currency)}</span>
