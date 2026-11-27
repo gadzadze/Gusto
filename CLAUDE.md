@@ -1168,6 +1168,7 @@ clean-up; pure and unit-tested), `lib/voice/wav.ts`, `server/voice/gemini.ts`.
 - **Units are settled in code, not by the model** (`reconcileUnit`, `lib/voice/order-parse.ts`, using the import's `parseUnit`): same unit is fine, g to kg and ml to l convert, no unit said assumes the catalogue's, anything else (pieces for a product sold in litres) is flagged `mismatch` and shown as a warning, never guessed.
 - **It never reads a real catalogue** (admins never see catalogues or price lists). Everything the model returns is re-checked
   (`normalizeResult`: ids must be in the pasted list, quantities range-checked, `*_milli`).
+- **Live mode shows the buyer's own interface** (2026-11-27): `live-test.tsx` opens the same full-screen `VoiceAssistant` buyers get, with a `VoiceAdapter` (`start` = `startLiveSessionAction` on the pasted catalogue, `fill` = nothing stored, `finish` = close). So the real screens (talk, review, steppers) can be tried by an admin without a buyer account or `VOICE_ORDER_ENABLED`.
 - **Live mode** (2026-11-25, same page, `live-test.tsx`, `lib/voice/live.ts`, `public/voice-capture-worklet.js`): the browser opens a WebSocket to
   Google's live audio endpoint itself and talks with the assistant (model `gemini-3.8-live`, override `GEMINI_LIVE_MODEL`). The real key never leaves
   the server: `startLiveSessionAction` (admin, 10 sessions/h, `RATE_LIMITS.voiceLive`) mints a **one-use ephemeral token** (starts one session within a

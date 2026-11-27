@@ -1,119 +1,70 @@
 "use client";
 
-import { useLocale, useTranslations } from "next-intl";
-import { Mic, Square, TriangleAlert } from "lucide-react";
+import { Mic } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useMemo, useRef, useState } from "react";
+import { VoiceAssistant, type VoiceAdapter } from "@/components/buyer/voice/voice-assistant";
 import { Button } from "@/components/ui/button";
-import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
-import type { LiveOrderLine } from "@/lib/voice/live";
-import { useLiveVoice } from "@/lib/voice/use-live-voice";
-import { milliToInput } from "@/lib/quantity";
+import type { VoiceRef } from "@/lib/voice/order-parse";
 import { startLiveSessionAction } from "./actions";
 
-// Live voice mode (experiment, admin only). Uses the shared browser half in `lib/voice/use-live-voice.ts`.
-
-type ErrorKey = "micDenied" | "startFailed" | "connectionLost" | "rate_limited" | "not_configured" | "key_rejected" | "bad_catalog" | "upstream" | "invalid" | "unknown";
-
+/**
+ * Live voice mode (experiment, admin only): the same full-screen assistant buyers get, but fed with the made-up catalogue pasted
+ * above, and with a fill that stores nothing. This is the place to try the real interface without a buyer account or the buyer switch.
+ */
 export function LiveTest({ catalog, configured }: { catalog: string; configured: boolean }) {
   const t = useTranslations("admin.voiceTest");
-  const tu = useTranslations("unitNames");
-  const locale = useLocale();
-  const separator = locale === "en" ? "." : ",";
-  const unitLabel = (code: string | null) => (code && (PRODUCT_UNITS as readonly string[]).includes(code) ? tu(code as ProductUnit) : (code ?? ""));
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
+  const [finished, setFinished] = useState(false);
 
-  const { phase, turns, order, deliveryDay, error: errorKey, start: startLive, stop } = useLiveVoice(async () => {
-    const session = await startLiveSessionAction(catalog);
-    if (!session.ok) return { ok: false, error: session.error === "invalid" || session.error === "bad_catalog" ? "bad_catalog" : (session.error as string) ?? "startFailed" };
-    return { ok: true, session };
-  });
-  const error = errorKey as ErrorKey | null;
-  const start = () => void startLive();
+  const adapter = useMemo<VoiceAdapter>(
+    () => ({
+      start: async () => {
+        const session = await startLiveSessionAction(catalog);
+        if (!session.ok) return { ok: false, error: session.error === "invalid" || session.error === "bad_catalog" ? "invalid" : session.error };
+        // Every made-up product is its own id; steps of half a unit are enough to try the steppers.
+        const refs: Record<string, VoiceRef> = Object.fromEntries(session.items.map((i) => [i.id, { productId: i.id, minMilli: 500, stepMilli: 500 }]));
+        return { ok: true, session, refs };
+      },
+      // Nothing is put in a cart or ordered: this is a try-out.
+      fill: async () => ({ ok: true, skipped: [] }),
+      finish: () => {
+        setFinished(true);
+        dialog.current?.close();
+      },
+    }),
+    [catalog],
+  );
 
-  // The order is kept separately for each supplier (one cart per supplier in the real app).
-  const groups: { name: string | null; lines: LiveOrderLine[] }[] = [];
-  for (const line of order) {
-    const group = groups.find((g) => g.name === line.supplierName);
-    if (group) group.lines.push(line);
-    else groups.push({ name: line.supplierName, lines: [line] });
+  function show() {
+    setFinished(false);
+    setOpen(true);
+    dialog.current?.showModal();
   }
 
   return (
-    <section className="space-y-4 pt-4" aria-labelledby="live-title">
+    <section className="space-y-4" aria-labelledby="live-title">
       <div>
         <h2 id="live-title" className="text-base font-semibold">{t("live.title")}</h2>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{t("live.intro")}</p>
       </div>
-
       <div className="flex flex-wrap items-center gap-3">
-        {phase === "idle" ? (
-          <Button type="button" onClick={start} disabled={!configured}>
-            <Mic aria-hidden /> {t("live.start")}
-          </Button>
-        ) : (
-          <Button type="button" variant="outline" onClick={stop}>
-            <Square aria-hidden /> {t("live.stop")}
-          </Button>
-        )}
-        {phase === "connecting" ? <p role="status" className="text-sm text-muted-foreground">{t("live.connecting")}</p> : null}
-        {phase === "live" ? <p role="status" className="text-sm text-brand">{t("live.listening")}</p> : null}
+        <Button type="button" onClick={show} disabled={!configured}>
+          <Mic aria-hidden /> {t("live.start")}
+        </Button>
+        {finished ? <p role="status" className="text-sm text-muted-foreground">{t("live.testNote")}</p> : null}
       </div>
       <p className="text-xs text-muted-foreground">{t("live.limit", { minutes: 10 })}</p>
-      {error ? (
-        <p role="alert" className="flex items-start gap-2 text-sm text-destructive">
-          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-          {error === "micDenied" ? t("problems.mic_denied") : error === "startFailed" || error === "connectionLost" ? t(`live.${error}`) : t(`errors.${error}`)}
-        </p>
-      ) : null}
-
-      {turns.length > 0 || order.length > 0 ? (
-        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-2">
-          <div aria-live="polite">
-            <h3 className="text-sm font-medium">{t("live.conversation")}</h3>
-            <p className="text-xs text-muted-foreground">{t("live.transcriptNote")}</p>
-            <ul className="mt-1 space-y-2">
-              {turns.map((turn, i) => (
-                <li key={i} className={turn.who === "you" ? "glass p-3 text-sm" : "rounded-lg bg-brand-soft p-3 text-sm"}>
-                  <span className="block text-xs text-muted-foreground">{turn.who === "you" ? t("live.you") : t("live.assistant")}</span>
-                  {turn.text}
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium">{t("live.orderTitle")}</h3>
-            {order.length === 0 ? (
-              <p className="mt-1 text-sm text-muted-foreground">{t("live.orderEmpty")}</p>
-            ) : (
-              <div className="mt-1 space-y-4">
-                {groups.map((group) => (
-                  <div key={group.name ?? ""}>
-                    {group.name ? <h4 className="mb-1 text-sm font-medium text-brand">{t("supplier", { name: group.name })}</h4> : null}
-                    <ul className="glass">
-                      {group.lines.map((line) => (
-                        <li key={line.productId} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 p-3">
-                          <p className="min-w-0 flex-[1_1_10rem] font-medium">{line.productName}</p>
-                          <p className="tabular-nums">
-                            {line.quantityMilli === null ? t("noQuantity") : milliToInput(line.quantityMilli, separator)} {unitLabel(line.unit)}
-                          </p>
-                          {line.unitCheck === "mismatch" ? (
-                            <p role="alert" className="flex basis-full items-start gap-2 text-sm text-destructive">
-                              <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
-                              {t("unitMismatch", { said: line.spokenUnit ?? "", catalogue: unitLabel(line.catalogUnit) })}
-                            </p>
-                          ) : null}
-                          {line.unitCheck === "converted" ? <p className="basis-full text-xs text-muted-foreground">{t("unitConverted", { from: line.spokenUnit ?? "", to: unitLabel(line.unit) })}</p> : null}
-                          {line.unitCheck === "assumed" ? <p className="basis-full text-xs text-muted-foreground">{t("unitAssumed", { unit: unitLabel(line.unit) })}</p> : null}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            )}
-            {deliveryDay ? <p className="mt-2 text-sm">{t("delivery", { day: deliveryDay })}</p> : null}
-            <p className="mt-2 text-xs text-muted-foreground">{t("live.testNote")}</p>
-          </div>
-        </div>
-      ) : null}
+      <dialog
+        ref={dialog}
+        data-motion="sheet"
+        aria-label={t("live.title")}
+        onClose={() => setOpen(false)}
+        className="m-0 h-dvh max-h-none w-full max-w-none overflow-hidden border-0 bg-surface p-0 text-foreground backdrop:bg-black/40 sm:m-auto sm:h-[min(46rem,92dvh)] sm:max-w-md sm:rounded-3xl sm:border sm:border-border sm:shadow-xl"
+      >
+        {open ? <VoiceAssistant suppliers={[{ name: t("live.testSupplier"), count: catalog.split("\n").filter((l) => l.trim()).length }]} onClose={() => dialog.current?.close()} adapter={adapter} /> : null}
+      </dialog>
     </section>
   );
 }
