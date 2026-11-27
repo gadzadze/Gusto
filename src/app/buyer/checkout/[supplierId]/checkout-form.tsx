@@ -4,7 +4,7 @@ import { RefreshCw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, ForwardArrow } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -143,6 +143,7 @@ export function CheckoutForm({
       <div className="space-y-2">
         <Button className="w-full sm:w-auto" size="lg" disabled={!canSubmit || pending || changes !== null} onClick={submit}>
           {pending ? t("submitting") : t("submit")}
+          {!pending ? <ForwardArrow /> : null}
         </Button>
         <p className="text-sm text-muted-foreground">{t("paymentNote")}</p>
       </div>

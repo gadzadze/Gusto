@@ -52,6 +52,18 @@
 
   /* Soft glass (2026-11-27): a frosted pane on a pure page. The page is exactly white (light) or black (dark), so the pane
      gets its depth from its own edge, a soft shadow and a faint tint, never from a coloured backdrop. */
+  /* Buttons (2026-11-27, "flat but great"): flat colour from one warm family, no shadow, no line. Primary is a warm near-black, the calm
+     secondary is a warm tint, brand is burgundy, and each has a hover tone. */
+  --primary: #141413;
+  --primary-hover: #2b2a28;
+  --tonal: #f1efeb;
+  --tonal-hover: #e8e5e0;
+  --brand-hover: #651926;
+  --brand-tonal-hover: #edd6da;
+  --danger-fg: #b42318;
+  --danger-tonal: #fbeded;
+  --danger-tonal-hover: #f6dcdc;
+
   --glass: rgba(250, 248, 247, 0.72);
   --glass-strong: rgba(255, 255, 255, 0.95);
   --glass-line: rgba(11, 11, 12, 0.1);
@@ -78,6 +90,16 @@
   --danger: #f87171;
 
   --primary-foreground: #0b0b0c;
+
+  --primary: #f5f4f0;
+  --primary-hover: #ffffff;
+  --tonal: #1d1c1b;
+  --tonal-hover: #272523;
+  --brand-hover: #ee9cab;
+  --brand-tonal-hover: #38191f;
+  --danger-fg: #f87171;
+  --danger-tonal: #2b1514;
+  --danger-tonal-hover: #3a1b1a;
 
   --glass: rgba(255, 255, 255, 0.065);
   --glass-strong: rgba(255, 255, 255, 0.13);
@@ -116,6 +138,14 @@
   --color-brand-soft: var(--brand-soft);
   --color-brand-foreground: var(--brand-foreground);
   --color-surface-2: var(--surface-2);
+  --color-primary-hover: var(--primary-hover);
+  --color-tonal: var(--tonal);
+  --color-tonal-hover: var(--tonal-hover);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-tonal-hover: var(--brand-tonal-hover);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-tonal: var(--danger-tonal);
+  --color-danger-tonal-hover: var(--danger-tonal-hover);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -454,6 +484,10 @@ dialog[open]::backdrop {
   .glass-strong {
     background: var(--glass-strong);
   }
+  /* The button corner: 12px (a full circle for icon buttons, set where they are made). */
+  .rounded-btn {
+    border-radius: 12px;
+  }
 }
 @media (prefers-reduced-transparency: reduce) {
   .glass,
@@ -479,6 +513,7 @@ dialog[open]::backdrop {
   .rounded-lg,
   .rounded-xl,
   .rounded-2xl,
+  .rounded-btn,
   .glass,
   dialog,
   [popover] {

@@ -90,4 +90,21 @@ describe("Button", () => {
     expect(loading.preventDefault).toHaveBeenCalled();
     expect(disabled.preventDefault).toHaveBeenCalled();
   });
+
+  it("is flat: a 12px corner, no shadow, no border, and the calm secondary is a tint", () => {
+    const classesOf = (html: string) => (/class="([^"]*)"/.exec(html)?.[1] ?? "").split(/\s+/);
+    const flat = (html: string) => classesOf(html).every((c) => !/^(shadow|border|bg-gradient|bg-linear|ring)(-|$)/.test(c));
+    const base = render({}, "Save");
+    expect(base).toContain("rounded-btn");
+    expect(flat(base)).toBe(true);
+    const calm = render({ variant: "outline" }, "Save");
+    expect(calm).toContain("bg-tonal");
+    expect(flat(calm)).toBe(true);
+    expect(render({ variant: "brand" }, "Save")).toContain("bg-brand");
+    expect(render({ variant: "danger" }, "Save")).toContain("bg-danger-tonal");
+  });
+
+  it("makes icon buttons round", () => {
+    expect(render({ size: "icon" }, "x")).toContain("rounded-full");
+  });
 });

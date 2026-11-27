@@ -56,6 +56,18 @@ const PAIRS: [string, string, number, string][] = [
   ["input", "surface-raised", UI, "text field edges on cards"],
   ["input", "surface", UI, "text field and select edges against the page"],
   ["input", "surface-2", UI, "text field and select edges against cards"],
+  // Flat buttons (2026-11-27): every fill, its hover and its tint must keep its label readable.
+  ["primary-foreground", "primary", TEXT, "primary button label"],
+  ["primary-foreground", "primary-hover", TEXT, "primary button label on hover"],
+  ["brand-foreground", "brand", TEXT, "brand button label"],
+  ["brand-foreground", "brand-hover", TEXT, "brand button label on hover"],
+  ["ink", "tonal", TEXT, "calm secondary button label"],
+  ["ink", "tonal-hover", TEXT, "calm secondary button label on hover"],
+  ["muted-text", "tonal", TEXT, "secondary text on a tonal button"],
+  ["brand", "brand-soft", TEXT, "soft burgundy button label"],
+  ["brand", "brand-tonal-hover", TEXT, "soft burgundy button label on hover"],
+  ["danger-fg", "danger-tonal", TEXT, "soft red button label"],
+  ["danger-fg", "danger-tonal-hover", TEXT, "soft red button label on hover"],
 ];
 
 describe.each([

@@ -8,6 +8,10 @@
   --line: #E3E8EE;
   --line2: #CFD7DF;
   --brand: #6E0018;
+  --cta: #7A1F2E;
+  --cta-hover: #651926;
+  --tonal: #F1EFEB;
+  --tonal-hover: #E8E5E0;
   --dark: #0B1220;
   --dark-2: #111A2B;
   --dark-line: #22304A;
@@ -54,16 +58,20 @@
 .lp .nav-sheet a { display: block; padding: 14px 16px; border-radius: 16px; font-size: 15px; font-weight: 700; text-decoration: none; color: var(--text); transition: background-color 0.3s var(--ease), color 0.3s var(--ease); }
 .lp .nav-sheet a:hover { background: rgba(11, 18, 32, 0.04); color: var(--brand); }
 .lp .nav-sheet a.sheet-join { display: none; }
-/* Buttons and links */
-.lp .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 26px; border-radius: 999px; background: var(--ink); color: #fff; font-family: var(--font); font-size: 16px; font-weight: 700; text-decoration: none; border: 1px solid var(--ink); cursor: pointer; transition: transform 0.25s var(--ease), background-color 0.3s var(--ease), border-color 0.3s var(--ease), color 0.3s var(--ease); }
-.lp .btn:hover { background: var(--brand); border-color: var(--brand); }
-.lp .btn:active { transform: scale(0.97); }
+/* Buttons and links (2026-11-27, "flat but great"): flat colour, no shadow, no line. The call to action is burgundy, the secondary a warm
+   tint, 12px corners, a thin arrow on the ones that move you forward (`.go`) that nudges 2px on hover. */
+.lp .btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 48px; padding: 0 24px; border-radius: 12px; background: var(--cta); color: #fff; font-family: var(--font); font-size: 16px; font-weight: 600; text-decoration: none; border: 1px solid var(--cta); cursor: pointer; transition: transform 0.2s var(--ease), background-color 0.2s var(--ease), border-color 0.2s var(--ease), color 0.2s var(--ease); }
+.lp .btn:hover { background: var(--cta-hover); border-color: var(--cta-hover); }
+.lp .btn:active { transform: scale(0.98); }
 .lp .btn.sm { min-height: 40px; padding: 0 18px; font-size: 14px; }
-.lp .btn.light { background: #fff; color: var(--ink); border-color: #fff; }
-.lp .btn.light:hover { background: #F0DCE0; border-color: #F0DCE0; }
-/* Secondary: same size as the primary, outline only. */
-.lp .btn.ghost { background: transparent; color: var(--ink); border-color: var(--line2); }
-.lp .btn.ghost:hover { background: #fff; color: var(--brand); border-color: var(--brand); }
+.lp .btn.go::after { content: ""; width: 16px; height: 16px; margin-right: -4px; background: currentColor; -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12h14M13 6l6 6-6 6'/></svg>") center / contain no-repeat; mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12h14M13 6l6 6-6 6'/></svg>") center / contain no-repeat; transition: transform 0.2s var(--ease); }
+.lp .btn.go:hover::after { transform: translateX(2px); }
+.lp .btn.light { background: #fff; color: var(--cta); border-color: #fff; }
+.lp .btn.light:hover { background: #F5E7E9; border-color: #F5E7E9; }
+/* Secondary: the same size as the primary, a warm tint with no line. */
+.lp .btn.ghost { background: var(--tonal); color: var(--ink); border-color: var(--tonal); }
+.lp .btn.ghost:hover { background: var(--tonal-hover); color: var(--ink); border-color: var(--tonal-hover); }
+@media (prefers-reduced-motion: reduce) { .lp .btn, .lp .btn.go::after { transition: none; } .lp .btn:active { transform: none; } .lp .btn.go:hover::after { transform: none; } }
 /* Type */
 .lp .h1 { margin: 0; font-weight: 700; font-size: clamp(34px, 4.1vw, 56px); line-height: 1.2; letter-spacing: -0.02em; text-wrap: balance; }
 .lp .h2 { margin: 0; font-weight: 700; font-size: clamp(32px, 3.6vw, 48px); line-height: 1.26; letter-spacing: -0.015em; text-wrap: balance; }
@@ -94,12 +102,12 @@
 .lp .hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; align-items: center; }
 .lp .hero-copy { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; }
 .lp .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; }
-/* The hero's two buttons sit side by side; on a narrow phone they stack at the same width. */
-.lp .hero-copy .hero-cta { gap: 12px; }
-.lp .hero-copy .hero-cta .btn { padding: 0 20px; white-space: nowrap; }
+/* The hero's two buttons always sit side by side; on a narrow phone they share the width and the text may wrap. */
+.lp .hero-copy .hero-cta { gap: 8px; flex-wrap: nowrap; align-items: stretch; max-width: 100%; }
+.lp .hero-copy .hero-cta .btn { padding: 0 14px; white-space: nowrap; }
 @media (max-width: 560px) {
-  .lp .hero-copy .hero-cta { flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; }
-  .lp .hero-copy .hero-cta .btn { width: 100%; }
+  .lp .hero-copy .hero-cta { width: 100%; }
+  .lp .hero-copy .hero-cta .btn { flex: 1 1 0; min-width: 0; padding: 0 10px; white-space: normal; text-align: center; line-height: 1.25; font-size: 14px; }
 }
 .lp .composite { position: relative; height: 560px; }
 /* Dashboard window */
