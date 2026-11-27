@@ -22,7 +22,7 @@ export function ListSection({
 }) {
   return (
     <section aria-labelledby={id} className={cn("glass px-4", className)}>
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 py-1.5">
         <h2 id={id} className="min-w-0 text-[1rem] font-semibold">{title}</h2>
         {action ? (
           <Link href={action.href} className="inline-flex min-h-11 items-center gap-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground">

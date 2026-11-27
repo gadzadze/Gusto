@@ -58,7 +58,7 @@ export function LegalView({
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-4 sm:px-6">
-        <Link href="/">
+        <Link href="/" className="inline-flex min-h-11 items-center" aria-label="202">
           <Logo />
         </Link>
         <div className="flex items-center gap-2">
@@ -79,11 +79,11 @@ export function LegalView({
 
           <nav aria-label={t("common.toc")} className="mt-8 glass p-4 sm:p-5">
             <p className="text-sm font-semibold">{t("common.toc")}</p>
-            <ol className="mt-3 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
+            <ol className="mt-3 grid gap-x-8 gap-y-0 text-sm sm:grid-cols-2 sm:gap-y-1">
               {sections.map((section, index) => (
-                <li key={section.title} className="flex gap-2">
+                <li key={section.title} className="flex items-center gap-2">
                   <span className="text-muted-foreground tabular-nums">{index + 1}.</span>
-                  <a href={`#section-${index + 1}`} className="underline-offset-2 hover:underline">
+                  <a href={`#section-${index + 1}`} className="inline-flex min-h-11 items-center underline-offset-2 hover:underline sm:min-h-0">
                     {section.title}
                   </a>
                 </li>
@@ -152,12 +152,12 @@ export function LegalView({
       <footer className="border-t border-border">
         <nav
           aria-label={t("common.navAria")}
-          className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6 text-sm text-muted-foreground sm:px-6"
+          className="mx-auto flex w-full max-w-3xl flex-wrap items-center gap-x-6 gap-y-0 px-4 py-4 text-sm text-muted-foreground sm:px-6"
         >
-          <Link href="/" className="hover:text-foreground">
+          <Link href="/" className="inline-flex min-h-11 items-center hover:text-foreground">
             {t("common.home")}
           </Link>
-          <Link href={otherDoc.href} className="hover:text-foreground">
+          <Link href={otherDoc.href} className="inline-flex min-h-11 items-center hover:text-foreground">
             {otherDoc.label}
           </Link>
         </nav>

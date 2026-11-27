@@ -13,7 +13,7 @@ export function LoginShell({ form, demo }: { form: ReactNode; demo: ReactNode })
   const t = useTranslations("login");
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center px-4 py-10">
-      <Link href="/" className="mb-8">
+      <Link href="/" className="mb-6 inline-flex min-h-11 items-center" aria-label="202">
         <Logo />
       </Link>
       <Card className="w-full max-w-sm">
