@@ -18,8 +18,8 @@ describe("the usual order", () => {
     expect(liveSystemInstruction(items, "buyer")).not.toContain("same as last time");
     const text = liveSystemInstruction(items, "buyer", "Vake Foods: p1 2.5 kg");
     expect(text).toContain("same as last time");
-    expect(text).toContain("Previous order per supplier (id quantity unit):\nVake Foods: p1 2.5 kg");
-    expect(text).toContain("Never invent a previous order");
+    expect(text).toContain("Usual order per supplier (id quantity unit):\nVake Foods: p1 2.5 kg");
+    expect(text).toContain("Never invent a usual order");
   });
 });
 

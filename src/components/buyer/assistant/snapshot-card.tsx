@@ -1,10 +1,12 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { Check, ChevronRight, LoaderCircle } from "lucide-react";
+import { useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ProductCard } from "@/components/buyer/product-card";
-import type { OrderSnap, Snapshot } from "@/lib/assistant/snapshots";
+import { Button } from "@/components/ui/button";
+import type { ApplyResult, OrderSnap, ProposalAction, ProposalView, Snapshot } from "@/lib/assistant/snapshots";
 import { cn } from "@/lib/utils";
 
 const DOT: Record<OrderSnap["status"], string> = {
@@ -19,9 +21,39 @@ const DOT: Record<OrderSnap["status"], string> = {
  * What the assistant shows in the thread when the buyer asks to see something. The same facts the page has, drawn compactly, each with a
  * way to open the full page: the manual side is always there. The data arrives already formatted from the server.
  */
-export function SnapshotCard({ view }: { view: Snapshot }) {
+export function SnapshotCard({ view, onChoose, onApply }: { view: Snapshot; onChoose?: (label: string) => void; onApply?: (action: ProposalAction) => Promise<ApplyResult> }) {
   const t = useTranslations("buyer.assistant");
   const link = "inline-flex min-h-11 items-center gap-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground";
+
+  if (view.kind === "proposal") return <ProposalCard view={view} onApply={onApply} />;
+
+  if (view.kind === "choices") {
+    return (
+      <section className="glass space-y-3 px-4 py-4">
+        <p className="font-medium">{view.question}</p>
+        <div className="flex flex-wrap gap-2">
+          {view.options.map((label) => (
+            <Button key={label} variant="outline" onClick={() => onChoose?.(label)}>
+              {label}
+            </Button>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (view.kind === "suggestions") {
+    return (
+      <Pane>
+        {view.items.map((s, i) => (
+          <div key={i} className="py-3">
+            <p className="font-medium">{s.name}</p>
+            <p className="text-sm text-muted-foreground">{s.supplier} · {s.hint}</p>
+          </div>
+        ))}
+      </Pane>
+    );
+  }
 
   if (view.kind === "products") {
     if (view.groups.length === 0) return <Pane><p className="py-3 text-sm text-muted-foreground">{t("noProducts", { query: view.title })}</p></Pane>;
@@ -152,5 +184,63 @@ function OrderRow({ order }: { order: OrderSnap }) {
         {order.deliveryDay ? <span className="block text-sm text-muted-foreground">{order.deliveryDay}</span> : null}
       </span>
     </Link>
+  );
+}
+
+/**
+ * A change the assistant proposes: what will change, then Confirm and Cancel. Nothing happens before the tap; the answer from the
+ * server (done, or why not) replaces the buttons. The state lives in the card, so it survives the thread scrolling.
+ */
+function ProposalCard({ view, onApply }: { view: ProposalView; onApply?: (action: ProposalAction) => Promise<ApplyResult> }) {
+  const t = useTranslations("buyer.assistant");
+  const [state, setState] = useState<{ phase: "idle" | "working" | "cancelled" } | { phase: "done"; message: string; href: string | null } | { phase: "failed"; error: string }>({ phase: "idle" });
+
+  async function confirm() {
+    if (!onApply) return;
+    setState({ phase: "working" });
+    const result = await onApply(view.action).catch(() => ({ ok: false as const, error: "failed" }));
+    if (result.ok) setState({ phase: "done", message: result.message, href: result.href });
+    else setState({ phase: "failed", error: result.error });
+  }
+
+  return (
+    <section className="glass space-y-3 px-4 py-4" aria-label={view.title}>
+      <p className="font-semibold">{view.title}</p>
+      <ul>
+        {view.rows.map((r, i) => (
+          <li key={i} className="flex items-baseline justify-between gap-3 py-1.5 text-sm">
+            <span className="min-w-0">{r.label}</span>
+            <span className="shrink-0 tabular-nums">
+              {r.before ? <span className="text-muted-foreground">{r.before} → </span> : null}
+              <span className="font-medium">{r.after ?? "–"}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      {view.note ? <p className="text-sm text-muted-foreground">{view.note}</p> : null}
+      {state.phase === "done" ? (
+        <p role="status" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-medium">
+          <span className="inline-flex items-center gap-1.5"><Check aria-hidden className="size-4 text-brand" />{state.message}</span>
+          {state.href ? <Link href={state.href} className="text-brand hover:underline">{t("openPage")}</Link> : null}
+        </p>
+      ) : state.phase === "cancelled" ? (
+        <p role="status" className="text-sm text-muted-foreground">{t("cancelled")}</p>
+      ) : (
+        <>
+          {state.phase === "failed" ? (
+            <p role="alert" className="text-sm text-destructive">{t(`errors.${(["invalid", "not_found", "failed", "product_unavailable", "invalid_quantity", "limit_reached", "empty", "rate_limited", "not_available"].includes(state.error) ? state.error : "failed") as "failed"}`)}</p>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <Button variant={view.danger ? "danger" : "default"} loading={state.phase === "working"} loadingLabel={t("working")} onClick={() => void confirm()}>
+              {state.phase === "working" ? <LoaderCircle aria-hidden className="animate-spin" /> : null}
+              {view.confirmLabel}
+            </Button>
+            <Button variant="outline" disabled={state.phase === "working"} onClick={() => setState({ phase: "cancelled" })}>
+              {t("cancel")}
+            </Button>
+          </div>
+        </>
+      )}
+    </section>
   );
 }

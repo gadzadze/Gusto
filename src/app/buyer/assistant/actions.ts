@@ -1,8 +1,9 @@
 "use server";
 
 import { z } from "zod";
-import type { ToolResult } from "@/lib/assistant/snapshots";
+import type { ApplyResult, ToolResult } from "@/lib/assistant/snapshots";
 import { requireBuyer } from "@/server/auth/guards";
+import { applyBuyerAction } from "@/server/assistant/buyer-actions";
 import { runBuyerTool } from "@/server/assistant/buyer-tools";
 import { consumeRateLimit, RATE_LIMITS } from "@/server/security/rate-limit";
 import { voiceOrderEnabled } from "@/server/voice/config";
@@ -24,4 +25,19 @@ export async function runAssistantToolAction(raw: unknown): Promise<ToolResult> 
     return { ok: false, error: "rate_limited" };
   }
   return runBuyerTool(ctx, parsed.data.name, parsed.data.args);
+}
+
+/**
+ * The buyer tapped Confirm on a card. The server checks the change again with the buyer's own permissions and calls the same function
+ * the buttons on the pages call: whatever the browser sent, it can do nothing the buyer could not do by hand.
+ */
+export async function applyAssistantActionAction(raw: unknown): Promise<ApplyResult> {
+  const ctx = await requireBuyer();
+  if (!voiceOrderEnabled() || ctx.orgStatus !== "active") return { ok: false, error: "not_available" };
+  try {
+    await consumeRateLimit(RATE_LIMITS.assistantApply, ctx.userId);
+  } catch {
+    return { ok: false, error: "rate_limited" };
+  }
+  return applyBuyerAction(ctx, raw);
 }

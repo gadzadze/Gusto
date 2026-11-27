@@ -1,9 +1,11 @@
 import "server-only";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { MAX_CATALOG_LINES, type CatalogItem, type VoiceRef } from "@/lib/voice/order-parse";
 import { previousOrdersText, type PreviousOrder } from "@/lib/voice/previous";
 import { getDb } from "@/server/db/client";
-import { orderItems, orders, organizations, products, supplierCustomers } from "@/server/db/schema";
+import { organizations, products, supplierCustomers } from "@/server/db/schema";
+import { loadOrderHistory } from "@/server/assistant/history";
+import { typicalOrder } from "@/lib/assistant/history";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError } from "@/server/domain/errors";
 import { voicePhrasesByProduct } from "@/server/domain/buyer/voice-phrases";
@@ -14,7 +16,7 @@ export type VoiceCatalog = {
   items: CatalogItem[];
   refs: Record<string, VoiceRef>;
   suppliers: { name: string; count: number }[];
-  /** The buyer's latest order per supplier as short-id lines, for "the usual". Empty when there is none. */
+  /** The buyer's usual order per supplier as short-id lines, for "the usual". Empty when there is none. */
   previous: string;
 };
 
@@ -73,8 +75,8 @@ export async function loadVoiceCatalog(ctx: OrgCtx): Promise<VoiceCatalog> {
   // "The usual": the latest order per supplier (not cancelled or rejected), only lines whose product is in this catalogue.
   const aliasOf = new Map(Object.entries(refs).map(([alias, ref]) => [ref.productId, alias]));
   const unitOf = new Map(items.map((i) => [i.id, i.unit]));
-  const previous = await latestOrdersPerSupplier(ctx, aliasOf, unitOf, supplierNames(rows)).catch((error: unknown) => {
-    console.error("latestOrdersPerSupplier failed:", error instanceof Error ? error.message : "unknown");
+  const previous = await usualPerSupplier(ctx, aliasOf, unitOf, supplierNames(rows)).catch((error: unknown) => {
+    console.error("usualPerSupplier failed:", error instanceof Error ? error.message : "unknown");
     return "";
   });
   return { items, refs, suppliers: [...counts.values()].sort((a, b) => a.name.localeCompare(b.name)), previous };
@@ -84,24 +86,15 @@ function supplierNames(rows: { supplierId: string; supplierName: string }[]): Ma
   return new Map(rows.map((r) => [r.supplierId, r.supplierName]));
 }
 
-async function latestOrdersPerSupplier(ctx: OrgCtx, aliasOf: Map<string, string>, unitOf: Map<string, string>, names: Map<string, string>): Promise<string> {
+/** "The usual" per supplier: the typical order from the buyer's own recent orders (the latest one when there are fewer than three). */
+async function usualPerSupplier(ctx: OrgCtx, aliasOf: Map<string, string>, unitOf: Map<string, string>, names: Map<string, string>): Promise<string> {
   if (aliasOf.size === 0) return "";
-  const db = getDb();
-  const latest = await db
-    .selectDistinctOn([orders.supplierOrgId], { id: orders.id, supplierOrgId: orders.supplierOrgId })
-    .from(orders)
-    .where(and(eq(orders.buyerOrgId, ctx.orgId), inArray(orders.status, ["pending", "confirmed", "delivered"]), inArray(orders.supplierOrgId, [...names.keys()])))
-    .orderBy(orders.supplierOrgId, desc(orders.createdAt));
-  if (latest.length === 0) return "";
-  const lines = await db
-    .select({ orderId: orderItems.orderId, productId: orderItems.productId, qty: orderItems.orderedQtyMilli })
-    .from(orderItems)
-    .where(inArray(orderItems.orderId, latest.map((l) => l.id)));
-  const groups: PreviousOrder[] = latest.map((o) => ({
-    supplierName: names.get(o.supplierOrgId) ?? "",
-    lines: lines.flatMap((l) => {
-      const id = l.orderId === o.id && l.productId ? aliasOf.get(l.productId) : undefined;
-      return id && l.qty > 0 ? [{ id, qtyMilli: l.qty, unit: unitOf.get(id) ?? "" }] : [];
+  const history = await loadOrderHistory(ctx);
+  const groups: PreviousOrder[] = [...names.entries()].map(([supplierId, supplierName]) => ({
+    supplierName,
+    lines: typicalOrder(history.get(supplierId) ?? []).flatMap((l) => {
+      const id = aliasOf.get(l.productId);
+      return id ? [{ id, qtyMilli: l.qtyMilli, unit: unitOf.get(id) ?? "" }] : [];
     }),
   }));
   return previousOrdersText(groups);

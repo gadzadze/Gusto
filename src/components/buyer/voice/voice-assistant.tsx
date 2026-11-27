@@ -5,8 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { runAssistantToolAction } from "@/app/buyer/assistant/actions";
+import { applyAssistantActionAction, runAssistantToolAction } from "@/app/buyer/assistant/actions";
 import { SnapshotCard } from "@/components/buyer/assistant/snapshot-card";
+import type { ApplyResult, ProposalAction } from "@/lib/assistant/snapshots";
 import { fillCartsFromVoiceAction, startBuyerVoiceAction } from "@/app/buyer/voice/actions";
 import { Button, ForwardArrow } from "@/components/ui/button";
 import { PRODUCT_UNITS, type ProductUnit } from "@/lib/catalog/units";
@@ -69,16 +70,21 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
   // dropped when the product is not in this session's catalogue (it can then be opened on screen, not ordered by voice).
   const refsRef = useRef<Record<string, VoiceRef>>({});
   const buyerLookup: LookupRunner = async (name, args) => {
+    // A change proposal names its product by the short id; the server wants the real one.
+    if (name === "propose_cart_change" && args && typeof args === "object") {
+      const given = (args as { product_id?: unknown }).product_id;
+      const real = typeof given === "string" ? refsRef.current[given]?.productId : undefined;
+      if (real) args = { ...(args as object), product_id: real };
+    }
     const result = await runAssistantToolAction({ name, args });
     if (!result.ok) return result;
     const model = result.forModel as { results?: { uuid?: string; id?: string | null; orderable_by_voice?: boolean }[] };
     if (Array.isArray(model.results)) {
       const alias = new Map(Object.entries(refsRef.current).map(([short, ref]) => [ref.productId, short]));
       for (const r of model.results) {
-        const short = r.uuid ? alias.get(r.uuid) : undefined;
+        // In the catalogue: its short id (also valid for set_order). Otherwise the real id, which only the propose tools accept.
+        r.id = (r.uuid ? alias.get(r.uuid) : undefined) ?? r.uuid ?? null;
         delete r.uuid;
-        if (short) r.id = short;
-        else r.orderable_by_voice = false;
       }
     }
     return result;
@@ -163,6 +169,11 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
       blocked={blocked}
       errorKey={errorKey}
       onStart={() => void voice.start()}
+      onChoose={(label) => {
+        if (voice.phase === "idle") void voice.start({ mic: false });
+        voice.sendText(label);
+      }}
+      onApply={adapter ? undefined : applyAssistantActionAction}
       onSendText={(text) => {
         // Typing needs no microphone: a session started by a typed line asks for no permission.
         if (voice.phase === "idle") void voice.start({ mic: false });
@@ -193,6 +204,10 @@ type TalkProps = {
   onStart: () => void;
   /** A command typed instead of spoken. Without it the Type button is not shown. */
   onSendText?: (text: string) => void;
+  /** A button on a "choices" card was tapped: the label goes to the assistant as what the buyer said. */
+  onChoose?: (label: string) => void;
+  /** Confirm on a proposal card. Without it proposal cards cannot be confirmed (the admin test page has none). */
+  onApply?: (action: ProposalAction) => Promise<ApplyResult>;
   onRetry: () => void;
   onFinish: () => void;
   onClose: () => void;
@@ -201,7 +216,7 @@ type TalkProps = {
 };
 
 /** The talking view, as plain props so a fixture can render it without a microphone or a socket. */
-export function TalkView({ suppliers, connecting, live, speaking, turns, order, levels, blocked, errorKey, onStart, onSendText, onRetry, onFinish, onClose, unitLabel, separator }: TalkProps) {
+export function TalkView({ suppliers, connecting, live, speaking, turns, order, levels, blocked, errorKey, onStart, onSendText, onChoose, onApply, onRetry, onFinish, onClose, unitLabel, separator }: TalkProps) {
   const t = useTranslations("buyer.voice");
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState("");
@@ -235,7 +250,7 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
               {shown.length === 0 ? <p className="text-xl text-muted-foreground">{t("listening")}</p> : null}
               {shown.map((turn, i) =>
                 turn.view ? (
-                  <SnapshotCard key={turns.length - shown.length + i} view={turn.view} />
+                  <SnapshotCard key={turns.length - shown.length + i} view={turn.view} onChoose={onChoose} onApply={onApply} />
                 ) : (
                 <p
                   key={turns.length - shown.length + i}

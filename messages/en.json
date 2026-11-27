@@ -559,7 +559,42 @@
       "emptyCart": "Your carts are empty.",
       "total": "Total",
       "shortfall": "{amount} short of the minimum order",
-      "openCart": "Open the cart"
+      "openCart": "Open the cart",
+      "applied": {
+        "cartSet": "Cart updated.",
+        "cartRemoved": "Removed from the cart.",
+        "reorder": "{added, plural, one {# product} other {# products}} added to the cart.",
+        "reorderSkipped": "{added} added to the cart. Not available now: {skipped}.",
+        "regular": "Saved as a regular order. You will get a reminder on that day."
+      },
+      "proposal": {
+        "cartTitle": "Change the cart",
+        "cartRemoveTitle": "Remove from the cart",
+        "cartConfirm": "Update the cart",
+        "cartRemoveConfirm": "Remove",
+        "reorderTitle": "Order again: {number}, {supplier}",
+        "reorderNote": "Goes into the cart at today's prices. Nothing is sent.",
+        "reorderConfirm": "Add to the cart",
+        "regularTitle": "Save as a regular order",
+        "regularNote": "A reminder and a one-tap cart fill. It never orders by itself.",
+        "regularConfirm": "Save"
+      },
+      "dueHint": "usually every {every} days, last ordered {since} days ago",
+      "cancel": "Cancel",
+      "cancelled": "Cancelled.",
+      "working": "Working...",
+      "openPage": "Open the page",
+      "errors": {
+        "invalid": "That did not work. Try again.",
+        "not_found": "Not found.",
+        "failed": "Something went wrong. Try again.",
+        "product_unavailable": "This product is not available now.",
+        "invalid_quantity": "That quantity is not allowed for this product.",
+        "limit_reached": "You already have the maximum number of regular orders.",
+        "empty": "That order has nothing to save.",
+        "rate_limited": "Too many requests. Try again in a moment.",
+        "not_available": "Not available."
+      }
     }
   },
   "admin": {

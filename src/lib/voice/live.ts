@@ -44,6 +44,11 @@ export const LOOKUP_DECLARATIONS = [
   { name: "list_orders", description: "The buyer's recent orders with status, total and delivery day. Set open_only for orders still in progress.", parameters: { type: "OBJECT", properties: { open_only: { type: "BOOLEAN" } } } },
   { name: "get_order", description: "One order of this buyer by its number (the digits after GST-), with its lines, status and delivery day.", parameters: { type: "OBJECT", properties: { number: { type: "NUMBER" } }, required: ["number"] } },
   { name: "get_cart", description: "What is in this buyer's carts right now, per supplier, with totals.", parameters: { type: "OBJECT", properties: {} } },
+  { name: "suggest_reorder", description: "Products this buyer reorders regularly whose usual gap has nearly passed (probably running low).", parameters: { type: "OBJECT", properties: {} } },
+  { name: "propose_cart_change", description: "Propose changing the cart for one product. Nothing changes until the buyer taps the button on the card. mode add adds to what is in the cart, set replaces it, remove takes it out.", parameters: { type: "OBJECT", properties: { product_id: { type: "STRING", description: "The product id from the catalogue or from a search result." }, quantity: { type: "NUMBER" }, mode: { type: "STRING", enum: ["add", "set", "remove"] }, spoken_unit: { type: "STRING", description: "The unit exactly as the buyer said it, if any." } }, required: ["product_id", "quantity"] } },
+  { name: "propose_reorder", description: "Propose putting a previous order of this buyer back in the cart (order again). Nothing changes until the buyer taps the button on the card.", parameters: { type: "OBJECT", properties: { number: { type: "NUMBER", description: "The order number, the digits after GST-." } }, required: ["number"] } },
+  { name: "propose_regular_order", description: "Propose saving a previous order as a regular order with a weekday reminder (1 Monday to 7 Sunday). Nothing changes until the buyer taps the button on the card.", parameters: { type: "OBJECT", properties: { number: { type: "NUMBER" }, weekday: { type: "NUMBER" }, name: { type: "STRING" } }, required: ["number", "weekday"] } },
+  { name: "show_choices", description: "When it is unclear which of two to five things the buyer means, show them as buttons instead of asking aloud. Then wait for the pick.", parameters: { type: "OBJECT", properties: { question: { type: "STRING" }, options: { type: "ARRAY", items: { type: "STRING" } } }, required: ["question", "options"] } },
 ] as const;
 
 export const LOOKUP_NAMES: readonly string[] = LOOKUP_DECLARATIONS.map((d) => d.name);
@@ -70,15 +75,15 @@ export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "te
       ? "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way."
       : "If the buyer asks about sending, a button, or where to click, answer exactly: «გაგზავნამდე შეკვეთას ეკრანზე გადაამოწმებთ.» Never mention sending, buttons or pressing anything in any other way.",
     mode === "buyer"
-      ? "You can look up anything the buyer could see by hand with these tools: search_products (products and their prices at the buyer's own suppliers), list_suppliers, list_orders, get_order and get_cart. Use a tool for every question about a price, a product, a supplier, an order or the cart: never answer those from memory, and never guess. Answer in one or two short sentences with the facts the tool returned; the app shows the details on screen as a card, so do not read long lists aloud. A product from a search can be ordered with set_order only when it has an id in the catalogue below; otherwise tell the buyer to open it on screen."
+      ? "You never change anything yourself. To change the cart, order again or save a regular order, call propose_cart_change, propose_reorder or propose_regular_order: they only show a card, and the buyer taps its button. Say in one short sentence what the card shows and that it needs their tap. When you are not sure which of a few products or orders the buyer means, call show_choices with their names instead of guessing or asking at length. You can also look up anything the buyer could see by hand with these tools: search_products (products and their prices at the buyer's own suppliers), list_suppliers, list_orders, get_order and get_cart. Use a tool for every question about a price, a product, a supplier, an order or the cart: never answer those from memory, and never guess. Answer in one or two short sentences with the facts the tool returned; the app shows the details on screen as a card, so do not read long lists aloud. set_order takes only ids from the catalogue below; for a product from a search that is not in the catalogue, use propose_cart_change with the id the search returned."
       : "",
     previous
-      ? "When the buyer says 'the usual', 'same as last time' or 'as before', start from the previous order of that supplier listed below (copy its lines into the order), then apply what they change ('but no cream', 'double the tomatoes'). Say in one sentence what you copied. Never invent a previous order that is not listed."
+      ? "When the buyer says 'the usual', 'same as last time' or 'as before', start from the usual order of that supplier listed below (copy its lines into the order), then apply what they change ('but no cream', 'double the tomatoes'). Say in one sentence what you copied. Never invent a usual order that is not listed."
       : "",
     "",
     "Catalogue (id | name | unit). An 'also said' list after a product is how this buyer usually names it: treat those words as that product.",
     catalogue,
-    previous ? `\nPrevious order per supplier (id quantity unit):\n${previous}` : "",
+    previous ? `\nUsual order per supplier (id quantity unit):\n${previous}` : "",
   ].join("\n");
 }
 
