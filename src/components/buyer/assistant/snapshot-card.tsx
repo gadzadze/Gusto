@@ -132,6 +132,39 @@ export function SnapshotCard({ view, onChoose, onApply }: { view: Snapshot; onCh
     );
   }
 
+  if (view.kind === "list") {
+    return (
+      <Pane>
+        {view.title ? <p className="pt-3 text-sm font-semibold">{view.title}</p> : null}
+        {view.rows.length === 0 ? <p className="py-3 text-sm text-muted-foreground">{view.empty ?? t("nothingFound")}</p> : null}
+        {view.rows.map((r, i) => {
+          const inner = (
+            <>
+              <span className="min-w-0 flex-1">
+                <span className="block font-medium">{r.primary}</span>
+                {r.secondary ? <span className="block text-sm text-muted-foreground">{r.secondary}</span> : null}
+              </span>
+              {r.tail ? <span className="shrink-0 text-sm tabular-nums text-muted-foreground">{r.tail}</span> : null}
+            </>
+          );
+          return r.href ? (
+            <Link key={i} href={r.href} className="flex items-center gap-3 py-2.5 transition-colors hover:text-brand">
+              {inner}
+            </Link>
+          ) : (
+            <div key={i} className="flex items-center gap-3 py-2.5">{inner}</div>
+          );
+        })}
+        {view.allHref ? (
+          <Link href={view.allHref} className={link}>
+            {t("openPage")}
+            <ChevronRight aria-hidden className="size-4" />
+          </Link>
+        ) : null}
+      </Pane>
+    );
+  }
+
   // cart
   if (view.carts.length === 0) return <Pane><p className="py-3 text-sm text-muted-foreground">{t("emptyCart")}</p></Pane>;
   return (
@@ -208,9 +241,9 @@ function ProposalCard({ view, onApply }: { view: ProposalView; onApply?: (action
       <p className="font-semibold">{view.title}</p>
       <ul>
         {view.rows.map((r, i) => (
-          <li key={i} className="flex items-baseline justify-between gap-3 py-1.5 text-sm">
-            <span className="min-w-0">{r.label}</span>
-            <span className="shrink-0 tabular-nums">
+          <li key={i} className="py-1.5 text-sm">
+            <span className="block min-w-0">{r.label}</span>
+            <span className="block tabular-nums">
               {r.before ? <span className="text-muted-foreground">{r.before} → </span> : null}
               <span className="font-medium">{r.after ?? "–"}</span>
             </span>

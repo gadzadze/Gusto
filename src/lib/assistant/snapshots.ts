@@ -21,6 +21,7 @@ export type Snapshot =
   | { kind: "suppliers"; items: { id: string; name: string; city: string; minOrder: string | null; delivery: string | null; products: number; href: string }[] }
   | { kind: "orders"; items: OrderSnap[]; allHref: string }
   | { kind: "order"; order: OrderSnap; lines: { name: string; qty: string; price: string; total: string }[]; reorderHref: string | null }
+  | { kind: "list"; title: string; rows: { primary: string; secondary: string | null; tail: string | null; href: string | null }[]; allHref: string | null; empty: string | null }
   | ProposalView
   | ChoicesView
   | SuggestionsView

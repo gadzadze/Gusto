@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Snapshot } from "@/lib/assistant/snapshots";
-import { applySetOrder, LOOKUP_NAMES, SET_ORDER, type LiveOrderLine } from "@/lib/voice/live";
+import { applySetOrder, SET_ORDER, type LiveOrderLine } from "@/lib/voice/live";
 import type { CatalogItem } from "@/lib/voice/order-parse";
 
 // The browser half of live voice: one WebSocket to Google's live endpoint with a one-use token from the server, microphone capture
@@ -147,13 +147,16 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>, runLook
   }
 
   /** `mic: false` starts a session for typing only: no microphone permission is asked. */
-  async function start(options: { mic?: boolean } = {}): Promise<LiveSession | null> {
+  async function start(options: { mic?: boolean; fresh?: boolean } = {}): Promise<LiveSession | null> {
     const useMic = options.mic !== false;
     setError(null);
-    setTurns([]);
+    // The thread outlives a session (it is the conversation on screen); only `fresh` empties it.
+    if (options.fresh) {
+      setTurns([]);
+      turnsRef.current = [];
+    }
     setOrder([]);
     setDeliveryDay(null);
-    turnsRef.current = [];
     boundary.current = true;
     closing.current = false;
     setPhase("connecting");
@@ -174,6 +177,13 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>, runLook
     const started = await getSession();
     if (!started.ok) return fail(started.error);
     const session = started.session;
+    // A new session knows nothing of the earlier one: hand it the last lines of the thread as context so it can carry on.
+    const earlier = turnsRef.current.filter((t) => t.text).slice(-8).map((t) => `${t.who === "you" ? "User" : "Assistant"}: ${t.text}`).join("\n");
+    if (earlier) {
+      const setup = session.setup as { setup?: { systemInstruction?: { parts?: { text: string }[] } } };
+      const part = setup.setup?.systemInstruction?.parts?.[0];
+      if (part) part.text += `\n\nEarlier in this conversation (context only, do not repeat it; the user may refer to it):\n${earlier}`;
+    }
 
     if (useMic) {
       let media: MediaStream;
@@ -260,7 +270,7 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>, runLook
                 if (applied.deliveryDay) setDeliveryDay(applied.deliveryDay);
                 return { id: call.id, name: call.name, response: applied.feedback };
               }
-              if (runLookup && LOOKUP_NAMES.includes(call.name)) {
+              if (runLookup) {
                 const result = await runLookup(call.name, call.args).catch(() => ({ ok: false as const, error: "failed" }));
                 if (!result.ok) return { id: call.id, name: call.name, response: { error: result.error } };
                 if (result.view) addView(result.view);
@@ -281,5 +291,17 @@ export function useLiveVoice(getSession: () => Promise<LiveStartResult>, runLook
     setPhase("idle");
   }
 
-  return { phase, turns, order, deliveryDay, error, speaking, levels, start, stop, sendText, clearError: () => setError(null) };
+  /** Cuts the assistant off mid-answer: the audio stops at once and the next thing said is a new turn. */
+  function interrupt() {
+    stopPlayback();
+    boundary.current = true;
+  }
+
+  function clearThread() {
+    turnsRef.current = [];
+    boundary.current = true;
+    setTurns([]);
+  }
+
+  return { phase, turns, order, deliveryDay, error, speaking, levels, start, stop, interrupt, clearThread, sendText, clearError: () => setError(null) };
 }

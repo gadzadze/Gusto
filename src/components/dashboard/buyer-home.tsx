@@ -50,7 +50,14 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
   return (
     <div className="space-y-8">
       {/* With the assistant on, the command bar is the first thing; plain search is the Search tab. Without it, the search field. */}
-      {voiceSuppliers ? <VoiceLauncher variant="bar" suppliers={voiceSuppliers} chips={voiceChips} /> : <BuyerSearchForm />}
+      {voiceSuppliers ? (
+        <div className="space-y-3">
+          <BuyerSearchForm voiceSuppliers={voiceSuppliers} />
+          <VoiceLauncher variant="chips" chips={voiceChips} />
+        </div>
+      ) : (
+        <BuyerSearchForm />
+      )}
       <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-8 lg:grid-cols-[1.55fr_1fr]">
         <div className="space-y-8">
           {regular.length > 0 ? (

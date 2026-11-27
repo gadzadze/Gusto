@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUp, Check, ChevronDown, Keyboard, LoaderCircle, Mic, MicOff, Minus, Plus, TriangleAlert, X } from "lucide-react";
+import { ArrowUp, Check, ChevronDown, Keyboard, LoaderCircle, Mic, MicOff, Minus, Plus, Square, TriangleAlert, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -35,6 +35,8 @@ export type VoiceAdapter = {
   finish: () => void;
   /** Lookups for the assistant. Without it the assistant has no lookup tools (the admin test page). */
   lookup?: LookupRunner;
+  /** Confirm on a proposal card. Without it the buyer's own is used when there is no adapter, and cards cannot be confirmed otherwise. */
+  apply?: (action: ProposalAction) => Promise<ApplyResult>;
 };
 
 const KNOWN_ERRORS = ["startFailed", "connectionLost", "rate_limited", "not_configured", "no_products", "pending", "invalid"];
@@ -47,7 +49,27 @@ const KNOWN_ERRORS = ["startFailed", "connectionLost", "rate_limited", "not_conf
 /** How the assistant was opened: with a typed or tapped command to start from, or straight into listening. */
 export type VoiceLaunch = { text?: string; mic?: boolean };
 
-export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppliers: VoiceSupplier[]; onClose: () => void; adapter?: VoiceAdapter; launch?: VoiceLaunch }) {
+/** A command from outside (the dock, the command bar, a chip). A new `id` is a new command, even with the same words. */
+export type AssistantCommand = VoiceLaunch & { id: number };
+export type AssistantStatus = { phase: "idle" | "connecting" | "live"; speaking: boolean };
+
+export function VoiceAssistant({
+  suppliers,
+  onClose,
+  adapter,
+  launch,
+  command,
+  onStatus,
+  role = "buyer",
+}: {
+  suppliers: VoiceSupplier[];
+  onClose: () => void;
+  adapter?: VoiceAdapter;
+  launch?: VoiceLaunch;
+  command?: AssistantCommand | null;
+  onStatus?: (status: AssistantStatus) => void;
+  role?: "buyer" | "supplier";
+}) {
   const tu = useTranslations("unitNames");
   const locale = useLocale();
   const router = useRouter();
@@ -103,10 +125,38 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
     if (launched.current || !launch) return;
     launched.current = true;
     if (launch.text) {
+      micOn.current = false;
       void voice.start({ mic: false });
       voice.sendText(launch.text);
     } else if (launch.mic) void voice.start();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A command from the dock or a chip while the assistant is already mounted (its session and thread outlive the panel).
+  const micOn = useRef(true);
+  const lastCommand = useRef<number | null>(null);
+  useEffect(() => {
+    if (!command || lastCommand.current === command.id) return;
+    lastCommand.current = command.id;
+    if (command.text) {
+      if (voice.phase === "idle") {
+        micOn.current = false;
+        void voice.start({ mic: false });
+      }
+      voice.sendText(command.text);
+    } else if (command.mic) startMic();
+  }, [command?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    onStatus?.({ phase: voice.phase === "live" ? "live" : voice.phase === "connecting" ? "connecting" : "idle", speaking: voice.speaking });
+  }, [voice.phase, voice.speaking]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** The microphone on. A session opened by typing has none, so it is closed and a listening one takes its place (the thread stays). */
+  function startMic() {
+    if (voice.phase === "live" && !micOn.current) voice.stop();
+    if (voice.phase === "live" && micOn.current) return;
+    micOn.current = true;
+    void voice.start();
+  }
 
   const [view, setView] = useState<View>("talk");
   const [lines, setLines] = useState<VoiceLine[]>([]);
@@ -135,8 +185,15 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
     const result = await use.fill(lines.filter((l) => l.qty !== null).map((l) => ({ productId: refs[l.productId].productId, qtyMilli: l.qty as number, phrase: l.spokenName ?? undefined })));
     setBusy(false);
     if (!result.ok) return setFillError(KNOWN_ERRORS.includes(result.error) ? result.error : "unknown");
-    if (result.skipped.length === 0) use.finish();
+    if (result.skipped.length === 0) done();
     else setSkipped(result.skipped);
+  }
+
+  /** After the lines went into the carts: go where the adapter says, and leave the review behind (the thread stays). */
+  function done() {
+    use.finish();
+    setView("talk");
+    setLines([]);
   }
 
   if (view === "review") {
@@ -149,7 +206,7 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
         skipped={skipped}
         errorKey={fillError}
         onConfirm={() => void confirm()}
-        onToCart={use.finish}
+        onToCart={done}
         onClose={onClose}
         unitLabel={unitLabel}
         separator={separator}
@@ -160,6 +217,7 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
   return (
     <TalkView
       suppliers={suppliers}
+      role={role}
       connecting={connecting}
       live={live}
       speaking={voice.speaking}
@@ -168,20 +226,33 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
       levels={voice.levels}
       blocked={blocked}
       errorKey={errorKey}
-      onStart={() => void voice.start()}
+      onStart={startMic}
+      micOn={live && micOn.current}
+      onInterrupt={voice.interrupt}
+      onTypeInstead={() => {
+        voice.clearError();
+        micOn.current = false;
+        void voice.start({ mic: false });
+      }}
       onChoose={(label) => {
-        if (voice.phase === "idle") void voice.start({ mic: false });
+        if (voice.phase === "idle") {
+          micOn.current = false;
+          void voice.start({ mic: false });
+        }
         voice.sendText(label);
       }}
-      onApply={adapter ? undefined : applyAssistantActionAction}
+      onApply={adapter ? adapter.apply : applyAssistantActionAction}
       onSendText={(text) => {
         // Typing needs no microphone: a session started by a typed line asks for no permission.
-        if (voice.phase === "idle") void voice.start({ mic: false });
+        if (voice.phase === "idle") {
+          micOn.current = false;
+          void voice.start({ mic: false });
+        }
         voice.sendText(text);
       }}
       onRetry={() => {
         voice.clearError();
-        void voice.start();
+        startMic();
       }}
       onFinish={finish}
       onClose={onClose}
@@ -193,6 +264,7 @@ export function VoiceAssistant({ suppliers, onClose, adapter, launch }: { suppli
 
 type TalkProps = {
   suppliers: VoiceSupplier[];
+  role?: "buyer" | "supplier";
   connecting: boolean;
   live: boolean;
   speaking: boolean;
@@ -202,6 +274,12 @@ type TalkProps = {
   blocked: boolean;
   errorKey: string | null;
   onStart: () => void;
+  /** The microphone is in use (a typing-only session does not count): the speak button is then off. */
+  micOn?: boolean;
+  /** Cuts the assistant off while it is speaking. */
+  onInterrupt?: () => void;
+  /** From the "microphone is off" screen: carry on by typing instead. */
+  onTypeInstead?: () => void;
   /** A command typed instead of spoken. Without it the Type button is not shown. */
   onSendText?: (text: string) => void;
   /** A button on a "choices" card was tapped: the label goes to the assistant as what the buyer said. */
@@ -216,13 +294,13 @@ type TalkProps = {
 };
 
 /** The talking view, as plain props so a fixture can render it without a microphone or a socket. */
-export function TalkView({ suppliers, connecting, live, speaking, turns, order, levels, blocked, errorKey, onStart, onSendText, onChoose, onApply, onRetry, onFinish, onClose, unitLabel, separator }: TalkProps) {
+export function TalkView({ suppliers, role = "buyer", connecting, live, speaking, turns, order, levels, blocked, errorKey, onStart, micOn = live, onInterrupt, onTypeInstead, onSendText, onChoose, onApply, onRetry, onFinish, onClose, unitLabel, separator }: TalkProps) {
   const t = useTranslations("buyer.voice");
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState("");
   const flagged = order.filter((l) => l.unitCheck === "mismatch" || l.quantityMilli === null).length;
   const status = connecting ? t("connecting") : live ? (speaking ? t("answering") : t("listening")) : null;
-  const shown = turns.slice(-6);
+  const shown = turns.slice(-14);
   const lastIndex = shown.findLastIndex((x) => !x.view);
 
   return (
@@ -241,9 +319,9 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
 
       <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-4 pt-6">
         {blocked ? (
-          <Blocked onRetry={onRetry} onClose={onClose} />
+          <Blocked onRetry={onRetry} onTypeInstead={onTypeInstead ? () => { onTypeInstead(); setTyping(true); } : undefined} onClose={onClose} />
         ) : !live && !connecting && turns.length === 0 ? (
-          <Intro suppliers={suppliers} />
+          <Intro suppliers={suppliers} role={role} />
         ) : (
           <div className="space-y-8">
             <div aria-live="polite" className="space-y-3">
@@ -331,23 +409,27 @@ export function TalkView({ suppliers, connecting, live, speaking, turns, order, 
                 </Link>
               )}
             </DockSlot>
-            <DockSlot label={connecting ? t("connecting") : live ? t("listening") : t("speak")} strong>
+            <DockSlot label={connecting ? t("connecting") : micOn ? t("listening") : t("speak")} strong>
               <button
                 type="button"
                 onClick={onStart}
-                disabled={live}
+                disabled={micOn || connecting}
                 aria-label={t("speak")}
-                aria-pressed={live}
+                aria-pressed={micOn}
                 className={cn(
                   "inline-flex size-[4.75rem] items-center justify-center rounded-full bg-brand text-brand-foreground transition-transform duration-150 active:scale-95 motion-reduce:transition-none motion-reduce:active:scale-100 disabled:cursor-default [&_svg]:size-7",
-                  live && "ring-2 ring-brand ring-offset-4 ring-offset-surface",
+                  micOn && "ring-2 ring-brand ring-offset-4 ring-offset-surface",
                 )}
               >
                 {connecting ? <LoaderCircle aria-hidden className="animate-spin motion-reduce:animate-none" /> : <Mic aria-hidden />}
               </button>
             </DockSlot>
-            <DockSlot label={live && order.length === 0 ? t("finish") : ""}>
-              {live && order.length === 0 ? (
+            <DockSlot label={speaking && onInterrupt ? t("stop") : live && order.length === 0 ? t("finish") : ""}>
+              {speaking && onInterrupt ? (
+                <button type="button" onClick={onInterrupt} aria-label={t("stop")} className={ringButton}>
+                  <Square aria-hidden className="size-5 fill-current" />
+                </button>
+              ) : live && order.length === 0 ? (
                 <button type="button" onClick={onFinish} aria-label={t("finish")} className={ringButton}>
                   <Check aria-hidden />
                 </button>
@@ -398,16 +480,16 @@ function Wave({ levels, active }: { levels: number[]; active: boolean }) {
   );
 }
 
-function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
+function Intro({ suppliers, role }: { suppliers: VoiceSupplier[]; role: "buyer" | "supplier" }) {
   const t = useTranslations("buyer.voice");
-  const examples = t.raw("examples") as string[];
+  const examples = t.raw(role === "supplier" ? "supplierExamples" : "examples") as string[];
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <h2 className="text-balance text-[1.75rem] font-semibold leading-tight">{t("title")}</h2>
-        <p className="text-base text-muted-foreground">{t("lead")}</p>
+        <h2 className="text-balance text-[1.75rem] font-semibold leading-tight">{role === "supplier" ? t("supplierTitle") : t("title")}</h2>
+        <p className="text-base text-muted-foreground">{role === "supplier" ? t("supplierLead") : t("lead")}</p>
       </div>
-      <section aria-labelledby="voice-suppliers" className="glass px-4 py-1">
+      {role === "buyer" ? <section aria-labelledby="voice-suppliers" className="glass px-4 py-1">
         <h3 id="voice-suppliers" className="sr-only">{t("suppliersTitle")}</h3>
         <ul>
           {suppliers.map((s) => (
@@ -417,7 +499,7 @@ function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
             </li>
           ))}
         </ul>
-      </section>
+      </section> : null}
       <section aria-labelledby="voice-examples" className="glass px-4 py-1">
         <h3 id="voice-examples" className="sr-only">{t("examplesTitle")}</h3>
         <ul>
@@ -431,7 +513,7 @@ function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
   );
 }
 
-function Blocked({ onRetry, onClose }: { onRetry: () => void; onClose: () => void }) {
+function Blocked({ onRetry, onTypeInstead, onClose }: { onRetry: () => void; onTypeInstead?: () => void; onClose: () => void }) {
   const t = useTranslations("buyer.voice");
   return (
     <div className="space-y-8">
@@ -449,9 +531,15 @@ function Blocked({ onRetry, onClose }: { onRetry: () => void; onClose: () => voi
         <Button type="button" size="lg" className="w-full" onClick={onRetry}>
           {t("blocked.retry")}
         </Button>
-        <Button asChild variant="outline" size="lg" className="w-full">
-          <Link href="/buyer/search" onClick={onClose}>{t("blocked.typeInstead")}</Link>
-        </Button>
+        {onTypeInstead ? (
+          <Button type="button" variant="outline" size="lg" className="w-full" onClick={onTypeInstead}>
+            {t("blocked.typeInstead")}
+          </Button>
+        ) : (
+          <Button asChild variant="outline" size="lg" className="w-full">
+            <Link href="/buyer/search" onClick={onClose}>{t("blocked.typeInstead")}</Link>
+          </Button>
+        )}
       </div>
     </div>
   );

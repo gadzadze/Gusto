@@ -4,6 +4,7 @@ import { pushPublicKey } from "@/server/notifications/push";
 import { LiveOrders } from "@/components/orders/live-orders";
 import { SupplierToday } from "@/components/dashboard/supplier-today";
 import { requireSupplier } from "@/server/auth/guards";
+import { voiceOrderEnabled } from "@/server/voice/config";
 import { getSupplierMetrics } from "@/server/domain/metrics/supplier";
 import { countSupplierOrders } from "@/server/domain/orders/queries";
 import { getOrderValueSeries, getPendingPulse, getSetupProgress, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
@@ -28,6 +29,13 @@ async function Dashboard() {
   ]);
   // A company with no orders at all gets a "get started" checklist instead of an empty home.
   const setup = counts.new + counts.confirmed + counts.done === 0 ? await getSetupProgress(ctx) : undefined;
+  // Starting points for the assistant: the label follows the page language, the command is always Georgian (what it listens for).
+  const assistantOn = voiceOrderEnabled() && ctx.orgStatus === "active";
+  const tv = await getTranslations("buyer.voice");
+  const tvKa = await getTranslations({ locale: "ka", namespace: "buyer.voice" });
+  const assistantChips = assistantOn
+    ? (["Waiting", "Tomorrow", "Restock"] as const).map((k) => ({ label: tv(`supplierChip${k}`), command: tvKa(`supplierChip${k}`) }))
+    : [];
   return (
     <>
     <LiveOrders signature={pulse.signature} pending={pulse.pending} />
@@ -43,6 +51,7 @@ async function Dashboard() {
       clock={clock}
       now={new Date()}
       setup={setup}
+      assistantChips={assistantChips}
     />
     </>
   );

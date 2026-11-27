@@ -16,6 +16,8 @@ import { PushNavigation } from "@/components/push/push-navigation";
 import { AccountMenu } from "./account-menu";
 import { CommandPalette, PaletteTrigger } from "./command-palette";
 import { NavBadgesProvider } from "./nav-badges";
+import { AssistantProvider } from "@/components/assistant/assistant-provider";
+import type { VoiceSupplier } from "@/components/buyer/voice/voice-assistant";
 import { BottomNav, SidebarNav } from "./nav-links";
 
 export type ShellProps = {
@@ -36,10 +38,12 @@ export type ShellProps = {
   addCompany?: "buyer" | "supplier" | null;
   /** Counts shown next to nav items, keyed by href. */
   navBadges?: Record<string, number>;
+  /** The voice/typed assistant for this area; absent when it is off or the business is not approved yet. */
+  assistant?: { role: "buyer" | "supplier"; suppliers: VoiceSupplier[] };
   children: React.ReactNode;
 };
 
-export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, sides, addSide, addCompany, navBadges, children }: ShellProps) {
+export async function AppShell({ area, title, email, homeHref, showAdminLink, bell, sides, addSide, addCompany, navBadges, assistant, children }: ShellProps) {
   const t = await getTranslations();
   const roleLabel = t(`roles.${area}`);
   const navProps = { area, homeHref, showAdminLink, badges: navBadges };
@@ -114,7 +118,13 @@ export async function AppShell({ area, title, email, homeHref, showAdminLink, be
           </div>
         </header>
         <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 outline-none px-4 pb-28 pt-6 sm:px-6 md:pb-10 md:pt-8 print:p-0">
-          {children}
+          {assistant ? (
+            <AssistantProvider role={assistant.role} suppliers={assistant.suppliers}>
+              {children}
+            </AssistantProvider>
+          ) : (
+            children
+          )}
         </main>
       </div>
 

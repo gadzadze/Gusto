@@ -2,8 +2,9 @@
 
 import { Mic } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
-import { VoiceAssistant, type VoiceLaunch, type VoiceSupplier } from "@/components/buyer/voice/voice-assistant";
+import { useState } from "react";
+import { useAssistant } from "@/components/assistant/assistant-provider";
+import type { VoiceSupplier } from "@/components/buyer/voice/voice-assistant";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -13,22 +14,20 @@ import { cn } from "@/lib/utils";
  */
 export type VoiceChip = { label: string; command: string };
 
-export function VoiceLauncher({ variant, suppliers, chips = [] }: { variant: "field" | "card" | "bar"; suppliers: VoiceSupplier[]; chips?: VoiceChip[] }) {
+export function VoiceLauncher({ variant, chips = [], role = "buyer" }: { variant: "field" | "card" | "bar" | "chips"; suppliers?: VoiceSupplier[]; chips?: VoiceChip[]; role?: "buyer" | "supplier" }) {
   const t = useTranslations("buyer.voice");
-  const dialog = useRef<HTMLDialogElement>(null);
-  const [open, setOpen] = useState(false);
-  const [launch, setLaunch] = useState<VoiceLaunch | undefined>(undefined);
+  const assistant = useAssistant();
   const [draft, setDraft] = useState("");
 
-  function show(next?: VoiceLaunch) {
-    setLaunch(next);
-    setOpen(true);
-    dialog.current?.showModal();
-  }
+  // The assistant itself lives in the app shell; this only starts it. Without one (voice off) nothing is drawn.
+  if (!assistant) return null;
+  const show = (next?: { text?: string; mic?: boolean }) => assistant.open(next ?? {});
 
   return (
     <>
-      {variant === "bar" ? (
+      {variant === "chips" ? (
+        <Chips chips={chips} onPick={(command) => show({ text: command })} />
+      ) : variant === "bar" ? (
         <div className="space-y-3">
           <form
             className="relative"
@@ -40,7 +39,7 @@ export function VoiceLauncher({ variant, suppliers, chips = [] }: { variant: "fi
               show({ text });
             }}
           >
-            <label htmlFor="command-bar" className="sr-only">{t("barLabel")}</label>
+            <label htmlFor="command-bar" className="sr-only">{role === "supplier" ? t("supplierBarLabel") : t("barLabel")}</label>
             <Input
               id="command-bar"
               value={draft}
@@ -48,7 +47,7 @@ export function VoiceLauncher({ variant, suppliers, chips = [] }: { variant: "fi
               maxLength={300}
               enterKeyHint="send"
               autoComplete="off"
-              placeholder={t("barPlaceholder")}
+              placeholder={role === "supplier" ? t("supplierBarPlaceholder") : t("barPlaceholder")}
               className="h-14 rounded-full bg-[var(--glass)] pl-5 pr-16 text-base backdrop-blur-[18px]"
             />
             <button
@@ -60,20 +59,7 @@ export function VoiceLauncher({ variant, suppliers, chips = [] }: { variant: "fi
               <Mic aria-hidden />
             </button>
           </form>
-          {chips.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {chips.map((chip) => (
-                <button
-                  key={chip.command}
-                  type="button"
-                  onClick={() => show({ text: chip.command })}
-                  className="rounded-btn inline-flex min-h-11 items-center bg-tonal px-3.5 text-sm font-medium transition-colors hover:bg-tonal-hover active:scale-[0.98]"
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-          ) : null}
+          <Chips chips={chips} onPick={(command) => show({ text: command })} />
         </div>
       ) : variant === "field" ? (
         <button
@@ -103,15 +89,24 @@ export function VoiceLauncher({ variant, suppliers, chips = [] }: { variant: "fi
           <span className="sr-only">{t("card.action")}</span>
         </button>
       )}
-      <dialog
-        ref={dialog}
-        data-motion="sheet"
-        aria-label={t("title")}
-        onClose={() => setOpen(false)}
-        className="m-0 h-dvh max-h-none w-full max-w-none overflow-hidden border-0 bg-surface p-0 text-foreground backdrop:bg-black/40 sm:m-auto sm:h-[min(46rem,92dvh)] sm:max-w-md sm:rounded-3xl sm:border sm:border-border sm:shadow-xl"
-      >
-        {open ? <VoiceAssistant suppliers={suppliers} onClose={() => dialog.current?.close()} launch={launch} /> : null}
-      </dialog>
     </>
+  );
+}
+
+function Chips({ chips, onPick }: { chips: VoiceChip[]; onPick: (command: string) => void }) {
+  if (chips.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {chips.map((chip) => (
+        <button
+          key={chip.command}
+          type="button"
+          onClick={() => onPick(chip.command)}
+          className="rounded-btn inline-flex min-h-11 items-center bg-tonal px-3.5 text-sm font-medium transition-colors hover:bg-tonal-hover active:scale-[0.98]"
+        >
+          {chip.label}
+        </button>
+      ))}
+    </div>
   );
 }
