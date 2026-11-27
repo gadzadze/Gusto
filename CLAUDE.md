@@ -703,7 +703,7 @@ Names only. `.env.example` holds placeholders. Never commit real values.
 - `RESEND_API_KEY`, `EMAIL_FROM`
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (**secret**), `VAPID_SUBJECT`: Web Push, optional (see Dashboards > Web Push).
 - `CRON_SECRET`
-- `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_LIVE_MODEL` (secret key; model defaults to `gemini-3.5-flash`, fallback `gemini-3.7-flash`; `gemini-2.5-flash` is retired for new keys (404) and the newest models answered 503 "high demand" on 2026-11-25, so check the key's model list (`GET /v1beta/models`) before changing it): the voice-order experiment only, off without a key (see "Voice order experiment").
+- `VOICE_ORDER_ENABLED` (`1` turns buyer voice ordering on, see "Voice ordering for buyers"), `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_LIVE_MODEL` (secret key; model defaults to `gemini-3.5-flash`, fallback `gemini-3.7-flash`; `gemini-2.5-flash` is retired for new keys (404) and the newest models answered 503 "high demand" on 2026-11-25, so check the key's model list (`GET /v1beta/models`) before changing it): the voice-order experiment only, off without a key (see "Voice order experiment").
 - `NEXT_PUBLIC_SENTRY_DSN` (public, build time), `SENTRY_ORG`, `SENTRY_PROJECT`, `SENTRY_AUTH_TOKEN` (build-only, **secret**): see Operations.
 - `LEGAL_ENTITY_NAME`, `LEGAL_ENTITY_ID`, `LEGAL_ADDRESS`, `LEGAL_CONTACT_EMAIL`: the operator block on `/terms` and `/privacy` (public, read at build). `LEGAL_CONTACT_EMAIL` alone is also the contact line on the sign-in "not accepted" message.
 
@@ -1153,6 +1153,32 @@ clean-up; pure and unit-tested), `lib/voice/wav.ts`, `server/voice/gemini.ts`.
   stays the only way an order is created), the model sees only that buyer's orderable products, and Google must be added to the
   privacy text as a processor of voice audio (with `LEGAL_UPDATED`). "AI parsing of WhatsApp orders" in the out-of-scope list is
   still a separate thing. Georgian accuracy is unproven: run the phrase list through the page before deciding anything.
+
+## Voice ordering for buyers (2026-11-26, off by default)
+
+A buyer orders by speaking Georgian. **Off unless `VOICE_ORDER_ENABLED=1` and `GEMINI_API_KEY` are set** (`voiceOrderEnabled()`,
+`server/voice/config.ts`); without them nothing shows. Entry points (both open the same full-screen dialog): a mic at the end of the
+buyer's search field (`BuyerSearchForm`, on Home and Search) and an "Order by voice" card under it on Home (`VoiceLauncher`,
+`components/buyer/voice/`). Only for an `active` buyer with at least one supplier that has products on their list.
+
+- **Browser half is shared** with the admin test page: `lib/voice/use-live-voice.ts` (socket, microphone worklet, playback, level strip).
+  `TalkView` and `VoiceReview` (`voice-assistant.tsx`) take plain props so a fixture can render them without a microphone.
+- **Server**: `app/buyer/voice/actions.ts`. `startBuyerVoiceAction` (buyer guard, `voiceBuyer` 20/h) loads `loadVoiceCatalog` (this buyer's
+  orderable products only, via `availableToBuyerSql`, products they ordered before first, max 100, **no prices, short ids `p1`/`s1`**, the
+  real ids stay in `refs` for the browser) and mints the one-use token; the prompt is `liveSystemInstruction(items, "buyer")`.
+  `fillCartsFromVoiceAction` takes `{productId, qtyMilli}` lines, finds each product's supplier **in the database** and calls
+  `putItemsInCart` (re-checks connection, assortment, min/step), then the buyer reviews each cart and sends it through the normal checkout.
+  **The assistant never creates an order.** Skipped lines come back by name.
+- Review screen: the model's lines are shown with 44px steppers; a unit mismatch, a missing quantity or a quantity off the product's step
+  is a red inline notice with a one-tap fix, and the primary button stays disabled until none is left.
+- Design (approved mockups, dark and light): one column, 8px rhythm, one accent (burgundy), the same three-button dock in every state
+  (type / speak / done), the level strip above it (dots when quiet), the live caption in large type, what was captured folded away,
+  the assistant's questions in the accent colour. `text-danger` is **not** a class here: the token is `destructive`.
+- Privacy text lists Google (Gemini) as a recipient of the live voice; `LEGAL_UPDATED` is 2026-11-26. **Turn the switch on only after the
+  legal text has been read by a lawyer and real phones and noisy rooms have been tried** (accuracy on real voices is unproven).
+- Not built: continuing to talk after "done" (a new session starts empty), editing by voice in the review, remembering the order if the
+  dialog is closed, a per-session cost counter. Integration test `tests/integration/voice-catalog.test.ts` was written without a test
+  database to run it against.
 
 ## Photo background remover
 

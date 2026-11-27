@@ -42,6 +42,10 @@ export const RATE_LIMITS = {
   voiceTest: { name: "voice_test", limit: 30, windowSeconds: 3600 },
   /** Live voice experiment (admin only): 10 live sessions per hour per admin; live audio is billed while it is open. */
   voiceLive: { name: "voice_live", limit: 10, windowSeconds: 3600 },
+  /** Buyers' voice ordering: 20 live sessions per hour per person; live audio is billed while it is open. */
+  voiceBuyer: { name: "voice_buyer", limit: 20, windowSeconds: 3600 },
+  /** Putting a voice order into the carts: 30 per hour per person. */
+  voiceFill: { name: "voice_fill", limit: 30, windowSeconds: 3600 },
   /** Command palette lookups: 240 per minute per person (one per pause in typing). */
   palette: { name: "palette", limit: 240, windowSeconds: 60 },
   /** Turning Web Push on or off for a browser: 20 per hour per person. */

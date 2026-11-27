@@ -33,7 +33,9 @@ export const GEORGIAN_SPEAKING = [
   "- Read-back at the end: first say «თქვენი შეკვეთა:», then list EVERY line with its quantity, product names in the nominative, in the form «სულგუნი: ორი კილო; კარაქი: სამი კილო.» (group by supplier when there are several: «მომწოდებელი ა: ... მომწოდებელი ბ: ...»), then say exactly «შეკვეთა ეკრანზეა, გთხოვთ, გადაამოწმოთ.»",
 ].join("\n");
 
-export function liveSystemInstruction(items: CatalogItem[]): string {
+export type LiveMode = "test" | "buyer";
+
+export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "test"): string {
   const catalogue = catalogueText(items);
   return [
     "You are a voice assistant inside a wholesale ordering app in Georgia. The person talking is a restaurant or cafe buyer ordering from ONE supplier.",
@@ -51,7 +53,9 @@ export function liveSystemInstruction(items: CatalogItem[]): string {
     "If the buyer asks for something that is not in the catalogue (for example lemonade when only lemons exist), say you do not have it and ask whether they meant the closest product. Never swap a product silently.",
     "After the read-back, stay silent unless the buyer changes the order or asks about it. No small talk and no goodbyes.",
     "You cannot send the order, and you do not know what the screen looks like. When the buyer says they are done, do the read-back from the patterns above and say nothing else about the screen.",
-    "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way.",
+    mode === "test"
+      ? "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way."
+      : "If the buyer asks about sending, a button, or where to click, answer exactly: «გაგზავნამდე შეკვეთას ეკრანზე გადაამოწმებთ.» Never mention sending, buttons or pressing anything in any other way.",
     "",
     "Catalogue (id | name | unit):",
     catalogue,
@@ -98,12 +102,12 @@ export function liveVocabulary(items: CatalogItem[]): string[] {
 }
 
 /** The first message after the socket opens. Kept on the server so the instructions are built next to the rules. */
-export function buildLiveSetup(items: CatalogItem[], model: string) {
+export function buildLiveSetup(items: CatalogItem[], model: string, mode: LiveMode = "test") {
   return {
     setup: {
       model: `models/${model}`,
       generationConfig: { responseModalities: ["AUDIO"] },
-      systemInstruction: { parts: [{ text: liveSystemInstruction(items) }] },
+      systemInstruction: { parts: [{ text: liveSystemInstruction(items, mode) }] },
       tools: [{ functionDeclarations: [SET_ORDER_DECLARATION] }],
       inputAudioTranscription: { languageCodes: ["ka-GE"], customVocabulary: liveVocabulary(items) },
       outputAudioTranscription: {},
