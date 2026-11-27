@@ -5,6 +5,7 @@ import { getDb } from "@/server/db/client";
 import { organizations, products, supplierCustomers } from "@/server/db/schema";
 import type { OrgCtx } from "@/server/domain/context";
 import { NotFoundError } from "@/server/domain/errors";
+import { voicePhrasesByProduct } from "@/server/domain/buyer/voice-phrases";
 import { availableToBuyerSql } from "@/server/domain/pricing/resolve";
 
 export type VoiceCatalog = {
@@ -47,6 +48,12 @@ export async function loadVoiceCatalog(ctx: OrgCtx): Promise<VoiceCatalog> {
     .orderBy(desc(sql`"ordered"`), asc(products.name))
     .limit(MAX_CATALOG_LINES);
 
+  // How this buyer has named these products before (their own earlier, confirmed orders), as "also said" hints.
+  // An enhancement: if it cannot be read, the assistant still works from the plain catalogue.
+  const remembered = await voicePhrasesByProduct(ctx, rows.map((r) => r.id)).catch((error: unknown) => {
+    console.error("voicePhrasesByProduct failed:", error instanceof Error ? error.message : "unknown");
+    return new Map<string, string[]>();
+  });
   const items: CatalogItem[] = [];
   const refs: Record<string, VoiceRef> = {};
   const supplierAlias = new Map<string, string>();
@@ -54,7 +61,7 @@ export async function loadVoiceCatalog(ctx: OrgCtx): Promise<VoiceCatalog> {
   rows.forEach((row, index) => {
     const alias = `p${index + 1}`;
     if (!supplierAlias.has(row.supplierId)) supplierAlias.set(row.supplierId, `s${supplierAlias.size + 1}`);
-    items.push({ id: alias, name: row.name.slice(0, 120), unit: row.unit, supplierId: supplierAlias.get(row.supplierId), supplierName: row.supplierName });
+    items.push({ id: alias, name: row.name.slice(0, 120), unit: row.unit, supplierId: supplierAlias.get(row.supplierId), supplierName: row.supplierName, aliases: remembered.get(row.id) });
     refs[alias] = { productId: row.id, minMilli: row.minMilli, stepMilli: row.stepMilli };
     const entry = counts.get(row.supplierId) ?? { name: row.supplierName, count: 0 };
     entry.count += 1;

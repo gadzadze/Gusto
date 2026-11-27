@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 import { beforeAll, describe, expect, it } from "vitest";
 import { getDb } from "@/server/db/client";
-import { products } from "@/server/db/schema";
+import { buyerVoicePhrases, products } from "@/server/db/schema";
 import { loadVoiceCatalog } from "@/server/domain/buyer/voice-catalog";
+import { clearVoicePhrases, recordVoicePhrases, voicePhrasesByProduct } from "@/server/domain/buyer/voice-phrases";
 import { connectBuyer, createAdmin, createBuyer, createSupplier, createTestCategory, createTestProduct } from "./helpers";
 
 let categoryId: string;
@@ -40,5 +41,41 @@ describe("voice catalogue for a buyer", () => {
     const lonely = await createBuyer();
     expect((await loadVoiceCatalog(lonely)).items).toEqual([]);
     await expect(loadVoiceCatalog(await createSupplier())).rejects.toThrow();
+  });
+});
+
+describe("what a buyer taught the assistant", () => {
+  it("is remembered only for products the buyer may order, counted on reuse, and shown to that buyer alone", async () => {
+    const supplier = await createSupplier();
+    const buyer = await createBuyer();
+    const other = await createBuyer();
+    await connectBuyer(supplier, buyer);
+    await connectBuyer(supplier, other);
+    const product = await createTestProduct(supplier, categoryId, { name: "[TEST] Sulguni", basePrice: "12" });
+    const stranger = await createTestProduct(await createSupplier(), categoryId, { name: "[TEST] Not mine", basePrice: "3" });
+
+    const lines = [
+      { productId: product, productName: "[TEST] Sulguni", phrase: "ყველი" },
+      { productId: product, productName: "[TEST] Sulguni", phrase: "[TEST] Sulguni" }, // its own name: nothing to learn
+      { productId: stranger, productName: "[TEST] Not mine", phrase: "უცხო" }, // not orderable by this buyer
+    ];
+    expect(await recordVoicePhrases(buyer, lines)).toBe(1);
+    await recordVoicePhrases(buyer, [lines[0]]);
+
+    const mine = await voicePhrasesByProduct(buyer, [product, stranger]);
+    expect(mine.get(product)).toEqual(["ყველი"]);
+    expect(mine.has(stranger)).toBe(false);
+    expect((await voicePhrasesByProduct(other, [product])).size).toBe(0);
+
+    const [row] = await getDb().select().from(buyerVoicePhrases).where(eq(buyerVoicePhrases.buyerOrgId, buyer.orgId));
+    expect(row.uses).toBe(2);
+
+    const catalog = await loadVoiceCatalog(buyer);
+    expect(catalog.items.find((i) => i.name === "[TEST] Sulguni")?.aliases).toEqual(["ყველი"]);
+    const theirs = await loadVoiceCatalog(other);
+    expect(theirs.items.find((i) => i.name === "[TEST] Sulguni")?.aliases).toBeUndefined();
+
+    await clearVoicePhrases(buyer);
+    expect((await voicePhrasesByProduct(buyer, [product])).size).toBe(0);
   });
 });

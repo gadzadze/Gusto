@@ -2101,7 +2101,8 @@
             "Connection requests: when a business asks another to connect, we keep who asked, who was asked, the optional short message, and the answer, for as long as the businesses use 202.",
             "Team members: when a company owner adds a colleague, we keep the colleague's email address and the role given (owner or member) so they can sign in and join that company. Everyone in the same company can see the names, email addresses and roles of its team members, and the company's owners can also see open invitations. Removing a person from a company ends their access to it; the audit log keeps a record of who added and removed whom.",
             "Waybill data: for a confirmed order, 202 prepares the details a waybill needs (seller, buyer and their identification codes, delivery address and date, goods) for the supplier to copy into RS.ge. 202 does not send anything to RS.ge. The driver and vehicle details the supplier types are kept in the supplier's own browser only. A supplier you are connected with also sees your business's identification code on the order and on the waybill data prepared from it, because a waybill has to name the buyer.",
-            "RS.ge waybills (only if a supplier turns this on): the supplier's RS.ge service user is stored encrypted and is never shown again. At the supplier's request, 202 sends the details a waybill needs (seller and buyer with their identification codes, delivery address and date, goods, quantities, prices, driver and vehicle) to the Revenue Service (RS.ge) to create the waybill. Calls may pass through a relay server run by 202 that only forwards them."
+            "RS.ge waybills (only if a supplier turns this on): the supplier's RS.ge service user is stored encrypted and is never shown again. At the supplier's request, 202 sends the details a waybill needs (seller and buyer with their identification codes, delivery address and date, goods, quantities, prices, driver and vehicle) to the Revenue Service (RS.ge) to create the waybill. Calls may pass through a relay server run by 202 that only forwards them.",
+            "Voice ordering (only if a buyer uses it): the words your organization uses for a product (for example \"cheese\" for one specific product), as text and only from lines you kept in the cart. We do not keep audio or a recording of the conversation. These words belong to your organization, are not shown to any other business, and are used only to make the assistant work better for you."
           ]
         },
         {
@@ -2139,7 +2140,8 @@
             "We keep your account and organization while you use the service. We deactivate organizations and products rather than delete them, so that order history isn't lost.",
             "Orders and their history are kept as a business record for both sides.",
             "We keep encrypted backups for a limited time, about 14 days.",
-            "Technical records for protection against abuse are deleted after about a day."
+            "Technical records for protection against abuse are deleted after about a day.",
+            "The words remembered for voice ordering are kept with your organization's account, at most 200 of them, and the least recently used go first. You can ask us to delete them."
           ]
         },
         {

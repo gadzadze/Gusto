@@ -27,7 +27,7 @@ export type VoiceLine = LiveOrderLine & { qty: number | null; unitOk: boolean };
  */
 export type VoiceAdapter = {
   start: () => Promise<{ ok: true; session: LiveSession; refs: Record<string, VoiceRef> } | { ok: false; error: string }>;
-  fill: (lines: { productId: string; qtyMilli: number }[]) => Promise<{ ok: true; skipped: string[] } | { ok: false; error: string }>;
+  fill: (lines: { productId: string; qtyMilli: number; phrase?: string }[]) => Promise<{ ok: true; skipped: string[] } | { ok: false; error: string }>;
   /** After a clean finish, or "to cart": the buyer goes to the cart, the test page just closes. */
   finish: () => void;
 };
@@ -89,7 +89,7 @@ export function VoiceAssistant({ suppliers, onClose, adapter }: { suppliers: Voi
   async function confirm() {
     setBusy(true);
     setFillError(null);
-    const result = await use.fill(lines.filter((l) => l.qty !== null).map((l) => ({ productId: refs[l.productId].productId, qtyMilli: l.qty as number })));
+    const result = await use.fill(lines.filter((l) => l.qty !== null).map((l) => ({ productId: refs[l.productId].productId, qtyMilli: l.qty as number, phrase: l.spokenName ?? undefined })));
     setBusy(false);
     if (!result.ok) return setFillError(KNOWN_ERRORS.includes(result.error) ? result.error : "unknown");
     if (result.skipped.length === 0) use.finish();

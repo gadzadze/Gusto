@@ -879,6 +879,31 @@ export const savedFilters = pgTable(
   ],
 );
 
+// How a buyer organization says a product when it orders by voice ("ყველი" for a sulguni). Learned only from lines the buyer
+// kept in the review and sent to the cart; plain text of the buyer's own words, no audio and no transcript. Scoped to the buyer
+// organization, never shared, and fed back to the assistant as "also said" hints for that buyer only (domain/buyer/voice-phrases.ts).
+export const buyerVoicePhrases = pgTable(
+  "buyer_voice_phrases",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    buyerOrgId: uuid("buyer_org_id")
+      .notNull()
+      .references(() => organizations.id, { onDelete: "cascade" }),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => products.id, { onDelete: "cascade" }),
+    phrase: text("phrase").notNull(),
+    uses: integer("uses").notNull().default(1),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    uniqueIndex("buyer_voice_phrases_key").on(t.buyerOrgId, t.productId, t.phrase),
+    index("buyer_voice_phrases_buyer_idx").on(t.buyerOrgId, t.lastUsedAt),
+    check("buyer_voice_phrases_len", sql`char_length(${t.phrase}) between 2 and 60`),
+  ],
+);
+
 // Web Push: one row per browser or installed app a person turned notifications on for. `endpoint` is the push
 // service's address for that browser (unique: if another person signs in on the same browser it moves to them), the
 // two keys encrypt the message for it. The server posts only to hosts of the known push services (lib/push.ts).

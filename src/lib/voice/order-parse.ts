@@ -3,7 +3,7 @@ import { parseUnit, type ProductUnit } from "@/lib/catalog/units";
 // Pure helpers for the voice-order experiment: the catalogue text a tester pastes, the instructions and
 // response schema sent to the model, and the clean-up of what comes back. No I/O here, so it is unit tested.
 
-export type CatalogItem = { id: string; name: string; unit: string; supplierId?: string; supplierName?: string };
+export type CatalogItem = { id: string; name: string; unit: string; supplierId?: string; supplierName?: string; /** How this buyer says the product (remembered from earlier orders). */ aliases?: string[] };
 /** What the browser needs to turn the assistant's short ids back into products, and to let the buyer step quantities. */
 export type VoiceRef = { productId: string; minMilli: number; stepMilli: number };
 export type CatalogSupplier = { id: string; name: string };
@@ -60,7 +60,7 @@ export function catalogueText(items: CatalogItem[]): string {
   const out: string[] = [];
   for (const [name, list] of groups) {
     if (groups.size > 1 || name) out.push(name ? `Supplier: ${name}` : "Supplier: (not named)");
-    for (const i of list) out.push(`${i.id} | ${i.name} | ${i.unit}`);
+    for (const i of list) out.push(`${i.id} | ${i.name} | ${i.unit}${i.aliases?.length ? ` | also said: ${i.aliases.join("; ")}` : ""}`);
   }
   return out.join("\n");
 }

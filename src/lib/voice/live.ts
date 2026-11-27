@@ -47,7 +47,7 @@ export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "te
     "Use ONLY the products in the catalogue below. Never invent a product, an id or a price (you do not know any prices).",
     "The catalogue may list several suppliers, and the same product can be sold by more than one (each with its own id). If the buyer names a supplier ('from supplier A'), use that supplier's ids. If they do not and several suppliers sell the product, ask which supplier BEFORE calling the tool. The order is kept separately for each supplier; never mix suppliers in one sentence of yours without saying which.",
     `Whenever the order changes (a product added, removed, or a quantity corrected), call ${SET_ORDER} with the COMPLETE current order, not only the change.`,
-    "In each line, productId is a catalogue id and quantity is the number said. spokenUnit is the unit exactly as the buyer said it (for example 'კილო', 'ცალი', 'ყუთი', 'გრამი'), never converted or corrected. Leave it out if no unit was said.",
+    "In each line, productId is a catalogue id and quantity is the number said. spokenUnit is the unit exactly as the buyer said it (for example 'კილო', 'ცალი', 'ყუთი', 'გრამი'), never converted or corrected. Leave it out if no unit was said. spokenName is the product name exactly as the buyer said it, without the number or the unit (for example 'ყველი' when they said 'ორი კილო ყველი').",
     "If the buyer corrects themselves ('five kilos... no, six'), use the final value.",
     "If a name fits several products (for example just 'cheese' when there are two cheeses), ask which one BEFORE calling the tool. Do not guess.",
     `If the tool answer lists needs_attention, ask the buyer about each item in one short sentence, then call ${SET_ORDER} again with the corrected order.`,
@@ -59,7 +59,7 @@ export function liveSystemInstruction(items: CatalogItem[], mode: LiveMode = "te
       ? "If the buyer asks about sending, a button, or where to click, answer exactly: «ეს ტესტია, არაფერი იგზავნება.» Never mention sending, buttons or pressing anything in any other way."
       : "If the buyer asks about sending, a button, or where to click, answer exactly: «გაგზავნამდე შეკვეთას ეკრანზე გადაამოწმებთ.» Never mention sending, buttons or pressing anything in any other way.",
     "",
-    "Catalogue (id | name | unit):",
+    "Catalogue (id | name | unit). An 'also said' list after a product is how this buyer usually names it: treat those words as that product.",
     catalogue,
   ].join("\n");
 }
@@ -78,6 +78,7 @@ export const SET_ORDER_DECLARATION = {
             productId: { type: "STRING", description: "A catalogue id." },
             quantity: { type: "NUMBER", description: "The number said, in the unit said." },
             spokenUnit: { type: "STRING", description: "The unit exactly as the buyer said it. Omit when none was said." },
+            spokenName: { type: "STRING", description: "The product name exactly as the buyer said it (the words, without the number or the unit). Omit when unsure." },
           },
           required: ["productId", "quantity"],
         },
@@ -126,6 +127,8 @@ export type LiveOrderLine = {
   /** The unit the quantity is in (the catalogue's, unless it was a mismatch). */
   unit: string | null;
   spokenUnit: string | null;
+  /** The product name as the buyer said it, so the app can remember how this buyer names things. */
+  spokenName: string | null;
   catalogUnit: string;
   unitCheck: UnitCheck;
 };
@@ -160,6 +163,7 @@ export function applySetOrder(
     }
     const q = typeof l.quantity === "number" && Number.isFinite(l.quantity) ? l.quantity : null;
     const spokenUnit = typeof l.spokenUnit === "string" && l.spokenUnit.trim() ? l.spokenUnit.trim().slice(0, 20) : null;
+    const spokenName = typeof l.spokenName === "string" && l.spokenName.trim() ? l.spokenName.trim().slice(0, 60) : null;
     const settled = reconcileUnit(q, spokenUnit, product.unit);
     if (settled.quantityMilli === null) attention.push({ product: product.name, problem: "bad_quantity" });
     if (settled.unitCheck === "mismatch") attention.push({ product: product.name, problem: "unit_mismatch", said: spokenUnit ?? "", sold_in: product.unit });
@@ -171,6 +175,7 @@ export function applySetOrder(
       quantityMilli: settled.quantityMilli,
       unit: settled.unit,
       spokenUnit,
+      spokenName,
       catalogUnit: product.unit,
       unitCheck: settled.unitCheck,
     });
