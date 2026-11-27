@@ -411,6 +411,13 @@ Black, burgundy and white.
 | `--brand-soft` | `#F6E9EB` | `#2A1418` | Selected rows, subtle brand fills |
 | `--danger` | `#DC2626` | `#F87171` | Errors only, always with an icon |
 
+- **Soft glass** (2026-11-27, chosen from mock-ups: "Soft", not "Rich"): the page is **exactly white (light) and exactly black (dark)**, with no coloured glow behind
+  anything. Every information block is one frosted pane (`.glass` in `globals.css`: a faint tint `--glass`, a 1px `--glass-line` edge, a soft
+  `--glass-shadow`, an 18px backdrop blur, 22px radius, no gradient). Used by `Panel`, `ListSection`, `StatTile`, `Card`, the bottom bar
+  (`glass glass-strong`), the voice assistant's panes and the review. `prefers-reduced-transparency` and browsers without backdrop blur get a solid
+  `--surface-2` card, so contrast never depends on what is behind. Text fields keep their 3:1 edge (`--input`); only their fill is glass.
+  Dark `--surface` is `#000000`, `--surface-2` `#111112`, `--surface-raised` `#0f0f10` (the colour a pane looks like over black, so the contrast
+  test still means something). `tests/unit/glass.test.ts` guards this.
 - **Light and dark are both first-class.** The theme is `data-theme="light|dark"` on `<html>`,
   set by an inline script in `layout.tsx` before first paint (the saved choice in `localStorage`
   key `gusto-theme`, else the device's setting), changed by `components/theme-toggle.tsx`
@@ -470,9 +477,12 @@ Black, burgundy and white.
   stays on it, and `loadingLabel` (`common.working`, or a "saving" string) is read to screen readers. `asChild` buttons get the
   same guard and attributes (a disabled link also leaves the tab order). **A `Button` carries no event handler of its own unless it is loading or the caller passes one**: pages render it on the server, where a function prop is an error (this broke every page once). Use `loading` on the one button that started the action, never on siblings that merely share
   `pending` and never on a button that only opens a form. Buttons and nav links shrink slightly while pressed (off under reduced
-  motion); an invisible 2px margin (`before:-inset-0.5`) keeps the full-size tap area so an edge tap is not lost. Every nav link
-  (sidebar, bottom tabs and the phone "More" list) shows `PendingHighlight` (`useLinkStatus`) while its page is being prepared,
-  so the tap is acknowledged before the page arrives (`tests/unit/button.test.ts` guards the button part).
+  motion); an invisible 2px margin (`before:-inset-0.5`) keeps the full-size tap area so an edge tap is not lost. The sidebar
+  links and the phone "More" list show `PendingHighlight` (`useLinkStatus`) while their page is being prepared; **the bottom tabs do not**: the
+  pressed tab becomes the open one at once (`BottomNav` `tapped`, tied to the page it was pressed on so it lapses when the route changes, 6 s
+  safety timeout), because a highlight drawn inside the pill had no rounded shape (a hard pink square, seen in a recording) and the pill itself
+  only moved when the new page arrived. The open tab's name fades in 90 ms after its pill starts to grow (`.animate-in-late`) so it never wraps
+  while the pill is narrow (`tests/unit/button.test.ts` guards the button part).
 - **Everything comes from somewhere** (2026-11-23; the principle from a design post on spatial continuity): panels and
   sheets animate from where they belong, set per dialog with `data-motion` (`sheet`: rises from the bottom on a phone,
   pops in centred above; `side`: the review panel; `top`: the command palette; `menu`: the account menu), in plain CSS
@@ -492,6 +502,10 @@ Black, burgundy and white.
   no animation of their own, so page-to-page view transitions only move the content between them.
   **Directional page slides** (2026-11-24, `components/motion/page-slide.tsx`, React `<ViewTransition>`, no config in Next 16): a link that goes deeper has `transitionTypes={["nav-forward"]}`, the back link on a detail page `["nav-back"]`; the page is wrapped in `PageSlide` in `page.tsx` (never a layout, which persists), 24px and about 200 ms on `--ease-out`, off under reduced motion. Without a type (browser back, refresh) nothing animates. Wired so far: supplier orders, products and customers (list and detail) and the buyer's order page. A new drill-down needs the wrapper on both pages and a type on each link. Not built: shared-element morphs of a row into its page, and a skeleton-to-content crossfade (the existing fade-in covers it).
 - **Squircle corners** (2026-11-24, `globals.css`): `corner-shape: squircle` on `rounded-md/lg/xl/2xl`, dialogs and popovers, inside `@supports`, so a browser without it keeps the plain radius (Chromium today). Never on `rounded-full`, never outside the `@supports` block (`motion.test.ts` guards both). The landing page does not use it.
+- **Touch defaults** (2026-11-27, from the UI/UX Pro Max guidance the owner supplied; its palette and style suggestions were not taken, this
+  design system comes first): every control has `touch-action: manipulation` (no tap-delay wait) and a transparent `-webkit-tap-highlight-color`
+  (each control has its own pressed state); h1 to h3 use `text-wrap: balance`. The buyer search field's icon is its submit button
+  (`tests/unit/touch.test.ts`).
 - **Selected text keeps the browser's default highlight** (decided 2026-11-25): no `::selection` rule anywhere (`tests/unit/selection.test.ts`).
 - **Avoid:** gradients, emoji as icons, decorative motion, modals for
   multi-step flows (use pages or sheets).
@@ -1048,7 +1062,10 @@ presentational component in `components/dashboard/` (`SupplierToday`, `BuyerHome
 props; the page under `app/` only guards, loads and passes it, so a fixture can render it without a database.
 Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRow`, `OrderProgress`.
 
-- **Supplier home** (`/supplier`, nav label stays "Home"; the order-value chart prints its first and last date and a legend, a day with no orders is a hairline): "waiting for your answer" queue (oldest first, amber after 4 h),
+- **Supplier home** (`/supplier`, nav label stays "Home"; reorganised 2026-11-27: **the row is the button**, no "Review" or "Loading sheet" buttons. A queue row is a `ReviewSheet` row
+  (the whole row opens the review dialog, chevron at its end, accessible name "Review: <buyer> <number>"), a delivery row is a link to the loading sheet; the total is on the
+  right with the age under it and a dot when it is late; the 30-day value, a small bar chart (no dates or legend any more) and the two counters (orders in 7 days with a "+2",
+  repeat buyers) are **one pane**; the "order value, not revenue" caption stays printed under the number): "waiting for your answer" queue (oldest first, amber after 4 h),
   next delivery days with a loading-sheet link each (days already past are marked overdue), order value of the last 30 days
   with a daily bar chart, week-on-week change, repeat customers, top products as proportional bars. Data:
   `domain/orders/today.ts` (`listPendingQueue`, `listUpcomingDeliveries`, `getOrderValueSeries`, `getSupplierClock`) plus
@@ -1069,9 +1086,17 @@ Building blocks: `Panel`/`PanelRow` (titled block with rows), `SparkBars`/`BarRo
   with search, bell and one account button (Popover API) that holds Administration (platform admins), Business settings (suppliers; the nav label `nav.settings`), team,
   change password, the theme choice and sign out; the sidebar still shows them directly. A buyer has no header magnifier: the
   Search tab is their one place to search.
-- **Buyer home**: search, regular orders (accent block when due today), "in progress" orders with a Sent / Confirmed /
-  Delivered strip and the agreed delivery day (with the open total under the list), recent orders with reorder (the ones already in progress are not repeated; on a phone the button sits under the text), often-ordered products, suppliers with the
-  last order date (`lastOrderDates`) and "find a supplier".
+- **Buyer home** (calmed 2026-11-27 after a phone recording: "messy, interface noise"): no page title (the header names the company and the open tab says
+  Home; an `sr-only` h1 remains), one rounded search field (icon inside, no extra button, the mic at its end when voice ordering is on), then
+  **glass sections** (`components/dashboard/list-section.tsx`: one pane each, a small heading, an "All" link, hairline-divided rows): regular orders, then
+  **one "Orders" pane** (an order in progress: supplier name, a status dot + word and the order number under it, the total and the delivery day on the right and a slim
+  three-step bar, `OrderSteps`; then recent orders with the reorder as an icon button, `ReorderButton iconOnly`, and a status only when it is not
+  "delivered"),
+  often-ordered products (`ProductCard layout="row"`: small picture, name, price, a round + that becomes the stepper; the supplier name only when the
+  buyer has more than one) and suppliers (a row each, whole row is the link, with a chevron). Status in lists is `OrderStatusText` (dot + word), not the coloured
+  `OrderStatusBadge`, which stays on the detail pages. **`Panel` (supplier and admin dashboards) is the same glass pane** (heading and a short "All" link inside it, one hairline above the rows, rows with no
+  side padding because the pane has `px-4`; only `tone="accent"` swaps the tint for the soft burgundy fill). Anything placed inside a `Panel` or
+  `ListSection` must not add its own horizontal padding.
 - **Admin overview**: "needs attention" (new supplier requests, businesses waiting for verification, stalled notifications
   via `checkHealth`, or an all-clear line), then pilot health (a bar only where there is a real ratio, the reorder rate)
   and the 30-day order split.
@@ -1169,8 +1194,11 @@ buyer's search field (`BuyerSearchForm`, on Home and Search) and an "Order by vo
   `fillCartsFromVoiceAction` takes `{productId, qtyMilli}` lines, finds each product's supplier **in the database** and calls
   `putItemsInCart` (re-checks connection, assortment, min/step), then the buyer reviews each cart and sends it through the normal checkout.
   **The assistant never creates an order.** Skipped lines come back by name.
-- Review screen: the model's lines are shown with 44px steppers; a unit mismatch, a missing quantity or a quantity off the product's step
-  is a red inline notice with a one-tap fix, and the primary button stays disabled until none is left.
+- Review screen (`VoiceReview`, organised 2026-11-27): a summary chip under the title ("N to fix" amber, or "Ready" green), **one glass pane per supplier**,
+  one row per product with the **unit beside the quantity** (in the unit that was said until it is settled), 44px tap steppers around a 34px circle; a unit
+  mismatch, a missing quantity or a quantity off the product's step marks its row (red edge) and shows one line under it with a one-tap fix chip. The primary
+  button stays disabled until nothing is flagged, says what is left under it, and shows the product count when ready. It is a full-screen view in the dialog
+  (no dimmed layer behind), edge to edge on a phone.
 - Design (approved mockups, dark and light): one column, 8px rhythm, one accent (burgundy), the same three-button dock in every state
   (type / speak / done), the level strip above it (dots when quiet), the live caption in large type, what was captured folded away,
   the assistant's questions in the accent colour. `text-danger` is **not** a class here: the token is `destructive`.

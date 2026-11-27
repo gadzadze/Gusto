@@ -22,6 +22,7 @@ export function QuantityStepper({
   unit,
   productName,
   className,
+  compact = false,
 }: {
   supplierOrgId: string;
   productId: string;
@@ -32,6 +33,8 @@ export function QuantityStepper({
   /** Used in button labels so screen readers know which product they change. */
   productName: string;
   className?: string;
+  /** In a dense list: "add" is a round + button without the label. */
+  compact?: boolean;
 }) {
   const t = useTranslations("cart");
   const locale = useLocale();
@@ -68,13 +71,14 @@ export function QuantityStepper({
         <Button
           type="button"
           variant="outline"
-          size="sm"
+          size={compact ? "icon" : "sm"}
+          className={compact ? "rounded-full" : undefined}
           aria-label={`${t("add")}: ${productName}`}
           disabled={pending}
           onClick={() => update(stepUp(0, minQtyMilli, qtyStepMilli))}
         >
-          <ShoppingCart />
-          {t("add")}
+          {compact ? <Plus /> : <ShoppingCart />}
+          {compact ? null : t("add")}
         </Button>
       ) : (
         <div className="inline-flex items-center rounded-md border border-border" aria-busy={pending}>

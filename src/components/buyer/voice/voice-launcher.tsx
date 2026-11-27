@@ -27,7 +27,7 @@ export function VoiceLauncher({ variant, suppliers }: { variant: "field" | "card
           type="button"
           onClick={show}
           aria-label={t("open")}
-          className="absolute right-0 top-0 inline-flex size-11 items-center justify-center rounded-md text-brand transition-colors hover:bg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand [&_svg]:size-5"
+          className="absolute right-0.5 top-0.5 inline-flex size-11 items-center justify-center rounded-full text-brand transition-colors hover:bg-brand-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand [&_svg]:size-5"
         >
           <Mic aria-hidden />
         </button>

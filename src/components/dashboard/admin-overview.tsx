@@ -91,9 +91,9 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
         </Panel>
 
         <Panel id="pilot" title={tp("title")}>
-          <p className="border-b border-border px-4 py-3 text-xs leading-relaxed text-muted-foreground">{tp("intro")}</p>
+          <p className="border-b border-border py-3 text-xs leading-relaxed text-muted-foreground">{tp("intro")}</p>
           {metrics.map((m) => (
-            <div key={m.key} className="grid grid-cols-[1fr_auto] items-center gap-4 border-b border-border px-4 py-3.5 last:border-b-0">
+            <div key={m.key} className="grid grid-cols-[1fr_auto] items-center gap-4 border-b border-border py-3.5 last:border-b-0">
               <div className="min-w-0">
                 <p className="text-sm font-semibold">{m.label}</p>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{m.hint}</p>
@@ -110,7 +110,7 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
       </div>
 
       <div className="space-y-5">
-        <section aria-labelledby="orders30" className="rounded-xl border border-border bg-card px-4 py-4">
+        <section aria-labelledby="orders30" className="rounded-xl bg-surface-2 px-4 py-4">
           <h2 id="orders30" className="text-sm text-muted-foreground">{tp("orders30")}</h2>
           <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">{orderTotal}</p>
           {orderTotal > 0 ? (

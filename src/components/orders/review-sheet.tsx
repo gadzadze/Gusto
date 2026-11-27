@@ -1,6 +1,6 @@
 "use client";
 
-import { X } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
@@ -109,11 +109,14 @@ export function ReviewSheet({
   number,
   buyerName,
   label,
+  children,
 }: {
   orderId: string;
   number: string;
   buyerName: string;
   label: string;
+  /** With children the whole row is the trigger (no separate button); the label stays as its accessible name. */
+  children?: React.ReactNode;
 }) {
   const t = useTranslations("orders");
   const router = useRouter();
@@ -137,9 +140,21 @@ export function ReviewSheet({
 
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={open}>
-        {label}
-      </Button>
+      {children ? (
+        <button
+          type="button"
+          onClick={open}
+          aria-label={`${label}: ${buyerName} ${number}`}
+          className="flex w-full items-center gap-3 py-3 text-left transition-colors hover:text-brand focus-visible:outline-2 focus-visible:outline-brand"
+        >
+          {children}
+          <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+        </button>
+      ) : (
+        <Button type="button" variant="outline" size="sm" onClick={open}>
+          {label}
+        </Button>
+      )}
       <dialog
         ref={dialog}
         data-motion="side"

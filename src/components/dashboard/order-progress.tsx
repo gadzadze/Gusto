@@ -18,3 +18,16 @@ export async function OrderProgress({ step }: { step: 1 | 2 | 3 }) {
     </ol>
   );
 }
+
+/** The same three steps as a slim bar with no labels (the status word is shown next to it); the current step is its accessible name. */
+export async function OrderSteps({ step }: { step: 1 | 2 | 3 }) {
+  const t = await getTranslations("buyer.home");
+  const labels = [t("stepSent"), t("stepConfirmed"), t("stepDelivered")];
+  return (
+    <ol className="mt-1 grid grid-cols-3 gap-1" aria-label={labels[step - 1]}>
+      {labels.map((label, i) => (
+        <li key={label} aria-hidden className={cn("h-1 rounded-full", i < step ? "bg-brand" : "bg-border")} />
+      ))}
+    </ol>
+  );
+}

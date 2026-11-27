@@ -15,7 +15,8 @@ test("light and dark themes: follows the device, can be chosen, and is remembere
   const dark = await (await browser.newContext({ colorScheme: "dark" })).newPage();
   await dark.goto("/login");
   expect(await theme(dark)).toBe("dark");
-  expect(await bg(dark)).toBe("rgb(11, 11, 12)");
+  // Pure black since the glass redesign (2026-11-27): the page itself has no tint, the panes carry the depth.
+  expect(await bg(dark)).toBe("rgb(0, 0, 0)");
   if (SHOTS) await dark.screenshot({ path: `${SHOTS}/login-dark.png` });
 
   // Choosing light overrides the device, survives a reload, and "device" goes back to following it.

@@ -20,4 +20,16 @@ describe("bottom bar", () => {
     expect(source).toContain("if (pathname !== href) return;");
     expect(source).toContain("[view-transition-name:app-bottom-nav]");
   });
+
+  it("moves the open tab on the tap itself and draws no highlight inside the pill", () => {
+    const bar = source.slice(source.indexOf("export function BottomNav"));
+    // The pressed tab is the open one at once; the choice lapses when the route changes (it is tied to the page it was made on).
+    expect(bar).toContain("const [tapped, setTapped]");
+    expect(bar).toContain("tapped.from === pathname");
+    // A PendingHighlight inside a pill tab had no rounded shape and showed as a hard square; only the "More" list keeps one.
+    const pill = bar.slice(bar.indexOf("<nav"), bar.indexOf("{overflow ?"));
+    expect(pill).not.toContain("PendingHighlight");
+    // The name fades in after the pill has started to grow, so it never wraps while narrow.
+    expect(bar).toContain("animate-in-late");
+  });
 });

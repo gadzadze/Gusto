@@ -135,11 +135,12 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
 
   // Supplier dashboard: one order waiting; after confirming, its value counts, as "order value".
   const region = (name: string) => supplier.getByRole("region", { name }); // the panel title carries a count badge, so match on the words
-  const weekTile = () => supplier.getByRole("heading", { name: "შეკვეთები ბოლო 7 დღეში", exact: true }).locator("xpath=../..");
+  // The week counter is one column of the figures pane: the number (with the change next to it), then this heading.
+  const weekTile = () => supplier.getByRole("heading", { name: "შეკვეთები ბოლო 7 დღეში", exact: true }).locator("xpath=..");
   await supplier.goto("/supplier");
   await expect(region("ელოდება თქვენს პასუხს")).toContainText("GST-");
   await expect(region("ელოდება თქვენს პასუხს").getByRole("button", { name: "ნახვა" })).toHaveCount(1);
-  await expect(weekTile().locator("p").last()).toHaveText("1");
+  await expect(weekTile().locator("p").first()).toHaveText(/^1/);
   await supplier.goto(`/supplier/orders/${orderId}`);
   await supplier.waitForLoadState("networkidle");
   await supplier.getByRole("button", { name: "დადასტურება" }).click();
@@ -154,7 +155,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
 
   // Buyer dashboard: open order, most-ordered product with quick add, order again.
   await buyer.goto("/buyer");
-  await expect(buyer.getByRole("heading", { name: "მიმდინარე შეკვეთები" })).toBeVisible();
+  await expect(buyer.getByRole("heading", { name: "შეკვეთები", exact: true })).toBeVisible();
   await expect(buyer.getByRole("link", { name: new RegExp(`GST-${number}`) }).first()).toBeVisible();
   await expect(buyer.getByRole("heading", { name: "ყველაზე ხშირად შეკვეთილი პროდუქტები" })).toBeVisible();
   await expect(buyer.getByRole("button", { name: "დამატება: ყველი სულგუნი" })).toBeVisible();
