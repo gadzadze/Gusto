@@ -78,6 +78,14 @@ describe("Georgian instructions", () => {
     expect(text).toContain("ორნახევარი"); // listening notes
     expect(text).toContain("Never guess a number or a product");
   });
+
+  it("teach Georgian counting in twenties, the look-alike numbers and fractions, and to confirm big or ambiguous amounts", () => {
+    const text = liveSystemInstruction(items);
+    for (const word of ["ოცდახუთი", "ორმოცდახუთი", "ოთხმოცდაათი", "ას ორმოცდაათი", "ათას ხუთასი", "მეოთხედი", "ერთი და ნახევარი"]) expect(text).toContain(word);
+    expect(text).toContain("ორი (2) with ოცი (20)");
+    expect(text).toContain("Confirm once, out loud, any quantity of 50 or more");
+    expect(text).toContain("Say numbers as words, never as digits");
+  });
 });
 
 describe("transcript hints", () => {

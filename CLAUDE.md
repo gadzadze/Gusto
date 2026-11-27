@@ -1193,6 +1193,7 @@ A buyer orders by speaking Georgian. **Off unless `VOICE_ORDER_ENABLED=1` and `G
 buyer's search field (`BuyerSearchForm`, on Home and Search) and an "Order by voice" card under it on Home (`VoiceLauncher`,
 `components/buyer/voice/`). Only for an `active` buyer with at least one supplier that has products on their list.
 
+- **Georgian instructions** (`GEORGIAN_LISTENING` in `lib/voice/order-parse.ts`, `GEORGIAN_SPEAKING` in `lib/voice/live.ts`, guarded by `tests/unit/voice-live.test.ts`): the assistant is taught Georgian counting in twenties (11 to 19, tens, hundreds, thousands), the look-alike numbers (ორი/ოცი, ოთხი/ორმოცი, ათი/ათასი, ცხრა/ცხრამეტი), fractions (ნახევარი, ერთნახევარი, მეოთხედი), to say numbers as words and to confirm once any quantity of 50 or more or any ambiguous number. It is prompt-level only: the model is hosted and not retrained. **Not verified against the live model yet** (needs a spoken test). Planned next, not built: per-buyer memory of how each buyer names products, learned from their corrections in the review (needs a table, a migration and a privacy-text update).
 - **Browser half is shared** with the admin test page: `lib/voice/use-live-voice.ts` (socket, microphone worklet, playback, level strip).
   `TalkView` and `VoiceReview` (`voice-assistant.tsx`) take plain props so a fixture can render them without a microphone.
 - **Server**: `app/buyer/voice/actions.ts`. `startBuyerVoiceAction` (buyer guard, `voiceBuyer` 20/h) loads `loadVoiceCatalog` (this buyer's

@@ -22,6 +22,8 @@ export const GEORGIAN_SPEAKING = [
   "- After a number the noun stays singular and the unit word does not change: ორი ყუთი ლუდი, სამი კილო კარაქი, ხუთი ბოთლი (never plural after a number).",
   "- Use these verbs for order actions and no others: დავამატე (added), წავშალე (removed), გავასწორე (corrected). Name the product in the nominative after the quantity, as in the patterns below.",
   "- If you are unsure of a Georgian form, do not invent one: use a simpler sentence or the list pattern.",
+  "- Say numbers as words, never as digits, and keep them correct: 11 თერთმეტი, 15 თხუთმეტი, 20 ოცი, 25 ოცდახუთი, 40 ორმოცი, 100 ასი, 1,5 ერთნახევარი, 2,5 ორნახევარი.",
+  "- Speak in your own natural spoken Georgian, not in headline style: use a short polite lead-in only when it helps (კარგით, გასაგებია), never repeat the same opening twice in a row, and never praise the buyer.",
   "Patterns (use them as they are when they fit):",
   "- Added: «დავამატე: ორი კილო სულგუნი.»",
   "- Removed: «წავშალე: ნაღები.»",
