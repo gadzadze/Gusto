@@ -82,6 +82,8 @@ export function AssistantProvider({ role, suppliers, children }: { role: "buyer"
   return (
     <AssistantContext.Provider value={{ role, open: openWith, status }}>
       {children}
+      {/* The dock floats above the page, so the page gets room under its last content. */}
+      <div aria-hidden className="h-16 print:hidden" />
       {mounted ? (
         <section
           ref={panel}

@@ -91,7 +91,7 @@ export function ThemeToggle({ className, compact }: { className?: string; compac
           title={t(option)}
           onClick={() => choose(option)}
           className={cn(
-            "inline-flex size-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground md:size-8",
+            "inline-flex size-11 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground md:size-8",
             pref === option && "bg-accent text-accent-foreground",
           )}
         >

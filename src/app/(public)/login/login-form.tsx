@@ -82,7 +82,7 @@ export function LoginForm({ next, error, contactEmail }: { next: string | null; 
           {pending ? t("signingIn") : t("signIn")}
         </Button>
         <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-          <Button type="submit" name="intent" value="reset" variant="link" className="h-auto p-0" disabled={pending}>
+          <Button type="submit" name="intent" value="reset" variant="link" className="h-auto min-h-11 p-0" disabled={pending}>
             {t("forgot")}
           </Button>
         </div>
