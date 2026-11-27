@@ -599,7 +599,6 @@
     },
     "pendingCount": "Suppliers pending review: {count}",
     "categories": {
-      "intro": "Categories are shared by all suppliers. An archived category can't be chosen for new products; existing ones stay unchanged.",
       "newPlaceholder": "New category",
       "add": "Add",
       "rename": "Rename",

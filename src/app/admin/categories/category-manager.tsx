@@ -97,7 +97,6 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
 
   return (
     <div className="max-w-3xl space-y-5">
-      <p className="text-sm text-muted-foreground">{t("intro")}</p>
       {error ? <FormAlert tone="error">{error}</FormAlert> : null}
 
       <form
