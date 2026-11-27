@@ -4,8 +4,8 @@ import type * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * A quiet section of a home page: a small heading with an optional "all" link, then rows separated by hairlines.
- * No card, no border around the whole, no fill: the rows themselves carry the page (one shape instead of boxes in boxes).
+ * A section of a home page as one soft glass pane: a small heading with an optional "all" link, then rows separated by hairlines
+ * (one pane per section, nothing nested in a box).
  */
 export function ListSection({
   id,
@@ -21,9 +21,9 @@ export function ListSection({
   children: React.ReactNode;
 }) {
   return (
-    <section aria-labelledby={id} className={className}>
+    <section aria-labelledby={id} className={cn("glass px-4", className)}>
       <div className="flex items-center justify-between gap-4">
-        <h2 id={id} className="text-base font-semibold">{title}</h2>
+        <h2 id={id} className="min-w-0 text-[1rem] font-semibold">{title}</h2>
         {action ? (
           <Link href={action.href} className="inline-flex min-h-11 items-center gap-0.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
             {action.label}
@@ -31,7 +31,7 @@ export function ListSection({
           </Link>
         ) : null}
       </div>
-      <div className="divide-y divide-border border-t border-border">{children}</div>
+      <div className="divide-y divide-border border-t border-border pb-1">{children}</div>
     </section>
   );
 }

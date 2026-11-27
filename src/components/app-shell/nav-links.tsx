@@ -235,7 +235,7 @@ export function BottomNav(props: Props) {
         aria-label={t("menu")}
         className="[view-transition-name:app-bottom-nav] pointer-events-none fixed inset-x-0 bottom-0 z-30 px-1 pb-[calc(0.5rem+env(safe-area-inset-bottom))] md:hidden print:hidden"
       >
-        <ul className="pointer-events-auto relative mx-auto flex max-w-md rounded-full border border-border bg-background/85 shadow-lg backdrop-blur-md [transform:translateZ(0)]">
+        <ul className="pointer-events-auto relative mx-auto flex max-w-md glass glass-strong rounded-full [transform:translateZ(0)]">
           {primary.map((item) => {
             const active = tabActive(item.href);
             const count = badges[item.href] ?? 0;

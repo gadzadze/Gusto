@@ -275,25 +275,25 @@ function Intro({ suppliers }: { suppliers: VoiceSupplier[] }) {
   const t = useTranslations("buyer.voice");
   const examples = t.raw("examples") as string[];
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <div className="space-y-2">
         <h2 className="text-balance text-[1.75rem] font-semibold leading-tight">{t("title")}</h2>
         <p className="text-base text-muted-foreground">{t("lead")}</p>
       </div>
-      <section aria-labelledby="voice-suppliers">
-        <h3 id="voice-suppliers" className="text-sm font-medium text-muted-foreground">{t("suppliersTitle")}</h3>
-        <ul className="mt-2 divide-y divide-border border-y border-border">
+      <section aria-labelledby="voice-suppliers" className="glass px-4 py-1">
+        <h3 id="voice-suppliers" className="sr-only">{t("suppliersTitle")}</h3>
+        <ul className="divide-y divide-border">
           {suppliers.map((s) => (
-            <li key={s.name} className="flex items-baseline justify-between gap-4 py-2.5">
-              <span className="min-w-0 font-medium">{s.name}</span>
+            <li key={s.name} className="flex items-baseline justify-between gap-4 py-3">
+              <span className="min-w-0 font-semibold">{s.name}</span>
               <span className="shrink-0 text-sm tabular-nums text-muted-foreground">{t("productCount", { count: s.count })}</span>
             </li>
           ))}
         </ul>
       </section>
-      <section aria-labelledby="voice-examples">
-        <h3 id="voice-examples" className="text-sm font-medium text-muted-foreground">{t("examplesTitle")}</h3>
-        <ul className="mt-2 divide-y divide-border border-y border-border">
+      <section aria-labelledby="voice-examples" className="glass px-4 py-1">
+        <h3 id="voice-examples" className="sr-only">{t("examplesTitle")}</h3>
+        <ul className="divide-y divide-border">
           {examples.map((e) => (
             <li key={e} className="py-2.5 text-muted-foreground">{e}</li>
           ))}
@@ -347,12 +347,12 @@ function Ledger({ lines, unitLabel, separator }: { lines: LiveOrderLine[]; unitL
   const groups = useMemo(() => groupBySupplier(lines), [lines]);
   if (lines.length === 0) return null;
   return (
-    <section className="border-t border-border pt-3">
+    <section className="glass px-4">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex min-h-11 w-full items-center justify-between gap-3 text-sm font-medium"
+        className="flex min-h-11 w-full items-center justify-between gap-3 text-sm font-semibold"
       >
         {t("captured", { count: lines.length })}
         <ChevronDown aria-hidden className={cn("size-4 transition-transform duration-200 motion-reduce:transition-none", open && "rotate-180")} />
@@ -382,6 +382,7 @@ function Ledger({ lines, unitLabel, separator }: { lines: LiveOrderLine[]; unitL
 
 type Issue = { text: string; fixLabel: string; fix: Partial<Pick<VoiceLine, "qty" | "unitOk">> };
 
+/** The review: one pane per supplier, the unit beside the quantity, a problem shown under its own row, and a summary and button that say what is left. */
 export function VoiceReview({
   lines,
   setLines,
@@ -413,14 +414,15 @@ export function VoiceReview({
   const issueOf = (line: VoiceLine): Issue | null => {
     const ref = refs[line.productId];
     if (!ref) return null;
+    const fix = (quantity: number) => t("review.fixUnit", { quantity: milliToInput(quantity, separator), unit: unitLabel(line.catalogUnit) });
     if (!line.unitOk) {
-      return line.qty === null ? null : { text: t("review.unitMismatch"), fixLabel: t("review.fixUnit", { quantity: milliToInput(line.qty, separator), unit: unitLabel(line.catalogUnit) }), fix: { unitOk: true } };
+      return line.qty === null ? null : { text: t("review.unitMismatch"), fixLabel: fix(line.qty), fix: { unitOk: true } };
     }
-    if (line.qty === null) return { text: t("review.needsQuantity"), fixLabel: t("review.fixUnit", { quantity: milliToInput(ref.minMilli, separator), unit: unitLabel(line.catalogUnit) }), fix: { qty: ref.minMilli } };
+    if (line.qty === null) return { text: t("review.needsQuantity"), fixLabel: fix(ref.minMilli), fix: { qty: ref.minMilli } };
     if (!isOrderableQuantity(line.qty, ref.minMilli, ref.stepMilli)) {
       const steps = Math.max(0, Math.round((line.qty - ref.minMilli) / ref.stepMilli));
       const nearest = ref.minMilli + steps * ref.stepMilli;
-      return { text: t("review.badQuantity"), fixLabel: t("review.fixUnit", { quantity: milliToInput(nearest, separator), unit: unitLabel(line.catalogUnit) }), fix: { qty: nearest } };
+      return { text: t("review.badQuantity"), fixLabel: fix(nearest), fix: { qty: nearest } };
     }
     return null;
   };
@@ -430,21 +432,34 @@ export function VoiceReview({
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex items-center justify-between gap-4 px-6 pt-6">
+      <header className="flex items-start justify-between gap-4 px-6 pt-6">
         <div className="min-w-0">
           <h2 className="text-2xl font-semibold leading-tight">{t("review.title")}</h2>
           {lines.length > 0 ? <p className="mt-1 text-sm text-muted-foreground">{t("review.meta", { suppliers: groups.length, count: lines.length })}</p> : null}
+          {lines.length > 0 ? (
+            open > 0 ? (
+              <p role="status" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-amber-600/35 bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-800 dark:border-amber-400/35 dark:text-amber-300">
+                <TriangleAlert aria-hidden className="size-3.5" />
+                {t("review.needFix", { count: open })}
+              </p>
+            ) : (
+              <p role="status" className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-green-600/30 bg-green-500/10 px-3 py-1 text-sm font-semibold text-green-800 dark:border-green-400/30 dark:text-green-300">
+                <Check aria-hidden className="size-3.5" />
+                {t("review.ready")}
+              </p>
+            )
+          ) : null}
         </div>
         <IconButton label={t("close")} onClick={onClose}>
           <X aria-hidden />
         </IconButton>
       </header>
 
-      <div className="min-h-0 flex-1 space-y-8 overflow-y-auto px-6 pb-4 pt-6">
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 pb-4 pt-4">
         {lines.length === 0 ? <p className="text-muted-foreground">{t("review.empty")}</p> : null}
         {groups.map((g) => (
-          <section key={g.name ?? ""} aria-label={g.name ?? undefined}>
-            <div className="flex items-baseline justify-between gap-4 border-b border-foreground pb-2">
+          <section key={g.name ?? ""} aria-label={g.name ?? undefined} className="glass overflow-hidden">
+            <div className="flex items-baseline justify-between gap-4 border-b border-border px-4 py-3">
               <h3 className="min-w-0 font-semibold">{g.name}</h3>
               <p className="shrink-0 text-sm tabular-nums text-muted-foreground">{t("review.linesOf", { count: g.items.length })}</p>
             </div>
@@ -452,14 +467,13 @@ export function VoiceReview({
               {g.items.map((line) => {
                 const ref = refs[line.productId];
                 const issue = issueOf(line);
+                // While the unit is not settled the quantity is shown in the unit that was said.
+                const shownUnit = line.unitOk ? line.catalogUnit : (line.spokenUnit ?? line.catalogUnit);
                 return (
-                  <li key={line.productId} className="py-3">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="font-medium">{line.productName}</p>
-                        <p className="text-sm text-muted-foreground">{unitLabel(line.catalogUnit)}</p>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-1">
+                  <li key={line.productId} className={cn(issue && "bg-destructive/5 shadow-[inset_3px_0_0_var(--destructive)]")}>
+                    <div className="flex items-center gap-3 px-4 py-2.5">
+                      <p className="min-w-0 flex-1 font-semibold leading-snug">{line.productName}</p>
+                      <div className="flex shrink-0 items-center">
                         <Stepper
                           label={t("review.decrease", { name: line.productName })}
                           onClick={() => {
@@ -469,7 +483,10 @@ export function VoiceReview({
                         >
                           <Minus aria-hidden />
                         </Stepper>
-                        <span className="min-w-[3.5rem] text-center font-medium tabular-nums">{line.qty === null ? "?" : milliToInput(line.qty, separator)}</span>
+                        <span className="w-16 text-center font-semibold tabular-nums">
+                          {line.qty === null ? "?" : milliToInput(line.qty, separator)}
+                          <small className="ml-0.5 text-sm font-normal text-muted-foreground">{unitLabel(shownUnit)}</small>
+                        </span>
                         <Stepper
                           label={t("review.increase", { name: line.productName })}
                           onClick={() => ref && patch(line.productId, { qty: stepUp(line.qty ?? 0, ref.minMilli, ref.stepMilli), unitOk: true })}
@@ -479,15 +496,15 @@ export function VoiceReview({
                       </div>
                     </div>
                     {issue ? (
-                      <div role="alert" className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-destructive px-3 py-2 text-sm text-destructive">
-                        <span className="flex min-w-0 items-center gap-2">
-                          <TriangleAlert aria-hidden className="size-4 shrink-0" />
+                      <div role="alert" className="flex items-center justify-between gap-3 px-4 pb-2.5 text-sm text-destructive">
+                        <span className="flex min-w-0 items-center gap-1.5">
+                          <TriangleAlert aria-hidden className="size-3.5 shrink-0" />
                           {issue.text}
                         </span>
                         <button
                           type="button"
                           onClick={() => patch(line.productId, issue.fix)}
-                          className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-input bg-surface px-3 font-medium text-foreground hover:bg-muted"
+                          className="inline-flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-full border border-input bg-[var(--glass-strong)] px-3 font-semibold text-foreground hover:bg-muted"
                         >
                           {issue.fixLabel}
                         </button>
@@ -501,7 +518,7 @@ export function VoiceReview({
         ))}
       </div>
 
-      <footer className="space-y-3 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
+      <footer className="space-y-2 px-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2">
         {errorKey ? (
           <p role="alert" className="flex items-start gap-2 text-sm text-destructive">
             <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
@@ -514,14 +531,15 @@ export function VoiceReview({
               <TriangleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
               {t("review.skipped", { names: skipped.join(", ") })}
             </p>
-            <Button type="button" size="lg" className="w-full" onClick={onToCart}>
+            <Button type="button" size="lg" className="w-full rounded-full" onClick={onToCart}>
               {t("review.toCart")}
             </Button>
           </div>
         ) : (
           <>
-            <Button type="button" size="lg" className="w-full" loading={busy} onClick={onConfirm} disabled={lines.length === 0 || open > 0}>
+            <Button type="button" size="lg" className="w-full rounded-full" loading={busy} onClick={onConfirm} disabled={lines.length === 0 || open > 0}>
               {t("review.confirm")}
+              {open === 0 && lines.length > 0 ? <span className="font-normal opacity-70">· {lines.length}</span> : null}
             </Button>
             <p className="text-center text-sm text-muted-foreground">{open > 0 ? t("review.fixFirst") : t("review.confirmNote")}</p>
           </>
@@ -532,14 +550,17 @@ export function VoiceReview({
 }
 
 function Stepper({ label, onClick, children }: { label: string; onClick: () => void; children: React.ReactNode }) {
+  // The tap area is 44px; the visible circle is 34px so a row stays slim.
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="inline-flex size-11 items-center justify-center rounded-full border border-input bg-surface transition-colors hover:bg-muted focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand active:scale-95 motion-reduce:active:scale-100 [&_svg]:size-4"
+      className="group inline-flex size-11 items-center justify-center rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand [&_svg]:size-4"
     >
-      {children}
+      <span className="grid size-[34px] place-items-center rounded-full border border-input bg-[var(--glass-strong)] transition-transform group-hover:bg-muted group-active:scale-95 motion-reduce:group-active:scale-100">
+        {children}
+      </span>
     </button>
   );
 }

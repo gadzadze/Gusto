@@ -154,7 +154,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
 
   // Buyer dashboard: open order, most-ordered product with quick add, order again.
   await buyer.goto("/buyer");
-  await expect(buyer.getByRole("heading", { name: "მიმდინარე შეკვეთები" })).toBeVisible();
+  await expect(buyer.getByRole("heading", { name: "შეკვეთები", exact: true })).toBeVisible();
   await expect(buyer.getByRole("link", { name: new RegExp(`GST-${number}`) }).first()).toBeVisible();
   await expect(buyer.getByRole("heading", { name: "ყველაზე ხშირად შეკვეთილი პროდუქტები" })).toBeVisible();
   await expect(buyer.getByRole("button", { name: "დამატება: ყველი სულგუნი" })).toBeVisible();

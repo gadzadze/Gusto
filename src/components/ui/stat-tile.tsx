@@ -15,7 +15,7 @@ export function StatTile({
   children?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl bg-surface-2 p-4">
+    <div className="glass flex flex-col gap-1 p-4">
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
       <p className="text-2xl font-semibold tabular-nums">{value}</p>
       {note ? <p className="text-sm tabular-nums text-muted-foreground">{note}</p> : null}

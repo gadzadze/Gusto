@@ -1,4 +1,4 @@
-import { Clock, Inbox, PauseCircle, Truck } from "lucide-react";
+import { ChevronRight, Clock, Inbox, PauseCircle } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/app-shell/page-header";
@@ -6,7 +6,6 @@ import { BarRow, SparkBars } from "@/components/dashboard/bars";
 import { GetStarted, type SetupProgress } from "@/components/dashboard/get-started";
 import { Panel, PanelRow } from "@/components/dashboard/panel";
 import { ReviewSheet } from "@/components/orders/review-sheet";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Notice } from "@/components/ui/notice";
 import { cn } from "@/lib/utils";
@@ -79,18 +78,22 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                   const late = now.getTime() - o.createdAt.getTime() > LATE_AFTER_MS;
                   const number = to("number", { number: o.number });
                   return (
-                    <PanelRow key={o.id} freshId={o.id}>
-                      <div className="min-w-0 flex-[1_1_12rem]">
-                        <p className="truncate font-semibold">{o.buyerName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          <span className="tabular-nums">{number}</span> · {tt("items", { count: o.itemCount })} ·{" "}
-                          <span className={cn(late && "font-semibold text-amber-800 dark:text-amber-300")}>
+                    <PanelRow key={o.id} freshId={o.id} className="py-0">
+                      <ReviewSheet orderId={o.id} number={number} buyerName={o.buyerName} label={tt("review")}>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-semibold">{o.buyerName}</span>
+                          <span className="block text-sm text-muted-foreground">
+                            <span className="whitespace-nowrap tabular-nums">{number}</span> · <span className="whitespace-nowrap">{tt("items", { count: o.itemCount })}</span>
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-right">
+                          <span className="block font-semibold tabular-nums">{fmt.money(o.totalMinor, o.currency)}</span>
+                          <span className={cn("block text-sm", late ? "font-semibold text-amber-800 dark:text-amber-300" : "text-muted-foreground")}>
+                            {late ? <span aria-hidden className="mr-1.5 inline-block size-2 rounded-full bg-amber-600 dark:bg-amber-400" /> : null}
                             {format.relativeTime(o.createdAt, now)}
                           </span>
-                        </p>
-                      </div>
-                      <span className="hidden whitespace-nowrap font-medium tabular-nums sm:block">{fmt.money(o.totalMinor, o.currency)}</span>
-                      <ReviewSheet orderId={o.id} number={number} buyerName={o.buyerName} label={tt("review")} />
+                        </span>
+                      </ReviewSheet>
                     </PanelRow>
                   );
                 })
@@ -105,37 +108,38 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
                   const isToday = d.date === clock.today;
                   const late = d.date !== null && d.date < clock.today;
                   return (
-                    <PanelRow key={d.date ?? "none"}>
-                      <div
-                        className={cn(
-                          "w-12 shrink-0 rounded-lg border py-1 text-center",
-                          isToday ? "border-brand bg-brand-soft text-brand" : "border-border bg-surface-2",
-                        )}
-                        aria-hidden
+                    <PanelRow key={d.date ?? "none"} className="py-0">
+                      <Link
+                        href={`/supplier/orders/pick?day=${d.date ?? "none"}`}
+                        aria-label={`${tt("loadingSheet")}: ${d.date ? format.dateTime(dayOf(d.date), { dateStyle: "medium", timeZone: "UTC" }) : tt("noDay")}`}
+                        className="flex w-full items-center gap-3 py-3 transition-colors hover:text-brand"
                       >
-                        {d.date ? (
-                          <>
-                            <b className="block text-base leading-tight tabular-nums">{format.dateTime(dayOf(d.date), { day: "numeric", timeZone: "UTC" })}</b>
-                            <span className="text-xs text-muted-foreground">{format.dateTime(dayOf(d.date), { weekday: "short", timeZone: "UTC" })}</span>
-                          </>
-                        ) : (
-                          <b className="block py-1 text-base">?</b>
-                        )}
-                      </div>
-                      <div className="min-w-0 flex-[1_1_12rem]">
-                        <p className="font-semibold">
-                          {d.date ? format.dateTime(dayOf(d.date), { dateStyle: "medium", timeZone: "UTC" }) : tt("noDay")}
-                          {isToday ? <span className="ml-2 text-xs font-medium text-brand">{tt("todayLabel")}</span> : null}
-                          {late ? <span className="ml-2 text-xs font-semibold text-amber-800 dark:text-amber-300">{tt("overdue")}</span> : null}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{tt("deliveryCounts", { orders: d.orders, customers: d.customers })}</p>
-                      </div>
-                      <Button asChild variant="outline" size="sm">
-                        <Link href={`/supplier/orders/pick?day=${d.date ?? "none"}`} aria-label={tt("loadingSheet")}>
-                          <Truck />
-                          <span className="hidden sm:inline">{tt("loadingSheet")}</span>
-                        </Link>
-                      </Button>
+                        <div
+                          className={cn(
+                            "w-12 shrink-0 rounded-lg border py-1 text-center",
+                            isToday ? "border-brand bg-brand-soft text-brand" : "border-border bg-surface-2",
+                          )}
+                          aria-hidden
+                        >
+                          {d.date ? (
+                            <>
+                              <b className="block text-base leading-tight tabular-nums">{format.dateTime(dayOf(d.date), { day: "numeric", timeZone: "UTC" })}</b>
+                              <span className="text-xs text-muted-foreground">{format.dateTime(dayOf(d.date), { weekday: "short", timeZone: "UTC" })}</span>
+                            </>
+                          ) : (
+                            <b className="block py-1 text-base">?</b>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold">
+                            {d.date ? format.dateTime(dayOf(d.date), { dateStyle: "medium", timeZone: "UTC" }) : tt("noDay")}
+                            {isToday ? <span className="ml-2 text-xs font-medium text-brand">{tt("todayLabel")}</span> : null}
+                            {late ? <span className="ml-2 text-xs font-semibold text-amber-800 dark:text-amber-300">{tt("overdue")}</span> : null}
+                          </p>
+                          <p className="text-sm text-muted-foreground">{tt("deliveryCounts", { orders: d.orders, customers: d.customers })}</p>
+                        </div>
+                        <ChevronRight aria-hidden className="size-4 shrink-0 text-muted-foreground" />
+                      </Link>
                     </PanelRow>
                   );
                 })
@@ -144,46 +148,38 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
           </div>
 
           <div className="space-y-5">
-            <section aria-labelledby="value">
-              <div className="space-y-1 border-b border-border py-4">
-                <h2 id="value" className="text-sm text-muted-foreground">{td("value")}</h2>
+            <section aria-labelledby="value" className="glass px-4 py-4">
+              <h2 id="value" className="text-sm text-muted-foreground">{td("value")}</h2>
+              <div className="mt-1 flex items-end justify-between gap-4">
                 <p className="text-3xl font-semibold tabular-nums tracking-tight">{fmt.money(metrics.orderValue30dMinor, metrics.currency)}</p>
-                <div className="py-2">
+                <div className="w-28 shrink-0">
                   <SparkBars values={series.map((s) => s.valueMinor)} label={tt("chartLabel")} />
-                  {series.length > 1 ? (
-                    <div className="mt-1 flex justify-between text-xs tabular-nums text-muted-foreground" aria-hidden>
-                      <span>{format.dateTime(dayOf(series[0].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
-                      <span>{format.dateTime(dayOf(series[series.length - 1].day), { day: "numeric", month: "short", timeZone: "UTC" })}</span>
-                    </div>
-                  ) : null}
-                  {series.some((s) => s.valueMinor > 0) ? (
-                    <p className="mt-1 text-xs text-muted-foreground">{tt("chartLegend", { best: fmt.money(Math.max(...series.map((s) => s.valueMinor), 0), metrics.currency) })}</p>
-                  ) : null}
                 </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">{td("valueHint")}</p>
-                <details className="group text-xs text-muted-foreground">
-                  <summary className="inline-flex min-h-11 cursor-pointer list-none items-center font-medium text-brand underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
-                    {td("valueWhyLabel")}
-                  </summary>
-                  <p className="pb-2 leading-relaxed">{td("valueWhy")}</p>
-                </details>
               </div>
-              <div className="divide-y divide-border">
-                <div className="flex items-center justify-between gap-4 py-3">
-                  <div className="min-w-0">
-                    <h3 className="text-sm">{td("week")}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {delta === 0 ? td("weekPrevious", { count: metrics.ordersLastWeek }) : delta > 0 ? tt("deltaUp", { count: delta }) : tt("deltaDown", { count: -delta })}
-                    </p>
-                  </div>
-                  <p className="text-2xl font-semibold tabular-nums">{metrics.ordersThisWeek}</p>
+              {/* The "order value, not revenue" caption stays printed next to the number (product honesty rule). */}
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{td("valueHint")}</p>
+              <details className="group text-sm text-muted-foreground">
+                <summary className="inline-flex min-h-11 cursor-pointer list-none items-center font-medium text-brand underline-offset-2 hover:underline [&::-webkit-details-marker]:hidden">
+                  {td("valueWhyLabel")}
+                </summary>
+                <p className="pb-2 leading-relaxed">{td("valueWhy")}</p>
+              </details>
+              <div className="mt-2 grid grid-cols-2 divide-x divide-border border-t border-border pt-3">
+                <div className="pr-4">
+                  <p className="text-2xl font-semibold tabular-nums">
+                    {metrics.ordersThisWeek}
+                    {delta !== 0 ? (
+                      <span aria-hidden className="ml-1.5 text-sm font-normal text-muted-foreground">{delta > 0 ? `+${delta}` : `−${-delta}`}</span>
+                    ) : null}
+                  </p>
+                  <h3 className="text-sm text-muted-foreground">{td("week")}</h3>
+                  <p className="sr-only">
+                    {delta === 0 ? td("weekPrevious", { count: metrics.ordersLastWeek }) : delta > 0 ? tt("deltaUp", { count: delta }) : tt("deltaDown", { count: -delta })}
+                  </p>
                 </div>
-                <div className="flex items-center justify-between gap-4 py-3">
-                  <div className="min-w-0">
-                    <h3 className="text-sm">{td("repeat")}</h3>
-                    <p className="text-xs text-muted-foreground">{td("repeatHint")}</p>
-                  </div>
+                <div className="pl-4">
                   <p className="text-2xl font-semibold tabular-nums">{metrics.repeatBuyers30d}</p>
+                  <h3 className="text-sm text-muted-foreground">{td("repeat")}</h3>
                 </div>
               </div>
             </section>

@@ -5,6 +5,8 @@ import { BuyerSearchForm } from "@/components/buyer/search-form";
 import type { VoiceSupplier } from "@/components/buyer/voice/voice-assistant";
 import { VoiceLauncher } from "@/components/buyer/voice/voice-launcher";
 import { ListRow, ListSection } from "@/components/dashboard/list-section";
+import { OrderSteps } from "@/components/dashboard/order-progress";
+import Link from "next/link";
 import { ReorderButton } from "@/components/orders/order-buttons";
 import { OrderStatusText } from "@/components/orders/order-status-text";
 import { RegularOrderButtons } from "@/components/orders/regular-order-controls";
@@ -41,7 +43,7 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
   const format = await getFormatter();
   const openIds = new Set(open.map((o) => o.id));
   const earlier = recent.filter((o) => !openIds.has(o.id)); // the ones in progress are already shown above
-  const day = (iso: string) => format.dateTime(new Date(`${iso}T00:00:00Z`), { dateStyle: "medium", timeZone: "UTC" });
+  const shortDay = (iso: string) => format.dateTime(new Date(`${iso}T00:00:00Z`), { day: "numeric", month: "short", timeZone: "UTC" });
   const regularShown = dueToday.length > 0 ? dueToday : regular.slice(0, 3);
   return (
     <div className="space-y-8">
@@ -63,45 +65,40 @@ export async function BuyerHome({ suppliers, recent, open, regular, lastOrders, 
             </ListSection>
           ) : null}
 
-          <ListSection id="open-orders" title={th("inProgress")} action={{ href: "/buyer/orders", label: th("all") }}>
-            {open.length === 0 ? (
+          <ListSection id="orders" title={to("title")} action={{ href: "/buyer/orders", label: th("all") }}>
+            {open.length === 0 && earlier.length === 0 ? (
               <p className="py-4 text-sm text-muted-foreground">{td("openEmpty")}</p>
-            ) : (
-              open.map((o) => (
-                <ListRow
-                  key={o.id}
-                  href={`/buyer/orders/${o.id}`}
-                  title={o.supplierName}
-                  subtitle={
-                    <>
-                      <OrderStatusText status={o.status} className="mr-2" />
-                      <span className="whitespace-nowrap tabular-nums">{to("number", { number: o.number })} · {fmt.money(o.totalMinor, o.currency)}</span>
-                      {o.deliveryDate ? <span className="mt-0.5 block">{th("deliveryOn", { date: day(o.deliveryDate) })}</span> : null}
-                    </>
-                  }
-                />
-              ))
-            )}
+            ) : null}
+            {open.map((o) => (
+              <Link key={o.id} href={`/buyer/orders/${o.id}`} className="block py-3 transition-colors hover:text-brand">
+                <span className="flex items-start gap-3">
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-medium leading-snug">{o.supplierName}</span>
+                    <OrderStatusText status={o.status} className="mt-0.5" />
+                  </span>
+                  <span className="shrink-0 text-right">
+                    <span className="block font-semibold tabular-nums">{fmt.money(o.totalMinor, o.currency)}</span>
+                    {o.deliveryDate ? <span className="block text-sm text-muted-foreground">{th("deliveryOn", { date: shortDay(o.deliveryDate) })}</span> : null}
+                  </span>
+                </span>
+                <OrderSteps step={o.status === "confirmed" ? 2 : 1} />
+              </Link>
+            ))}
+            {earlier.map((o) => (
+              <ListRow
+                key={o.id}
+                href={`/buyer/orders/${o.id}`}
+                title={o.supplierName}
+                subtitle={
+                  <>
+                    <span className="tabular-nums">{to("number", { number: o.number })}</span> · {fmt.money(o.totalMinor, o.currency)}
+                    {o.status !== "delivered" ? <OrderStatusText status={o.status} className="ml-2" /> : null}
+                  </>
+                }
+                trailing={<ReorderButton orderId={o.id} iconOnly />}
+              />
+            ))}
           </ListSection>
-
-          {earlier.length > 0 ? (
-            <ListSection id="recent-orders" title={to("recent")} action={{ href: "/buyer/orders", label: th("all") }}>
-              {earlier.map((o) => (
-                <ListRow
-                  key={o.id}
-                  href={`/buyer/orders/${o.id}`}
-                  title={o.supplierName}
-                  subtitle={
-                    <>
-                      <span className="tabular-nums">{to("number", { number: o.number })}</span> · {fmt.money(o.totalMinor, o.currency)}
-                      {o.status !== "delivered" ? <OrderStatusText status={o.status} className="ml-2" /> : null}
-                    </>
-                  }
-                  trailing={<ReorderButton orderId={o.id} iconOnly />}
-                />
-              ))}
-            </ListSection>
-          ) : null}
 
           {topSection}
         </div>

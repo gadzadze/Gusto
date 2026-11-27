@@ -25,16 +25,16 @@ export function Panel({
   className?: string;
   children: React.ReactNode;
 }) {
-  // Light on purpose (2026-11-27): no box around the block, the heading sits on the page, rows are separated by one hairline.
-  // Only the "accent" tone (something due today) keeps a soft fill so it still stands out.
+  // A soft glass pane: heading and "All" link inside it, one hairline above the rows. Only the "accent" tone (something due today)
+  // swaps the tint for the soft burgundy fill.
   const accent = tone === "accent";
   return (
-    <section aria-labelledby={id} className={cn(accent && "rounded-xl bg-brand-soft px-4 pb-1", className)}>
-      <header className={cn("flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-3", !accent && "px-0")}>
-        <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
+    <section aria-labelledby={id} className={cn("glass px-4", accent && "border-brand/30 bg-brand-soft", className)}>
+      <header className="flex items-center justify-between gap-3 py-3">
+        <h2 id={id} className="flex min-w-0 items-center gap-2 text-[1rem] font-semibold">
           {title}
           {count !== undefined ? (
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold tabular-nums text-brand">{count}</span>
+            <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold tabular-nums text-brand">{count}</span>
           ) : null}
         </h2>
         {action ? (

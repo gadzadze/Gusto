@@ -518,7 +518,9 @@
         "confirmNote": "Each supplier's order is reviewed and sent separately.",
         "fixFirst": "Fix the marked products first.",
         "skipped": "Could not add to the cart: {names}.",
-        "toCart": "Go to cart"
+        "toCart": "Go to cart",
+        "needFix": "{count, plural, one {# thing to fix} other {# things to fix}}",
+        "ready": "Ready"
       },
       "blocked": {
         "title": "Microphone is off",
