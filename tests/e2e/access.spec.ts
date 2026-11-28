@@ -65,7 +65,7 @@ test("admin registers an address, it can sign in, revoking blocks it again", asy
   // An admin can't lock themselves out.
   const own = admin.getByRole("listitem").filter({ hasText: adminEmail });
   await own.getByRole("button", { name: "გაუქმება" }).click();
-  await expect(admin.getByText("საკუთარ ელფოსტაზე წვდომას ვერ გააუქმებთ.")).toBeVisible();
+  await expect(admin.getByText("საკუთარ ელფოსტაზე წვდომას ვერ გააუქმებთ")).toBeVisible();
 
   // Non-admins can't open the page.
   await visitor.goto("/admin/access");

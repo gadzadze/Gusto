@@ -47,7 +47,7 @@ test("a vetted partner picks their own password, then signs in with it", async (
   await partner.getByLabel("ახალი პაროლი").fill(PASSWORD);
   await partner.getByLabel("გაიმეორეთ პაროლი").fill("something-else-entirely");
   await partner.getByRole("button", { name: "პაროლის შენახვა" }).click();
-  await expect(partner.getByText("პაროლები არ ემთხვევა.")).toBeVisible();
+  await expect(partner.getByText("პაროლები არ ემთხვევა")).toBeVisible();
   // The form clears after an error (React resets it): type both again.
   await partner.getByLabel("ახალი პაროლი").fill(PASSWORD);
   await partner.getByLabel("გაიმეორეთ პაროლი").fill(PASSWORD);
@@ -73,7 +73,7 @@ test("a vetted partner picks their own password, then signs in with it", async (
   await partner.getByLabel("ელფოსტა").fill(email);
   await partner.getByLabel("პაროლი").fill("wrong-password-1");
   await partner.getByRole("button", { name: "შესვლა", exact: true }).click();
-  await expect(partner.getByText("ელფოსტა ან პაროლი არასწორია.")).toBeVisible();
+  await expect(partner.getByText("ელფოსტა ან პაროლი არასწორია")).toBeVisible();
   await partner.getByLabel("პაროლი").fill(PASSWORD);
   await partner.getByRole("button", { name: "შესვლა", exact: true }).click();
   await expect(partner).toHaveURL(/\/buyer$/);

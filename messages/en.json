@@ -197,12 +197,12 @@
     "sentBody": "A sign-in link has been sent to {email}. Open the email and follow the link.",
     "useAnotherEmail": "Use a different email",
     "errors": {
-      "invalid_email": "Enter a valid email address.",
+      "invalid_email": "Enter a valid email address",
       "rate_limited": "Too many attempts. Try again in a few minutes.",
       "auth": "Sign-in failed. The link may have expired - try again.",
       "unknown": "Sign-in failed. Try again.",
       "not_allowed": "This email has not been approved yet. Only verified businesses can sign in to 202.",
-      "wrong_credentials": "The email or password is wrong."
+      "wrong_credentials": "The email or password is wrong"
     },
     "passwordLabel": "Password",
     "signIn": "Sign in",
@@ -239,21 +239,21 @@
     "cityPlaceholder": "Tbilisi",
     "addressLine": "Delivery address",
     "deliveryInstructions": "Delivery instructions",
-    "deliveryInstructionsHint": "E.g.: entrance from the courtyard, receiving until 10:00.",
+    "deliveryInstructionsHint": "E.g.: entrance from the courtyard, receiving until 10:00",
     "deliveryArea": "Delivery area",
     "deliveryAreaHint": "E.g.: Tbilisi and the surrounding area",
     "submit": "Continue",
     "submitting": "Saving…",
     "optional": "optional",
     "errors": {
-      "already_onboarded": "Your business is already registered.",
-      "invalid": "Check the highlighted fields.",
+      "already_onboarded": "Your business is already registered",
+      "invalid": "Check the highlighted fields",
       "unknown": "Could not save. Try again.",
       "wrong_role": "This email is registered for a different role. Please contact us.",
       "legal_id_taken": "This legal ID is already registered. If it's your company, please contact us.",
-      "already_has_kind": "You already have this side.",
-      "not_onboarded": "Finish registering your business first.",
-      "too_many_companies": "You have reached the maximum number of companies."
+      "already_has_kind": "You already have this side",
+      "not_onboarded": "Finish registering your business first",
+      "too_many_companies": "You have reached the maximum number of companies"
     },
     "kindRequired": "Choose one of the options",
     "kindBoth": "Both",
@@ -327,7 +327,7 @@
     "pendingTitle": "Your account is under review",
     "pendingBody": "Awaiting approval. You can prepare your catalog",
     "suspendedTitle": "Account suspended",
-    "suspendedBody": "Contact 202 support for details.",
+    "suspendedBody": "Contact 202 support for details",
     "emptyTitle": "No orders yet",
     "emptyBody": "New orders appear here",
     "noCategoriesTitle": "No categories added yet",
@@ -337,7 +337,7 @@
     "dashboard": {
       "pending": "Waiting for your decision",
       "pendingHint": "Not yet confirmed or rejected",
-      "pendingNone": "No new orders.",
+      "pendingNone": "No new orders",
       "openPending": "View orders",
       "week": "Orders in the last 7 days",
       "weekHint": "Orders received vs the previous 7 days",
@@ -346,16 +346,16 @@
       "valueHint": "Confirmed and delivered, last 30 days. Order value, not revenue",
       "top": "Top 5 products, 30 days",
       "topHint": "By confirmed quantity, last 30 days",
-      "topEmpty": "No data yet.",
+      "topEmpty": "No data yet",
       "repeat": "Repeat buyers",
       "repeatHint": "Ordered 2 or more times in 30 days",
-      "valueWhy": "202 doesn't know whether they were paid.",
+      "valueWhy": "202 doesn't know whether they were paid",
       "valueWhyLabel": "Why?"
     },
     "today": {
       "queueTitle": "Waiting for your answer",
       "queueAll": "All",
-      "queueEmpty": "No orders are waiting for an answer.",
+      "queueEmpty": "No orders are waiting for an answer",
       "review": "Review",
       "items": "{count, plural, one {# item} other {# items}}",
       "deliveriesTitle": "Next deliveries",
@@ -373,7 +373,7 @@
     "getStarted": {
       "title": "Get started",
       "done": "Done",
-      "afterApproval": "Available once the 202 team has approved your business.",
+      "afterApproval": "Available once the 202 team has approved your business",
       "products": {
         "title": "Add your products",
         "body": "Add by hand or import from Excel",
@@ -421,7 +421,7 @@
     "sku": "Code",
     "dashboard": {
       "open": "Current orders",
-      "openEmpty": "You have no current orders.",
+      "openEmpty": "You have no current orders",
       "topTitle": "Most often ordered products",
       "topHint": "Most ordered first",
       "orderedTimes": "Ordered {count, plural, one {# time} other {# times}}",
@@ -497,7 +497,7 @@
       "captured": "Captured · {count, plural, one {# product} other {# products}}",
       "you": "You",
       "assistant": "Assistant",
-      "timeLimit": "The session ends in {minutes} minutes.",
+      "timeLimit": "The session ends in {minutes} minutes",
       "review": {
         "title": "Your order",
         "meta": "{suppliers, plural, one {# supplier} other {# suppliers}} · {count, plural, one {# product} other {# products}}",
@@ -511,9 +511,9 @@
         "fixUnit": "{quantity} {unit}",
         "empty": "The order is empty",
         "confirm": "Review orders",
-        "confirmNote": "Each supplier's order is reviewed and sent separately.",
-        "fixFirst": "Fix the marked products first.",
-        "skipped": "Could not add to the cart: {names}.",
+        "confirmNote": "Each supplier's order is reviewed and sent separately",
+        "fixFirst": "Fix the marked products first",
+        "skipped": "Could not add to the cart: {names}",
         "toCart": "Go to cart",
         "needFix": "{count, plural, one {# thing to fix} other {# things to fix}}",
         "ready": "Ready"
@@ -521,9 +521,9 @@
       "blocked": {
         "title": "Microphone is off",
         "body": "The browser has no access to the microphone. Turn it on in the browser settings, or type your order instead.",
-        "step1": "Open the site settings next to the address bar.",
-        "step2": "Choose “Allow” for the microphone.",
-        "step3": "Come back here and tap “Speak”.",
+        "step1": "Open the site settings next to the address bar",
+        "step2": "Choose “Allow” for the microphone",
+        "step3": "Come back here and tap “Speak”",
         "typeInstead": "Type instead",
         "retry": "Try again"
       },
@@ -531,9 +531,9 @@
         "startFailed": "Could not connect. Try again.",
         "connectionLost": "The connection dropped. Try again.",
         "rate_limited": "Too many attempts. Try again later.",
-        "not_configured": "Voice ordering is not available right now.",
-        "no_products": "Voice ordering needs a supplier whose products are available to you.",
-        "pending": "Voice ordering opens once your business is approved.",
+        "not_configured": "Voice ordering is not available right now",
+        "no_products": "Voice ordering needs a supplier whose products are available to you",
+        "pending": "Voice ordering opens once your business is approved",
         "invalid": "Something was wrong with the request. Try again.",
         "unknown": "Something went wrong. Try again."
       },
@@ -542,7 +542,7 @@
       "barPlaceholder": "Tell me what you need",
       "usualChip": "The usual: {name}",
       "reviewCart": "Review cart",
-      "proposalNote": "Nothing is sent until you confirm.",
+      "proposalNote": "Nothing is sent until you confirm",
       "proposalFlagged": "To check: {count}",
       "barLabel": "Ask the assistant",
       "supplierTitle": "Run your orders by voice",
@@ -570,20 +570,20 @@
       "textOnly": "Typing only"
     },
     "assistant": {
-      "noProducts": "Nothing found for \"{query}\" at your suppliers.",
+      "noProducts": "Nothing found for \"{query}\" at your suppliers",
       "moreProducts": "{count} matches: see all",
       "minOrder": "min. order {amount}",
-      "noOrders": "No orders yet.",
+      "noOrders": "No orders yet",
       "allOrders": "All orders",
       "openOrder": "Open the order",
-      "emptyCart": "Your carts are empty.",
+      "emptyCart": "Your carts are empty",
       "total": "Total",
       "shortfall": "{amount} short of the minimum order",
       "openCart": "Open the cart",
       "applied": {
-        "cartSet": "Cart updated.",
-        "cartRemoved": "Removed from the cart.",
-        "reorder": "{added, plural, one {# product} other {# products}} added to the cart.",
+        "cartSet": "Cart updated",
+        "cartRemoved": "Removed from the cart",
+        "reorder": "{added, plural, one {# product} other {# products}} added to the cart",
         "reorderSkipped": "{added} added to the cart. Not available now: {skipped}.",
         "regular": "Saved as a regular order. You will get a reminder on that day."
       },
@@ -601,21 +601,21 @@
       },
       "dueHint": "usually every {every} days, last ordered {since} days ago",
       "cancel": "Cancel",
-      "cancelled": "Cancelled.",
+      "cancelled": "Cancelled",
       "working": "Working...",
       "openPage": "Open the page",
       "errors": {
         "invalid": "That did not work. Try again.",
-        "not_found": "Not found.",
+        "not_found": "Not found",
         "failed": "Something went wrong. Try again.",
-        "product_unavailable": "This product is not available now.",
-        "invalid_quantity": "That quantity is not allowed for this product.",
-        "limit_reached": "You already have the maximum number of regular orders.",
-        "empty": "That order has nothing to save.",
+        "product_unavailable": "This product is not available now",
+        "invalid_quantity": "That quantity is not allowed for this product",
+        "limit_reached": "You already have the maximum number of regular orders",
+        "empty": "That order has nothing to save",
         "rate_limited": "Too many requests. Try again in a moment.",
-        "not_available": "Not available."
+        "not_available": "Not available"
       },
-      "nothingFound": "Nothing found."
+      "nothingFound": "Nothing found"
     }
   },
   "admin": {
@@ -633,7 +633,7 @@
       "active": "Approved",
       "suspended": "Suspended"
     },
-    "suppliersEmpty": "No suppliers with this status.",
+    "suppliersEmpty": "No suppliers with this status",
     "columns": {
       "name": "Name",
       "city": "City",
@@ -659,7 +659,7 @@
       "suspend": "Suspend",
       "reactivate": "Reactivate",
       "reason": "Reason",
-      "reasonHint": "Recorded in the audit log.",
+      "reasonHint": "Recorded in the audit log",
       "confirmSuspend": "Confirm suspension",
       "confirmReactivate": "Confirm reactivation"
     },
@@ -692,9 +692,9 @@
         "title": "Add categories from a product file",
         "hint": "Upload a product file to see missing categories. It is read in your browser",
         "choose": "Choose a file",
-        "noColumn": "The category column could not be found automatically.",
+        "noColumn": "The category column could not be found automatically",
         "pickColumn": "Which column is the category?",
-        "nothingNew": "The file has {count} categories and they all exist already.",
+        "nothingNew": "The file has {count} categories and they all exist already",
         "willCreate": "New categories to create: {count}",
         "alreadyThere": "Already there: {count}",
         "tooMany": "More than {max} new categories can't be created at once. Check the column.",
@@ -702,17 +702,17 @@
         "done": "Created: {created} · already there: {existing}",
         "failed": "Could not be completed. Try again.",
         "fileErrors": {
-          "unsupported": "Only CSV and Excel (.xlsx) files are supported.",
-          "empty": "The file is empty.",
-          "too_many_rows": "The file has more than {max} rows.",
-          "unreadable": "The file could not be read.",
-          "too_large": "The file is too large (60 MB at most)."
+          "unsupported": "Only CSV and Excel (.xlsx) files are supported",
+          "empty": "The file is empty",
+          "too_many_rows": "The file has more than {max} rows",
+          "unreadable": "The file could not be read",
+          "too_large": "The file is too large (60 MB at most)"
         }
       },
       "errors": {
-        "name_taken": "A category with this name already exists.",
-        "required": "Enter a name.",
-        "too_long": "The name is too long."
+        "name_taken": "A category with this name already exists",
+        "required": "Enter a name",
+        "too_long": "The name is too long"
       }
     },
     "overview": {
@@ -731,11 +731,11 @@
       "activeSuppliers": "Active suppliers",
       "activeSuppliersHint": "1 or more orders in 30 days",
       "activeBuyers": "Active buyers",
-      "activeBuyersHint": "Sent at least 1 order in the last 14 days.",
+      "activeBuyersHint": "Sent at least 1 order in the last 14 days",
       "reorder": "Weekly reorder rate",
       "reorderHint": "Buyers in both of the last 2 weeks ÷ buyers in the earlier week",
       "reorderDetail": "{both} / {earlier}",
-      "reorderNone": "No orders in the earlier week.",
+      "reorderNone": "No orders in the earlier week",
       "perSupplier": "Orders per supplier per week",
       "perSupplierHint": "Orders in 28 days ÷ 4 ÷ approved suppliers",
       "none": "-"
@@ -752,7 +752,7 @@
         "supplier": "Supplier",
         "buyer": "Buyer"
       },
-      "empty": "No business found.",
+      "empty": "No business found",
       "buyerTitle": "Buyer",
       "orders": "Orders: {count}",
       "back": "Businesses"
@@ -762,7 +762,7 @@
       "label": "Order number",
       "placeholder": "GST-1001",
       "find": "Search",
-      "notFound": "No such order was found.",
+      "notFound": "No such order was found",
       "invalid": "The number is invalid. Example: GST-1001.",
       "readOnly": "View only. This view is recorded in the audit log.",
       "back": "Order lookup"
@@ -777,7 +777,7 @@
       "to": "To date",
       "apply": "Filter",
       "reset": "Clear",
-      "empty": "No entries found.",
+      "empty": "No entries found",
       "when": "Time",
       "target": "Object",
       "details": "Details",
@@ -790,7 +790,7 @@
       "note": "Note",
       "notePlaceholder": "E.g.: Winiveria, manager",
       "add": "Add",
-      "empty": "No emails added yet.",
+      "empty": "No emails added yet",
       "added": "Added",
       "status": {
         "active": "Has access",
@@ -805,21 +805,21 @@
         "added": "Added"
       },
       "done": {
-        "allowed": "Email added.",
-        "restored": "Access restored.",
-        "already_allowed": "This email has already been added.",
-        "updated": "Role updated."
+        "allowed": "Email added",
+        "restored": "Access restored",
+        "already_allowed": "This email has already been added",
+        "updated": "Role updated"
       },
       "errors": {
-        "invalid_email": "Enter a valid email address.",
-        "cannot_revoke_self": "You can't revoke access for your own email.",
+        "invalid_email": "Enter a valid email address",
+        "cannot_revoke_self": "You can't revoke access for your own email",
         "unknown": "Could not be completed. Try again.",
-        "invalid_legal_id": "The ID must have 9 or 11 digits, and give the business name too.",
-        "legal_id_taken": "This ID is already registered to another business."
+        "invalid_legal_id": "The ID must have 9 or 11 digits, and give the business name too",
+        "legal_id_taken": "This ID is already registered to another business"
       },
       "welcome": {
         "sent": "Email added. The first sign-in link has been sent.",
-        "skipped": "Email added, but no message was sent: the email service isn't switched on yet.",
+        "skipped": "Email added, but no message was sent: the email service isn't switched on yet",
         "failed": "Email added, but the message could not be sent. A new link is available from the sign-in page via \"Set or reset password\"."
       },
       "authUserWarning": "Email added, but the sign-in account could not be created yet. It will be created at first sign-in.",
@@ -830,7 +830,7 @@
         "placeholder": "info@firma.ge, Firma Ltd, 405123456, supplier",
         "submit": "Add all",
         "summary": "Added: {done} · with errors: {failed}",
-        "tooMany": "The first 100 lines were processed; the rest were skipped.",
+        "tooMany": "The first 100 lines were processed; the rest were skipped",
         "line": "Line {line}",
         "parse": {
           "columns": "Too many columns",
@@ -852,12 +852,12 @@
       "verifiedHint": "A name and ID mean you've checked the business: its account is active right after registration. Without them it waits for your approval.",
       "link": {
         "create": "Create link",
-        "ready": "The sign-in link for {email} is ready.",
+        "ready": "The sign-in link for {email} is ready",
         "warning": "The link is single-use: whoever opens it first gets in. Send it only to this person. We don't store it, but creating it is logged.",
         "whatsapp": "Send on WhatsApp",
         "copy": "Copy link",
         "copied": "Copied",
-        "noPhone": "The phone is unknown: WhatsApp will open and you choose the recipient yourself.",
+        "noPhone": "The phone is unknown: WhatsApp will open and you choose the recipient yourself",
         "rateLimited": "You created too many links. Try again in a while.",
         "message": "Hello! Your business has been approved on 202. To sign in and set your password, open this link (single-use): {link}"
       }
@@ -887,7 +887,7 @@
         "approved": "Approved",
         "rejected": "Rejected"
       },
-      "empty": "No requests.",
+      "empty": "No requests",
       "legalId": "Legal ID",
       "city": "City",
       "email": "Email",
@@ -900,21 +900,21 @@
       "reasonLabel": "Reason (saved)",
       "confirmReject": "Confirm rejection",
       "cancel": "Cancel",
-      "approved": "Approved.",
+      "approved": "Approved",
       "approvedWelcome": {
         "sent": "Approved. The first sign-in link has been emailed to the supplier.",
-        "skipped": "Approved, but no message was sent: the email service isn't switched on yet.",
+        "skipped": "Approved, but no message was sent: the email service isn't switched on yet",
         "failed": "Approved, but the message could not be sent. A new link is available from the sign-in page via \"Set or reset password\"."
       },
       "approvedAuthWarning": "Approved, but the sign-in account could not be created yet. It will be created at first sign-in.",
       "errors": {
         "stale_status": "The status has already changed. Refresh the page.",
-        "note_required": "A reason is required when rejecting.",
-        "legal_id_taken": "This ID is already registered to another business.",
-        "invalid_legal_id": "The ID is invalid.",
+        "note_required": "A reason is required when rejecting",
+        "legal_id_taken": "This ID is already registered to another business",
+        "invalid_legal_id": "The ID is invalid",
         "unknown": "Could not be completed. Try again.",
-        "invalid": "Check the details.",
-        "invalid_email": "The email is invalid."
+        "invalid": "Check the details",
+        "invalid_email": "The email is invalid"
       },
       "invitedBy": "Invited by a buyer: {name}"
     },
@@ -935,21 +935,21 @@
     "voiceTest": {
       "title": "Voice order (test)",
       "intro": "Experiment: record or upload an order spoken in Georgian and see what Gemini makes of it. It only uses the made-up products listed below; no cart or order is touched.",
-      "notConfigured": "GEMINI_API_KEY is not set, so the test is off.",
+      "notConfigured": "GEMINI_API_KEY is not set, so the test is off",
       "catalogLabel": "Test products",
       "catalogHint": "One line per product: id | name | unit. A line starting with @ starts a supplier: @id | name. Made-up data.",
       "record": "Record",
       "stop": "Stop",
       "upload": "Upload a file",
       "recordingNow": "Recording... (up to {seconds} seconds)",
-      "readyRecording": "Recording ready.",
+      "readyRecording": "Recording ready",
       "readyFile": "File ready: {name}",
       "analyze": "Analyze",
       "analyzing": "Working",
       "heard": "What it heard",
-      "nothingHeard": "Nothing heard.",
+      "nothingHeard": "Nothing heard",
       "proposed": "Proposed lines",
-      "noLines": "No products recognized.",
+      "noLines": "No products recognized",
       "noMatch": "No match in the catalogue",
       "noQuantity": "No quantity heard",
       "said": "Said: {text}",
@@ -964,14 +964,14 @@
         "bad_audio": "We could not read that audio. Try another recording."
       },
       "errors": {
-        "invalid": "The data is not valid.",
-        "not_configured": "GEMINI_API_KEY is not set.",
+        "invalid": "The data is not valid",
+        "not_configured": "GEMINI_API_KEY is not set",
         "rate_limited": "Too many tries. Try again later.",
-        "too_large": "The recording is too long.",
-        "bad_audio": "We could not read the audio.",
-        "bad_catalog": "The test product list is not valid: one line each as id | name | unit, ids all different.",
+        "too_large": "The recording is too long",
+        "bad_audio": "We could not read the audio",
+        "bad_catalog": "The test product list is not valid: one line each as id | name | unit, ids all different",
         "upstream": "Gemini did not return an answer. Try again.",
-        "unknown": "Something went wrong.",
+        "unknown": "Something went wrong",
         "model_not_found": "Gemini does not know this model (404). Set GEMINI_MODEL to a valid name.",
         "key_rejected": "Gemini rejected the key. Check GEMINI_API_KEY.",
         "quota": "Gemini's limit was reached. Try again later.",
@@ -987,16 +987,16 @@
         "stop": "End",
         "connecting": "Connecting...",
         "listening": "Listening",
-        "limit": "Ends by itself after {minutes} minutes.",
+        "limit": "Ends by itself after {minutes} minutes",
         "conversation": "Conversation",
         "you": "You",
         "assistant": "Assistant",
         "orderTitle": "Current order",
-        "orderEmpty": "Nothing yet.",
-        "startFailed": "Could not start live mode.",
-        "connectionLost": "The connection was lost.",
-        "testNote": "Test: nothing is sent.",
-        "transcriptNote": "The text is approximate: the assistant hears your voice directly.",
+        "orderEmpty": "Nothing yet",
+        "startFailed": "Could not start live mode",
+        "connectionLost": "The connection was lost",
+        "testNote": "Test: nothing is sent",
+        "transcriptNote": "The text is approximate: the assistant hears your voice directly",
         "testSupplier": "Test supplier"
       },
       "supplier": "Supplier: {name}"
@@ -1004,7 +1004,7 @@
   },
   "notFound": {
     "title": "Page not found",
-    "body": "The link is wrong or you don't have access to this page.",
+    "body": "The link is wrong or you don't have access to this page",
     "home": "Go to the home page"
   },
   "common": {
@@ -1102,8 +1102,8 @@
     "emptyTitle": "You don't have any products yet",
     "emptyBody": "Add a product or import a price list",
     "noResultsTitle": "Nothing found",
-    "noResultsBody": "Change the search or the filters.",
-    "suspendedReadOnly": "Your account is suspended - the catalog can't be edited.",
+    "noResultsBody": "Change the search or the filters",
+    "suspendedReadOnly": "Your account is suspended - the catalog can't be edited",
     "form": {
       "newTitle": "New product",
       "editTitle": "Edit product",
@@ -1114,7 +1114,7 @@
       "description": "Description",
       "brand": "Brand",
       "barcode": "Barcode",
-      "barcodeHint": "8-14 digits, optional.",
+      "barcodeHint": "8-14 digits, optional",
       "sku": "Code (SKU)",
       "skuHint": "Your own internal code. On import we use it to find an existing product.",
       "category": "Category",
@@ -1146,23 +1146,23 @@
       "deactivateHint": "A disabled product is hidden from buyers. Past orders stay unchanged.",
       "created": "Product added",
       "stockTitle": "Stock",
-      "stockUntracked": "Stock isn't tracked yet.",
+      "stockUntracked": "Stock isn't tracked yet",
       "stockOnlyYou": "Only you see this. Confirming an order lowers stock; cancelling it restores it.",
       "stockAddLabel": "Quantity received",
-      "stockAddHint": "Added to the existing stock.",
+      "stockAddHint": "Added to the existing stock",
       "stockAdd": "Add",
       "stockSetLabel": "Recounted quantity",
-      "stockSetHint": "Replaces the existing stock: enter the full new quantity.",
+      "stockSetHint": "Replaces the existing stock: enter the full new quantity",
       "stockSet": "Set the new quantity",
       "stockSaved": "Stock saved",
       "imageSaveFailed": "The product was saved, but the photo could not be uploaded: {reason}"
     },
     "errors": {
-      "suspended": "Your account is suspended - changes aren't possible.",
+      "suspended": "Your account is suspended - changes aren't possible",
       "category_unavailable": "This category is no longer available. Choose another.",
-      "sku_taken": "This code is already used by another product.",
-      "invalid_stock": "Enter a quantity (greater than 0 when receiving stock).",
-      "invalid": "Check the highlighted fields.",
+      "sku_taken": "This code is already used by another product",
+      "invalid_stock": "Enter a quantity (greater than 0 when receiving stock)",
+      "invalid": "Check the highlighted fields",
       "unknown": "Could not save. Try again.",
       "rate_limited": "Too many attempts. Try again in a while."
     },
@@ -1184,15 +1184,15 @@
       "keep": "Keep the original",
       "poor": "Background removal didn't work well. Better to keep the original.",
       "errors": {
-        "no_webgpu": "This browser doesn't support background removal.",
+        "no_webgpu": "This browser doesn't support background removal",
         "download": "The model could not be downloaded. Check your internet connection and try again.",
         "integrity": "The downloaded model didn't match what was expected, so we didn't use it. Try again.",
         "failed": "Background removal failed. Use the original."
       }
     },
     "imageErrors": {
-      "empty": "The file is empty.",
-      "too_large": "The file is larger than 4 MB.",
+      "empty": "The file is empty",
+      "too_large": "The file is larger than 4 MB",
       "unsupported": "This format isn't supported. Use JPEG, PNG or WebP.",
       "upload_failed": "The photo could not be uploaded. Try again."
     },
@@ -1202,7 +1202,7 @@
       "title": "Delete \"{name}\" for good?",
       "effects": "Removed from price lists, carts and regular orders; photo deleted",
       "history": "In {count, plural, one {# order line} other {# order lines}}. History stays",
-      "noHistory": "No orders include this product.",
+      "noHistory": "No orders include this product",
       "openOrders": "{count, plural, one {# open order} other {# open orders}} include it",
       "hideInstead": "This cannot be undone. A disabled product can be enabled again at any time.",
       "confirm": "Yes, delete",
@@ -1239,10 +1239,10 @@
       "remove": "Remove the view \"{name}\"",
       "removeShort": "Remove",
       "errors": {
-        "name_required": "Give the view a name.",
-        "nothing_to_save": "Choose at least one filter first.",
+        "name_required": "Give the view a name",
+        "nothing_to_save": "Choose at least one filter first",
         "too_many": "You can keep up to 20 saved views. Remove one first.",
-        "name_taken": "You already have a view with this name.",
+        "name_taken": "You already have a view with this name",
         "unknown": "Could not save. Try again."
       }
     }
@@ -1259,10 +1259,10 @@
     "validCategoriesHint": "Use one of these categories",
     "fileErrors": {
       "too_large": "The file is too large (60 MB at most). Reduce the size of the photos and try again.",
-      "unsupported": "Upload a .csv or .xlsx file.",
-      "empty": "No data was found in the file.",
-      "too_many_rows": "At most {max} rows per file.",
-      "unreadable": "We couldn't read the file."
+      "unsupported": "Upload a .csv or .xlsx file",
+      "empty": "No data was found in the file",
+      "too_many_rows": "At most {max} rows per file",
+      "unreadable": "We couldn't read the file"
     },
     "rowsFound": "{count, plural, one {# row found} other {# rows found}}",
     "mappingIntro": "Say which column is which. * - required.",
@@ -1309,7 +1309,7 @@
     },
     "photos": {
       "found": "Photos found in the file: {count}. Without a photo: {missing}.",
-      "skipped": "Photos we couldn't use: {count} (wrong format, or extra photos in a row).",
+      "skipped": "Photos we couldn't use: {count} (wrong format, or extra photos in a row)",
       "private": "Photos appear only in your own catalog. After adding, you can replace a photo on any product.",
       "uploading": "Uploading photos: {done} / {total}",
       "uploaded": "Photos added: {ok}. Not added: {failed}. Upload the ones that failed from the product page.",
@@ -1326,7 +1326,7 @@
       "unit": "Unit, if it's not in the file",
       "unitError": "Treat as an error",
       "autoSku": "Create the code (SKU) automatically if it's not in the file",
-      "autoSkuHint": "The code comes from the name, so re-uploading the same file updates products instead of duplicating them."
+      "autoSkuHint": "The code comes from the name, so re-uploading the same file updates products instead of duplicating them"
     },
     "importAll": "Import all",
     "importValid": "Import only the valid rows ({count})",
@@ -1340,10 +1340,10 @@
     "another": "Upload another file",
     "startOver": "Start over",
     "errors": {
-      "missing_columns": "Choose all the required columns.",
-      "has_errors": "The file has errors.",
-      "nothing_to_import": "There are no rows to import.",
-      "suspended": "Your account is suspended - importing isn't possible.",
+      "missing_columns": "Choose all the required columns",
+      "has_errors": "The file has errors",
+      "nothing_to_import": "There are no rows to import",
+      "suspended": "Your account is suspended - importing isn't possible",
       "unknown": "The import failed. Try again."
     }
   },
@@ -1353,16 +1353,16 @@
     "sectionOrders": "Order terms",
     "contactName": "Contact person",
     "phone": "Phone",
-    "phoneHint": "Customers will message you on WhatsApp at this number.",
+    "phoneHint": "Customers will message you on WhatsApp at this number",
     "minOrder": "Minimum order",
-    "minOrderHint": "Empty or 0 - no minimum.",
+    "minOrderHint": "Empty or 0 - no minimum",
     "pricesIncludeVat": "Prices include VAT",
-    "pricesIncludeVatHint": "Buyers see next to each price whether VAT is included or not.",
+    "pricesIncludeVatHint": "Buyers see next to each price whether VAT is included or not",
     "deliveryArea": "Delivery area",
     "deliveryTerms": "Delivery terms",
-    "deliveryTermsHint": "E.g.: delivery Monday to Saturday, the day after the order.",
+    "deliveryTermsHint": "E.g.: delivery Monday to Saturday, the day after the order",
     "orderCutoffNote": "Order cut-off",
-    "orderCutoffHint": "E.g.: orders placed before 15:00 are delivered the next day.",
+    "orderCutoffHint": "E.g.: orders placed before 15:00 are delivered the next day",
     "saved": "Settings saved"
   },
   "customers": {
@@ -1395,7 +1395,7 @@
       "priceListHint": "Which products and prices this customer sees. No list, no products.",
       "submit": "Add and create a link",
       "legalId": "Identification code",
-      "legalIdHint": "If they're already on 202, send a request instead of a link."
+      "legalIdHint": "If they're already on 202, send a request instead of a link"
     },
     "invite": {
       "title": "The invitation link is ready",
@@ -1406,7 +1406,7 @@
       "whatsappNote": "Opens WhatsApp. You press send",
       "emailNotSent": "Sending by email isn't switched on yet. Send the link on WhatsApp or copy it.",
       "message": "Hello{name}! {supplier} invites you to 202. With this link you'll see our catalog with your prices and can send an order: {link}",
-      "expires": "Valid for 14 days.",
+      "expires": "Valid for 14 days",
       "toCustomer": "To the customer's page",
       "another": "Add another customer"
     },
@@ -1435,18 +1435,18 @@
       "inOrders": "in {count, plural, one {# order} other {# orders}}",
       "recentOrders": "Recent orders",
       "noteTitle": "Private note",
-      "noteHint": "For you only: the customer can't see this.",
+      "noteHint": "For you only: the customer can't see this",
       "noteSave": "Save",
       "noteSaved": "Note saved",
       "noteFailed": "Could not save. Try again."
     },
     "errors": {
-      "not_active": "You can invite customers once your account is approved.",
-      "suspended": "Your account is suspended - changes aren't possible.",
-      "price_list_unavailable": "The price list could not be found.",
-      "not_invited": "The customer is already connected or blocked.",
+      "not_active": "You can invite customers once your account is approved",
+      "suspended": "Your account is suspended - changes aren't possible",
+      "price_list_unavailable": "The price list could not be found",
+      "not_invited": "The customer is already connected or blocked",
       "stale_status": "The status has already changed. Refresh the page.",
-      "invalid": "Check the highlighted fields.",
+      "invalid": "Check the highlighted fields",
       "unknown": "Could not be completed. Try again.",
       "rate_limited": "Too many attempts. Try again in a while."
     },
@@ -1458,8 +1458,8 @@
       "adding": "Adding…",
       "added": "Added",
       "errors": {
-        "already_connected": "This buyer is already your customer.",
-        "suspended": "Your account is suspended - changes aren't possible.",
+        "already_connected": "This buyer is already your customer",
+        "suspended": "Your account is suspended - changes aren't possible",
         "unknown": "Could not be completed. Try again."
       }
     },
@@ -1474,7 +1474,7 @@
       "onDelivery": "On delivery",
       "days": "{count, plural, one {# day} other {# days}} after delivery",
       "requestTitle": "Request to change payment terms",
-      "requestBody": "{buyer} asks to pay: {terms}.",
+      "requestBody": "{buyer} asks to pay: {terms}",
       "changeLine": "Change on every price: {from} → {to}",
       "sampleTitle": "Example prices (before → after, quantity discounts not counted)",
       "approve": "Approve",
@@ -1482,7 +1482,7 @@
       "reset": "Back to the standard price",
       "editConditions": "Edit the conditions of the price list",
       "errors": {
-        "request_not_pending": "This request was already decided.",
+        "request_not_pending": "This request was already decided",
         "unknown": "Could not save. Try again."
       },
       "bannerTitle": "{count, plural, one {# customer asks} other {# customers ask}} to change payment terms"
@@ -1516,8 +1516,8 @@
     },
     "errors": {
       "limit_reached": "You can't have more than 10 regular orders. Delete one you don't need.",
-      "empty": "There's nothing to save in this order.",
-      "invalid": "Check the highlighted fields.",
+      "empty": "There's nothing to save in this order",
+      "invalid": "Check the highlighted fields",
       "unknown": "Could not be completed. Try again."
     }
   },
@@ -1533,11 +1533,11 @@
     "detail": {
       "rename": "Rename",
       "makeDefault": "Make default",
-      "defaultHint": "It will be chosen automatically for a new customer.",
+      "defaultHint": "It will be chosen automatically for a new customer",
       "unsetDefault": "Remove default",
       "delete": "Delete list",
       "deleteConfirm": "Yes, delete",
-      "deleteHint": "{count, plural, one {# customer} other {# customers}} will see no products until you assign another list.",
+      "deleteHint": "{count, plural, one {# customer} other {# customers}} will see no products until you assign another list",
       "copy": "Copy list",
       "copyName": "New list name",
       "category": "Category",
@@ -1552,22 +1552,22 @@
       "placeholder": "Base",
       "saveChanges": "Save changes",
       "saved": "Changes saved",
-      "noProducts": "You don't have any products yet.",
+      "noProducts": "You don't have any products yet",
       "bulkTitle": "Discount on the ticked products",
-      "bulkHint": "Ticked products get the base price minus this percentage.",
+      "bulkHint": "Ticked products get the base price minus this percentage",
       "bulkPercent": "Discount, %",
       "bulkPreview": "Preview",
       "bulkApply": "Apply to {count, plural, one {# product} other {# products}}",
       "bulkApplied": "Prices updated: {count}",
       "bulkSample": "Examples",
       "importTitle": "Import prices",
-      "importHint": "The file needs a code (SKU) column and a price column.",
+      "importHint": "The file needs a code (SKU) column and a price column",
       "inactive": "Disabled",
       "show": {
         "label": "Show",
         "all": "All products",
         "selected": "Selected only ({count})",
-        "noneSelected": "No products are selected on this list yet."
+        "noneSelected": "No products are selected on this list yet"
       }
     },
     "import": {
@@ -1579,13 +1579,13 @@
       }
     },
     "errors": {
-      "name_taken": "You already have a list with this name.",
-      "suspended": "Your account is suspended - changes aren't possible.",
-      "invalid_discount": "Enter a percentage from 0 to 100.",
+      "name_taken": "You already have a list with this name",
+      "suspended": "Your account is suspended - changes aren't possible",
+      "invalid_discount": "Enter a percentage from 0 to 100",
       "unknown_products": "Some products could not be found. Refresh the page.",
-      "required": "Enter a name.",
-      "too_long": "The name is too long.",
-      "invalid": "Check the highlighted fields.",
+      "required": "Enter a name",
+      "too_long": "The name is too long",
+      "invalid": "Check the highlighted fields",
       "unknown": "Could not be completed. Try again."
     },
     "conditions": {
@@ -1593,7 +1593,7 @@
       "scope": "Applies to",
       "scopeList": "All products on this list",
       "hasOwn": "own values",
-      "scopeListHint": "These values apply to every product on the list, unless a product has its own.",
+      "scopeListHint": "These values apply to every product on the list, unless a product has its own",
       "scopeProductHint": "Own values for this product. Empty fields follow the list.",
       "howToType": "Percent: -3 is 3% cheaper, 2 is 2% dearer, 0 no change. Leave empty if not offered.",
       "methodTitle": "Payment method",
@@ -1621,7 +1621,7 @@
       "saved": "Conditions saved",
       "useList": "Use the list's values",
       "errors": {
-        "invalid_rule": "Check the rows: percentages from -90 to 50, quantities above 0, no repeated rows.",
+        "invalid_rule": "Check the rows: percentages from -90 to 50, quantities above 0, no repeated rows",
         "unknown": "Could not save. Try again."
       }
     }
@@ -1629,7 +1629,7 @@
   "invite": {
     "title": "Invitation to 202",
     "heading": "{supplier} invites you",
-    "body": "Once connected, you'll see {supplier}'s catalog at your prices and can order.",
+    "body": "Once connected, you'll see {supplier}'s catalog at your prices and can order",
     "signIn": "Sign in and accept",
     "signInHint": "Only businesses approved by 202 can sign in. Not approved yet? Contact us.",
     "acceptAs": "Accept on behalf of {business}",
@@ -1639,18 +1639,18 @@
     "supplierAccount": "This invitation is for buyers. Sign out, then sign in with your buying account.",
     "unavailableTitle": "The invitation is no longer valid",
     "unavailableBody": "The link may have expired, been revoked or already been used. Ask the supplier for a new link.",
-    "alreadyConnected": "You are already connected to this supplier.",
+    "alreadyConnected": "You are already connected to this supplier",
     "toSupplier": "To the supplier's catalog",
     "home": "To the home page",
     "errors": {
       "unavailable": "The invitation is no longer valid. Ask the supplier for a new link.",
-      "already_connected": "You are already connected to this supplier.",
-      "not_a_buyer": "This invitation is for buyers.",
-      "already_onboarded": "Your business is already registered.",
-      "invalid": "Check the highlighted fields.",
+      "already_connected": "You are already connected to this supplier",
+      "not_a_buyer": "This invitation is for buyers",
+      "already_onboarded": "Your business is already registered",
+      "invalid": "Check the highlighted fields",
       "unknown": "Could not be completed. Try again.",
       "rate_limited": "Too many attempts. Try again in a while.",
-      "wrong_role": "This account is registered as a supplier and can't accept a buyer's invitation.",
+      "wrong_role": "This account is registered as a supplier and can't accept a buyer's invitation",
       "legal_id_taken": "This legal ID is already registered. Please contact us."
     }
   },
@@ -1668,9 +1668,9 @@
     "decrease": "Decrease quantity",
     "remove": "Remove",
     "emptyTitle": "The cart is empty",
-    "emptyBody": "Add products from a supplier's catalog.",
+    "emptyBody": "Add products from a supplier's catalog",
     "toSuppliers": "To suppliers",
-    "separateNote": "Each supplier's order is placed separately.",
+    "separateNote": "Each supplier's order is placed separately",
     "items": "{count, plural, one {# product} other {# products}}",
     "checkout": "Check out",
     "continue": "Back to the catalog",
@@ -1681,11 +1681,11 @@
     "problemUnavailable": "No longer available - remove it from the cart",
     "problemQuantity": "The quantity no longer fits the minimum or step - correct it",
     "bar": "{count, plural, one {# product} other {# products}} in the cart · {total}",
-    "reordered": "The products were added to the cart at current prices.",
+    "reordered": "The products were added to the cart at current prices",
     "skipped": "Could not be added (no longer available): {names}",
     "errors": {
-      "product_unavailable": "The product is no longer available.",
-      "invalid_quantity": "The quantity doesn't fit the minimum or step.",
+      "product_unavailable": "The product is no longer available",
+      "invalid_quantity": "The quantity doesn't fit the minimum or step",
       "unknown": "Could not be changed. Try again.",
       "rate_limited": "Too many attempts. Try again in a while."
     },
@@ -1721,12 +1721,12 @@
       "added": "{name}: added to the cart"
     },
     "errors": {
-      "empty_cart": "The cart is empty.",
-      "below_minimum": "The order is below the minimum amount.",
-      "address_required": "Choose or enter an address.",
-      "invalid_delivery_date": "The delivery date must be today or within the next 90 days.",
-      "supplier_unavailable": "Ordering from this supplier isn't possible right now.",
-      "invalid": "Check the highlighted fields.",
+      "empty_cart": "The cart is empty",
+      "below_minimum": "The order is below the minimum amount",
+      "address_required": "Choose or enter an address",
+      "invalid_delivery_date": "The delivery date must be today or within the next 90 days",
+      "supplier_unavailable": "Ordering from this supplier isn't possible right now",
+      "invalid": "Check the highlighted fields",
       "unknown": "The order could not be sent. Try again.",
       "rate_limited": "Too many attempts. Try again in a while.",
       "buyer_suspended": "Your account is suspended. Contact 202 support.",
@@ -1740,9 +1740,9 @@
     "title": "Orders",
     "number": "GST-{number}",
     "emptyTitle": "No orders yet",
-    "emptyBuyer": "An order will appear here once you send it to a supplier.",
-    "emptySupplier": "When customers send you an order, it will appear here.",
-    "emptyTab": "No orders in this tab.",
+    "emptyBuyer": "An order will appear here once you send it to a supplier",
+    "emptySupplier": "When customers send you an order, it will appear here",
+    "emptyTab": "No orders in this tab",
     "tabs": {
       "new": "New",
       "confirmed": "Confirmed",
@@ -1783,7 +1783,7 @@
       "byBuyer": "Customer",
       "bySupplier": "Supplier",
       "print": "Print",
-      "pricesNote": "Prices are fixed at the moment of the order."
+      "pricesNote": "Prices are fixed at the moment of the order"
     },
     "pick": {
       "link": "Pick list",
@@ -1830,11 +1830,11 @@
     "errors": {
       "stale_status": "The order's status has already changed. Refresh the page.",
       "reason_required": "Enter a reason (at least 3 characters).",
-      "nothing_confirmed": "Confirm at least one item, or reject the order.",
-      "invalid_lines": "Check the quantities.",
-      "invalid_delivery_date": "The delivery date must be today or within the next 90 days.",
-      "suspended": "Your account is suspended.",
-      "invalid": "Check the highlighted fields.",
+      "nothing_confirmed": "Confirm at least one item, or reject the order",
+      "invalid_lines": "Check the quantities",
+      "invalid_delivery_date": "The delivery date must be today or within the next 90 days",
+      "suspended": "Your account is suspended",
+      "invalid": "Check the highlighted fields",
       "unknown": "Could not be completed. Try again."
     },
     "whatsapp": {
@@ -1959,18 +1959,18 @@
     "titleFirst": "Create your password",
     "introFirst": "Choose your own password. You'll use it with your email from now on.",
     "titleChange": "Change password",
-    "introChange": "Choose a new password.",
+    "introChange": "Choose a new password",
     "new": "New password",
     "confirm": "Repeat the password",
-    "hint": "At least {min} characters.",
+    "hint": "At least {min} characters",
     "submitFirst": "Save password",
     "submitChange": "Change password",
     "saving": "Saving…",
     "errors": {
-      "too_short": "The password is too short.",
-      "too_long": "The password is too long.",
-      "mismatch": "The passwords don't match.",
-      "same_password": "The new password must be different from the old one.",
+      "too_short": "The password is too short",
+      "too_long": "The password is too long",
+      "mismatch": "The passwords don't match",
+      "same_password": "The new password must be different from the old one",
       "weak": "This password is too easy to guess. Choose a stronger one.",
       "unknown": "Could not save. Try again."
     }
@@ -1978,21 +1978,21 @@
   "pending": {
     "title": "Your business is being checked",
     "body": "Thank you, {name}. We'll call after checking your ID",
-    "next": "Once approved, you can view catalogs and send orders."
+    "next": "Once approved, you can view catalogs and send orders"
   },
   "supplierRequest": {
     "signIn": "Sign in",
     "title": "Sell more easily - to your own buyers",
-    "intro": "202 helps suppliers receive orders from restaurants, cafés and hotels in one place.",
-    "point1": "Free: no commission, no payments.",
-    "point2": "Your customers repeat an order at your prices in a few taps.",
-    "point3": "Prices stay private: each customer sees only their own prices.",
-    "point4": "Import your catalog from Excel, with a separate price list for each customer.",
+    "intro": "202 helps suppliers receive orders from restaurants, cafés and hotels in one place",
+    "point1": "Free: no commission, no payments",
+    "point2": "Your customers repeat an order at your prices in a few taps",
+    "point3": "Prices stay private: each customer sees only their own prices",
+    "point4": "Import your catalog from Excel, with a separate price list for each customer",
     "formTitle": "Request to join",
     "formIntro": "Fill in the short form. We'll check your company and email you a sign-in link once approved.",
     "businessName": "Company name",
     "legalId": "Legal ID",
-    "legalIdHint": "9 digits (company) or 11 digits (sole trader).",
+    "legalIdHint": "9 digits (company) or 11 digits (sole trader)",
     "city": "City",
     "cityPlaceholder": "Tbilisi",
     "contactName": "Contact person",
@@ -2006,17 +2006,17 @@
     "sentTitle": "Request received",
     "sentBody": "Thank you! We'll check the details and get in touch on the number you gave.",
     "errors": {
-      "invalid": "Check the highlighted fields.",
+      "invalid": "Check the highlighted fields",
       "rate_limited": "Too many attempts. Try again later.",
       "unknown": "Could not send. Try again."
     },
     "privacyNote": "By sending the request you agree to the <privacy>Privacy Policy</privacy>. We'll use the data only to contact you.",
     "invitedTitle": "{buyer} invites you to 202",
     "invitedBody": "{buyer} buys from you and invites you to 202. Fill in the short form; once approved, you can add {buyer} as a customer.",
-    "invitedUnavailable": "This invitation link no longer works, but you can still send a request to join.",
-    "invitedIntro": "202 gives a supplier one place for the catalog, prices and orders.",
-    "invitedPoint1": "Catalog and prices in one place: each customer sees only their own prices.",
-    "invitedPoint2": "Orders arrive neatly organized, instead of forwarded WhatsApp messages.",
+    "invitedUnavailable": "This invitation link no longer works, but you can still send a request to join",
+    "invitedIntro": "202 gives a supplier one place for the catalog, prices and orders",
+    "invitedPoint1": "Catalog and prices in one place: each customer sees only their own prices",
+    "invitedPoint2": "Orders arrive neatly organized, instead of forwarded WhatsApp messages",
     "invitedPoint3": "Free: no commission, no payments. You decide who sees what."
   },
   "legal": {
@@ -2254,13 +2254,13 @@
     "name": "Supplier's name",
     "phone": "Phone (WhatsApp)",
     "email": "Email",
-    "contactHint": "Give at least one, so you can send them the link.",
+    "contactHint": "Give at least one, so you can send them the link",
     "submit": "Create link",
     "submitting": "Creating…",
     "panel": {
       "title": "The invitation link is ready",
       "once": "The link is shown only now. If you lose it, create a new one.",
-      "expires": "Valid for 30 days.",
+      "expires": "Valid for 30 days",
       "copy": "Copy link",
       "copied": "Copied",
       "whatsapp": "Send on WhatsApp",
@@ -2271,7 +2271,7 @@
     "emailSubject": "{buyer} invites you to 202",
     "list": {
       "title": "Your invitations",
-      "empty": "You haven't sent any invitations yet.",
+      "empty": "You haven't sent any invitations yet",
       "revoke": "Revoke the link",
       "state": {
         "open": "Link sent",
@@ -2284,11 +2284,11 @@
       }
     },
     "errors": {
-      "not_active": "You can invite suppliers once your business is approved.",
+      "not_active": "You can invite suppliers once your business is approved",
       "too_many_open": "You have too many open invitations. Revoke the extra ones.",
       "stale_status": "The status has already changed. Refresh the page.",
       "rate_limited": "Too many attempts. Try again in a while.",
-      "invalid": "Check the highlighted fields.",
+      "invalid": "Check the highlighted fields",
       "unknown": "Could not be completed. Try again."
     },
     "orderFooter": "Receive your next order on 202: your catalog and each customer's prices in one place, and orders neatly organized. It's free. Join: {link}",
@@ -2300,13 +2300,13 @@
       "copyLink": "Copy link",
       "copied": "Copied",
       "regenerate": "Replace link",
-      "regenerateNote": "The old link stops working at once.",
+      "regenerateNote": "The old link stops working at once",
       "preparing": "Preparing the link…",
       "error": "The link could not be prepared. Refresh the page."
     },
     "namedTitle": "Invite a specific supplier",
     "legalId": "Identification code",
-    "legalIdHint": "If they're already on 202, send a request instead of a link."
+    "legalIdHint": "If they're already on 202, send a request instead of a link"
   },
   "authContinue": {
     "title": "Sign in to 202",
@@ -2345,17 +2345,17 @@
       "inviteSupplier": "Invite a customer",
       "inviteBuyer": "Invite a supplier"
     },
-    "self": "This is your own business.",
+    "self": "This is your own business",
     "found": {
       "city": "{city}",
       "approved": "Approved by 202"
     },
     "relation": {
-      "connected": "Already connected.",
+      "connected": "Already connected",
       "pending_outgoing": "Request sent. Waiting for an answer.",
       "pending_incoming": "This business has already asked to connect with you. Answer it in the requests above.",
       "cooldown": "This business declined your request recently. You can ask again later.",
-      "blocked_by_you": "You blocked this business."
+      "blocked_by_you": "You blocked this business"
     },
     "openCustomer": "Open customer",
     "openSupplier": "Open supplier",
@@ -2367,9 +2367,9 @@
       "listNone": "Decide later",
       "button": "Send request",
       "sent": "Request sent. {name} will see it in their requests.",
-      "connected": "Connected with {name}.",
+      "connected": "Connected with {name}",
       "alsoFrom": "Also send a request from my other companies",
-      "alsoHint": "Each company sends its own request; the customer approves each."
+      "alsoHint": "Each company sends its own request; the customer approves each"
     },
     "incoming": {
       "title": "Requests to connect",
@@ -2381,8 +2381,8 @@
       "listLabel": "Price list for this customer",
       "listDefault": "Default list",
       "listNone": "No list yet (they see nothing until you assign one)",
-      "approved": "Connected.",
-      "declined": "Declined."
+      "approved": "Connected",
+      "declined": "Declined"
     },
     "outgoing": {
       "title": "Requests you sent",
@@ -2394,18 +2394,18 @@
       "title": "Visibility",
       "label": "Other businesses can find us by our identification code",
       "hint": "Others see only your name and city",
-      "saved": "Saved."
+      "saved": "Saved"
     },
     "errors": {
-      "invalid_code": "Enter the full code: 9 digits for a company, 11 for an individual entrepreneur.",
-      "not_active": "Your business must be approved by 202 before it can connect with others.",
-      "not_found": "No business found.",
-      "already_connected": "You are already connected.",
-      "already_pending": "A request between you is already waiting for an answer.",
+      "invalid_code": "Enter the full code: 9 digits for a company, 11 for an individual entrepreneur",
+      "not_active": "Your business must be approved by 202 before it can connect with others",
+      "not_found": "No business found",
+      "already_connected": "You are already connected",
+      "already_pending": "A request between you is already waiting for an answer",
       "declined_recently": "This business declined your request recently. You can ask again later.",
       "blocked": "This customer is blocked. Unblock it on its page first.",
-      "request_not_pending": "This request was already answered or has expired.",
-      "invalid_list": "Choose one of your own price lists.",
+      "request_not_pending": "This request was already answered or has expired",
+      "invalid_list": "Choose one of your own price lists",
       "rate_limited": "Too many attempts. Try again in an hour.",
       "unknown": "Something went wrong. Try again."
     },
@@ -2445,21 +2445,21 @@
     "roleHint": "Owners manage the team",
     "alsoIn": "Also add them to these companies",
     "send": "Add and send sign-in link",
-    "ownersOnly": "Only an owner can manage the team.",
+    "ownersOnly": "Only an owner can manage the team",
     "invited": {
       "sent": "Added. A sign-in link was emailed.",
       "skipped": "Added. No email service is connected: your colleague can use \"Set or reset password\" on the sign-in page.",
       "failed": "Added, but the email failed. Your colleague can use \"Set or reset password\" on the sign-in page."
     },
     "errors": {
-      "invalid_email": "Enter a valid email address.",
-      "not_owner": "Only an owner can do this.",
-      "not_active": "Your account is not approved yet.",
-      "already_member": "This person is already on the team.",
-      "already_invited": "An invitation for this address is already open.",
+      "invalid_email": "Enter a valid email address",
+      "not_owner": "Only an owner can do this",
+      "not_active": "Your account is not approved yet",
+      "already_member": "This person is already on the team",
+      "already_invited": "An invitation for this address is already open",
       "blocked": "This address is blocked. Please contact us.",
-      "too_many": "You have reached the maximum team size.",
-      "last_owner": "A company needs at least one owner.",
+      "too_many": "You have reached the maximum team size",
+      "last_owner": "A company needs at least one owner",
       "rate_limited": "Too many attempts. Try again later.",
       "unknown": "Could not complete this. Try again."
     }
@@ -2503,8 +2503,8 @@
     "subtotal": "Excluding VAT",
     "vatTotal": "VAT",
     "grandTotal": "Total",
-    "pricesInclude": "Prices include VAT.",
-    "pricesExclude": "Prices exclude VAT.",
+    "pricesInclude": "Prices include VAT",
+    "pricesExclude": "Prices exclude VAT",
     "rs": {
       "title": "RS.ge",
       "notConnected": "RS.ge is not connected. Connect it in Settings (owner only).",
@@ -2522,23 +2522,23 @@
       "closed": "The waybill is closed. Number: {number}",
       "vatNote": "Lines with 0% VAT go to RS.ge as VAT-exempt. Check them in the draft.",
       "errors": {
-        "disabled": "The RS.ge integration is off.",
-        "not_owner": "Only an owner can do this.",
-        "not_connected": "RS.ge is not connected.",
-        "invalid_credentials": "RS.ge did not accept these credentials.",
-        "wrong_company": "This user belongs to another company: the identification code does not match.",
+        "disabled": "The RS.ge integration is off",
+        "not_owner": "Only an owner can do this",
+        "not_connected": "RS.ge is not connected",
+        "invalid_credentials": "RS.ge did not accept these credentials",
+        "wrong_company": "This user belongs to another company: the identification code does not match",
         "rs_unreachable": "RS.ge is not answering. Try again later.",
-        "rs_rejected": "RS.ge refused the waybill.",
-        "already_exists": "This order already has a waybill.",
-        "not_draft": "The waybill is no longer a draft.",
-        "not_active": "The waybill is not active.",
-        "invalid_transport": "Check the loading address, the driver's personal number (11 digits) and the vehicle plate.",
+        "rs_rejected": "RS.ge refused the waybill",
+        "already_exists": "This order already has a waybill",
+        "not_draft": "The waybill is no longer a draft",
+        "not_active": "The waybill is not active",
+        "invalid_transport": "Check the loading address, the driver's personal number (11 digits) and the vehicle plate",
         "rate_limited": "Too many attempts. Try again later.",
-        "unit_unmapped": "A unit was not found in RS.ge's list.",
-        "vat_unsupported": "Waybills support only 18% and 0% VAT.",
-        "empty": "The waybill has no goods.",
-        "transport_missing": "Fill in the loading address and the vehicle plate.",
-        "invalid_amount": "A quantity is not valid.",
+        "unit_unmapped": "A unit was not found in RS.ge's list",
+        "vat_unsupported": "Waybills support only 18% and 0% VAT",
+        "empty": "The waybill has no goods",
+        "transport_missing": "Fill in the loading address and the vehicle plate",
+        "invalid_amount": "A quantity is not valid",
         "unknown": "Could not complete this. Try again."
       },
       "connect": {
@@ -2547,10 +2547,10 @@
         "user": "Service user",
         "password": "Service password",
         "submit": "Connect",
-        "connected": "Connected ({date}).",
+        "connected": "Connected ({date})",
         "disconnect": "Disconnect",
-        "ownerOnly": "Only an owner can connect or disconnect.",
-        "ipNote": "RS.ge ties a service user to one IP: create it for the address 202 connects from."
+        "ownerOnly": "Only an owner can connect or disconnect",
+        "ipNote": "RS.ge ties a service user to one IP: create it for the address 202 connects from"
       }
     },
     "noticeRs": "If RS.ge is connected, 202 saves the data there as a draft. It takes effect only when you activate it."
@@ -2559,7 +2559,7 @@
     "title": "Quick search",
     "placeholder": "Search or jump to...",
     "trigger": "Search",
-    "empty": "Nothing found.",
+    "empty": "Nothing found",
     "searchFor": "Search products for \"{q}\"",
     "groups": {
       "results": "Results",
@@ -2594,11 +2594,11 @@
     "testFailed": "The test could not be delivered. Try turning notifications off and on again.",
     "on": "On for this device",
     "denied": "Notifications are blocked. Allow them in your browser settings.",
-    "unsupported": "This browser cannot show notifications from a website.",
+    "unsupported": "This browser cannot show notifications from a website",
     "iosInstall": "On iPhone: Share, then Add to Home Screen. Open 202 from there and turn on notifications.",
     "error": "Could not change notifications. Try again.",
     "tooMany": "Notifications are already on for 10 devices. Turn one off first.",
-    "notConfigured": "Notifications are not set up on the server yet.",
+    "notConfigured": "Notifications are not set up on the server yet",
     "nudgeTitle": "Get new orders on your phone",
     "nudgeBody": "Get new orders even when 202 is closed",
     "nudgeLater": "Not now"
@@ -2627,20 +2627,20 @@
       "hideNote": "Buyers will not see them. Open orders are not affected.",
       "hideButton": "Hide {count, plural, one {# product} other {# products}}",
       "showTitle": "Show {count, plural, one {# product} other {# products}}",
-      "showNote": "Customers whose list includes them will see them again.",
+      "showNote": "Customers whose list includes them will see them again",
       "showButton": "Show {count, plural, one {# product} other {# products}}",
       "priceTitle": "Change the price",
       "priceNote": "This is the base price. Prices set on customer lists stay as they are.",
       "priceButton": "Change the price"
     },
     "applied": {
-      "confirmed": "{count, plural, one {# order} other {# orders}} confirmed.",
-      "delivered": "{count, plural, one {# order} other {# orders}} marked delivered.",
-      "rejected": "Order rejected.",
-      "hidden": "{count, plural, one {# product} other {# products}} hidden.",
-      "shown": "{count, plural, one {# product} other {# products}} shown.",
-      "price": "Price changed.",
-      "skipped": "{count} already answered and skipped."
+      "confirmed": "{count, plural, one {# order} other {# orders}} confirmed",
+      "delivered": "{count, plural, one {# order} other {# orders}} marked delivered",
+      "rejected": "Order rejected",
+      "hidden": "{count, plural, one {# product} other {# products}} hidden",
+      "shown": "{count, plural, one {# product} other {# products}} shown",
+      "price": "Price changed",
+      "skipped": "{count} already answered and skipped"
     }
   }
 }

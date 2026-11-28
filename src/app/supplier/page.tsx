@@ -7,7 +7,7 @@ import { requireSupplier } from "@/server/auth/guards";
 import { voiceOrderEnabled } from "@/server/voice/config";
 import { getSupplierMetrics } from "@/server/domain/metrics/supplier";
 import { countSupplierOrders } from "@/server/domain/orders/queries";
-import { getOrderValueSeries, getPendingPulse, getSetupProgress, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
+import { getPendingPulse, getSetupProgress, getSupplierClock, listPendingQueue, listUpcomingDeliveries } from "@/server/domain/orders/today";
 
 export default function SupplierDashboardPage() {
   return (
@@ -18,12 +18,11 @@ export default function SupplierDashboardPage() {
 async function Dashboard() {
   const ctx = await requireSupplier();
   const t = await getTranslations("supplier");
-  const [counts, metrics, queue, deliveries, series, clock, pulse] = await Promise.all([
+  const [counts, metrics, queue, deliveries, clock, pulse] = await Promise.all([
     countSupplierOrders(ctx),
     getSupplierMetrics(ctx),
     listPendingQueue(ctx, 6),
     listUpcomingDeliveries(ctx, 5),
-    getOrderValueSeries(ctx, 30),
     getSupplierClock(ctx),
     getPendingPulse(ctx),
   ]);
@@ -47,7 +46,6 @@ async function Dashboard() {
       metrics={metrics}
       queue={queue}
       deliveries={deliveries}
-      series={series}
       clock={clock}
       now={new Date()}
       setup={setup}

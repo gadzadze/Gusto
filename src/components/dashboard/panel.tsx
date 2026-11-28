@@ -34,7 +34,7 @@ export function Panel({
         <h2 id={id} className="flex min-w-0 items-center gap-2 text-[1rem] font-semibold">
           {title}
           {count !== undefined ? (
-            <span className="shrink-0 rounded-full bg-brand-soft px-2 py-0.5 text-xs font-semibold tabular-nums text-brand">{count}</span>
+            <span className="shrink-0 text-sm font-normal tabular-nums text-muted-foreground">{count}</span>
           ) : null}
         </h2>
         {action ? (
