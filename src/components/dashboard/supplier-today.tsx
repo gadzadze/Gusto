@@ -2,7 +2,7 @@ import { ChevronRight, Clock, Inbox, PauseCircle } from "lucide-react";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/app-shell/page-header";
-import { BarRow, SparkBars } from "@/components/dashboard/bars";
+import { BarRow } from "@/components/dashboard/bars";
 import { GetStarted, type SetupProgress } from "@/components/dashboard/get-started";
 import { Panel, PanelRow } from "@/components/dashboard/panel";
 import { VoiceLauncher, type VoiceChip } from "@/components/buyer/voice/voice-launcher";
@@ -25,7 +25,6 @@ export type SupplierTodayProps = {
   metrics: SupplierMetrics;
   queue: PendingQueueItem[];
   deliveries: UpcomingDelivery[];
-  series: { day: string; valueMinor: number }[];
   clock: { timezone: string; today: string };
   now: Date;
   /** What the company has prepared; only read while it has no orders at all (the "get started" checklist). */
@@ -35,7 +34,7 @@ export type SupplierTodayProps = {
 };
 
 /** The supplier's home: what needs an answer, what goes out next, and the shape of the last 30 days. */
-export async function SupplierToday({ title, orgStatus, counts, metrics, queue, deliveries, series, clock, now, setup, assistantChips }: SupplierTodayProps) {
+export async function SupplierToday({ title, orgStatus, counts, metrics, queue, deliveries, clock, now, setup, assistantChips }: SupplierTodayProps) {
   const fmt = await getFormats();
   const format = await getFormatter();
   const t = await getTranslations("supplier");
@@ -154,12 +153,7 @@ export async function SupplierToday({ title, orgStatus, counts, metrics, queue, 
           <div className="space-y-5">
             <section aria-labelledby="value" className="glass px-4 py-4">
               <h2 id="value" className="text-sm text-muted-foreground">{td("value")}</h2>
-              <div className="mt-1 flex items-end justify-between gap-4">
-                <p className="text-3xl font-semibold tabular-nums tracking-tight">{fmt.money(metrics.orderValue30dMinor, metrics.currency)}</p>
-                <div className="w-28 shrink-0">
-                  <SparkBars values={series.map((s) => s.valueMinor)} label={tt("chartLabel")} />
-                </div>
-              </div>
+              <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight">{fmt.money(metrics.orderValue30dMinor, metrics.currency)}</p>
               {/* The "order value, not revenue" caption stays printed next to the number (product honesty rule). */}
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{td("valueHint")}</p>
               <details className="group text-sm text-muted-foreground">

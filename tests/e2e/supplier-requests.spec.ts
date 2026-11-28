@@ -125,7 +125,7 @@ test("a rejected request needs a reason", async ({ browser }) => {
   await expect(card).toContainText("პირადი ელფოსტაა");
   await card.getByRole("button", { name: "უარყოფა" }).click();
   await card.getByRole("button", { name: "უარყოფის დადასტურება" }).click();
-  await expect(admin.getByText("უარყოფისას მიზეზი სავალდებულოა.")).toBeVisible();
+  await expect(admin.getByText("უარყოფისას მიზეზი სავალდებულოა")).toBeVisible();
   await card.getByLabel("მიზეზი").fill("Could not reach the owner");
   await card.getByRole("button", { name: "უარყოფის დადასტურება" }).click();
   await expect(admin.getByRole("listitem").filter({ hasText: name })).toHaveCount(0);
