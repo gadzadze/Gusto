@@ -43,7 +43,6 @@ export function PriceConditions({ priceListId, rules, products, disabled }: Prop
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{t("intro")}</p>
       <div className="max-w-md space-y-2">
         <Label htmlFor="cond-scope">{t("scope")}</Label>
         <Select id="cond-scope" value={scope} onChange={(event) => setScope(event.target.value)}>

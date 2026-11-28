@@ -5,7 +5,7 @@ import type * as React from "react";
 import { Label } from "@/components/ui/label";
 import { toValidationKey } from "@/lib/validation/form-errors";
 
-/** Label + control + hint/error, wired for screen readers via aria-describedby. */
+/** Label + control + hint/error, wired for screen readers via aria-describedby. The hint appears while the field is focused. */
 export function Field({
   id,
   label,
@@ -23,7 +23,7 @@ export function Field({
 }) {
   const t = useTranslations();
   return (
-    <div className="space-y-2">
+    <div className="group/field space-y-2">
       <Label htmlFor={id}>
         {label}
         {optional ? (
@@ -36,7 +36,7 @@ export function Field({
           {t(`validation.${toValidationKey(error)}`)}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="text-sm text-muted-foreground">
+        <p id={`${id}-hint`} className="sr-only text-sm text-muted-foreground group-focus-within/field:not-sr-only">
           {hint}
         </p>
       ) : null}

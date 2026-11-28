@@ -24,7 +24,6 @@ async function RegularOrders() {
   if (list.length === 0) return <EmptyState icon={CalendarClock} title={t("emptyTitle")} body={t("emptyBody")} />;
   return (
     <div className="space-y-4">
-      <p className="text-sm text-muted-foreground">{t("intro")}</p>
       <ul className="glass">
         {list.map((r) => (
           <li key={r.id} className="space-y-2 px-4 py-3">

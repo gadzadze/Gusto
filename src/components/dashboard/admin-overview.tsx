@@ -91,7 +91,6 @@ export async function AdminOverview({ suppliers, pendingBuyers, newRequests, pil
         </Panel>
 
         <Panel id="pilot" title={tp("title")}>
-          <p className="pb-3 text-xs leading-relaxed text-muted-foreground">{tp("intro")}</p>
           {metrics.map((m) => (
             <div key={m.key} className="grid grid-cols-[1fr_auto] items-center gap-4 py-3.5">
               <div className="min-w-0">

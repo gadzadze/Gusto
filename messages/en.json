@@ -214,7 +214,6 @@
   },
   "onboarding": {
     "title": "Welcome to 202",
-    "subtitle": "Tell us briefly about your business. Verified businesses activate at once.",
     "kindLegend": "How do you use 202?",
     "kindBuyer": "I buy",
     "kindBuyerHint": "A restaurant, café, hotel or shop",
@@ -326,30 +325,30 @@
   "supplier": {
     "dashboardTitle": "Home",
     "pendingTitle": "Your account is under review",
-    "pendingBody": "The 202 team is checking your business. Once approved, you can invite customers.",
+    "pendingBody": "Awaiting approval. You can prepare your catalog",
     "suspendedTitle": "Account suspended",
     "suspendedBody": "Contact 202 support for details.",
     "emptyTitle": "No orders yet",
-    "emptyBody": "When customers send you an order, it will appear here.",
+    "emptyBody": "New orders appear here",
     "noCategoriesTitle": "No categories added yet",
-    "noCategoriesBody": "You can add products once the 202 team adds categories.",
+    "noCategoriesBody": "Products open once categories are added",
     "newOrders": "New orders: {count}",
     "openOrders": "View orders",
     "dashboard": {
       "pending": "Waiting for your decision",
-      "pendingHint": "Orders you have not yet confirmed or rejected.",
+      "pendingHint": "Not yet confirmed or rejected",
       "pendingNone": "No new orders.",
       "openPending": "View orders",
       "week": "Orders in the last 7 days",
-      "weekHint": "Orders sent to you, whatever their status, compared with the previous 7 days.",
+      "weekHint": "Orders received vs the previous 7 days",
       "weekPrevious": "Previous 7 days: {count}",
       "value": "Order value, 30 days",
-      "valueHint": "Total of confirmed and delivered orders in the last 30 days. This is order value, not revenue.",
+      "valueHint": "Confirmed and delivered, last 30 days. Order value, not revenue",
       "top": "Top 5 products, 30 days",
-      "topHint": "By confirmed quantity, in confirmed and delivered orders of the last 30 days.",
+      "topHint": "By confirmed quantity, last 30 days",
       "topEmpty": "No data yet.",
       "repeat": "Repeat buyers",
-      "repeatHint": "Buyers who sent you 2 or more orders in the last 30 days.",
+      "repeatHint": "Ordered 2 or more times in 30 days",
       "valueWhy": "202 doesn't know whether they were paid.",
       "valueWhyLabel": "Why?"
     },
@@ -360,7 +359,7 @@
       "review": "Review",
       "items": "{count, plural, one {# item} other {# items}}",
       "deliveriesTitle": "Next deliveries",
-      "deliveriesEmpty": "No confirmed orders yet. Once you confirm an order, its delivery day shows here.",
+      "deliveriesEmpty": "Delivery days appear after you confirm orders",
       "deliveryCounts": "{orders, plural, one {# order} other {# orders}} · {customers, plural, one {# customer} other {# customers}}",
       "noDay": "No day agreed",
       "overdue": "Overdue",
@@ -373,22 +372,21 @@
     },
     "getStarted": {
       "title": "Get started",
-      "intro": "Three steps and your customers can order from you.",
       "done": "Done",
       "afterApproval": "Available once the 202 team has approved your business.",
       "products": {
         "title": "Add your products",
-        "body": "Type them in or import a price list from Excel or CSV.",
+        "body": "Add by hand or import from Excel",
         "action": "Add products"
       },
       "prices": {
         "title": "Set up a price list",
-        "body": "A list says which products a customer may order, and at what price.",
+        "body": "Which products a customer can order, and at what price",
         "action": "Create a list"
       },
       "customers": {
         "title": "Invite your first customer",
-        "body": "Send them a link. They see only their own prices.",
+        "body": "Send a link",
         "action": "Invite a customer"
       }
     }
@@ -396,12 +394,12 @@
   "buyer": {
     "dashboardTitle": "Home",
     "emptyTitle": "You don't have any suppliers yet",
-    "emptyBody": "When a supplier invites you to 202, their catalog with your prices will appear here.",
+    "emptyBody": "A supplier's catalog appears here after they invite you",
     "suppliersTitle": "Suppliers",
     "searchPlaceholder": "Search products",
     "searchTitle": "Search",
     "searchEmpty": "Nothing found",
-    "searchHint": "You can type in Georgian or Latin letters, e.g. ყველი or kveli.",
+    "searchHint": "Georgian or Latin letters, e.g. ყველი or kveli",
     "showMore": "All results ({count})",
     "productCount": "{count, plural, one {# product} other {# products}}",
     "minOrder": "Minimum order: {amount}",
@@ -413,7 +411,7 @@
     "minQty": "Min. {qty} {unit}",
     "step": "Step {qty} {unit}",
     "allCategories": "All categories",
-    "catalogEmpty": "The supplier hasn't opened any products to you yet. When they do, they will appear here.",
+    "catalogEmpty": "No products opened for you yet",
     "deliveryTerms": "Delivery terms",
     "details": "Details",
     "close": "Close",
@@ -425,14 +423,13 @@
       "open": "Current orders",
       "openEmpty": "You have no current orders.",
       "topTitle": "Most often ordered products",
-      "topHint": "Sorted by how many of your orders contain them. Prices are current.",
+      "topHint": "Most ordered first",
       "orderedTimes": "Ordered {count, plural, one {# time} other {# times}}",
       "from": "Supplier: {supplier}"
     },
     "inviteSupplier": "Invite a supplier",
     "terms": {
       "title": "Payment terms and discounts",
-      "intro": "Choose how you pay {supplier}. {supplier} approves it; until then the standard price applies.",
       "methodLabel": "How do you pay?",
       "intervalLabel": "When do you pay?",
       "standard": "Standard price",
@@ -689,11 +686,11 @@
       "productCount": "{count, plural, one {# product} other {# products}}",
       "empty": "No categories yet. Suppliers can't add products until at least one exists.",
       "addStandard": "Add the standard categories",
-      "standardHint": "Adds the main HoReCa categories you don't have yet (wine, beer, cheese, meat, vegetables, sauces, packaging and more). Existing ones are untouched. Import also recognizes them under other common names.",
+      "standardHint": "Adds the standard HoReCa categories you don't have. Existing ones stay",
       "standardDone": "Created: {created} · already there: {existing}",
       "fromFile": {
         "title": "Add categories from a product file",
-        "hint": "Upload a supplier's product file (CSV or Excel) and you'll see which categories 202 is missing. The file is read in your browser; only the category names are sent to the server.",
+        "hint": "Upload a product file to see missing categories. It is read in your browser",
         "choose": "Choose a file",
         "noColumn": "The category column could not be found automatically.",
         "pickColumn": "Which column is the category?",
@@ -727,21 +724,20 @@
     },
     "pilot": {
       "title": "Pilot metrics",
-      "intro": "Every number is computed from real data. A \"week\" is a rolling 7 days.",
       "suppliers": "Suppliers by status",
       "buyerOrgs": "Buyer organizations",
       "activeProducts": "Active products",
       "orders30": "Orders by status, 30 days",
       "activeSuppliers": "Active suppliers",
-      "activeSuppliersHint": "Received at least 1 order in the last 30 days.",
+      "activeSuppliersHint": "1 or more orders in 30 days",
       "activeBuyers": "Active buyers",
       "activeBuyersHint": "Sent at least 1 order in the last 14 days.",
       "reorder": "Weekly reorder rate",
-      "reorderHint": "Buyers who ordered in both of the last two weeks, divided by buyers who ordered in the earlier week. Pilot goal: buyers come back once a week without a reminder.",
+      "reorderHint": "Buyers in both of the last 2 weeks ÷ buyers in the earlier week",
       "reorderDetail": "{both} / {earlier}",
       "reorderNone": "No orders in the earlier week.",
       "perSupplier": "Orders per supplier per week",
-      "perSupplierHint": "Orders in the last 28 days ÷ 4 ÷ number of approved suppliers.",
+      "perSupplierHint": "Orders in 28 days ÷ 4 ÷ approved suppliers",
       "none": "-"
     },
     "orgs": {
@@ -763,7 +759,6 @@
     },
     "orders": {
       "title": "Order lookup",
-      "intro": "Enter an order number. Every time you open one, it is recorded in the audit log.",
       "label": "Order number",
       "placeholder": "GST-1001",
       "find": "Search",
@@ -791,7 +786,6 @@
     },
     "access": {
       "title": "Access",
-      "intro": "Only emails on this list can sign in. Add the email of a business you've checked (ID, phone): they get a link and set their own password. A supplier's invitation doesn't open the door: an invited buyer must be on this list too.",
       "email": "Email",
       "note": "Note",
       "notePlaceholder": "E.g.: Winiveria, manager",
@@ -878,11 +872,10 @@
       "invitedBy": "Invited by a supplier: {names}",
       "selfRegistered": "Registered by themselves",
       "freeMail": "This is a personal email (e.g. gmail.com), not a company one. Verify by phone.",
-      "howTo": "Check the ID in the registry (NAPR / RS.ge), call the number given, and approve only after that."
+      "howTo": "Check the ID in the registry, call, then approve"
     },
     "requests": {
       "title": "Requests to join",
-      "intro": "Suppliers from the public form. A request gives no access: check the ID in the registry, call them, then approve. Approval adds the email to the access list and activates the supplier.",
       "filter": {
         "open": "Open",
         "approved": "Approved",
@@ -928,15 +921,15 @@
     "attention": {
       "title": "Needs attention",
       "requests": "{count, plural, one {# supplier asked} other {# suppliers asked}} to be onboarded",
-      "requestsHint": "Review their contact details and identification code.",
+      "requestsHint": "Check contact and ID",
       "requestsAction": "Requests",
       "pending": "{count, plural, one {# business is} other {# businesses are}} waiting for verification",
-      "pendingHint": "Suppliers and buyers you haven't approved yet.",
+      "pendingHint": "Not yet approved",
       "pendingAction": "Review",
       "health": "Notifications are late",
-      "healthHint": "The sending queue has been stuck for over 15 minutes, or the database is not answering.",
+      "healthHint": "Queue stuck for over 15 minutes, or database not answering",
       "clear": "Everything is on time",
-      "clearHint": "No requests, nothing to verify, and notifications are going out on time.",
+      "clearHint": "All clear",
       "goalSuppliers": "Pilot goal: 3 to 5 suppliers"
     },
     "voiceTest": {
@@ -1107,7 +1100,7 @@
       "inactive": "Disabled"
     },
     "emptyTitle": "You don't have any products yet",
-    "emptyBody": "Add a product by hand or upload your price list.",
+    "emptyBody": "Add a product or import a price list",
     "noResultsTitle": "Nothing found",
     "noResultsBody": "Change the search or the filters.",
     "suspendedReadOnly": "Your account is suspended - the catalog can't be edited.",
@@ -1205,12 +1198,12 @@
     },
     "delete": {
       "button": "Delete product",
-      "hint": "Deletes the product for good. If you only want to hide it, use \"Disable\".",
+      "hint": "Deletes for good. To hide instead, use Disable",
       "title": "Delete \"{name}\" for good?",
-      "effects": "It disappears from price lists, carts and saved regular orders, and its photo is deleted.",
-      "history": "It appears in {count, plural, one {# order line} other {# order lines}}. Order history stays unchanged.",
+      "effects": "Removed from price lists, carts and regular orders; photo deleted",
+      "history": "In {count, plural, one {# order line} other {# order lines}}. History stays",
       "noHistory": "No orders include this product.",
-      "openOrders": "{count, plural, one {# open order still includes} other {# open orders still include}} it; they finish as usual.",
+      "openOrders": "{count, plural, one {# open order} other {# open orders}} include it",
       "hideInstead": "This cannot be undone. A disabled product can be enabled again at any time.",
       "confirm": "Yes, delete",
       "cancel": "Cancel",
@@ -1256,7 +1249,6 @@
   },
   "import": {
     "title": "Import products",
-    "intro": "Upload your price list as CSV or Excel. Products are matched by code (SKU).",
     "template": "Download the template",
     "stepFile": "File",
     "stepMapping": "Columns",
@@ -1264,7 +1256,7 @@
     "chooseFile": "Choose a file",
     "parsing": "Reading…",
     "validCategories": "Categories that exist in 202:",
-    "validCategoriesHint": "A category in the file must match one of these. For a new one, contact 202 support.",
+    "validCategoriesHint": "Use one of these categories",
     "fileErrors": {
       "too_large": "The file is too large (60 MB at most). Reduce the size of the photos and try again.",
       "unsupported": "Upload a .csv or .xlsx file.",
@@ -1289,7 +1281,7 @@
       "barcode": "Barcode",
       "description": "Description"
     },
-    "defaultsNote": "If missing from the file: VAT - {vat}%, min. quantity and step - 1.",
+    "defaultsNote": "Missing values: VAT {vat}%, min. quantity and step 1",
     "checkRows": "Check",
     "checking": "Checking…",
     "summary": "To add: {create} · to update: {update} · with errors: {error}",
@@ -1338,12 +1330,12 @@
     },
     "importAll": "Import all",
     "importValid": "Import only the valid rows ({count})",
-    "hasErrorsNote": "The file has errors. Fix them and upload again, or import only the valid rows.",
+    "hasErrorsNote": "Fix the errors and upload again, or import valid rows only",
     "importing": "Importing…",
     "doneTitle": "Import finished",
     "doneBody": "Added: {created} · updated: {updated} · skipped: {skipped}",
     "doneCheckTitle": "Check the products that were added",
-    "doneCheckBody": "Some categories, units and codes were filled in automatically. Check the list.",
+    "doneCheckBody": "Some values were filled in automatically. Check the list",
     "toProducts": "Go to products",
     "another": "Upload another file",
     "startOver": "Start over",
@@ -1379,7 +1371,7 @@
     "newTitle": "New customer",
     "notActive": "You can invite customers once approved. Until then, prepare your catalog and prices.",
     "emptyTitle": "You don't have any customers yet",
-    "emptyBody": "Add your first customer and send them the invitation link on WhatsApp.",
+    "emptyBody": "Add a customer and send the invite on WhatsApp",
     "columns": {
       "customer": "Customer",
       "status": "Status",
@@ -1411,7 +1403,7 @@
       "copy": "Copy link",
       "copied": "Copied",
       "whatsapp": "Send on WhatsApp",
-      "whatsappNote": "WhatsApp opens with the text ready - you have to confirm sending.",
+      "whatsappNote": "Opens WhatsApp. You press send",
       "emailNotSent": "Sending by email isn't switched on yet. Send the link on WhatsApp or copy it.",
       "message": "Hello{name}! {supplier} invites you to 202. With this link you'll see our catalog with your prices and can send an order: {link}",
       "expires": "Valid for 14 days.",
@@ -1428,16 +1420,16 @@
       "revoked": "The link was revoked",
       "block": "Block",
       "unblock": "Unblock",
-      "blockHint": "A blocked customer can no longer see your catalog. Active links are revoked too.",
-      "blockedNote": "The customer is blocked and can't see your catalog.",
+      "blockHint": "Blocked customers can't see your catalog",
+      "blockedNote": "Blocked",
       "editAssortment": "This customer's products and prices: list \"{name}\"",
       "noListTitle": "The customer has no products yet",
-      "noListBody": "Until you assign a list, the customer sees nothing in your catalog. Choose a list above.",
+      "noListBody": "No list assigned: this customer sees nothing",
       "history": "Order history",
       "orders": "Orders",
       "lastOrder": "Last: {date}",
       "orderValue": "Order value",
-      "orderValueHint": "Total of confirmed and delivered orders. This is order value, not revenue.",
+      "orderValueHint": "Confirmed and delivered. Order value, not revenue",
       "firstOrder": "First order",
       "topProducts": "Most often ordered",
       "inOrders": "in {count, plural, one {# order} other {# orders}}",
@@ -1461,7 +1453,7 @@
     "awaitingVerification": "Awaiting 202's verification",
     "invitingBuyers": {
       "title": "Buyers who invited you to 202",
-      "hint": "These buyers already order from you. Added as customers, they see what's on your default price list.",
+      "hint": "Already order from you. They will see your default price list",
       "add": "Add as a customer",
       "adding": "Adding…",
       "added": "Added",
@@ -1498,9 +1490,8 @@
   },
   "regular": {
     "title": "Regular orders",
-    "intro": "Orders you repeat often. We remind you by email, and one button fills your cart.",
     "emptyTitle": "You don't have any regular orders yet",
-    "emptyBody": "Open a sent order and press \"Save as a regular order\".",
+    "emptyBody": "Open an order and choose Save as regular",
     "save": "Save as a regular order",
     "saveConfirm": "Save",
     "cancel": "Cancel",
@@ -1535,7 +1526,7 @@
     "newPlaceholder": "New list name, e.g.: Restaurants",
     "create": "Create list",
     "emptyTitle": "You don't have any price lists yet",
-    "emptyBody": "Customers see no products until you assign a list. Create one, tick products, assign it.",
+    "emptyBody": "Create a list, tick products, assign it to customers",
     "default": "Default",
     "customers": "{count, plural, one {# customer} other {# customers}}",
     "overrides": "{count, plural, one {# product} other {# products}}",
@@ -1599,7 +1590,6 @@
     },
     "conditions": {
       "title": "Conditions",
-      "intro": "Set how the price changes with payment method and quantity. You approve each customer's choice.",
       "scope": "Applies to",
       "scopeList": "All products on this list",
       "hasOwn": "own values",
@@ -1706,7 +1696,7 @@
   "checkout": {
     "title": "Check out",
     "deliveryDate": "Wanted delivery day (optional)",
-    "deliveryDateHint": "The supplier will confirm or change the day when confirming.",
+    "deliveryDateHint": "The supplier confirms the day",
     "review": "Order",
     "editCart": "Edit cart",
     "address": "Delivery address",
@@ -1718,7 +1708,7 @@
     "noteHint": "Optional. E.g.: delivery before 11:00.",
     "submit": "Send order",
     "submitting": "Sending…",
-    "paymentNote": "202 doesn't process payment - you settle up as agreed with the supplier.",
+    "paymentNote": "No payment through 202. Settle with the supplier",
     "changedTitle": "There are changes in the cart",
     "changedBody": "The order was not sent. Look through the changes and try again.",
     "reviewAgain": "Refresh and review",
@@ -1768,7 +1758,7 @@
       "status": "Status"
     },
     "placed": "Order sent",
-    "placedBody": "{supplier} will receive the order in 202. The status will update here.",
+    "placedBody": "Status updates here",
     "recent": "Recent orders",
     "orderAgain": "Order again",
     "viewAll": "All orders",
@@ -1805,7 +1795,7 @@
       "noDay": "Confirmed orders without a delivery day",
       "print": "Print",
       "emptyTitle": "No confirmed orders for this day",
-      "emptyBody": "The list includes confirmed orders for which this delivery day was agreed.",
+      "emptyBody": "Confirmed orders for this day appear here",
       "summary": "Orders: {orders}",
       "otherCategory": "Other",
       "inOrders": "in {count, plural, one {# order} other {# orders}}",
@@ -1820,7 +1810,7 @@
     "actions": {
       "confirm": "Confirm",
       "confirmTitle": "Confirm",
-      "confirmHint": "Change the quantity if needed. 0 - out of stock.",
+      "confirmHint": "0 = unavailable",
       "confirmQty": "Confirmed quantity",
       "noteOptional": "Note for the customer (optional)",
       "deliveryDate": "Delivery day",
@@ -1850,7 +1840,7 @@
     "whatsapp": {
       "sendToSupplier": "Send to the supplier on WhatsApp",
       "tellBuyer": "Message the buyer on WhatsApp",
-      "hint": "WhatsApp opens with the order ready. You press send; 202 doesn't record whether it was sent.",
+      "hint": "Opens WhatsApp with the order ready. You press send",
       "sendNow": "Send the order on WhatsApp"
     },
     "terms": {
@@ -1987,7 +1977,7 @@
   },
   "pending": {
     "title": "Your business is being checked",
-    "body": "Thank you, {name}! We are checking your legal ID and will contact you by phone.",
+    "body": "Thank you, {name}. We'll call after checking your ID",
     "next": "Once approved, you can view catalogs and send orders."
   },
   "supplierRequest": {
@@ -2260,7 +2250,7 @@
   },
   "supplierInvite": {
     "title": "Invite a supplier",
-    "intro": "If your supplier isn't on 202, invite them. Once we approve them, they can add you as a customer.",
+    "intro": "Invite a supplier that isn't on 202",
     "name": "Supplier's name",
     "phone": "Phone (WhatsApp)",
     "email": "Email",
@@ -2274,7 +2264,7 @@
       "copy": "Copy link",
       "copied": "Copied",
       "whatsapp": "Send on WhatsApp",
-      "whatsappNote": "WhatsApp opens with the text ready - you have to confirm sending.",
+      "whatsappNote": "Opens WhatsApp. You press send",
       "emailNotSent": "Sending by email isn't switched on yet. Send the link on WhatsApp or copy it."
     },
     "message": "Hello! {buyer} invites you to 202. Here suppliers receive orders from customers in one place, at prices they set themselves. Send us a request to join with this link: {link}",
@@ -2304,7 +2294,7 @@
     "orderFooter": "Receive your next order on 202: your catalog and each customer's prices in one place, and orders neatly organized. It's free. Join: {link}",
     "personal": {
       "title": "Your invitation link",
-      "body": "Add this text under your WhatsApp order. One link works for every supplier.",
+      "body": "Paste under your WhatsApp order. One link for all suppliers",
       "share": "Share",
       "copyText": "Copy text",
       "copyLink": "Copy link",
@@ -2330,7 +2320,6 @@
       "buyer": "Join as a buyer too",
       "supplier": "Join as a supplier too"
     },
-    "intro": "Your details are filled in. If the ID matches and your first side is approved, the new side activates at once; otherwise it needs approval.",
     "link": "Go to the page",
     "another": {
       "title": {
@@ -2352,7 +2341,7 @@
     "searching": "Searching",
     "notFound": {
       "title": "No business found with this code",
-      "body": "It may not be on 202 yet, or it is not taking requests. You can invite it with a link instead.",
+      "body": "Not on 202, or not accepting requests. Invite by link instead",
       "inviteSupplier": "Invite a customer",
       "inviteBuyer": "Invite a supplier"
     },
@@ -2404,7 +2393,7 @@
     "findable": {
       "title": "Visibility",
       "label": "Other businesses can find us by our identification code",
-      "hint": "They see only our name and city. Turn off to be reached only by invitation links.",
+      "hint": "Others see only your name and city",
       "saved": "Saved."
     },
     "errors": {
@@ -2422,7 +2411,7 @@
     },
     "instead": {
       "title": "{name} ({city}) is already on 202",
-      "body": "Instead of a link you can send a connection request. They approve it in their requests.",
+      "body": "Or send a connection request",
       "send": "Send request",
       "link": "Invite by link anyway",
       "back": "Back"
@@ -2432,7 +2421,7 @@
     "scope": "View",
     "thisCompany": "This company",
     "allBrands": "All brands",
-    "allHint": "Orders of all your companies together. Each company keeps its own orders, prices and waybills."
+    "allHint": "All your companies together"
   },
   "team": {
     "title": "Team",
@@ -2447,13 +2436,13 @@
     "removeConfirm": "This person will lose access to the company. Continue?",
     "leaveConfirm": "You will leave this company and lose access. Continue?",
     "pending": "Invited",
-    "pendingHint": "An invited person joins the company the first time they sign in.",
+    "pendingHint": "Joins at first sign-in",
     "revoke": "Cancel",
     "add": "Add a colleague",
-    "addHint": "Everyone has their own email and password. No 202 approval needed.",
+    "addHint": "Own email and password. No 202 approval needed",
     "email": "Colleague's email",
     "roleLabel": "Role",
-    "roleHint": "An owner also manages the team. A member works with orders and the catalog.",
+    "roleHint": "Owners manage the team",
     "alsoIn": "Also add them to these companies",
     "send": "Add and send sign-in link",
     "ownersOnly": "Only an owner can manage the team.",
@@ -2499,7 +2488,7 @@
     "instructions": "Delivery instructions",
     "note": "Buyer's note",
     "transport": "Transport",
-    "transportHint": "Type this once: it is remembered in this browser only and 202 stores it nowhere.",
+    "transportHint": "Saved in this browser only",
     "startAddress": "Loading address",
     "driver": "Driver",
     "driverId": "Driver's personal number",
@@ -2597,7 +2586,7 @@
   },
   "push": {
     "title": "Notifications on this device",
-    "hint": "Get a message on this phone or computer when an order needs you, even when 202 is closed.",
+    "hint": "Get a message when an order needs you",
     "enable": "Turn on",
     "disable": "Turn off",
     "test": "Send a test",
@@ -2611,7 +2600,7 @@
     "tooMany": "Notifications are already on for 10 devices. Turn one off first.",
     "notConfigured": "Notifications are not set up on the server yet.",
     "nudgeTitle": "Get new orders on your phone",
-    "nudgeBody": "Turn on notifications and a new order reaches you even when 202 is closed.",
+    "nudgeBody": "Get new orders even when 202 is closed",
     "nudgeLater": "Not now"
   },
   "supplierAssistant": {

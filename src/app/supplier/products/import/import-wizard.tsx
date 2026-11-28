@@ -145,7 +145,6 @@ export function ImportWizard({ savedMapping, categories }: { savedMapping: Impor
 
       {step.kind === "file" ? (
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">{t("intro")}</p>
           <div className="flex flex-wrap gap-3">
             <label
               aria-disabled={pending}

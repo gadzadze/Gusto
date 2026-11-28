@@ -9,7 +9,6 @@ export default async function AdminAccessPage() {
   return (
     <>
       <PageHeader title={t("title")} />
-      <p className="-mt-3 mb-6 max-w-2xl text-sm text-muted-foreground">{t("intro")}</p>
       <Access />
     </>
   );

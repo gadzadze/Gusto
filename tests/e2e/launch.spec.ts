@@ -150,7 +150,7 @@ test("launch scenario - image, catalog, order, dashboards, admin tools, isolatio
   await expect(region("ელოდება თქვენს პასუხს")).toContainText("პასუხის მომლოდინე შეკვეთა არ არის");
   await expect(region("შეკვეთების ღირებულება, 30 დღე")).toContainText("18,50");
   await expect(region("ყველაზე მოთხოვნადი 5 პროდუქტი, 30 დღე")).toContainText("ყველი სულგუნი");
-  await expect(supplier.getByText("შეკვეთილი თანხაა და არა შემოსავალი", { exact: false })).toBeVisible();
+  await expect(supplier.getByText("შეკვეთების ღირებულება და არა შემოსავალი", { exact: false })).toBeVisible();
   await expect(supplier.locator("main")).not.toContainText("გაყიდვ");
 
   // Buyer dashboard: open order, most-ordered product with quick add, order again.

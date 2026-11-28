@@ -53,7 +53,7 @@ test("buyer submits → supplier sees an unread notification and opens the order
   expect(href).toMatch(/^https:\/\/wa\.me\/\d+\?text=/);
   expect(decodeURIComponent(href)).toContain(`GST-${number}`);
   expect(decodeURIComponent(href)).toContain(`/o/${number}`);
-  await expect(buyer.getByText("გაიგზავნა თუ არა")).toBeVisible();
+  await expect(buyer.getByText("გაგზავნას თქვენ აჭერთ")).toBeVisible();
 
   // The supplier's bell shows one more unread; the list has it, unread, and opens the order.
   await supplier.goto("/supplier");
